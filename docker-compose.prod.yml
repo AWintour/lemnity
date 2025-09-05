@@ -1,0 +1,92 @@
+services:
+  # PostgreSQL - стабильная версия 16.5
+  postgres:
+    image: postgres:16.5
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # NestJS сервер - production версия
+  server:
+    build:
+      context: .
+      dockerfile: projects/server/Dockerfile
+    container_name: nestjs:11.0.1
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PORT:-3000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # React клиент - production версия
+  client:
+    build:
+      context: ./projects/client
+      dockerfile: Dockerfile
+    container_name: react:19.1.1
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost/api}
+    volumes:
+      - client_static:/usr/share/nginx/html
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # Nginx - стабильная версия 1.25.4
+  nginx:
+    image: nginx:1.25.4
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./projects/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./projects/nginx/ssl:/etc/nginx/ssl:ro
+      - client_static:/usr/share/nginx/html:ro
+    depends_on:
+      client:
+        condition: service_started
+      server:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  client_static:
+
+networks:
+  app_network:
+    driver: bridge

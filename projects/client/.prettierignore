@@ -1,0 +1,21 @@
+# Ignore artifacts:
+build
+coverage
+dist
+node_modules
+
+# Ignore config files
+*.config.js
+*.config.ts
+vite.config.ts
+eslint.config.js
+
+# Ignore documentation
+*.md
+
+# Ignore other files
+.gitignore
+package-lock.json
+
+# Ignore all HTML files:
+**/*.html

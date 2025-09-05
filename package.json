@@ -1,0 +1,33 @@
+{
+  "name": "monorepo-template",
+  "version": "1.0.0",
+  "description": "Full-stack monorepo template with React frontend and NestJS backend using pnpm workspaces",
+  "scripts": {
+    "dev": "pnpm --parallel --recursive run dev",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server start:dev",
+    "build": "pnpm --recursive run build",
+    "start": "pnpm --filter server start",
+    "install:client": "pnpm --filter client install",
+    "install:server": "pnpm --filter server install",
+    "clean": "rm -rf node_modules projects/*/node_modules pnpm-lock.yaml",
+    "build:client": "pnpm --filter client build",
+    "build:server": "pnpm --filter server build",
+    "format": "prettier --check . --ignore-path .gitignore",
+    "format:fix": "prettier --write . --ignore-path .gitignore",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:db": "docker compose up -d postgres",
+    "docker:up:prod": "docker compose -f docker-compose.prod.yml up -d",
+    "docker:down:prod": "docker compose -f docker-compose.prod.yml down",
+    "docker:db:prod": "docker compose -f docker-compose.prod.yml up -d postgres",
+    "dev:docker": "pnpm docker:db && pnpm dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.1",
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

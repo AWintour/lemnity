@@ -1,0 +1,18 @@
+# Development Dockerfile для NestJS сервера
+FROM node:20.19.0-alpine
+
+# Устанавливаем рабочую директорию
+WORKDIR /server
+
+# Устанавливаем pnpm глобально
+RUN npm install -g pnpm@10.15.1
+
+# Копируем только файлы зависимостей
+COPY projects/server/package*.json ./
+COPY pnpm-lock.yaml ./
+
+# Открываем порт
+EXPOSE 3000
+
+# Запускаем в режиме разработки
+CMD ["sh", "-c", "pnpm install && pnpm exec prisma generate && pnpm run start:dev"]
