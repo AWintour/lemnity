@@ -4,15 +4,11 @@ FROM node:20.19.0-alpine
 # Устанавливаем рабочую директорию
 WORKDIR /client
 
-# Устанавливаем pnpm
+# Устанавливаем pnpm глобально
 RUN npm install -g pnpm@10.15.1
-
-# Копируем файлы зависимостей
-COPY projects/client/package*.json ./
-COPY pnpm-lock.yaml ./
 
 # Открываем порт для Vite dev server
 EXPOSE 5173
 
 # Запускаем dev server с hot reload
-CMD ["sh", "-c", "pnpm install && pnpm run dev --host 0.0.0.0"]
+CMD ["sh", "-c", "pnpm install --frozen-lockfile && pnpm run dev --host 0.0.0.0"]
