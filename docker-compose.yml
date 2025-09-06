@@ -30,7 +30,6 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       DATABASE_URL: ${DATABASE_URL:-postgresql://user:password@postgres:5432/db}
-
       JWT_SECRET: ${JWT_SECRET}
       PORT: ${PORT:-3000}
     ports:
