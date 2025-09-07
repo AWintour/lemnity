@@ -104,3 +104,6 @@ Desktop.ini
 package-lock.json
 yarn.lock
 # pnpm-lock.yaml (keep this for pnpm)
+
+# Prisma generated files
+projects/*/prisma/generated/
