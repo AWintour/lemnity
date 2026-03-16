@@ -6,15 +6,15 @@ import {
   type CSSProperties,
 } from 'react'
 
-import CountdownAnnouncementWidget from '../CountdownAnnouncementWidget'
-import FadeInOut from '../utils/FadeInOut'
+import EventTimerWidget from './EventTimerWidget'
+import { FadeInOut } from '@/components'
 
-type CountdownPreviewProps = Pick<HTMLProps<HTMLElement>, 'className'> & {
+type EventTimerPreviewProps = Pick<HTMLProps<HTMLElement>, 'className'> & {
   rewardScreenEnabled: boolean
   containerStyle: CSSProperties
 }
 
-const CountdownPreview = (props: CountdownPreviewProps) => {
+const EventTimerPreview = (props: EventTimerPreviewProps) => {
   const countdownInfoScreenRef = useRef<HTMLDivElement | null>(null)
   const countdownFormScreenRef = useRef<HTMLDivElement | null>(null)
   const countdownRewardScreenRef = useRef<HTMLDivElement | null>(null)
@@ -82,7 +82,7 @@ const CountdownPreview = (props: CountdownPreviewProps) => {
               : '228px'
           }}
         >
-          <CountdownAnnouncementWidget
+          <EventTimerWidget
             ref={countdownInfoScreenRef}
             variant='countdown'
             focused
@@ -102,7 +102,7 @@ const CountdownPreview = (props: CountdownPreviewProps) => {
                 : '228px'
             }}
           >
-            <CountdownAnnouncementWidget
+            <EventTimerWidget
               ref={countdownFormScreenRef}
               variant='form'
               focused
@@ -121,7 +121,7 @@ const CountdownPreview = (props: CountdownPreviewProps) => {
                 : '228px'
             }}
           >
-            <CountdownAnnouncementWidget
+            <EventTimerWidget
               ref={countdownRewardScreenRef}
               variant='reward'
               focused
@@ -134,4 +134,4 @@ const CountdownPreview = (props: CountdownPreviewProps) => {
   )
 }
 
-export default CountdownPreview
+export default EventTimerPreview

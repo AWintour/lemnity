@@ -2,28 +2,21 @@
   TypedWidgetUpdater,
 } from '@/stores/widgetSettings/widgetActions/types'
 import {
-  type AnnouncementWidgetType,
-  type Content,
+  type EventTimertWidgetType,
   type ContentAlignment,
   type FontWeight,
-  type Format,
   type MobileTrigger,
-} from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults, buildAnnouncementWidgetSettings } from './defaults'
+} from '@lemnity/widget-config/widgets/event-timer'
+import {
+  eventTimerWidgetDefaults,
+  buildEventTimerWidgetSettings,
+} from './defaults'
 import type { ColorScheme, Icon } from '@lemnity/widget-config/widgets/base'
 
-export const createAnnouncementActions = (
-  updateWidget: TypedWidgetUpdater<AnnouncementWidgetType>
+export const createEventTimerActions = (
+  updateWidget: TypedWidgetUpdater<EventTimertWidgetType>
 ) => ({
   // WidgetAppearenceSchema
-  setAnnouncementWidgetFormat: (format: Format) =>
-    updateWidget(widget => ({
-      ...widget,
-      appearence: {
-        ...widget.appearence,
-        format,
-      }
-    })),
   setAnnouncementCompanyLogoEnabled: (enabled: boolean) =>
     updateWidget(widget => ({
       ...widget,
@@ -64,31 +57,23 @@ export const createAnnouncementActions = (
         borderRadius: radius,
       }
     })),
-    // InfoSettingsSchema
-    setAnnouncementContentType: (contentType: Content) =>
-      updateWidget(widget => ({
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          contentType,
-        }
-      })),
-    setAnnouncementContentAlignment: (alignment: ContentAlignment) =>
-      updateWidget(widget => ({
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          contentAlignment: alignment,
-        }
-      })),
-    setAnnouncementContentUrl: (url: string | undefined) =>
-      updateWidget(widget => ({
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          contentUrl: url,
-        }
-      })),
+  // InfoSettingsSchema
+  setAnnouncementContentEnabled: (contentEnabled: boolean) =>
+    updateWidget(widget => ({
+      ...widget,
+      infoSettings: {
+        ...widget.infoSettings,
+        contentEnabled,
+      }
+    })),
+  setAnnouncementContentUrl: (url: string | undefined) =>
+    updateWidget(widget => ({
+      ...widget,
+      infoSettings: {
+        ...widget.infoSettings,
+        contentUrl: url,
+      }
+    })),
   setAnnouncementInfoScreenTitle: (title: string) =>
     updateWidget(widget => {
       return {
@@ -149,16 +134,6 @@ export const createAnnouncementActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenCountdownDate: (countdownDate: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          countdownDate,
-        }
-      }
-    }),
   setAnnouncementInfoScreenCountdownEnabled: (countdownEnabled: boolean) =>
     updateWidget(widget => {
       return {
@@ -166,6 +141,16 @@ export const createAnnouncementActions = (
         infoSettings: {
           ...widget.infoSettings,
           countdownEnabled,
+        }
+      }
+    }),
+  setAnnouncementInfoScreenCountdownDate: (countdownDate: string) =>
+    updateWidget(widget => {
+      return {
+        ...widget,
+        infoSettings: {
+          ...widget.infoSettings,
+          countdownDate,
         }
       }
     }),
@@ -705,7 +690,7 @@ export const createAnnouncementActions = (
   ) => 
     updateWidget(widget => {
       const previousSettings = widget.mobileSettings
-        ?? announcementWidgetDefaults.mobileSettings
+        ?? eventTimerWidgetDefaults.mobileSettings
 
       return {
         ...widget,
@@ -720,7 +705,7 @@ export const createAnnouncementActions = (
   ) => 
     updateWidget(widget => {
       const previousSettings = widget.mobileSettings
-        ?? announcementWidgetDefaults.mobileSettings
+        ?? eventTimerWidgetDefaults.mobileSettings
 
       return {
         ...widget,
@@ -735,7 +720,7 @@ export const createAnnouncementActions = (
   ) => 
     updateWidget(widget => {
       const previousSettings = widget.mobileSettings
-        ?? announcementWidgetDefaults.mobileSettings
+        ?? eventTimerWidgetDefaults.mobileSettings
 
       return {
         ...widget,
@@ -750,7 +735,7 @@ export const createAnnouncementActions = (
   ) => 
     updateWidget(widget => {
       const previousSettings = widget.mobileSettings
-        ?? announcementWidgetDefaults.mobileSettings
+        ?? eventTimerWidgetDefaults.mobileSettings
 
       return {
         ...widget,
@@ -765,7 +750,7 @@ export const createAnnouncementActions = (
   ) => 
     updateWidget(widget => {
       const previousSettings = widget.mobileSettings
-        ?? announcementWidgetDefaults.mobileSettings
+        ?? eventTimerWidgetDefaults.mobileSettings
 
       return {
         ...widget,
@@ -780,7 +765,7 @@ export const createAnnouncementActions = (
   ) => 
     updateWidget(widget => {
       const previousSettings = widget.mobileSettings
-        ?? announcementWidgetDefaults.mobileSettings
+        ?? eventTimerWidgetDefaults.mobileSettings
 
       return {
         ...widget,
@@ -802,7 +787,7 @@ export const createAnnouncementActions = (
     }),
   resetAnnouncementColors: () =>
     updateWidget(widget => {
-      const defaults = buildAnnouncementWidgetSettings()
+      const defaults = buildEventTimerWidgetSettings()
       return {
         ...widget,
         appearence: {

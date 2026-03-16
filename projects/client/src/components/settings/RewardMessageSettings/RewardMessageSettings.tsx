@@ -8,8 +8,15 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
+import type {
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
 
-const RewardMessageSettings = () => {
+type RewardMessageSettingssProps = {
+  defaults: AnnouncementWidgetType | EventTimertWidgetType
+}
+
+const RewardMessageSettings = (props: RewardMessageSettingssProps) => {
   const {
     rewardScreenEnabled,
 
@@ -35,31 +42,49 @@ const RewardMessageSettings = () => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const settings = (s.settings?.widget as AnnouncementWidgetType)
+      const settings =
+        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
         .rewardMessageSettings
+      const defaults = props.defaults.rewardMessageSettings
       
       return {
-        rewardScreenEnabled: settings.rewardScreenEnabled,
+        rewardScreenEnabled: settings.rewardScreenEnabled
+          ?? defaults.rewardScreenEnabled,
 
-        title: settings.title,
-        titleFontSize: settings.titleFontSize,
-        titleFontColor: settings.titleFontColor,
+        title: settings.title
+          ?? defaults.title,
+        titleFontSize: settings.titleFontSize
+          ?? defaults.titleFontSize,
+        titleFontColor: settings.titleFontColor
+          ?? defaults.titleFontColor,
 
-        description: settings.description,
-        descriptionFontSize: settings.descriptionFontSize,
-        descriptionFontColor: settings.descriptionFontColor,
+        description: settings.description
+          ?? defaults.description,
+        descriptionFontSize: settings.descriptionFontSize
+          ?? defaults.descriptionFontSize,
+        descriptionFontColor: settings.descriptionFontColor
+          ?? defaults.descriptionFontColor,
 
-        discount: settings.discount,
-        discountFontSize: settings.discountFontSize,
-        discountFontColor: settings.discountFontColor,
+        discount: settings.discount
+          ?? defaults.discount,
+        discountFontSize: settings.discountFontSize
+          ?? defaults.discountFontSize,
+        discountFontColor: settings.discountFontColor
+          ?? defaults.discountFontColor,
 
-        promo: settings.promo,
-        promoFontSize: settings.promoFontSize,
-        promoFontColor: settings.promoFontColor,
+        promo: settings.promo
+          ?? defaults.promo,
+        promoFontSize: settings.promoFontSize
+          ?? defaults.promoFontSize,
+        promoFontColor: settings.promoFontColor
+          ?? defaults.promoFontColor,
 
-        customColorSchemeEnabled: settings.customColorSchemeEnabled,
-        customDiscountBackgroundColor: settings.customDiscountBackgroundColor,
-        customPromoBackgroundColor: settings.customPromoBackgroundColor,
+        customColorSchemeEnabled: settings.customColorSchemeEnabled
+          ?? defaults.customColorSchemeEnabled,
+        customDiscountBackgroundColor: settings.customDiscountBackgroundColor
+          ?? defaults.customDiscountBackgroundColor,
+        customPromoBackgroundColor: settings.customPromoBackgroundColor
+          ?? defaults.customPromoBackgroundColor,
       }
     })
   )

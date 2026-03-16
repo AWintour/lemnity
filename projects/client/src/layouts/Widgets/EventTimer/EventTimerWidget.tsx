@@ -10,11 +10,13 @@ import { cn } from '@heroui/theme'
 import SvgIcon from '@/components/SvgIcon'
 import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
 import CountdownScreen from './CountdownScreen'
-import CountdownRewardScreen from './CountdownRewardScreen'
-import CountdownFormScreen, { type CountdownForm } from './CountdownFormScreen'
+import { RewardScreen } from '@/components'
+import EventTimerFormScreen, {
+  type CountdownForm,
+} from './EventTimerFormScreen'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from './utils/useUrlImage'
+import useUrlImageOrDefault from '../../../hooks/useUrlImage'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
 import { useMobileContext } from './embedded/MobileContext'
@@ -23,6 +25,7 @@ import crossIcon from '@/assets/icons/cross.svg'
 import type {
   EventTimertWidgetType,
 } from '@lemnity/widget-config/widgets/event-timer'
+import { eventTimerWidgetDefaults } from './defaults'
 
 export type EventTimerWidgetVariant = 'countdown' | 'form' | 'reward'
 
@@ -125,14 +128,15 @@ const EventTimerWidget = (
         />
       )}
       {props.variant === 'form' && (
-        <CountdownFormScreen
+        <EventTimerFormScreen
           companyLogoEnabled={companyLogoEnabled}
           companyLogo={companyLogo}
           onFormScreenButtonPress={props.onFormScreenButtonPress}
         />
       )}
       {props.variant === 'reward' && (
-        <CountdownRewardScreen
+        <RewardScreen
+          defaults={eventTimerWidgetDefaults.rewardMessageSettings} 
           companyLogoEnabled={companyLogoEnabled}
           companyLogo={companyLogo}
         />

@@ -4,9 +4,11 @@ import { cn } from '@heroui/theme'
 import { Button } from '@heroui/button'
 import { DateTime } from 'luxon'
 
-import CompanyLogo from './CompanyLogo'
-import CountdownTimer from '@/components/CountdownTimer'
-import { BrTagsOnNewlines } from './utils/BrTagsOnNewlines'
+import {
+  CompanyLogo,
+  CountdownTimer,
+  BrTagsOnNewlines,
+} from '@/components'
 import * as Icons from '@/components/Icons'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
@@ -15,6 +17,7 @@ import { getFontWeightClass } from './utils/getFontWeightClass'
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
+import { eventTimerWidgetDefaults } from './defaults'
 
 type CountdownScreenProps = {
   companyLogoEnabled: boolean
@@ -51,25 +54,56 @@ const CountdownScreen = (props: CountdownScreenProps) => {
       const rewardSettings = widget.rewardMessageSettings
 
       return {
-        title: infoSettings.title,
-        titleFontWeight: infoSettings.titleFontWeight,
-        titleColor: infoSettings.titleColor,
-        description: infoSettings.description,
-        descriptionFontWeight: infoSettings.descriptionFontWeight,
-        descriptionColor: infoSettings.descriptionColor,
+        title: infoSettings.title
+          ?? eventTimerWidgetDefaults.infoSettings.title,
+        titleFontWeight: infoSettings.titleFontWeight
+          ?? eventTimerWidgetDefaults.infoSettings.titleFontWeight,
+        titleColor:
+          infoSettings.titleColor && infoSettings.titleColor.length > 0
+            ? infoSettings.titleColor
+            : eventTimerWidgetDefaults.infoSettings.titleColor,
+        description: infoSettings.description
+          ?? eventTimerWidgetDefaults.infoSettings.description,
+        descriptionFontWeight: infoSettings.descriptionFontWeight
+          ?? eventTimerWidgetDefaults.infoSettings.descriptionFontWeight,
+        descriptionColor:
+          infoSettings.descriptionColor && infoSettings.descriptionColor
+            ? infoSettings.descriptionColor
+            : eventTimerWidgetDefaults.infoSettings.descriptionColor,
         
-        countdownEnabled: infoSettings.countdownEnabled,
-        countdownDate: infoSettings.countdownDate,
-        countdownBackgroundColor: infoSettings.countdownBackgroundColor,
-        countdownFontColor: infoSettings.countdownFontColor,
+        countdownEnabled: infoSettings.countdownEnabled
+          ?? eventTimerWidgetDefaults.infoSettings.countdownEnabled,
+        countdownDate: infoSettings.countdownDate
+          ?? eventTimerWidgetDefaults.infoSettings.countdownDate,
+        countdownBackgroundColor:
+          infoSettings.countdownBackgroundColor
+          && infoSettings.countdownBackgroundColor.length > 0
+            ? infoSettings.countdownBackgroundColor
+            : eventTimerWidgetDefaults.infoSettings.countdownBackgroundColor,
+        countdownFontColor:
+          infoSettings.countdownFontColor
+          && infoSettings.countdownFontColor.length > 0
+            ? infoSettings.countdownFontColor
+            : eventTimerWidgetDefaults.infoSettings.countdownFontColor,
 
-        buttonText: infoSettings.buttonText,
-        buttonFontColor: infoSettings.buttonFontColor,
-        buttonBackgroundColor: infoSettings.buttonBackgroundColor,
-        icon: infoSettings.icon,
-        link: infoSettings.link,
+        buttonText: infoSettings.buttonText
+          ?? eventTimerWidgetDefaults.infoSettings.buttonText,
+        buttonFontColor:
+          infoSettings.buttonFontColor && infoSettings.buttonFontColor.length > 0
+            ? infoSettings.buttonFontColor
+            : eventTimerWidgetDefaults.infoSettings.buttonFontColor,
+        buttonBackgroundColor:
+          infoSettings.buttonBackgroundColor
+          && infoSettings.buttonBackgroundColor.length > 0
+            ? infoSettings.buttonBackgroundColor
+            : eventTimerWidgetDefaults.infoSettings.buttonBackgroundColor,
+        icon: infoSettings.icon
+          ?? eventTimerWidgetDefaults.infoSettings.icon,
+        link: infoSettings.link
+          ?? eventTimerWidgetDefaults.infoSettings.link,
 
-        rewardScreenEnabled: rewardSettings.rewardScreenEnabled,
+        rewardScreenEnabled: rewardSettings.rewardScreenEnabled
+          ?? eventTimerWidgetDefaults.rewardMessageSettings.rewardScreenEnabled,
       }
     })
   )

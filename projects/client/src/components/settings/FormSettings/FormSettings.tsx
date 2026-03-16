@@ -10,9 +10,15 @@ import AgreementAndPolicy from '@/components/AgreementAndPolicy'
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from '../defaults'
+import type {
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
 
-const FormSettings = () => {
+type FormSettingsProps = {
+  defaults: AnnouncementWidgetType | EventTimertWidgetType
+}
+
+const FormSettings = (props: FormSettingsProps) => {
   const {
     title,
     titleFontColor,
@@ -32,25 +38,40 @@ const FormSettings = () => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const settings = (s.settings?.widget as AnnouncementWidgetType)
+      const settings =
+        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
         .formSettings
+      const defaults = props.defaults.formSettings
 
       return {
-        title: settings?.title,
-        titleFontColor: settings?.titleFontColor,
-        description: settings?.description,
-        descriptionFontColor: settings?.descriptionFontColor,
+        title: settings?.title
+          ?? defaults.title,
+        titleFontColor: settings?.titleFontColor
+          ?? defaults.titleFontColor,
+        description: settings?.description
+          ?? defaults.description,
+        descriptionFontColor: settings?.descriptionFontColor
+          ?? defaults.descriptionFontColor,
 
-        contactAcquisitionEnabled: settings?.contactAcquisitionEnabled,
-        nameFieldEnabled: settings?.nameFieldEnabled,
-        nameFieldRequired: settings?.nameFieldRequired,
-        emailFieldEnabled: settings?.emailFieldEnabled,
-        emailFieldRequired: settings?.emailFieldRequired,
-        phoneFieldEnabled: settings?.phoneFieldEnabled,
-        phoneFieldRequired: settings?.phoneFieldRequired,
+        contactAcquisitionEnabled: settings?.contactAcquisitionEnabled
+          ?? defaults.contactAcquisitionEnabled,
+        nameFieldEnabled: settings?.nameFieldEnabled
+          ?? defaults.nameFieldEnabled,
+        nameFieldRequired: settings?.nameFieldRequired
+          ?? defaults.nameFieldRequired,
+        emailFieldEnabled: settings?.emailFieldEnabled
+          ?? defaults.emailFieldEnabled,
+        emailFieldRequired: settings?.emailFieldRequired
+          ?? defaults.emailFieldRequired,
+        phoneFieldEnabled: settings?.phoneFieldEnabled
+          ?? defaults.phoneFieldEnabled,
+        phoneFieldRequired: settings?.phoneFieldRequired
+          ?? defaults.phoneFieldRequired,
 
-        agreement: settings?.agreement,
-        adsInfo: settings?.adsInfo,
+        agreement: settings?.agreement
+          ?? defaults.agreement,
+        adsInfo: settings?.adsInfo
+          ?? defaults.adsInfo,
       }
     })
   )
@@ -121,48 +142,36 @@ const FormSettings = () => {
   )
 
   return (
-    <div className="w-full min-w-85.5 flex flex-col gap-2.5">
-      <h1 className="text-[25px] leading-7.5 font-normal text-[#060606]">
+    <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
+      <h1 className='text-[25px] leading-7.5 font-normal text-[#060606]'>
         Форма данных
       </h1>
 
       <BorderedContainer>
-        <div className="w-full flex flex-col">
+        <div className='w-full flex flex-col'>
           <TextSettings
-            title="Заголовок"
-            text={
-              title
-              ?? announcementWidgetDefaults.formSettings!.title
-            }
+            title='Заголовок'
+            text={title}
             onTextChange={setFormScreenTitle}
             onFontWeightChange={setFormScreenTitleFontWeight}
-            textColor={
-              titleFontColor
-              ?? announcementWidgetDefaults.formSettings!.titleFontColor
-            }
+            textColor={titleFontColor}
             onColorChange={setFormScreenTitleFontColor}
-            placeholder="Укажите заголовок"
+            placeholder='Укажите заголовок'
           />
         </div>
       </BorderedContainer>
 
       <BorderedContainer>
-        <div className="w-full flex flex-col">
+        <div className='w-full flex flex-col'>
           <TextSettings
-            title="Описание"
-            text={
-              description
-              ?? announcementWidgetDefaults.formSettings!.description
-            }
+            title='Описание'
+            text={description}
             onTextChange={setFormScreenDescription}
             onFontWeightChange={setFormScreenDescriptionFontWeight}
-            textColor={
-              descriptionFontColor
-              ?? announcementWidgetDefaults.formSettings!.descriptionFontColor
-            }
+            textColor={descriptionFontColor}
             onColorChange={setFormScreenDescriptionFontColor}
             placeholder={
-              "Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ."
+              'Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ.'
             }
           />
         </div>
@@ -171,44 +180,23 @@ const FormSettings = () => {
       <ContactAcquisitionSettings
         contactAcquisitionEnabled={!!contactAcquisitionEnabled}
         onContactAcquisitionToggle={setFormScreenContactAcquisitionEnabled}
-        nameFieldEnabled={
-          nameFieldEnabled
-          ?? announcementWidgetDefaults.formSettings!.nameFieldEnabled
-        }
+        nameFieldEnabled={nameFieldEnabled}
         onNameFieldEnabledChange={setFormScreenNameFieldEnabled}
-        nameFieldRequired={
-          nameFieldRequired
-          ?? announcementWidgetDefaults.formSettings!.nameFieldRequired
-        }
+        nameFieldRequired={nameFieldRequired}
         onNameFieldRequiredChange={setFormScreenNameFieldRequired}
-        phoneFieldEnabled={
-          phoneFieldEnabled
-          ?? announcementWidgetDefaults.formSettings!.phoneFieldEnabled
-        }
+        phoneFieldEnabled={phoneFieldEnabled}
         onPhoneFieldEnabledChange={setFormScreenPhoneFieldEnabled}
-        phoneFieldRequired={
-          phoneFieldRequired
-          ?? announcementWidgetDefaults.formSettings!.phoneFieldRequired
-        }
+        phoneFieldRequired={phoneFieldRequired}
         onPhoneFieldRequiredChange={setFormScreenPhoneFieldRequired}
-        emailFieldEnabled={
-          emailFieldEnabled
-          ?? announcementWidgetDefaults.formSettings!.emailFieldEnabled
-        }
+        emailFieldEnabled={emailFieldEnabled}
         onEmailFieldEnabledChange={setFormScreenEmailFieldEnabled}
-        emailFieldRequired={
-          emailFieldRequired
-          ?? announcementWidgetDefaults.formSettings!.emailFieldRequired
-        }
+        emailFieldRequired={emailFieldRequired}
         onEmailFieldRequiredChange={setFormScreenEmailFieldRequired}
       />
       
       <AgreementAndPolicy
         errorPath=''
-        agreement={
-          agreement
-          ?? announcementWidgetDefaults.formSettings!.agreement
-        }
+        agreement={agreement}
         onToggle={setAgreementEnabled}
         onFontColorChange={setAgreementColor}
         onAgreementUrlChange={setAgreementUrl}
@@ -217,10 +205,7 @@ const FormSettings = () => {
       
       <AgreementAndPolicy
         errorPath=''
-        agreement={
-          adsInfo
-          ?? announcementWidgetDefaults.formSettings!.adsInfo
-        }
+        agreement={adsInfo}
         onToggle={setAdsInfoEnabled}
         onFontColorChange={setAdsInfoColor}
         onPolicyUrlChange={setAdsInfoPolicyUrl}

@@ -1,16 +1,16 @@
-import SwitchableField from '@/components/SwitchableField'
-import CustomRadioGroup, {
+import {
+  SwitchableField,
+  CustomRadioGroup,
   type CustomRadioGroupOption,
-} from '@/components/CustomRadioGroup'
-import ImageUploader from '@/components/ImageUploader'
+  ImageUploader,
+} from '@/components'
 
 import { uploadImage } from '@/api/upload'
 
 import type { MobileTrigger } from '@lemnity/widget-config/widgets/announcement'
 import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
-import useUrlImageOrDefault from './utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 
-// const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
 type MobileVersionSettingsProps = {
   enabled: boolean
   triggerType: MobileTrigger
@@ -36,7 +36,7 @@ const MobileVersionSettings = (props: MobileVersionSettingsProps) => {
     base64Image,
     // error,
     // isLoading,
-  } = useUrlImageOrDefault(props.imageUrl)
+  } = useUrlImage(props.imageUrl)
 
   const handleTriggerTypeChange = (value: string) => {
     props.onTriggerTypeChange(value as MobileTrigger)
@@ -59,7 +59,7 @@ const MobileVersionSettings = (props: MobileVersionSettingsProps) => {
       enabled={props.enabled}
       onToggle={props.onToggle}
     >
-      <div className="flex flex-col gap-2.5">
+      <div className='flex flex-col gap-2.5'>
         <CustomRadioGroup
           options={radioOptions}
           value={props.triggerType}
@@ -72,8 +72,8 @@ const MobileVersionSettings = (props: MobileVersionSettingsProps) => {
               <div className='w-full flex flex-row gap-3.75'>
                 <img
                   src={base64Image as string}
-                  alt="image"
-                  className="w-21.25 h-21.25 object-cover rounded-[5px]"
+                  alt='image'
+                  className='w-21.25 h-21.25 object-cover rounded-[5px]'
                 />
                 <div className='w-full flex flex-col gap-2.5'>
                   <span className='text-[16px] leading-4.75'>
@@ -85,8 +85,8 @@ const MobileVersionSettings = (props: MobileVersionSettingsProps) => {
                     hidePreview
                     noBorder
                     noPadding
-                    recommendedResolution="600x600"
-                    fileSize="До 25 Mb"
+                    recommendedResolution='600x600'
+                    fileSize='До 25 Mb'
                     formats={['png', 'jpeg', 'jpg', 'webp']}
                     url={props.imageUrl || ''}
                     onFileSelect={handleImageUpload}

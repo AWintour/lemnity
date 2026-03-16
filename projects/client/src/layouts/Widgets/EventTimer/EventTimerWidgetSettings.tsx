@@ -1,48 +1,49 @@
 import { useShallow } from 'zustand/react/shallow'
 
-import RewardMessageSettings from './RewardMessageSettings'
-import InfoSettings from './InfoSettings'
-import FormSettings from './FormSettings'
-import WidgetAppearanceSettings from './WidgetAppearanceSettings'
+import {
+  WidgetAppearanceSettings,
+  FormSettings,
+  InfoSettings,
+  RewardMessageSettings,
+} from '@/components/settings'
 import DisableBranding from '@/layouts/WidgetSettings/FieldsSettingsTab/DisableBranding/DisableBranding'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
 import MobileVersionSettings from './MobileVersionSettings'
-import { announcementWidgetDefaults } from './defaults'
+import { eventTimerWidgetDefaults } from './defaults'
 
-const AnnouncementWidgetSettings = () => {
+const EventTimerWidgetSettings = () => {
   const {
-    format,
-
     mobileEnabled,
     triggerType,
     imageUrl,
     triggerText,
     triggerFontColor,
     triggerBackgroundColor,
-
     brandingEnabled,
   } = useWidgetSettingsStore(
     useShallow(s => {
       const widget = s.settings?.widget as AnnouncementWidgetType
-      const appearence = widget.appearence
       const mobile = widget.mobileSettings
-      const defaults = announcementWidgetDefaults.mobileSettings
+      const defaults = eventTimerWidgetDefaults.mobileSettings
 
       return {
-        format: appearence.format,
-
-        mobileEnabled: mobile?.mobileEnabled ?? defaults.mobileEnabled,
-        triggerType: mobile?.triggerType ?? defaults.triggerType,
-        imageUrl: mobile?.imageUrl ?? defaults.imageUrl,
-        triggerText: mobile?.triggerText ?? defaults.triggerText,
-        triggerFontColor: mobile?.triggerFontColor ?? defaults.triggerFontColor,
+        mobileEnabled: mobile?.mobileEnabled
+          ?? defaults.mobileEnabled,
+        triggerType: mobile?.triggerType
+          ?? defaults.triggerType,
+        imageUrl: mobile?.imageUrl
+          ?? defaults.imageUrl,
+        triggerText: mobile?.triggerText
+          ?? defaults.triggerText,
+        triggerFontColor: mobile?.triggerFontColor
+          ?? defaults.triggerFontColor,
         triggerBackgroundColor: mobile?.triggerBackgroundColor
           ?? defaults.triggerBackgroundColor,
-
         brandingEnabled: widget.brandingEnabled,
       }
     })
@@ -72,11 +73,11 @@ const AnnouncementWidgetSettings = () => {
   )
 
   return (
-    <div className="w-full px-4.75 flex flex-col gap-2.5">
+    <div className='w-full px-4.75 flex flex-col gap-2.5'>
       <WidgetAppearanceSettings />
-      <InfoSettings />
-      {format === 'countdown' && <FormSettings />}
-      <RewardMessageSettings />
+      <InfoSettings defaults={eventTimerWidgetDefaults} variant='countdown' />
+      <FormSettings defaults={eventTimerWidgetDefaults} />
+      <RewardMessageSettings defaults={eventTimerWidgetDefaults} />
       <MobileVersionSettings
         enabled={mobileEnabled}
         triggerType={triggerType}
@@ -101,4 +102,4 @@ const AnnouncementWidgetSettings = () => {
   )
 }
 
-export default AnnouncementWidgetSettings
+export default EventTimerWidgetSettings

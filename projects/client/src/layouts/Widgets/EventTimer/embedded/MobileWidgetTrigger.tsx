@@ -1,12 +1,10 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, HTMLProps } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@heroui/button'
 import { cn } from '@heroui/theme'
 
-import Widget, { type WidgetProps } from './Widget'
-
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from '../utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 import { useMobileContext } from './MobileContext'
 
 import type {
@@ -14,7 +12,9 @@ import type {
 } from '@lemnity/widget-config/widgets/event-timer'
 import { eventTimerWidgetDefaults } from '../defaults'
 
-const MobileWidgetTrigger = ({ ref, ...props }: WidgetProps) => {
+type MobileWidgetTriggerProps = Pick<HTMLProps<HTMLElement>, 'children'>
+
+const MobileWidgetTrigger = (props: MobileWidgetTriggerProps) => {
   const {
     imageUrl,
     triggerType,
@@ -23,7 +23,11 @@ const MobileWidgetTrigger = ({ ref, ...props }: WidgetProps) => {
     triggerBackgroundColor,
   } = useWidgetSettingsStore(
     useShallow(s => {
-      const widget = s.settings?.widget as EventTimertWidgetType
+      // i hope i will replace the whole state system
+      // with something better than this =w=
+      // why do i have to do this
+      // how did you make enough abstractions that nothing works anymore
+      const widget = (s.settings?.widget as EventTimertWidgetType)
       const defaults = eventTimerWidgetDefaults.mobileSettings
 
       return {
@@ -45,7 +49,7 @@ const MobileWidgetTrigger = ({ ref, ...props }: WidgetProps) => {
     base64Image,
     // error,
     isLoading,
-  } = useUrlImageOrDefault(imageUrl)
+  } = useUrlImage(imageUrl)
 
   const mobileContext = useMobileContext()
 
@@ -108,13 +112,7 @@ const MobileWidgetTrigger = ({ ref, ...props }: WidgetProps) => {
             'bg-black/20 backdrop-blur-sm',
           )}
         >
-          <Widget
-            ref={ref}
-            variant={props.variant}
-            focused={props.focused}
-            onCountdownScreenButtonPress={props.onCountdownScreenButtonPress}
-            onFormScreenButtonPress={props.onFormScreenButtonPress}
-          />
+          {props.children}
         </div>
       )}
     </div>

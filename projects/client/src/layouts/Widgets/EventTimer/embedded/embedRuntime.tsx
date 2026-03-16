@@ -15,7 +15,7 @@ import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import type {
   EventTimertWidgetType,
 } from '@lemnity/widget-config/widgets/event-timer'
-import type { CountdownForm } from '../CountdownFormScreen'
+import type { CountdownForm } from '../EventTimerFormScreen'
 import { type EventTimerWidgetVariant } from '../EventTimerWidget'
 import { MobileProvider } from './MobileContext'
 
@@ -23,9 +23,7 @@ type EmbedRuntimeProps = {
   isPreview?: boolean
 }
 
-export const CountdownAnnouncementEmbedRuntime = (
-  props: EmbedRuntimeProps
-) => {
+const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
   const {
     widgetId,
     projectId,
@@ -140,13 +138,15 @@ export const CountdownAnnouncementEmbedRuntime = (
     <>
       {isMobile
         ? <MobileProvider>
-            <MobileWidgetTrigger
-              ref={widgetRef}
-              variant={countdownVariant}
-              focused={focused}
-              onCountdownScreenButtonPress={handleCountdownScreenButtonPress}
-              onFormScreenButtonPress={handleFormScreenButtonPress}
-            />
+            <MobileWidgetTrigger>
+              <Widget
+                ref={widgetRef}
+                variant={countdownVariant}
+                focused={focused}
+                onCountdownScreenButtonPress={handleCountdownScreenButtonPress}
+                onFormScreenButtonPress={handleFormScreenButtonPress}
+              />
+            </MobileWidgetTrigger>
           </MobileProvider>
         : <DesktopWidgetTrigger
             widgetRef={widgetRef}
@@ -168,4 +168,4 @@ export const CountdownAnnouncementEmbedRuntime = (
   )
 }
 
-export default CountdownAnnouncementEmbedRuntime
+export default EventTimerEmbedRuntime

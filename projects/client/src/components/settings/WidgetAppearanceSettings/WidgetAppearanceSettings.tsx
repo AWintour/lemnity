@@ -1,19 +1,17 @@
 import { useShallow } from 'zustand/react/shallow'
 
-import WidgetType from './WidgetType'
 import WidgetBackgroundColor from './WidgetBackgroundColor'
 import WidgetBorderRadius from './WidgetBorderRadius'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from '../defaults'
+import { announcementWidgetDefaults } from '../../../layouts/Widgets/Announcement/defaults'
 import CompanyLogo from './CompanyLogo'
 import type { ColorScheme } from '@lemnity/widget-config/widgets/base'
 
 const WidgetAppearanceSettings = () => {
   const {
-    format,
     companyLogoEnabled,
     companyLogoUrl,
     colorScheme,
@@ -24,7 +22,6 @@ const WidgetAppearanceSettings = () => {
       // a crutch because the store just works this way apparently
       const settings = (s.settings?.widget as AnnouncementWidgetType).appearence
       return  {
-        format: settings.format,
         companyLogoEnabled: settings.companyLogoEnabled,
         companyLogoUrl: settings.companyLogoUrl,
         colorScheme: settings.colorScheme,
@@ -34,9 +31,6 @@ const WidgetAppearanceSettings = () => {
     })
   )
   
-  const setWidgetFormat = useWidgetSettingsStore(
-    s => s.setAnnouncementWidgetFormat
-  )
   const setCompanyLogoEnabled = useWidgetSettingsStore(
     s => s.setAnnouncementCompanyLogoEnabled
   )
@@ -77,10 +71,6 @@ const WidgetAppearanceSettings = () => {
         Оформление
       </h1>
 
-      <WidgetType
-        format={format}
-        onWidgetFormatChange={setWidgetFormat}
-      />
       <CompanyLogo
         enabled={companyLogoEnabled}
         logoUrl={companyLogoUrl}

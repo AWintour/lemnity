@@ -2,48 +2,48 @@ import { type CSSProperties } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
-import { AnnouncementPreview, CountdownPreview } from './Preview'
+import EventTimerPreview from './EventTimerPreview'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from './utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 
 import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from './defaults'
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
+import { eventTimerWidgetDefaults } from './defaults'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
 
 const WidgetPreview = () => {
   const {
-    format,
     colorScheme,
     backgroundColor,
     borderRadius,
-
-    contentType,
-    contentAlignment,
+    contentEnabled,
     contentUrl,
-
     rewardScreenEnabled,
   } = useWidgetSettingsStore(
     useShallow(s => {
-      const widget = s.settings?.widget as AnnouncementWidgetType
+      const widget = s.settings?.widget as EventTimertWidgetType
       const appearence = widget.appearence
       const rewardMessageSettings = widget.rewardMessageSettings
       const infoSettings = widget.infoSettings
 
       return {
-        format: appearence.format,
-        colorScheme: appearence.colorScheme,
-        backgroundColor: appearence.backgroundColor,
-        borderRadius: appearence.borderRadius,
-
-        contentType: infoSettings.contentType,
-        contentAlignment: infoSettings.contentAlignment,
-        contentUrl: infoSettings.contentUrl,
-
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
+        colorScheme: appearence.colorScheme
+          ?? eventTimerWidgetDefaults.appearence.colorScheme,
+        backgroundColor:
+          appearence.backgroundColor && appearence.backgroundColor.length > 0
+            ? appearence.backgroundColor
+            : eventTimerWidgetDefaults.appearence.backgroundColor,
+        borderRadius: appearence.borderRadius
+          ?? eventTimerWidgetDefaults.appearence.borderRadius,
+        contentEnabled: infoSettings.contentEnabled
+          ?? eventTimerWidgetDefaults.infoSettings.contentEnabled,
+        contentUrl: infoSettings.contentUrl
+          ?? eventTimerWidgetDefaults.infoSettings.contentUrl,
+        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
+          ?? eventTimerWidgetDefaults.rewardMessageSettings.rewardScreenEnabled,
       }
     })
   )
@@ -52,26 +52,22 @@ const WidgetPreview = () => {
     base64Image: contentBase64Image,
     // error,
     isLoading,
-  } = useUrlImageOrDefault(contentUrl)
+  } = useUrlImage(contentUrl)
 
   const containerStyle: CSSProperties = {
     backgroundColor: colorScheme === 'primary'
-      ? format === 'announcement' ? '#FFFFFF' : '#725DFF'
-      : backgroundColor && backgroundColor.length !== 0
-          ? backgroundColor
-          : announcementWidgetDefaults.appearence.backgroundColor,
-    borderRadius: borderRadius
-      ?? announcementWidgetDefaults.appearence.borderRadius,
+      ? '#725DFF'
+      : backgroundColor,
+    borderRadius: borderRadius,
   }
 
   const backgroundImage = contentUrl && !isLoading
     ? contentBase64Image as string
     : noBackgroundImageUrl
 
-  if (contentType === 'background') {
+  if (contentEnabled) {
     containerStyle.backgroundImage = `url('${backgroundImage}')`
     containerStyle.backgroundSize = 'cover'
-    containerStyle.backgroundPosition = contentAlignment
   }
 
   const previewWidgetCardStyle = cn(
@@ -82,20 +78,11 @@ const WidgetPreview = () => {
 
   return (
     <div className='w-full h-full flex flex-col overflow-auto select-none'>
-      {format === 'announcement' && (
-        <AnnouncementPreview
-          className={previewWidgetCardStyle}
-          rewardScreenEnabled={rewardScreenEnabled}
-        />
-      )}
-
-      {format === 'countdown' && (
-        <CountdownPreview
-          className={previewWidgetCardStyle}
-          rewardScreenEnabled={rewardScreenEnabled}
-          containerStyle={containerStyle}
-        />
-      )}
+      <EventTimerPreview
+        className={previewWidgetCardStyle}
+        rewardScreenEnabled={rewardScreenEnabled}
+        containerStyle={containerStyle}
+      />
     </div>
   )
 }

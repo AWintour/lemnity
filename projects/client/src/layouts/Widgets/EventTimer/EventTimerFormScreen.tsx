@@ -7,16 +7,18 @@ import { Checkbox } from '@heroui/checkbox'
 import { Input } from '@heroui/input'
 import { cn } from '@heroui/theme'
 
-import CompanyLogo from './CompanyLogo'
-import { BrTagsOnNewlines } from './utils/BrTagsOnNewlines'
+import {
+  CompanyLogo,
+  BrTagsOnNewlines,
+} from '@/components'
 import * as Icons from '@/components/Icons'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { getFontWeightClass } from './utils/getFontWeightClass'
 
 import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
 
 export type CountdownForm = {
   name: string
@@ -37,7 +39,7 @@ type CountdownFormScreenProps = {
   onFormScreenButtonPress?: (formData: CountdownForm) => void
 }
 
-const CountdownFormScreen = (props: CountdownFormScreenProps) => {
+const EventTimerFormScreen = (props: CountdownFormScreenProps) => {
   const {
     buttonText,
     buttonFontColor,
@@ -64,7 +66,7 @@ const CountdownFormScreen = (props: CountdownFormScreenProps) => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const widget = s.settings?.widget as AnnouncementWidgetType
+      const widget = s.settings?.widget as EventTimertWidgetType
       const infoSettings = widget.infoSettings
       const formSettings = widget.formSettings
 
@@ -380,4 +382,4 @@ const CountdownFormScreen = (props: CountdownFormScreenProps) => {
   )
 }
 
-export default CountdownFormScreen
+export default EventTimerFormScreen

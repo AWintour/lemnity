@@ -3,23 +3,27 @@ import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
 import CompanyLogo from './CompanyLogo'
-import { BrTagsOnNewlines } from './utils/BrTagsOnNewlines'
+import { BrTagsOnNewlines } from './BrTagsOnNewlines'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { getFontWeightClass } from './utils/getFontWeightClass'
+import { getFontWeightClass } from '../layouts/Widgets/EventTimer/utils/getFontWeightClass'
 
 import type {
   AnnouncementWidgetType,
+  RewardMessageSettings,
 } from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from './defaults'
+import type {
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
 
-type CountdownRewardScreenProps = {
+type RewardScreenProps = {
   isAnnouncement?: boolean
+  defaults: RewardMessageSettings
   companyLogoEnabled?: boolean
   companyLogo?: string
 }
 
-const CountdownRewardScreen = (props: CountdownRewardScreenProps) => {
+const RewardScreen = (props: RewardScreenProps) => {
   const {
     title,
     titleFontSize,
@@ -47,67 +51,83 @@ const CountdownRewardScreen = (props: CountdownRewardScreenProps) => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const settings = (s.settings?.widget as AnnouncementWidgetType)
+      const settings =
+        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
         .rewardMessageSettings
 
       return  {
-        title: settings.title,
-        titleFontSize: settings.titleFontSize,
-        titleFontWeight: settings.titleFontWeight,
-        titleFontColor: settings.titleFontColor,
+        title: settings.title
+          ?? props.defaults.title,
+        titleFontSize: settings.titleFontSize
+          ?? props.defaults.titleFontSize,
+        titleFontWeight: settings.titleFontWeight
+          ?? props.defaults.titleFontWeight,
+        titleFontColor:
+          settings.titleFontColor && settings.titleFontColor.length > 0
+            ? settings.titleFontColor
+            : props.defaults.titleFontColor,
         
-        description: settings.description,
-        descriptionFontSize: settings.descriptionFontSize,
-        descriptionFontWeight: settings.descriptionFontWeight,
-        descriptionFontColor: settings.descriptionFontColor,
+        description: settings.description
+          ?? props.defaults.description,
+        descriptionFontSize: settings.descriptionFontSize
+          ?? props.defaults.descriptionFontWeight,
+        descriptionFontWeight: settings.descriptionFontWeight
+          ?? props.defaults.descriptionFontWeight,
+        descriptionFontColor:
+          settings.descriptionFontColor && settings.descriptionFontColor.length > 0
+            ? settings.descriptionFontColor
+            : props.defaults.descriptionFontColor,
 
-        discount: settings.discount,
-        discountFontSize: settings.discountFontSize,
-        discountFontWeight: settings.discountFontWeight,
-        discountFontColor: settings.discountFontColor,
+        discount: settings.discount
+          ?? props.defaults.discount,
+        discountFontSize: settings.discountFontSize
+          ?? props.defaults.discountFontSize,
+        discountFontWeight: settings.discountFontWeight
+          ?? props.defaults.discountFontWeight,
+        discountFontColor:
+          settings.discountFontColor && settings.discountFontColor.length > 0
+            ? settings.discountFontColor
+            : props.defaults.discountFontColor,
 
-        promo: settings.promo,
-        promoFontSize: settings.promoFontSize,
-        promoFontWeight: settings.promoFontWeight,
-        promoFontColor: settings.promoFontColor,
+        promo: settings.promo
+          ?? props.defaults.promo,
+        promoFontSize: settings.promoFontSize
+          ?? props.defaults.promoFontSize,
+        promoFontWeight: settings.promoFontWeight
+          ?? props.defaults.promoFontWeight,
+        promoFontColor:
+          settings.promoFontColor && settings.promoFontColor.length > 0
+            ? settings.promoFontColor
+            : props.defaults.promoFontColor,
 
-        customColorSchemeEnabled:settings.customColorSchemeEnabled,
-        customDiscountBackgroundColor: settings.customDiscountBackgroundColor,
-        customPromoBackgroundColor: settings.customPromoBackgroundColor,
+        customColorSchemeEnabled: settings.customColorSchemeEnabled
+          ?? props.defaults.customColorSchemeEnabled,
+        customDiscountBackgroundColor: settings.customDiscountBackgroundColor
+          ?? props.defaults.customPromoBackgroundColor,
+        customPromoBackgroundColor: settings.customPromoBackgroundColor
+          ?? props.defaults.customPromoBackgroundColor,
       }
     })
   )
 
   const titleStyle: CSSProperties = {
-    fontSize: titleFontSize
-      ?? announcementWidgetDefaults.rewardMessageSettings.titleFontSize,
-    color: titleFontColor && titleFontColor.length > 0
-      ? titleFontColor
-      : announcementWidgetDefaults.rewardMessageSettings.titleFontColor,
+    fontSize: titleFontSize,
+    color: titleFontColor,
   }
 
   const descriptionStyle: CSSProperties = {
-    fontSize: descriptionFontSize
-      ?? announcementWidgetDefaults.rewardMessageSettings.descriptionFontSize,
-    color: descriptionFontColor && descriptionFontColor.length > 0
-      ? descriptionFontColor
-      : announcementWidgetDefaults.rewardMessageSettings.descriptionFontColor,
+    fontSize: descriptionFontSize,
+    color: descriptionFontColor,
   }
 
   const discountStyle: CSSProperties = {
-    fontSize: discountFontSize
-      ?? announcementWidgetDefaults.rewardMessageSettings.discountFontSize,
-    color: discountFontColor && discountFontColor.length > 0
-      ? discountFontColor
-      : announcementWidgetDefaults.rewardMessageSettings.discountFontColor,
+    fontSize: discountFontSize,
+    color: discountFontColor,
   }
 
   const promoStyle: CSSProperties = {
-    fontSize: promoFontSize
-      ?? announcementWidgetDefaults.rewardMessageSettings.promoFontSize,
-    color: promoFontColor && promoFontColor.length > 0
-      ? promoFontColor
-      : announcementWidgetDefaults.rewardMessageSettings.promoFontColor,
+    fontSize: promoFontSize,
+    color: promoFontColor,
   }
 
   return (
@@ -217,4 +237,4 @@ const CountdownRewardScreen = (props: CountdownRewardScreenProps) => {
   )
 }
 
-export default CountdownRewardScreen
+export default RewardScreen

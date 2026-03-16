@@ -7,6 +7,7 @@ import { FABMenuEmbedRuntime } from '@/layouts/Widgets/FABMenu/embedRuntime'
 import { WheelEmbedRuntime } from '@/layouts/Widgets/WheelOfFortune/embedRuntime'
 import { ActionTimerEmbedRuntime } from '@/layouts/Widgets/CountDown/embedRuntime'
 import { CountdownAnnouncementEmbedRuntime } from '@/layouts/Widgets/Announcement/embedded'
+import EventTimerEmbedRuntime from '@/layouts/Widgets/EventTimer/embedded/embedRuntime'
 import NotificationEmbedRuntime from '@/layouts/Widgets/Notification/embedded/embedRuntime'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { InitOptions } from './types'
@@ -26,6 +27,8 @@ const EmbedRuntime = ({ widgetType }: { widgetType: WidgetTypeEnum }) => {
       return <ActionTimerEmbedRuntime />
     case WidgetTypeEnum.ANNOUNCEMENT:
       return <CountdownAnnouncementEmbedRuntime />
+    case WidgetTypeEnum.EVENT_TIMER:
+      return <EventTimerEmbedRuntime />
     case WidgetTypeEnum.NOTIFICATION:
       return <NotificationEmbedRuntime />
     default:

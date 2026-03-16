@@ -1,2 +1,0 @@
-import WidgetAppearanceSettings from './WidgetAppearanceSettings'
-export default WidgetAppearanceSettings

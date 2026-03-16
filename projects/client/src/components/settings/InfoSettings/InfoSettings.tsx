@@ -1,27 +1,35 @@
 import { cn } from '@heroui/theme'
 import { Input } from '@heroui/input'
 import { useShallow } from 'zustand/react/shallow'
-
-import ContentSettings from '../WidgetAppearanceSettings/ContentSettings'
-import TextSettings from '@/components/TextSettings'
-import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
-import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from '../defaults'
-
-import CountdownSettings from './CountdownSettings'
 import {
   parseAbsoluteToLocal,
   ZonedDateTime,
 } from '@internationalized/date'
 
-const InfoSettings = () => {
-  const {
-    format,
+import { ContentSettings } from '../'
+import CountdownSettings from './CountdownSettings'
+import TextSettings from '@/components/TextSettings'
+import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
+import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
 
+import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+
+import type {
+  AnnouncementWidgetType,
+  Content,
+  ContentAlignment,
+} from '@lemnity/widget-config/widgets/announcement'
+import type {
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
+
+type InfoSettingsProps = {
+  variant: 'countdown' | 'announcement'
+  defaults: AnnouncementWidgetType | EventTimertWidgetType
+}
+
+const InfoSettings =(props: InfoSettingsProps) => {
+  const {
     contentType,
     contentAlignment,
     contentUrl,
@@ -44,31 +52,65 @@ const InfoSettings = () => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const widget = (s.settings?.widget as AnnouncementWidgetType)
+      const widget =
+        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
       const settings = widget.infoSettings
+      const defaults = props.defaults.infoSettings
+      
+      let contentType: Content = 'imageOnTop'
+      let contentAlignment: ContentAlignment = 'center'
+      if (props.variant === 'announcement') {
+        contentType =
+          (s.settings?.widget as AnnouncementWidgetType)
+            .infoSettings
+            .contentType
+          ?? (props.defaults as AnnouncementWidgetType)
+            .infoSettings
+            .contentType
+        contentAlignment =
+          (s.settings?.widget as AnnouncementWidgetType)
+            .infoSettings
+            .contentAlignment
+          ?? (props.defaults as AnnouncementWidgetType)
+            .infoSettings
+            .contentAlignment!
+      }
 
       return {
-        format: widget.appearence.format,
+        contentType: contentType,
+        contentAlignment: contentAlignment,
 
-        contentType: settings.contentType,
-        contentAlignment: settings.contentAlignment,
-        contentUrl: settings.contentUrl,
+        contentUrl: settings.contentUrl
+          ?? defaults.contentUrl,
 
-        title: settings?.title,
-        titleColor: settings?.titleColor,
-        description: settings?.description,
-        descriptionColor: settings?.descriptionColor,
+        title: settings?.title
+          ?? defaults.title,
+        titleColor: settings?.titleColor
+          ?? defaults.titleColor,
+        description: settings?.description
+          ?? defaults.description,
+        descriptionColor: settings?.descriptionColor
+          ?? defaults.descriptionColor,
 
-        countdownEnabled: settings?.countdownEnabled,
-        countdownDate: settings?.countdownDate,
-        countdownFontColor: settings?.countdownFontColor,
-        countdownBackgroundColor: settings?.countdownBackgroundColor,
+        countdownEnabled: settings?.countdownEnabled
+          ?? defaults.countdownEnabled,
+        countdownDate: settings?.countdownDate
+          ?? defaults.countdownDate,
+        countdownFontColor: settings?.countdownFontColor
+          ?? defaults.countdownFontColor,
+        countdownBackgroundColor: settings?.countdownBackgroundColor
+          ?? defaults.countdownBackgroundColor,
         
-        buttonText: settings?.buttonText,
-        buttonFontColor: settings?.buttonFontColor,
-        buttonBackgroundColor: settings?.buttonBackgroundColor,
-        icon: settings?.icon,
-        link: settings?.link,
+        buttonText: settings?.buttonText
+          ?? defaults.buttonText,
+        buttonFontColor: settings?.buttonFontColor
+          ?? defaults.buttonFontColor,
+        buttonBackgroundColor: settings?.buttonBackgroundColor
+          ?? defaults.buttonBackgroundColor,
+        icon: settings?.icon
+          ?? defaults.icon,
+        link: settings?.link
+          ?? defaults.link,
       }
     })
   )
@@ -139,13 +181,13 @@ const InfoSettings = () => {
   }
 
   return (
-    <div className="w-full min-w-85.5 flex flex-col gap-2.5">
-      <h1 className="text-[25px] leading-7.5 font-normal text-[#060606]">
+    <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
+      <h1 className='text-[25px] leading-7.5 font-normal text-[#060606]'>
         Окно информации
       </h1>
       
       <ContentSettings
-        format={format}
+        format={props.variant}
         contentType={contentType}
         contentAlignment={contentAlignment}
         contentUrl={contentUrl}
@@ -155,18 +197,12 @@ const InfoSettings = () => {
       />
 
       <BorderedContainer>
-        <div className="w-full flex flex-col">
+        <div className='w-full flex flex-col'>
           <TextSettings
-            text={
-              title
-              ?? announcementWidgetDefaults.infoSettings!.title
-            }
-            textColor={
-              titleColor
-              ?? announcementWidgetDefaults.infoSettings!.titleColor
-            }
-            title="Заголовок"
-            placeholder="Укажите заголовок"
+            text={title}
+            textColor={titleColor}
+            title='Заголовок'
+            placeholder='Укажите заголовок'
             onTextChange={setInfoScreenTitle}
             onFontWeightChange={setInfoScreenTitleFontWeight}
             onColorChange={setInfoScreenTitleColor}
@@ -175,19 +211,13 @@ const InfoSettings = () => {
       </BorderedContainer>
 
       <BorderedContainer>
-        <div className="w-full flex flex-col">
+        <div className='w-full flex flex-col'>
           <TextSettings
-            text={
-              description
-              ?? announcementWidgetDefaults.infoSettings!.description
-            }
-            textColor={
-              descriptionColor
-              ?? announcementWidgetDefaults.infoSettings!.descriptionColor
-            }
-            title="Описание"
+            text={description}
+            textColor={descriptionColor}
+            title='Описание'
             placeholder={
-              "Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ."
+              'Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ.'
             }
             onTextChange={setInfoScreenDescription}
             onFontWeightChange={setInfoScreenDescriptionFontWeight}
@@ -196,11 +226,8 @@ const InfoSettings = () => {
         </div>
       </BorderedContainer>
 
-      {format === 'countdown' &&  <CountdownSettings
-        enabled={
-          countdownEnabled
-          ?? announcementWidgetDefaults.infoSettings!.countdownEnabled
-        }
+      {props.variant === 'countdown' &&  <CountdownSettings
+        enabled={countdownEnabled}
         onToggle={setInfoScreenCountdownEnabled}
         date={
           countdownDate
@@ -208,49 +235,31 @@ const InfoSettings = () => {
             : parseAbsoluteToLocal(new Date().toISOString())
         }
         onDateChange={handleCountdownDateChange}
-        backgroundColor={
-          countdownBackgroundColor
-          ?? announcementWidgetDefaults.infoSettings!.countdownBackgroundColor
-        }
+        backgroundColor={countdownBackgroundColor}
         onBackgroundColorChange={setInfoScreenCountdownBackgroundColor}
-        fontColor={
-          countdownFontColor
-          ?? announcementWidgetDefaults.infoSettings!.countdownFontColor
-        }
+        fontColor={countdownFontColor}
         onFontColorChange={setInfoScreenCountdownFontColor}
       />}
 
       <BorderedContainer>
-        <div className="w-full flex flex-col gap-2.5">
-          <h2 className="text-[16px] leading-4.75">Кнопка</h2>
+        <div className='w-full flex flex-col gap-2.5'>
+          <h2 className='text-[16px] leading-4.75'>Кнопка</h2>
           <ButtonAppearenceSettings
             onTriggerTextChange={setInfoScreenButtonText}
             onTriggerIconChange={setInfoScreenButtonIcon}
             onFontColorChange={setInfoScreenButtonFontColor}
             onBackgroundColorChange={setInfoScreenButtonBackgroundColor}
             buttonText={buttonText}
-            buttonTextColor={
-              buttonFontColor
-              ?? announcementWidgetDefaults.infoSettings!.buttonFontColor
-            }
-            buttonBackgroundColor={
-              buttonBackgroundColor
-              ?? announcementWidgetDefaults.infoSettings!.buttonBackgroundColor
-            }
-            buttonIcon={
-              icon
-              ?? announcementWidgetDefaults.infoSettings!.icon
-            }
+            buttonTextColor={buttonFontColor}
+            buttonBackgroundColor={buttonBackgroundColor}
+            buttonIcon={icon}
           />
 
-          <h2 className="text-[16px] leading-4.75">Ссылка</h2>
+          <h2 className='text-[16px] leading-4.75'>Ссылка</h2>
             <Input
-              value={
-                link
-                ?? announcementWidgetDefaults.infoSettings!.link
-              }
+              value={link}
               onValueChange={setInfoScreenButtonLink}
-              placeholder={"lemnity.ru/ads"}
+              placeholder={'lemnity.ru/ads'}
               classNames={{
                 base: 'min-w-76 flex-1',
                 inputWrapper: cn(

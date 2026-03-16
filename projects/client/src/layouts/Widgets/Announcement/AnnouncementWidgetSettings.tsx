@@ -1,9 +1,9 @@
 import { useShallow } from 'zustand/react/shallow'
 
-import RewardMessageSettings from './RewardMessageSettings'
+import RewardMessageSettings from '../../../components/settings/RewardMessageSettings'
 import InfoSettings from './InfoSettings'
-import FormSettings from './FormSettings'
-import WidgetAppearanceSettings from './WidgetAppearanceSettings'
+import FormSettings from '../../../components/settings/FormSettings'
+import WidgetAppearanceSettings from '../../../components/settings/WidgetAppearanceSettings'
 import DisableBranding from '@/layouts/WidgetSettings/FieldsSettingsTab/DisableBranding/DisableBranding'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'

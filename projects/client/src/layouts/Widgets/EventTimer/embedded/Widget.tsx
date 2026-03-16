@@ -1,16 +1,18 @@
 import type { Ref, CSSProperties } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
-import CountdownAnnouncementWidget, {
+import EventTimerWidget, {
   type EventTimerWidgetVariant,
 } from '../EventTimerWidget'
 
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from '../utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 
-import type { EventTimertWidgetType } from '@lemnity/widget-config/widgets/event-timer'
-import type { CountdownForm } from '../CountdownFormScreen'
+import type {
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
+import type { CountdownForm } from '../EventTimerFormScreen'
 import { eventTimerWidgetDefaults } from '../defaults'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
@@ -23,7 +25,7 @@ export type WidgetProps = {
   onFormScreenButtonPress: (formData: CountdownForm) => void
 }
 
-const Widget = ({ref, ...props}: WidgetProps) => {
+const Widget = ({ ref, ...props }: WidgetProps) => {
   const {
     colorScheme,
     backgroundColor,
@@ -55,7 +57,7 @@ const Widget = ({ref, ...props}: WidgetProps) => {
     base64Image: contentBase64Image,
     // error,
     isLoading,
-  } = useUrlImageOrDefault(contentUrl)
+  } = useUrlImage(contentUrl)
 
   const mobile = useIsMobileViewport()
 
@@ -79,7 +81,7 @@ const Widget = ({ref, ...props}: WidgetProps) => {
 
   return (
     <>
-      <CountdownAnnouncementWidget
+      <EventTimerWidget
         ref={ref}
         variant={props.variant}
         focused={props.focused}
