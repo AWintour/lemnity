@@ -1,49 +1,50 @@
 import { useShallow } from 'zustand/react/shallow'
 
-import RewardMessageSettings from '../../../components/settings/RewardMessageSettings'
-import InfoSettings from './InfoSettings'
-import FormSettings from '../../../components/settings/FormSettings'
-import WidgetAppearanceSettings from '../../../components/settings/WidgetAppearanceSettings'
+import {
+ InfoSettings,
+ WidgetAppearanceSettings,
+ RewardMessageSettings,
+ MobileVersionSettings,
+} from '@/components/settings'
 import DisableBranding from '@/layouts/WidgetSettings/FieldsSettingsTab/DisableBranding/DisableBranding'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
-import MobileVersionSettings from './MobileVersionSettings'
 import { announcementWidgetDefaults } from './defaults'
 
 const AnnouncementWidgetSettings = () => {
   const {
-    format,
-
     mobileEnabled,
     triggerType,
     imageUrl,
     triggerText,
     triggerFontColor,
     triggerBackgroundColor,
-
     brandingEnabled,
   } = useWidgetSettingsStore(
     useShallow(s => {
       const widget = s.settings?.widget as AnnouncementWidgetType
-      const appearence = widget.appearence
       const mobile = widget.mobileSettings
       const defaults = announcementWidgetDefaults.mobileSettings
 
       return {
-        format: appearence.format,
-
-        mobileEnabled: mobile?.mobileEnabled ?? defaults.mobileEnabled,
-        triggerType: mobile?.triggerType ?? defaults.triggerType,
-        imageUrl: mobile?.imageUrl ?? defaults.imageUrl,
-        triggerText: mobile?.triggerText ?? defaults.triggerText,
-        triggerFontColor: mobile?.triggerFontColor ?? defaults.triggerFontColor,
+        mobileEnabled: mobile?.mobileEnabled
+          ?? defaults.mobileEnabled,
+        triggerType: mobile?.triggerType
+          ?? defaults.triggerType,
+        imageUrl: mobile?.imageUrl
+          ?? defaults.imageUrl,
+        triggerText: mobile?.triggerText
+          ?? defaults.triggerText,
+        triggerFontColor: mobile?.triggerFontColor
+          ?? defaults.triggerFontColor,
         triggerBackgroundColor: mobile?.triggerBackgroundColor
           ?? defaults.triggerBackgroundColor,
 
-        brandingEnabled: widget.brandingEnabled,
+        brandingEnabled: widget.brandingEnabled
+          ?? announcementWidgetDefaults.brandingEnabled,
       }
     })
   )
@@ -72,11 +73,13 @@ const AnnouncementWidgetSettings = () => {
   )
 
   return (
-    <div className="w-full px-4.75 flex flex-col gap-2.5">
+    <div className='w-full px-4.75 flex flex-col gap-2.5'>
       <WidgetAppearanceSettings />
-      <InfoSettings />
-      {format === 'countdown' && <FormSettings />}
-      <RewardMessageSettings />
+      <InfoSettings
+        defaults={announcementWidgetDefaults}
+        variant='announcement'
+      />
+      <RewardMessageSettings defaults={announcementWidgetDefaults} />
       <MobileVersionSettings
         enabled={mobileEnabled}
         triggerType={triggerType}

@@ -2,10 +2,10 @@ import { type CSSProperties } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
-import { AnnouncementPreview, CountdownPreview } from './Preview'
+import AnnouncementPreview from './AnnouncementPreview'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from './utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 
 import type {
   AnnouncementWidgetType,
@@ -16,15 +16,12 @@ const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f53
 
 const WidgetPreview = () => {
   const {
-    format,
     colorScheme,
     backgroundColor,
     borderRadius,
-
     contentType,
     contentAlignment,
     contentUrl,
-
     rewardScreenEnabled,
   } = useWidgetSettingsStore(
     useShallow(s => {
@@ -34,16 +31,26 @@ const WidgetPreview = () => {
       const infoSettings = widget.infoSettings
 
       return {
-        format: appearence.format,
-        colorScheme: appearence.colorScheme,
-        backgroundColor: appearence.backgroundColor,
-        borderRadius: appearence.borderRadius,
+        colorScheme: appearence.colorScheme
+          ?? announcementWidgetDefaults.appearence.colorScheme,
+        backgroundColor:
+          appearence.backgroundColor && appearence.backgroundColor.length > 0
+            ? appearence.backgroundColor
+            : announcementWidgetDefaults.appearence.backgroundColor,
+        borderRadius: appearence.borderRadius
+          ?? announcementWidgetDefaults.appearence.borderRadius,
 
-        contentType: infoSettings.contentType,
-        contentAlignment: infoSettings.contentAlignment,
-        contentUrl: infoSettings.contentUrl,
+        contentType: infoSettings.contentType
+          ?? announcementWidgetDefaults.infoSettings.contentType,
+        contentAlignment: infoSettings.contentAlignment
+          ?? announcementWidgetDefaults.infoSettings.contentAlignment,
+        contentUrl: infoSettings.contentUrl
+          ?? announcementWidgetDefaults.infoSettings.contentUrl,
 
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
+        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
+          ?? announcementWidgetDefaults
+               .rewardMessageSettings
+               .rewardScreenEnabled,
       }
     })
   )
@@ -52,16 +59,13 @@ const WidgetPreview = () => {
     base64Image: contentBase64Image,
     // error,
     isLoading,
-  } = useUrlImageOrDefault(contentUrl)
+  } = useUrlImage(contentUrl)
 
   const containerStyle: CSSProperties = {
     backgroundColor: colorScheme === 'primary'
-      ? format === 'announcement' ? '#FFFFFF' : '#725DFF'
-      : backgroundColor && backgroundColor.length !== 0
-          ? backgroundColor
-          : announcementWidgetDefaults.appearence.backgroundColor,
-    borderRadius: borderRadius
-      ?? announcementWidgetDefaults.appearence.borderRadius,
+      ? '#FFFFFF'
+      : backgroundColor,
+    borderRadius: borderRadius,
   }
 
   const backgroundImage = contentUrl && !isLoading
@@ -82,20 +86,10 @@ const WidgetPreview = () => {
 
   return (
     <div className='w-full h-full flex flex-col overflow-auto select-none'>
-      {format === 'announcement' && (
-        <AnnouncementPreview
-          className={previewWidgetCardStyle}
-          rewardScreenEnabled={rewardScreenEnabled}
-        />
-      )}
-
-      {format === 'countdown' && (
-        <CountdownPreview
-          className={previewWidgetCardStyle}
-          rewardScreenEnabled={rewardScreenEnabled}
-          containerStyle={containerStyle}
-        />
-      )}
+      <AnnouncementPreview
+        className={previewWidgetCardStyle}
+        rewardScreenEnabled={rewardScreenEnabled}
+      />
     </div>
   )
 }

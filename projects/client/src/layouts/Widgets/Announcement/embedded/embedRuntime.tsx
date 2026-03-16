@@ -1,24 +1,26 @@
-import {
-  useRef,
-  useState,
-} from 'react'
+import { useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import Widget from './Widget'
-import DesktopWidgetTrigger from './DesktopWidgetTrigger'
-import MobileWidgetTrigger from './MobileWidgetTrigger'
+import {
+  MobileWidgetTrigger,
+  DesktopWidgetTrigger,
+} from '@/components/announcement'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { sendEvent, sendPublicRequest } from '@/common/api/publicApi'
+import { sendEvent } from '@/common/api/publicApi'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
-import type { CountdownForm } from '../CountdownFormScreen'
-import { type CountdownWidgetVariant } from '../CountdownAnnouncementWidget'
 import { type AnnouncementWidgetVariant } from '../AnnouncementWidget'
 import { MobileProvider } from './MobileContext'
+
+export type Rect = {
+  width: number
+  height: number
+}
 
 type EmbedRuntimeProps = {
   isPreview?: boolean
@@ -30,18 +32,15 @@ export const CountdownAnnouncementEmbedRuntime = (
   const {
     widgetId,
     projectId,
-    format,
     rewardScreenEnabled,
   } = useWidgetSettingsStore(
     useShallow(s => {
       const widget = s.settings?.widget as AnnouncementWidgetType
-      const appearence = widget.appearence
       const rewardMessageSettings = widget.rewardMessageSettings
 
       return {
         widgetId: s.settings?.id,
         projectId: s.projectId,
-        format: appearence.format,
         rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
       }
     })
@@ -58,9 +57,7 @@ export const CountdownAnnouncementEmbedRuntime = (
     }
 
     void sendEvent({
-      event_name: format === 'countdown'
-        ? 'countdown.close'
-        : 'announcement.close',
+      event_name: 'announcement.close',
       widget_id: widgetId,
       project_id: projectId,
     })
@@ -74,57 +71,9 @@ export const CountdownAnnouncementEmbedRuntime = (
     }
 
     void sendEvent({
-      event_name: format === 'countdown'
-        ? 'countdown.open'
-        : 'announcement.open',
+      event_name: 'announcement.open',
       widget_id: widgetId,
       project_id: projectId,
-    })
-  }
-
-  const [countdownVariant, setCountdownVariant] =
-    useState<CountdownWidgetVariant>('countdown')
-
-  const handleCountdownScreenButtonPress = () => {
-    if (rewardScreenEnabled) {
-      setCountdownVariant('form')
-    }
-    
-    if (!widgetId || !projectId || format !== 'countdown' || props.isPreview) {
-      return
-    }
-
-    void sendEvent({
-      event_name: rewardScreenEnabled
-        ? 'countdown.transition_to_form'
-        : 'countdown.link_opened',
-      widget_id: widgetId,
-      project_id: projectId,
-    })
-  }
-
-  const handleFormScreenButtonPress = (formData: CountdownForm) => {
-    setCountdownVariant('reward')
-
-    if (!widgetId || !projectId || format !== 'countdown' || props.isPreview) {
-      return
-    }
-
-    void sendEvent({
-      event_name: 'countdown.transition_to_reward',
-      widget_id: widgetId,
-      project_id: projectId,
-      payload: formData,
-    })
-
-    void sendPublicRequest({
-      widgetId: widgetId,
-      fullName: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      url: window.location.href,
-      referrer: document.referrer || undefined,
-      userAgent: navigator.userAgent,
     })
   }
 
@@ -139,7 +88,6 @@ export const CountdownAnnouncementEmbedRuntime = (
     if (
       !widgetId
       || !projectId
-      || format !== 'announcement'
       || props.isPreview
     ) {
       return
@@ -154,7 +102,7 @@ export const CountdownAnnouncementEmbedRuntime = (
     })
   }
 
-  const sendBoundingRectToIframe = (rect: DOMRect, offset: number) => {
+  const sendBoundingRectToIframe = (rect: Rect, offset: number) => {
     window.parent.postMessage({
       scope: 'lemnity-embed',
       type: 'interactive-region',
@@ -174,15 +122,14 @@ export const CountdownAnnouncementEmbedRuntime = (
     <>
       {isMobile
         ? <MobileProvider>
-            <MobileWidgetTrigger
-              ref={widgetRef}
-              announementVariant={announementVariant}
-              countdownVariant={countdownVariant}
-              focused={focused}
-              onAnnouncementButtonPress={handleAnnouncementButtonPress}
-              onCountdownScreenButtonPress={handleCountdownScreenButtonPress}
-              onFormScreenButtonPress={handleFormScreenButtonPress}
-            />
+            <MobileWidgetTrigger>
+              <Widget
+                ref={widgetRef}
+                announementVariant={announementVariant}
+                focused={focused}
+                onAnnouncementButtonPress={handleAnnouncementButtonPress}
+              />
+            </MobileWidgetTrigger>
           </MobileProvider>
         : <DesktopWidgetTrigger
             widgetRef={widgetRef}
@@ -194,11 +141,8 @@ export const CountdownAnnouncementEmbedRuntime = (
             <Widget
               ref={widgetRef}
               announementVariant={announementVariant}
-              countdownVariant={countdownVariant}
               focused={focused}
               onAnnouncementButtonPress={handleAnnouncementButtonPress}
-              onCountdownScreenButtonPress={handleCountdownScreenButtonPress}
-              onFormScreenButtonPress={handleFormScreenButtonPress}
             />
           </DesktopWidgetTrigger>
         }

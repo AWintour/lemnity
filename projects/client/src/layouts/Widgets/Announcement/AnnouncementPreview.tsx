@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type HTMLProps } from 'react'
 
-import AnnouncementWidget from '../AnnouncementWidget'
-import FadeInOut from '../utils/FadeInOut'
+import AnnouncementWidget from './AnnouncementWidget'
+import { FadeInOut } from '@/components'
 
 type AnnouncementPreviewProps = Pick<HTMLProps<HTMLElement>, 'className'> & {
   // className: React.HTMLProps<HTMLElement>['className']

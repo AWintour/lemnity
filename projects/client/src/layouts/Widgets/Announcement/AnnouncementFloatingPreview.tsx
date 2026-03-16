@@ -19,9 +19,9 @@ const AnnouncementFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   if (typeof document === 'undefined' || !mounted) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-1200 bg-black/20 backdrop-blur-sm">
+    <div className='fixed inset-0 z-1200 bg-black/20 backdrop-blur-sm'>
       <button
-        type="button"
+        type='button'
         onClick={onClose}
         className={cn(
           'absolute right-6 top-6 rounded-full',

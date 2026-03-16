@@ -14,6 +14,7 @@ import CustomRadioGroup, {
 } from './CustomRadioGroup'
 import ImageUploader from './ImageUploader'
 import CountdownTimer from './CountdownTimer'
+import SvgIcon from './SvgIcon'
 
 export {
   Input,
@@ -31,4 +32,5 @@ export {
   type CustomRadioGroupOption,
   ImageUploader,
   CountdownTimer,
+  SvgIcon,
 }

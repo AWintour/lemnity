@@ -2,11 +2,12 @@ import { type HTMLProps, type RefObject, useRef, useEffect } from 'react'
 import { cn } from '@heroui/theme'
 
 import useClickOutside from '@/hooks/useClickOutside'
+import type { Rect } from '../../layouts/Widgets/EventTimer/embedded/embedRuntime'
 
 type DesktopWidgetTriggerProps = Pick<HTMLProps<HTMLElement>, 'children'> & {
   widgetRef: RefObject<HTMLDivElement | null>
   focused: boolean
-  sendBoundingRectToIframe: (rect: DOMRect, offset: number) => void
+  sendBoundingRectToIframe: (rect: Rect, offset: number) => void
   onFocusClick: () => void
   onClickOutside: () => void
 }
@@ -45,11 +46,12 @@ const DesktopWidgetTrigger = ({
     if (!widgetRef.current) {
       return
     }
-
-    const boundingRect = widgetRef.current.getBoundingClientRect()
   
     if (focused) {
-      sendBoundingRectToIframe(boundingRect, 24)
+      sendBoundingRectToIframe({
+        width: 398,
+        height: 524,
+      }, 24)
       return
     }
 
@@ -70,7 +72,7 @@ const DesktopWidgetTrigger = ({
 
     const boundingRect = containerRef.current.getBoundingClientRect()
     sendBoundingRectToIframe(boundingRect, 16)
-  }, [sendBoundingRectToIframe])
+  }, [])
 
   return (
     <div

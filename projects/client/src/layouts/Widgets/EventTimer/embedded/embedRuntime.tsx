@@ -5,8 +5,10 @@ import {
 import { useShallow } from 'zustand/react/shallow'
 
 import Widget from './Widget'
-import DesktopWidgetTrigger from './DesktopWidgetTrigger'
-import MobileWidgetTrigger from './MobileWidgetTrigger'
+import {
+  MobileWidgetTrigger,
+  DesktopWidgetTrigger,
+} from '@/components/announcement'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { sendEvent, sendPublicRequest } from '@/common/api/publicApi'
@@ -18,6 +20,11 @@ import type {
 import type { CountdownForm } from '../EventTimerFormScreen'
 import { type EventTimerWidgetVariant } from '../EventTimerWidget'
 import { MobileProvider } from './MobileContext'
+
+export type Rect = {
+  width: number
+  height: number
+}
 
 type EmbedRuntimeProps = {
   isPreview?: boolean
@@ -118,7 +125,7 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
     })
   }
 
-  const sendBoundingRectToIframe = (rect: DOMRect, offset: number) => {
+  const sendBoundingRectToIframe = (rect: Rect, offset: number) => {
     window.parent.postMessage({
       scope: 'lemnity-embed',
       type: 'interactive-region',

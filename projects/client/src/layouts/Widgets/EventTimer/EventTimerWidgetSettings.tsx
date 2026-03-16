@@ -5,6 +5,7 @@ import {
   FormSettings,
   InfoSettings,
   RewardMessageSettings,
+  MobileVersionSettings,
 } from '@/components/settings'
 import DisableBranding from '@/layouts/WidgetSettings/FieldsSettingsTab/DisableBranding/DisableBranding'
 
@@ -13,7 +14,6 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
-import MobileVersionSettings from './MobileVersionSettings'
 import { eventTimerWidgetDefaults } from './defaults'
 
 const EventTimerWidgetSettings = () => {
