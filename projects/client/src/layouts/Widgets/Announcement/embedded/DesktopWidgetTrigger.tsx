@@ -50,7 +50,7 @@ const DesktopWidgetTrigger = ({
     if (focused) {
       sendBoundingRectToIframe({
         width: 398,
-        height: 518,
+        height: 524,
       }, 24)
       return
     }
