@@ -95,11 +95,11 @@ class EmbedManager {
   }
 
   private handleMessage = (event: MessageEvent) => {
-    if (event.data?.scope?.startsWith('lemnity')) {
-      console.table('[EmbedManager]', event.data?.rect)
-      console.trace()
-      console.log('///////////////////////////////////////////')
-    }
+    // if (event.data?.scope?.startsWith('lemnity')) {
+    //   console.table('[EmbedManager]', event.data?.rect)
+    //   console.trace()
+    //   console.log('///////////////////////////////////////////')
+    // }
 
     const scopeOk =
       event.data
