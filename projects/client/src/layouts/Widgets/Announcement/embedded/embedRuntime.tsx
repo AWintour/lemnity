@@ -20,6 +20,11 @@ import { type CountdownWidgetVariant } from '../CountdownAnnouncementWidget'
 import { type AnnouncementWidgetVariant } from '../AnnouncementWidget'
 import { MobileProvider } from './MobileContext'
 
+export type Rect = {
+  width: number
+  height: number
+}
+
 type EmbedRuntimeProps = {
   isPreview?: boolean
 }
@@ -154,7 +159,7 @@ export const CountdownAnnouncementEmbedRuntime = (
     })
   }
 
-  const sendBoundingRectToIframe = (rect: DOMRect, offset: number) => {
+  const sendBoundingRectToIframe = (rect: Rect, offset: number) => {
     window.parent.postMessage({
       scope: 'lemnity-embed',
       type: 'interactive-region',

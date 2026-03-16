@@ -95,9 +95,11 @@ class EmbedManager {
   }
 
   private handleMessage = (event: MessageEvent) => {
-    // if (event.data?.scope?.startsWith('lemnity')) {
-    //   console.table('[EmbedManager]', event.data)
-    // }
+    if (event.data?.scope?.startsWith('lemnity')) {
+      console.table('[EmbedManager]', event.data?.rect)
+      console.trace()
+      console.log('///////////////////////////////////////////')
+    }
 
     const scopeOk =
       event.data
@@ -353,8 +355,11 @@ class EmbedManager {
               const mo = new MutationObserver(() => {
                 const notification = document.querySelector('[data-lemnity-notification]')
                 const isNotification = !!notification
+
+                const announcement = document.querySelector('[data-lemnity-announcement]')
+                const isAnnouncement = !!announcement
               
-                if (!isNotification) {
+                if (!isNotification && !isAnnouncement) {
                   schedule()
                   return
                 }

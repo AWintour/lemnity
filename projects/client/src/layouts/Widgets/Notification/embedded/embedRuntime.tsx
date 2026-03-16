@@ -159,7 +159,7 @@ const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
             }
 
             timeout = (index - newNotificationIndexRef.current + 1) * delay * 1000
-            localStorageData![notification.id] = new Date(Date.now())
+            localStorageData[notification.id] = new Date(Date.now())
             localStorage.setItem(
               localStorageKey,
               JSON.stringify(localStorageData)
