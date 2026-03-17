@@ -3,7 +3,6 @@
 } from '@/stores/widgetSettings/widgetActions/types'
 import {
   type EventTimertWidgetType,
-  type ContentAlignment,
   type FontWeight,
   type MobileTrigger,
 } from '@lemnity/widget-config/widgets/event-timer'
@@ -17,7 +16,7 @@ export const createEventTimerActions = (
   updateWidget: TypedWidgetUpdater<EventTimertWidgetType>
 ) => ({
   // WidgetAppearenceSchema
-  setAnnouncementCompanyLogoEnabled: (enabled: boolean) =>
+  setEventTimerCompanyLogoEnabled: (enabled: boolean) =>
     updateWidget(widget => ({
       ...widget,
       appearence: {
@@ -25,7 +24,7 @@ export const createEventTimerActions = (
         companyLogoEnabled: enabled,
       }
     })),
-  setAnnouncementCompanyLogoUrl: (url: string | undefined) =>
+  setEventTimerCompanyLogoUrl: (url: string | undefined) =>
     updateWidget(widget => ({
       ...widget,
       appearence: {
@@ -33,7 +32,7 @@ export const createEventTimerActions = (
         companyLogoUrl: url,
       }
     })),
-  setAnnouncementColorScheme: (colorScheme: ColorScheme) =>
+  setEventTimerColorScheme: (colorScheme: ColorScheme) =>
     updateWidget(widget => ({
       ...widget,
       appearence: {
@@ -41,7 +40,7 @@ export const createEventTimerActions = (
         colorScheme,
       }
     })),
-  setAnnouncementBackgroundColor: (color: string) =>
+  setEventTimerBackgroundColor: (color: string) =>
     updateWidget(widget => ({
       ...widget,
       appearence: {
@@ -49,7 +48,7 @@ export const createEventTimerActions = (
         backgroundColor: color,
       }
     })),
-  setAnnouncementBorderRadius: (radius: number) =>
+  setEventTimerBorderRadius: (radius: number) =>
     updateWidget(widget => ({
       ...widget,
       appearence: {
@@ -58,7 +57,7 @@ export const createEventTimerActions = (
       }
     })),
   // InfoSettingsSchema
-  setAnnouncementContentEnabled: (contentEnabled: boolean) =>
+  setEventTimerContentEnabled: (contentEnabled: boolean) =>
     updateWidget(widget => ({
       ...widget,
       infoSettings: {
@@ -66,7 +65,7 @@ export const createEventTimerActions = (
         contentEnabled,
       }
     })),
-  setAnnouncementContentUrl: (url: string | undefined) =>
+  setEventTimerContentUrl: (url: string | undefined) =>
     updateWidget(widget => ({
       ...widget,
       infoSettings: {
@@ -74,7 +73,7 @@ export const createEventTimerActions = (
         contentUrl: url,
       }
     })),
-  setAnnouncementInfoScreenTitle: (title: string) =>
+  setEventTimerInfoScreenTitle: (title: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -84,7 +83,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenTitleFontWeight: (weight: FontWeight) =>
+  setEventTimerInfoScreenTitleFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -94,7 +93,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenTitleColor: (titleColor: string) =>
+  setEventTimerInfoScreenTitleColor: (titleColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -104,7 +103,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenDescriptionFontWeight: (weight: FontWeight) =>
+  setEventTimerInfoScreenDescriptionFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -114,7 +113,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenDescription: (description: string) =>
+  setEventTimerInfoScreenDescription: (description: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -124,7 +123,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenDescriptionColor: (descriptionColor: string) =>
+  setEventTimerInfoScreenDescriptionColor: (descriptionColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -134,7 +133,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenCountdownEnabled: (countdownEnabled: boolean) =>
+  setEventTimerInfoScreenCountdownEnabled: (countdownEnabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -144,7 +143,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenCountdownDate: (countdownDate: string) =>
+  setEventTimerInfoScreenCountdownDate: (countdownDate: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -154,7 +153,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenCountdownBackgroundColor: (
+  setEventTimerInfoScreenCountdownBackgroundColor: (
     countdownBackgroundColor: string
   ) =>
     updateWidget(widget => {
@@ -166,7 +165,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenCountdownFontColor: (countdownFontColor: string) =>
+  setEventTimerInfoScreenCountdownFontColor: (countdownFontColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -176,7 +175,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenButtonText: (buttonText: string) =>
+  setEventTimerInfoScreenButtonText: (buttonText: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -186,7 +185,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenButtonFontColor: (buttonFontColor: string) =>
+  setEventTimerInfoScreenButtonFontColor: (buttonFontColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -196,7 +195,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenButtonBackgroundColor: (
+  setEventTimerInfoScreenButtonBackgroundColor: (
     buttonBackgroundColor: string
   ) =>
     updateWidget(widget => {
@@ -208,7 +207,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenIcon: (icon: Icon) =>
+  setEventTimerInfoScreenIcon: (icon: Icon) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -218,7 +217,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenLink: (link: string) =>
+  setEventTimerInfoScreenLink: (link: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -229,7 +228,7 @@ export const createEventTimerActions = (
       }
     }),
   // FormSettingsSchema
-  setAnnouncementFormScreenTitle: (title: string) =>
+  setEventTimerFormScreenTitle: (title: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -239,7 +238,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenTitleFontWeight: (weight: FontWeight) =>
+  setEventTimerFormScreenTitleFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -249,7 +248,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenTitleFontColor: (titleFontColor: string) =>
+  setEventTimerFormScreenTitleFontColor: (titleFontColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -259,7 +258,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenDescription: (description: string) =>
+  setEventTimerFormScreenDescription: (description: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -269,7 +268,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenDescriptionFontWeight: (weight: FontWeight) =>
+  setEventTimerFormScreenDescriptionFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -279,7 +278,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenDescriptionFontColor: (
+  setEventTimerFormScreenDescriptionFontColor: (
     descriptionFontColor: string
   ) =>
     updateWidget(widget => {
@@ -291,7 +290,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenContactAcquisitionEnabled: (
+  setEventTimerFormScreenContactAcquisitionEnabled: (
     contactAcquisitionEnabled: boolean
   ) =>
     updateWidget(widget => {
@@ -303,7 +302,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenNameFieldEnabled: (nameFieldEnabled: boolean) =>
+  setEventTimerFormScreenNameFieldEnabled: (nameFieldEnabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -313,7 +312,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenNameFieldRequired: (nameFieldRequired: boolean) =>
+  setEventTimerFormScreenNameFieldRequired: (nameFieldRequired: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -323,7 +322,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenEmailFieldEnabled: (emailFieldEnabled: boolean) =>
+  setEventTimerFormScreenEmailFieldEnabled: (emailFieldEnabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -333,7 +332,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenEmailFieldRequired: (emailFieldRequired: boolean) =>
+  setEventTimerFormScreenEmailFieldRequired: (emailFieldRequired: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -343,7 +342,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenPhoneFieldEnabled: (phoneFieldEnabled: boolean) =>
+  setEventTimerFormScreenPhoneFieldEnabled: (phoneFieldEnabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -353,7 +352,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenPhoneFieldRequired: (phoneFieldRequired: boolean) =>
+  setEventTimerFormScreenPhoneFieldRequired: (phoneFieldRequired: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -363,7 +362,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAgreementEnabled: (enabled: boolean) =>
+  setEventTimerFormScreenAgreementEnabled: (enabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -376,7 +375,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAgreementPolicyUrl: (policyUrl: string) =>
+  setEventTimerFormScreenAgreementPolicyUrl: (policyUrl: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -389,7 +388,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAgreementUrl: (agreementUrl: string) =>
+  setEventTimerFormScreenAgreementUrl: (agreementUrl: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -402,7 +401,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAgreementColor: (color: string) =>
+  setEventTimerFormScreenAgreementColor: (color: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -415,7 +414,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAdsInfoEnabled: (enabled: boolean) =>
+  setEventTimerFormScreenAdsInfoEnabled: (enabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -428,7 +427,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAdsInfoPolicyUrl: (policyUrl: string) =>
+  setEventTimerFormScreenAdsInfoPolicyUrl: (policyUrl: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -441,7 +440,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAdsInfoColor: (color: string) =>
+  setEventTimerFormScreenAdsInfoColor: (color: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -454,7 +453,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementFormScreenAdsInfo: (
+  setEventTimerFormScreenAdsInfo: (
     enabled: boolean,
     policyUrl: string,
     color: string
@@ -474,7 +473,7 @@ export const createEventTimerActions = (
       }
     }),
   // RewardMessageSettingsSchema
-  setAnnouncementRewardScreenEnabled: (enabled: boolean) =>
+  setEventTimerRewardScreenEnabled: (enabled: boolean) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -484,7 +483,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenTitle: (title: string) =>
+  setEventTimerRewardScreenTitle: (title: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -494,7 +493,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenTitleFontWeight: (weight: FontWeight) =>
+  setEventTimerRewardScreenTitleFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -504,7 +503,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenTitleFontSize: (titleFontSize: number) =>
+  setEventTimerRewardScreenTitleFontSize: (titleFontSize: number) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -514,7 +513,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenTitleFontColor: (titleFontColor: string) =>
+  setEventTimerRewardScreenTitleFontColor: (titleFontColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -524,7 +523,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDescription: (description: string) =>
+  setEventTimerRewardScreenDescription: (description: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -534,7 +533,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDescriptionFontWeight: (weight: FontWeight) =>
+  setEventTimerRewardScreenDescriptionFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -544,7 +543,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDescriptionFontSize: (
+  setEventTimerRewardScreenDescriptionFontSize: (
     descriptionFontSize: number
   ) =>
     updateWidget(widget => {
@@ -556,7 +555,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDescriptionFontColor: (
+  setEventTimerRewardScreenDescriptionFontColor: (
     descriptionFontColor: string
   ) =>
     updateWidget(widget => {
@@ -568,7 +567,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDiscount: (discount: string) =>
+  setEventTimerRewardScreenDiscount: (discount: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -578,7 +577,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDiscountFontWeight: (weight: FontWeight) =>
+  setEventTimerRewardScreenDiscountFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -588,7 +587,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDiscountFontSize: (discountFontSize: number) =>
+  setEventTimerRewardScreenDiscountFontSize: (discountFontSize: number) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -598,7 +597,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDiscountFontColor: (discountFontColor: string) =>
+  setEventTimerRewardScreenDiscountFontColor: (discountFontColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -608,7 +607,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenPromo: (promo: string) =>
+  setEventTimerRewardScreenPromo: (promo: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -618,7 +617,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenPromoFontWeight: (weight: FontWeight) =>
+  setEventTimerRewardScreenPromoFontWeight: (weight: FontWeight) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -628,7 +627,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenPromoFontSize: (promoFontSize: number) =>
+  setEventTimerRewardScreenPromoFontSize: (promoFontSize: number) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -638,7 +637,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenPromoFontColor: (promoFontColor: string) =>
+  setEventTimerRewardScreenPromoFontColor: (promoFontColor: string) =>
     updateWidget(widget => {
       return {
         ...widget,
@@ -648,7 +647,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenCustomColorSchemeEnabled: (
+  setEventTimerRewardScreenCustomColorSchemeEnabled: (
     customColorSchemeEnabled: boolean
   ) =>
     updateWidget(widget => {
@@ -660,7 +659,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenDiscountBackgroundColor: (
+  setEventTimerRewardScreenDiscountBackgroundColor: (
     customDiscountBackgroundColor: string
   ) =>
     updateWidget(widget => {
@@ -672,7 +671,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementRewardScreenPromoBackgroundColor: (
+  setEventTimerRewardScreenPromoBackgroundColor: (
     customPromoBackgroundColor: string
   ) =>
     updateWidget(widget => {
@@ -685,7 +684,7 @@ export const createEventTimerActions = (
       }
     }),
   // Mobile
-  setAnnouncementMobileEnabled: (
+  setEventTimerMobileEnabled: (
     mobileEnabled: boolean
   ) => 
     updateWidget(widget => {
@@ -700,7 +699,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementMobileTriggerType: (
+  setEventTimerMobileTriggerType: (
     triggerType: MobileTrigger
   ) => 
     updateWidget(widget => {
@@ -715,7 +714,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementMobileImageUrl: (
+  setEventTimerMobileImageUrl: (
     imageUrl: string | undefined
   ) => 
     updateWidget(widget => {
@@ -730,7 +729,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementMobileTriggerText: (
+  setEventTimerMobileTriggerText: (
     triggerText: string
   ) => 
     updateWidget(widget => {
@@ -745,7 +744,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementMobileTriggerFontColor: (
+  setEventTimerMobileTriggerFontColor: (
     triggerFontColor: string
   ) => 
     updateWidget(widget => {
@@ -760,7 +759,7 @@ export const createEventTimerActions = (
         }
       }
     }),
-  setAnnouncementMobileTriggerBackgroundColor: (
+  setEventTimerMobileTriggerBackgroundColor: (
     triggerBackgroundColor: string
   ) => 
     updateWidget(widget => {
@@ -776,7 +775,7 @@ export const createEventTimerActions = (
       }
     }),
   // General
-  setAnnouncementBrandingEnabled: (
+  setEventTimerBrandingEnabled: (
     brandingEnabled: boolean
   ) => 
     updateWidget(widget => {
@@ -785,7 +784,7 @@ export const createEventTimerActions = (
         brandingEnabled,
       }
     }),
-  resetAnnouncementColors: () =>
+  resetEventTimerColors: () =>
     updateWidget(widget => {
       const defaults = buildEventTimerWidgetSettings()
       return {

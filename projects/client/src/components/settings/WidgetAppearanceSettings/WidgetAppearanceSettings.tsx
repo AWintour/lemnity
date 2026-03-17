@@ -2,15 +2,31 @@ import { useShallow } from 'zustand/react/shallow'
 
 import WidgetBackgroundColor from './WidgetBackgroundColor'
 import WidgetBorderRadius from './WidgetBorderRadius'
+import CompanyLogo from './CompanyLogo'
+
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+
 import type {
   AnnouncementWidgetType,
+  Content,
 } from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from '../../../layouts/Widgets/Announcement/defaults'
-import CompanyLogo from './CompanyLogo'
+import type {
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
 import type { ColorScheme } from '@lemnity/widget-config/widgets/base'
 
-const WidgetAppearanceSettings = () => {
+type WidgetAppearenceSettingsProps = {
+  defaults: AnnouncementWidgetType | EventTimertWidgetType
+  setCompanyLogoEnabled: (enabled: boolean) => void
+  setCompanyLogoUrl: (url: string | undefined) => void
+  setWidgetColorScheme: (colorScheme: ColorScheme) => void
+  setContentType?: (contentType: Content) => void
+  setWidgetBackgroundColor: (color: string) => void
+  setBorderRadius: (radius: number) => void
+  resetColors: () => void
+}
+
+const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
   const {
     companyLogoEnabled,
     companyLogoUrl,
@@ -20,49 +36,37 @@ const WidgetAppearanceSettings = () => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const settings = (s.settings?.widget as AnnouncementWidgetType).appearence
+      const settings =
+        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
+          .appearence
+      const defaults = props.defaults.appearence
+
       return  {
-        companyLogoEnabled: settings.companyLogoEnabled,
-        companyLogoUrl: settings.companyLogoUrl,
-        colorScheme: settings.colorScheme,
-        backgroundColor: settings.backgroundColor,
-        borderRadius: settings.borderRadius,
+        companyLogoEnabled: settings.companyLogoEnabled
+          ?? defaults.companyLogoEnabled,
+        companyLogoUrl: settings.companyLogoUrl
+          ?? defaults.companyLogoUrl,
+        colorScheme: settings.colorScheme
+          ?? defaults.colorScheme,
+        backgroundColor:
+          settings.backgroundColor && settings.backgroundColor.length > 0
+            ? settings.backgroundColor
+            : defaults.backgroundColor!,
+        borderRadius: settings.borderRadius
+          ?? defaults.borderRadius,
       }
     })
   )
-  
-  const setCompanyLogoEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementCompanyLogoEnabled
-  )
-  const setCompanyLogoUrl = useWidgetSettingsStore(
-    s => s.setAnnouncementCompanyLogoUrl
-  )
-
-  const setWidgetColorScheme = useWidgetSettingsStore(
-    s => s.setAnnouncementColorScheme
-  )
-  const setContentType = useWidgetSettingsStore(
-    s => s.setAnnouncementContentType
-  )
-  const setWidgetBackgroundColor = useWidgetSettingsStore(
-    s => s.setAnnouncementBackgroundColor
-  )
-  const setBorderRadius = useWidgetSettingsStore(
-    s => s.setAnnouncementBorderRadius
-  )
-  const resetColors = useWidgetSettingsStore(
-    s => s.resetAnnouncementColors
-  )
 
   const handleColorSchemeChange = (colorScheme: ColorScheme) => {
-    setWidgetColorScheme(colorScheme)
+    props.setWidgetColorScheme(colorScheme)
 
     if (colorScheme === 'custom') {
-      setContentType('imageOnTop')
+      props?.setContentType?.('imageOnTop')
       return
     }
 
-    resetColors()
+    props.resetColors()
   }
   
   return (
@@ -74,23 +78,18 @@ const WidgetAppearanceSettings = () => {
       <CompanyLogo
         enabled={companyLogoEnabled}
         logoUrl={companyLogoUrl}
-        onToggle={setCompanyLogoEnabled}
-        onLogoUrlChange={setCompanyLogoUrl}
+        onToggle={props.setCompanyLogoEnabled}
+        onLogoUrlChange={props.setCompanyLogoUrl}
       />
       <WidgetBackgroundColor 
         colorScheme={colorScheme}
-        backgroundColor={
-          backgroundColor
-          // defaults (by definition) are always initialized thus the need for !
-          // to override the type
-          || announcementWidgetDefaults.appearence.backgroundColor!
-        }
-        onBackgroundColorChange={setWidgetBackgroundColor}
+        backgroundColor={backgroundColor}
+        onBackgroundColorChange={props.setWidgetBackgroundColor}
         onColorSchemeChange={handleColorSchemeChange}
       />
       <WidgetBorderRadius
         widgetBorderRadius={borderRadius}
-        onBorderRadiuschange={setBorderRadius}
+        onBorderRadiuschange={props.setBorderRadius}
       />
     </div>
   )

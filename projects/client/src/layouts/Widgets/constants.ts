@@ -48,15 +48,15 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
     badge: 'new'
   },
   {
-    type: WidgetTypes.EVENT_TIMER,
-    title: 'Таймер событий',
+    type: WidgetTypes.ANNOUNCEMENT,
+    title: 'Анонс',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
     badge: 'new'
   },
   {
-    type: WidgetTypes.ANNOUNCEMENT,
-    title: 'Анонс',
+    type: WidgetTypes.EVENT_TIMER,
+    title: 'Таймер событий',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
     badge: 'new'

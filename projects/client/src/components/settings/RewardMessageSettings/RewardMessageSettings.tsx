@@ -7,6 +7,7 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 
 import type {
   AnnouncementWidgetType,
+  FontWeight,
 } from '@lemnity/widget-config/widgets/announcement'
 import type {
   EventTimertWidgetType,
@@ -14,6 +15,28 @@ import type {
 
 type RewardMessageSettingssProps = {
   defaults: AnnouncementWidgetType | EventTimertWidgetType
+  setRewardScreenEnabled: (enabled: boolean) => void
+  setTitle: (title: string) => void
+  setTitleFontSize: (titleFontSize: number) => void
+  setTitleFontWeight: (weight: FontWeight) => void
+  setTitleFontColor: (titleFontColor: string) => void
+  setDescription: (description: string) => void
+  setDescriptionFontSize: (descriptionFontSize: number) => void
+  setDescriptionFontWeight: (weight: FontWeight) => void
+  setDescriptionFontColor: (descriptionFontColor: string) => void
+  setDiscount: (discount: string) => void
+  setDiscountFontSize: (discountFontSize: number) => void
+  setDiscountFontWeight: (weight: FontWeight) => void
+  setDiscountFontColor: (discountFontColor: string) => void
+  setPromo: (promo: string) => void
+  setPromoFontSize: (promoFontSize: number) => void
+  setPromoFontWeight: (weight: FontWeight) => void
+  setPromoFontColor: (promoFontColor: string) => void
+  setCustomColorSchemeEnabled: (customColorSchemeEnabled: boolean) => void
+  setCustomDiscountBackgroundColor: (
+    customDiscountBackgroundColor: string
+  ) => void
+  setCustomPromoBackgroundColor: (customPromoBackgroundColor: string) => void
 }
 
 const RewardMessageSettings = (props: RewardMessageSettingssProps) => {
@@ -88,144 +111,76 @@ const RewardMessageSettings = (props: RewardMessageSettingssProps) => {
       }
     })
   )
-
-  const setRewardScreenenabled = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenEnabled
-  )
-  
-  const setRewardScreenTitle = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenTitle
-  )
-  const setRewardScreenTitleFontSize = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenTitleFontSize
-  )
-  const setRewardScreenTitleFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenTitleFontWeight
-  )
-  const setRewardScreenTitleFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenTitleFontColor
-  )
-
-  const setRewardScreenDescription = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDescription
-  )
-  const setRewardScreenDescriptionFontSize = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDescriptionFontSize
-  )
-  const setRewardScreenDescriptionFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDescriptionFontWeight
-  )
-  const setRewardScreenDescriptionFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDescriptionFontColor
-  )
-
-  const setRewardScreenDiscount = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDiscount
-  )
-  const setRewardScreenDiscountFontSize = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDiscountFontSize
-  )
-  const setRewardScreenDiscountFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDiscountFontWeight
-  )
-  const setRewardScreenDiscountFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDiscountFontColor
-  )
-
-  const setRewardScreenPromo = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenPromo
-  )
-  const setRewardScreenPromoFontSize = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenPromoFontSize
-  )
-  const setRewardScreenPromoFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenPromoFontWeight
-  )
-  const setRewardScreenPromoFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenPromoFontColor
-  )
-
-  const setRewardScreenCustomColorSchemeEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenCustomColorSchemeEnabled
-  )
-  const setRewardScreenCustomDiscountBackgroundColor = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenDiscountBackgroundColor
-  )
-  const setRewardScreenCustomPromoBackgroundColor = useWidgetSettingsStore(
-    s => s.setAnnouncementRewardScreenPromoBackgroundColor
-  )
   
   return (
-    <div className="w-full min-w-85.5 flex flex-col gap-2.5">
-      <h1 className="text-[25px] leading-7.5 font-normal text-[#060606]">
+    <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
+      <h1 className='text-[25px] leading-7.5 font-normal text-[#060606]'>
         Настройки сообщений
       </h1>
 
       <SwitchableField
-        title="Текст при выигрыше"
+        title='Текст при выигрыше'
         enabled={rewardScreenEnabled}
-        onToggle={setRewardScreenenabled}
+        onToggle={props.setRewardScreenEnabled}
         classNames={{
           title: 'text-[16px] leading-4.75 font-normal',
         }}
       >
-        <div className="w-full flex flex-col gap-2.5">
+        <div className='w-full flex flex-col gap-2.5'>
           <TextSettings
-            title="Заголовок"
+            title='Заголовок'
             text={title}
-            onTextChange={setRewardScreenTitle}
+            onTextChange={props.setTitle}
             fontSize={titleFontSize}
-            onFontSizeChange={setRewardScreenTitleFontSize}
-            onFontWeightChange={setRewardScreenTitleFontWeight}
+            onFontSizeChange={props.setTitleFontSize}
+            onFontWeightChange={props.setTitleFontWeight}
             textColor={titleFontColor}
-            onColorChange={setRewardScreenTitleFontColor}
-            placeholder="Ура! Вы выиграли"
+            onColorChange={props.setTitleFontColor}
+            placeholder='Ура! Вы выиграли'
           />
           <TextSettings
-            title="Описание"
+            title='Описание'
             text={description}
-            onTextChange={setRewardScreenDescription}
+            onTextChange={props.setDescription}
             fontSize={descriptionFontSize}
-            onFontSizeChange={setRewardScreenDescriptionFontSize}
-            onFontWeightChange={setRewardScreenDescriptionFontWeight}
+            onFontSizeChange={props.setDescriptionFontSize}
+            onFontWeightChange={props.setDescriptionFontWeight}
             textColor={descriptionFontColor}
-            onColorChange={setRewardScreenDescriptionFontColor}
-            placeholder="Поздравляем! Вы выиграли, заберите Ваш приз!"
+            onColorChange={props.setDescriptionFontColor}
+            placeholder='Поздравляем! Вы выиграли, заберите Ваш приз!'
           />
           <TextSettings
-            title="Скидка"
+            title='Скидка'
             text={discount}
-            onTextChange={setRewardScreenDiscount}
+            onTextChange={props.setDiscount}
             fontSize={discountFontSize}
-            onFontSizeChange={setRewardScreenDiscountFontSize}
-            onFontWeightChange={setRewardScreenDiscountFontWeight}
+            onFontSizeChange={props.setDiscountFontSize}
+            onFontWeightChange={props.setDiscountFontWeight}
             textColor={discountFontColor}
-            onColorChange={setRewardScreenDiscountFontColor}
-            placeholder="Ваша скидка 10%"
+            onColorChange={props.setDiscountFontColor}
+            placeholder='Ваша скидка 10%'
           />
           <TextSettings
-            title="Промокод"
+            title='Промокод'
             text={promo}
-            onTextChange={setRewardScreenPromo}
+            onTextChange={props.setPromo}
             fontSize={promoFontSize}
-            onFontSizeChange={setRewardScreenPromoFontSize}
-            onFontWeightChange={setRewardScreenPromoFontWeight}
+            onFontSizeChange={props.setPromoFontSize}
+            onFontWeightChange={props.setPromoFontWeight}
             textColor={promoFontColor}
-            onColorChange={setRewardScreenPromoFontColor}
-            placeholder="TNF2026"
+            onColorChange={props.setPromoFontColor}
+            placeholder='TNF2026'
           />
           
           <RewardScreenColors
             enabled={customColorSchemeEnabled}
-            onToggle={setRewardScreenCustomColorSchemeEnabled}
+            onToggle={props.setCustomColorSchemeEnabled}
             discountBackgroundColor={customDiscountBackgroundColor}
             onDiscountBackgrounfColorChange={
-              setRewardScreenCustomDiscountBackgroundColor
+              props.setCustomDiscountBackgroundColor
             }
             promoBackgroundColor={customPromoBackgroundColor}
-            onPromoBackgroundColorChange={
-              setRewardScreenCustomPromoBackgroundColor
-            }
+            onPromoBackgroundColorChange={props.setCustomPromoBackgroundColor}
           />
         </div>
       </SwitchableField>

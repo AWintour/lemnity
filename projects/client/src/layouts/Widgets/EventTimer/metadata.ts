@@ -3,7 +3,7 @@ import type { WidgetDefinition } from '@/layouts/Widgets/registry'
 
 type MetadataType = Pick<WidgetDefinition, 'preview' | 'settings'>
 
-export const announcementWidgetMetadata: MetadataType = {
+export const eventTimerWidgetMetadata: MetadataType = {
   preview: {
     panel: lazy(() => import('./WidgetPreview')),
     desktopScreens: {},

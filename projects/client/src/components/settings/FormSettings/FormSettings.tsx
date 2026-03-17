@@ -8,14 +8,11 @@ import ContactAcquisitionSettings from './ContactAcquisitionSettings'
 import AgreementAndPolicy from '@/components/AgreementAndPolicy'
 
 import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
-import type {
   EventTimertWidgetType,
 } from '@lemnity/widget-config/widgets/event-timer'
 
 type FormSettingsProps = {
-  defaults: AnnouncementWidgetType | EventTimertWidgetType
+  defaults: EventTimertWidgetType
 }
 
 const FormSettings = (props: FormSettingsProps) => {
@@ -39,7 +36,7 @@ const FormSettings = (props: FormSettingsProps) => {
     useShallow(s => {
       // a crutch because the store just works this way apparently
       const settings =
-        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
+        (s.settings?.widget as EventTimertWidgetType)
         .formSettings
       const defaults = props.defaults.formSettings
 
@@ -78,67 +75,67 @@ const FormSettings = (props: FormSettingsProps) => {
 
   // mmm, yes, boilerplate
   const setFormScreenTitle = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenTitle
+    s => s.setEventTimerFormScreenTitle
   )
   const setFormScreenTitleFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenTitleFontWeight
+    s => s.setEventTimerFormScreenTitleFontWeight
   )
   const setFormScreenTitleFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenTitleFontColor
+    s => s.setEventTimerFormScreenTitleFontColor
   )
   const setFormScreenDescription = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenDescription
+    s => s.setEventTimerFormScreenDescription
   )
   const setFormScreenDescriptionFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenDescriptionFontWeight
+    s => s.setEventTimerFormScreenDescriptionFontWeight
   )
   const setFormScreenDescriptionFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenDescriptionFontColor
+    s => s.setEventTimerFormScreenDescriptionFontColor
   )
 
   const setFormScreenContactAcquisitionEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenContactAcquisitionEnabled
+    s => s.setEventTimerFormScreenContactAcquisitionEnabled
   )
   const setFormScreenNameFieldEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenNameFieldEnabled
+    s => s.setEventTimerFormScreenNameFieldEnabled
   )
   const setFormScreenNameFieldRequired = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenNameFieldRequired
+    s => s.setEventTimerFormScreenNameFieldRequired
   )
   const setFormScreenEmailFieldEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenEmailFieldEnabled
+    s => s.setEventTimerFormScreenEmailFieldEnabled
   )
   const setFormScreenEmailFieldRequired = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenEmailFieldRequired
+    s => s.setEventTimerFormScreenEmailFieldRequired
   )
   const setFormScreenPhoneFieldEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenPhoneFieldEnabled
+    s => s.setEventTimerFormScreenPhoneFieldEnabled
   )
   const setFormScreenPhoneFieldRequired = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenPhoneFieldRequired
+    s => s.setEventTimerFormScreenPhoneFieldRequired
   )
 
   const setAgreementEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAgreementEnabled
+    s => s.setEventTimerFormScreenAgreementEnabled
   )
   const setAgreementPolicyUrl = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAgreementPolicyUrl
+    s => s.setEventTimerFormScreenAgreementPolicyUrl
   )
   const setAgreementUrl = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAgreementUrl
+    s => s.setEventTimerFormScreenAgreementUrl
   )
   const setAgreementColor = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAgreementColor
+    s => s.setEventTimerFormScreenAgreementColor
   )
 
   const setAdsInfoEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAdsInfoEnabled
+    s => s.setEventTimerFormScreenAdsInfoEnabled
   )
   const setAdsInfoPolicyUrl = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAdsInfoPolicyUrl
+    s => s.setEventTimerFormScreenAdsInfoPolicyUrl
   )
   const setAdsInfoColor = useWidgetSettingsStore(
-    s => s.setAnnouncementFormScreenAdsInfoColor
+    s => s.setEventTimerFormScreenAdsInfoColor
   )
 
   return (

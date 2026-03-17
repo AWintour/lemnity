@@ -9,6 +9,8 @@ const convertBlobToBase64 = (blob: Blob) => new Promise((resolve, reject) => {
   reader.readAsDataURL(blob)
 })
 
+const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
+
 const useUrlImage = (url: string | undefined) => {
   const {
     data: base64Image,
@@ -17,9 +19,9 @@ const useUrlImage = (url: string | undefined) => {
   } = useQuery({
     queryKey: [url],
     queryFn: () =>
-      url && fetch(url)
-      .then((result) => result.blob())
-      .then(convertBlobToBase64)
+      fetch(url ?? noBackgroundImageUrl)
+        .then((result) => result.blob())
+        .then(convertBlobToBase64)
   })
 
   return { base64Image, error, isLoading }

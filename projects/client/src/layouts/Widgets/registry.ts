@@ -4,6 +4,7 @@ import { wheelWidgetMetadata } from './WheelOfFortune/metadata'
 import { actionTimerWidgetMetadata } from './CountDown/metadata'
 import { fabMenuWidgetMetadata } from './FABMenu/metadata'
 import { announcementWidgetMetadata } from './Announcement/metadata'
+import { eventTimerWidgetMetadata } from './EventTimer/metadata'
 import { notificationWidgetMetadata } from './Notification/metadata'
 import {
   StubWidgetPanelPreview,
@@ -116,6 +117,7 @@ const widgetMetadata: Partial<
   [WidgetTypeEnum.ACTION_TIMER]: actionTimerWidgetMetadata,
   [WidgetTypeEnum.FAB_MENU]: fabMenuWidgetMetadata,
   [WidgetTypeEnum.ANNOUNCEMENT]: announcementWidgetMetadata,
+  [WidgetTypeEnum.EVENT_TIMER]: eventTimerWidgetMetadata,
   [WidgetTypeEnum.NOTIFICATION]: notificationWidgetMetadata,
 }
 

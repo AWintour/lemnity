@@ -8,7 +8,6 @@ import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import type {
   Content,
   ContentAlignment,
-  Format,
 } from '@lemnity/widget-config/widgets/announcement'
 import { useEffect, useState } from 'react'
 
@@ -16,9 +15,10 @@ type ContentSettingsProps = {
   contentType: Content
   contentAlignment?: ContentAlignment
   contentUrl?: string
-  format: Format
-  onContentTypeChange: (contentType: Content) => void
-  onContentAlignmentChange: (alignment: ContentAlignment) => void
+  format: 'countdown' | 'announcement'
+  onContentTypeChange?: (contentType: Content) => void
+  onContentToggle?: (enabled: boolean) => void
+  onContentAlignmentChange?: (alignment: ContentAlignment) => void
   onContentUrlChange: (url: string | undefined) => void
 }
 
@@ -44,11 +44,11 @@ const Settings = (props: ContentSettingsProps) => {
   const handleContentTypeChange = (value: string) => {
     // because generics are for loosers apparently
     // (looking at you, Hero UI)
-    props.onContentTypeChange(value as Content)
+    props?.onContentTypeChange?.(value as Content)
   }
 
   const handleAlignmentChange = (value: string) => {
-    props.onContentAlignmentChange(value as ContentAlignment)
+    props?.onContentAlignmentChange?.(value as ContentAlignment)
   }
 
   const handleImageUpload = (file: File | null) => {
@@ -110,7 +110,7 @@ const ContentSettings = (props: ContentSettingsProps) => {
 
   const handleContentToggle = (value: boolean) => {
     setEnabled(value)
-    props.onContentTypeChange(value ? 'background' : 'imageOnTop')
+    props?.onContentToggle?.(value)
   }
 
   return (

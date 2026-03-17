@@ -15,8 +15,8 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { getFontWeightClass } from './utils/getFontWeightClass'
 
 import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
+  EventTimertWidgetType,
+} from '@lemnity/widget-config/widgets/event-timer'
 import { eventTimerWidgetDefaults } from './defaults'
 
 type CountdownScreenProps = {
@@ -49,7 +49,7 @@ const CountdownScreen = (props: CountdownScreenProps) => {
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
-      const widget = s.settings?.widget as AnnouncementWidgetType
+      const widget = s.settings?.widget as EventTimertWidgetType
       const infoSettings = widget.infoSettings
       const rewardSettings = widget.rewardMessageSettings
 

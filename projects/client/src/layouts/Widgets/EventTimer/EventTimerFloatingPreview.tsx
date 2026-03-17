@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@heroui/theme'
 
-import { EventTimerEmbedRuntime } from './embedded/embedRuntime'
+import EventTimerEmbedRuntime from './embedded/embedRuntime'
 
 type FloatingPreviewProps = {
   onClose: () => void

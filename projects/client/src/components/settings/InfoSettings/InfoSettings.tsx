@@ -18,6 +18,8 @@ import type {
   AnnouncementWidgetType,
   Content,
   ContentAlignment,
+  FontWeight,
+  Icon,
 } from '@lemnity/widget-config/widgets/announcement'
 import type {
   EventTimertWidgetType,
@@ -26,9 +28,30 @@ import type {
 type InfoSettingsProps = {
   variant: 'countdown' | 'announcement'
   defaults: AnnouncementWidgetType | EventTimertWidgetType
+  setContentType?: (contentType: Content) => void
+  setContentAlignment?: (alignment: ContentAlignment) => void
+  setContentEnabled?: (contentEnabled: boolean) => void
+  setContentUrl: (url: string | undefined) => void
+  setTitle: (title: string) => void
+  setTitleFontWeight: (weight: FontWeight) => void
+  setTitleColor: (titleColor: string) => void
+  setDescription: (description: string) => void
+  setDescriptionFontWeight: (weight: FontWeight) => void
+  setDescriptionColor: (descriptionColor: string) => void
+  setCountdownEnabled?: (countdownEnabled: boolean) => void
+  setCountdownDate?: (countdownDate: string) => void
+  setCountdownFontColor?: (countdownFontColor: string) => void
+  setCountdownBackgroundColor?: (
+    countdownBackgroundColor: string
+  ) => void
+  setButtonText: (buttonText: string) => void
+  setButtonFontColor: (buttonFontColor: string) => void
+  setButtonBackgroundColor: (buttonBackgroundColor: string) => void
+  setButtonIcon: (icon: Icon) => void
+  setButtonLink: (link: string) => void
 }
 
-const InfoSettings =(props: InfoSettingsProps) => {
+const InfoSettings = (props: InfoSettingsProps) => {
   const {
     contentType,
     contentAlignment,
@@ -56,10 +79,11 @@ const InfoSettings =(props: InfoSettingsProps) => {
         (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
       const settings = widget.infoSettings
       const defaults = props.defaults.infoSettings
+      const isAnnouncement = s.settings?.widgetType === 'ANNOUNCEMENT'
       
       let contentType: Content = 'imageOnTop'
       let contentAlignment: ContentAlignment = 'center'
-      if (props.variant === 'announcement') {
+      if (isAnnouncement) {
         contentType =
           (s.settings?.widget as AnnouncementWidgetType)
             .infoSettings
@@ -92,14 +116,22 @@ const InfoSettings =(props: InfoSettingsProps) => {
         descriptionColor: settings?.descriptionColor
           ?? defaults.descriptionColor,
 
-        countdownEnabled: settings?.countdownEnabled
-          ?? defaults.countdownEnabled,
-        countdownDate: settings?.countdownDate
-          ?? defaults.countdownDate,
-        countdownFontColor: settings?.countdownFontColor
-          ?? defaults.countdownFontColor,
-        countdownBackgroundColor: settings?.countdownBackgroundColor
-          ?? defaults.countdownBackgroundColor,
+        countdownEnabled: isAnnouncement
+          ? undefined
+          // @ts-expect-error this code will get nuked soon anyways
+          : settings?.countdownEnabled ?? defaults.countdownEnabled,
+        countdownDate: isAnnouncement
+          ? undefined
+          // @ts-expect-error this code will get nuked soon anyways
+          : settings?.countdownDate ?? defaults.countdownDate,
+        countdownFontColor: isAnnouncement
+          ? undefined
+          // @ts-expect-error this code will get nuked soon anyways
+          : settings?.countdownFontColor ?? defaults.countdownFontColor,
+        countdownBackgroundColor: isAnnouncement
+          ? undefined
+          // @ts-expect-error this code will get nuked soon anyways
+          : settings?.countdownBackgroundColor ?? defaults.countdownBackgroundColor,
         
         buttonText: settings?.buttonText
           ?? defaults.buttonText,
@@ -115,69 +147,17 @@ const InfoSettings =(props: InfoSettingsProps) => {
     })
   )
 
-  const setContentType = useWidgetSettingsStore(
-    s => s.setAnnouncementContentType
-  )
-  const setContentAlignment = useWidgetSettingsStore(
-    s => s.setAnnouncementContentAlignment
-  )
-  const setContentUrl = useWidgetSettingsStore(
-    s => s.setAnnouncementContentUrl
-  )
-
-  const setInfoScreenTitle = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenTitle
-  )
-  const setInfoScreenTitleFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenTitleFontWeight
-  )
-  const setInfoScreenTitleColor = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenTitleColor
-  )
-  const setInfoScreenDescription = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenDescription
-  )
-  const setInfoScreenDescriptionFontWeight = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenDescriptionFontWeight
-  )
-  const setInfoScreenDescriptionColor = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenDescriptionColor
-  )
-
-  const setInfoScreenCountdownEnabled = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenCountdownEnabled
-  )
-  const setInfoScreenCountdownDate = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenCountdownDate
-  )
-  const setInfoScreenCountdownFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenCountdownFontColor
-  )
-  const setInfoScreenCountdownBackgroundColor = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenCountdownBackgroundColor
-  )
-
-  const setInfoScreenButtonText = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenButtonText
-  )
-  const setInfoScreenButtonFontColor = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenButtonFontColor
-  )
-  const setInfoScreenButtonBackgroundColor = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenButtonBackgroundColor
-  )
-  const setInfoScreenButtonIcon = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenIcon
-  )
-  const setInfoScreenButtonLink = useWidgetSettingsStore(
-    s => s.setAnnouncementInfoScreenLink
-  )
+  const showCountdownSettings =
+    props.variant === 'countdown'
+    && props.setCountdownEnabled
+    && props.setCountdownBackgroundColor
+    && props.setCountdownFontColor
 
   const handleCountdownDateChange = (value: ZonedDateTime | null) => {
     if (!value) {
       return
     }
-    setInfoScreenCountdownDate(value.toAbsoluteString())
+    props?.setCountdownDate?.(value.toAbsoluteString())
   }
 
   return (
@@ -191,9 +171,10 @@ const InfoSettings =(props: InfoSettingsProps) => {
         contentType={contentType}
         contentAlignment={contentAlignment}
         contentUrl={contentUrl}
-        onContentTypeChange={setContentType}
-        onContentAlignmentChange={setContentAlignment}
-        onContentUrlChange={setContentUrl}
+        onContentTypeChange={props.setContentType}
+        onContentToggle={props.setContentEnabled}
+        onContentAlignmentChange={props.setContentAlignment}
+        onContentUrlChange={props.setContentUrl}
       />
 
       <BorderedContainer>
@@ -203,9 +184,9 @@ const InfoSettings =(props: InfoSettingsProps) => {
             textColor={titleColor}
             title='Заголовок'
             placeholder='Укажите заголовок'
-            onTextChange={setInfoScreenTitle}
-            onFontWeightChange={setInfoScreenTitleFontWeight}
-            onColorChange={setInfoScreenTitleColor}
+            onTextChange={props.setTitle}
+            onFontWeightChange={props.setTitleFontWeight}
+            onColorChange={props.setTitleColor}
           />
         </div>
       </BorderedContainer>
@@ -219,36 +200,38 @@ const InfoSettings =(props: InfoSettingsProps) => {
             placeholder={
               'Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ.'
             }
-            onTextChange={setInfoScreenDescription}
-            onFontWeightChange={setInfoScreenDescriptionFontWeight}
-            onColorChange={setInfoScreenDescriptionColor}
+            onTextChange={props.setDescription}
+            onFontWeightChange={props.setDescriptionFontWeight}
+            onColorChange={props.setDescriptionColor}
           />
         </div>
       </BorderedContainer>
 
-      {props.variant === 'countdown' &&  <CountdownSettings
-        enabled={countdownEnabled}
-        onToggle={setInfoScreenCountdownEnabled}
-        date={
-          countdownDate
-            ? parseAbsoluteToLocal(countdownDate)
-            : parseAbsoluteToLocal(new Date().toISOString())
-        }
-        onDateChange={handleCountdownDateChange}
-        backgroundColor={countdownBackgroundColor}
-        onBackgroundColorChange={setInfoScreenCountdownBackgroundColor}
-        fontColor={countdownFontColor}
-        onFontColorChange={setInfoScreenCountdownFontColor}
-      />}
+      {/* Typescript only looks one level down */}
+      {showCountdownSettings
+       && <CountdownSettings
+            enabled={countdownEnabled}
+            onToggle={props.setCountdownEnabled!}
+            date={
+              countdownDate
+                ? parseAbsoluteToLocal(countdownDate)
+                : parseAbsoluteToLocal(new Date().toISOString())
+            }
+            onDateChange={handleCountdownDateChange}
+            backgroundColor={countdownBackgroundColor}
+            onBackgroundColorChange={props.setCountdownBackgroundColor!}
+            fontColor={countdownFontColor}
+            onFontColorChange={props.setCountdownFontColor!}
+          />}
 
       <BorderedContainer>
         <div className='w-full flex flex-col gap-2.5'>
           <h2 className='text-[16px] leading-4.75'>Кнопка</h2>
           <ButtonAppearenceSettings
-            onTriggerTextChange={setInfoScreenButtonText}
-            onTriggerIconChange={setInfoScreenButtonIcon}
-            onFontColorChange={setInfoScreenButtonFontColor}
-            onBackgroundColorChange={setInfoScreenButtonBackgroundColor}
+            onTriggerTextChange={props.setButtonText}
+            onTriggerIconChange={props.setButtonIcon}
+            onFontColorChange={props.setButtonFontColor}
+            onBackgroundColorChange={props.setButtonBackgroundColor}
             buttonText={buttonText}
             buttonTextColor={buttonFontColor}
             buttonBackgroundColor={buttonBackgroundColor}
@@ -258,7 +241,7 @@ const InfoSettings =(props: InfoSettingsProps) => {
           <h2 className='text-[16px] leading-4.75'>Ссылка</h2>
             <Input
               value={link}
-              onValueChange={setInfoScreenButtonLink}
+              onValueChange={props.setButtonLink}
               placeholder={'lemnity.ru/ads'}
               classNames={{
                 base: 'min-w-76 flex-1',
