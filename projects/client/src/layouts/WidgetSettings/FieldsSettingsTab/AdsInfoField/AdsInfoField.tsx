@@ -45,6 +45,7 @@ const AdsInfoField = () => {
 
   return (
     <AgreementAndPolicy
+      variant="advertisement"
       errorPath="fields.adsInfo"
       agreement={adsInfo}
       onToggle={handleToggle}

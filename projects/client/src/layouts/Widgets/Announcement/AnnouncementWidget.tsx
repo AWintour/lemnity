@@ -3,14 +3,16 @@ import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@heroui/button'
 import { cn } from '@heroui/theme'
 
-import CountdownRewardScreen from './CountdownRewardScreen'
 import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
-import { BrTagsOnNewlines } from './utils/BrTagsOnNewlines'
-import SvgIcon from '@/components/SvgIcon'
+import {
+  BrTagsOnNewlines,
+  SvgIcon,
+  RewardScreen,
+} from '@/components'
 import * as Icons from '@/components/Icons'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from './utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { useMobileContext } from './embedded/MobileContext'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
@@ -90,27 +92,55 @@ const AnnouncementWidgetContent = (
       const rewardMessageSettings = widget.rewardMessageSettings
 
       return  {
-        title: infoSettings.title,
-        titleFontWeight: infoSettings.titleFontWeight,
-        titleColor: infoSettings.titleColor,
-        description: infoSettings.description,
-        descriptionFontWeight: infoSettings.descriptionFontWeight,
-        descriptionColor: infoSettings.descriptionColor,
+        title: infoSettings.title
+          ?? announcementWidgetDefaults.infoSettings.title,
+        titleFontWeight: infoSettings.titleFontWeight
+          ?? announcementWidgetDefaults.infoSettings.titleFontWeight,
+        titleColor:
+          infoSettings.titleColor && infoSettings.titleColor.length > 0
+            ? infoSettings.titleColor
+            : announcementWidgetDefaults.infoSettings.titleColor,
+        description: infoSettings.description
+          ?? announcementWidgetDefaults.infoSettings.description,
+        descriptionFontWeight: infoSettings.descriptionFontWeight
+          ?? announcementWidgetDefaults.infoSettings.descriptionFontWeight,
+        descriptionColor:
+          infoSettings.descriptionColor
+          && infoSettings.descriptionColor.length > 0
+            ? infoSettings.descriptionColor
+            : announcementWidgetDefaults.infoSettings.descriptionColor,
 
-        buttonText: infoSettings.buttonText,
-        buttonFontColor: infoSettings.buttonFontColor,
-        buttonBackgroundColor: infoSettings.buttonBackgroundColor,
-        icon: infoSettings.icon,
-        link: infoSettings.link,
+        buttonText: infoSettings.buttonText
+          ?? announcementWidgetDefaults.infoSettings.buttonText,
+        buttonFontColor:
+          infoSettings.buttonFontColor
+          && infoSettings.buttonFontColor.length > 0
+            ? infoSettings.buttonFontColor
+            : announcementWidgetDefaults.infoSettings.buttonFontColor,
+        buttonBackgroundColor:
+          infoSettings.buttonBackgroundColor
+          && infoSettings.buttonBackgroundColor.length > 0
+            ? infoSettings.buttonBackgroundColor
+            : announcementWidgetDefaults.infoSettings.buttonBackgroundColor,
+        icon: infoSettings.icon
+          ?? announcementWidgetDefaults.infoSettings.icon,
+        link: infoSettings.link
+          ?? announcementWidgetDefaults.infoSettings.link,
 
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
-      }
+        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
+          ?? announcementWidgetDefaults
+               .rewardMessageSettings
+               .rewardScreenEnabled,
+        }
     })
   )
 
   const buttonStyle: CSSProperties = {
     color: buttonFontColor,
     backgroundColor: buttonBackgroundColor,
+  }
+  const imageStyle: CSSProperties = {
+    objectPosition: props.contentAlignment
   }
 
   const handleButtonPress = () => {
@@ -128,11 +158,9 @@ const AnnouncementWidgetContent = (
       {props.contentType === 'imageOnTop'
         ? <img
             src={props.contentUrl}
-            alt="Announcement Widget Image"
-            className="w-full max-w-99.5 h-67 object-cover rounded-[10px]"
-            style={{
-              objectPosition: props.contentAlignment
-            }}
+            alt='Announcement Widget Image'
+            className='w-full max-w-99.5 h-67 object-cover rounded-[10px]'
+            style={imageStyle}
           />
         : <div className='w-full max-w-99.5 h-67 bg-transparent' />}
 
@@ -202,20 +230,34 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
       const rewardMessageSettings = widget.rewardMessageSettings
 
       return  {
-        colorScheme: appearence.colorScheme,
-        backgroundColor: appearence.backgroundColor,
-        borderRadius: appearence.borderRadius,
+        colorScheme: appearence.colorScheme
+          ?? announcementWidgetDefaults.appearence.colorScheme,
+        backgroundColor:
+          appearence.backgroundColor && appearence.backgroundColor.length > 0
+            ? appearence.backgroundColor
+            : announcementWidgetDefaults.appearence.backgroundColor,
+        borderRadius: appearence.borderRadius
+          ?? announcementWidgetDefaults.appearence.borderRadius,
 
-        companyLogoEnabled: appearence.companyLogoEnabled,
-        companyLogoUrl: appearence.companyLogoUrl,
+        companyLogoEnabled: appearence.companyLogoEnabled
+          ?? announcementWidgetDefaults.appearence.companyLogoEnabled,
+        companyLogoUrl: appearence.companyLogoUrl
+          ?? announcementWidgetDefaults.appearence.companyLogoUrl,
 
-        contentType: infoSettings.contentType,
-        contentAlignment: infoSettings.contentAlignment,
-        contentUrl: infoSettings.contentUrl,
+        contentType: infoSettings.contentType
+          ?? announcementWidgetDefaults.infoSettings.contentType,
+        contentAlignment: infoSettings.contentAlignment
+          ?? announcementWidgetDefaults.infoSettings.contentAlignment!,
+        contentUrl: infoSettings.contentUrl
+          ?? announcementWidgetDefaults.infoSettings.contentUrl,
 
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
+        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
+          ?? announcementWidgetDefaults
+              .rewardMessageSettings
+              .rewardScreenEnabled,
         
-        brandingEnabled: widget.brandingEnabled,
+        brandingEnabled: widget.brandingEnabled
+          ?? announcementWidgetDefaults.brandingEnabled,
       }
     })
   )
@@ -224,19 +266,27 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
     base64Image: contentBase64Image,
     // error,
     isLoading,
-  } = useUrlImageOrDefault(contentUrl)
+  } = useUrlImage(contentUrl)
 
   const mobile = useIsMobileViewport()
   const mobileContext = useMobileContext()
+  const width = useViewportWidth()
+
+  const mobileScale = width >= 398
+    ? undefined
+    // 2 20 px margins on x axis = 40 px
+    // the width of the widget is w-99.5 = 398
+    // 1% of 398 = 3.98
+    : Math.floor((width - 40) / 3.98)
 
   const containerStyle: CSSProperties = {
     backgroundColor: colorScheme === 'primary'
       ? '#FFFFFF'
-      : backgroundColor && backgroundColor.length !== 0
-          ? backgroundColor
-          : announcementWidgetDefaults.appearence.backgroundColor,
-    borderRadius: borderRadius
-      ?? announcementWidgetDefaults.appearence.borderRadius,
+      : backgroundColor,
+    borderRadius: borderRadius,
+    transform: mobile && mobileScale
+      ? `scale(${mobileScale}%)`
+      : undefined,
   }
 
   const backgroundImage = contentUrl && !isLoading
@@ -253,21 +303,18 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
     base64Image: companyBase64Logo,
     // error,
     isLoading: isCompanyLogoLoading,
-  } = useUrlImageOrDefault(companyLogoUrl)
+  } = useUrlImage(companyLogoUrl)
 
   const companyLogo = companyLogoUrl && !isCompanyLogoLoading
     ? companyBase64Logo as string
     : undefined
-  
-  const width = useViewportWidth()
-  const mobileScale = width >= 398
-    ? undefined
-    // 2 20 px margins on x axis = 40 px
-    // the width of the widget is w-99.5 = 398
-    // 1% of 398 = 3.98
-    : Math.floor((width - 40) / 3.98)
 
   const [hidden, setHidden] = useState(false)
+
+  const closeButtonStyle: CSSProperties = {
+    borderTopRightRadius: borderRadius,
+    borderBottomLeftRadius: borderRadius,
+  }
 
   const handleCloseButtonPress = () => {
     if (mobile && mobileContext) {
@@ -285,12 +332,7 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
         'flex flex-col items-center text-center transition-colors duration-250',
         hidden && 'hidden',
       )}
-      style={{
-        ...containerStyle,
-        transform: mobile && mobileScale
-          ? `scale(${mobileScale}%)`
-          : undefined,
-      }}
+      style={containerStyle}
     >
       <Button
         className={cn(
@@ -299,42 +341,37 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
           'pointer-events-auto',
           props.focused || mobile ? 'flex' : 'hidden group-hover:flex',
         )}
-        style={{
-          borderTopRightRadius: borderRadius,
-          borderBottomLeftRadius: borderRadius,
-        }}
+        style={closeButtonStyle}
         onPress={handleCloseButtonPress}
       >
-        <div className="w-4 h-4 fill-black">
-          <SvgIcon src={crossIcon} alt="Close" />
+        <div className='w-4 h-4 fill-black'>
+          <SvgIcon src={crossIcon} alt='Close' />
         </div>
       </Button>
 
       {props.variant === 'announcement' && (
         <AnnouncementWidgetContent
           contentType={contentType}
-          contentAlignment={
-            contentAlignment
-              ?? announcementWidgetDefaults.infoSettings.contentAlignment!
-          }
+          contentAlignment={contentAlignment}
           contentUrl={backgroundImage}
           onButtonPress={props.onButtonPress}
         />
       )}
 
       {props.variant === 'reward' && rewardScreenEnabled && (
-        <CountdownRewardScreen
+        <RewardScreen
           isAnnouncement
           companyLogoEnabled={companyLogoEnabled}
           companyLogo={companyLogo}
+          defaults={announcementWidgetDefaults.rewardMessageSettings}
         />
       )}
       
       {brandingEnabled
-        ? <div className="flex justify-center py-2 mt-auto mb-0">
+        ? <div className='flex justify-center py-2 mt-auto mb-0'>
             <FreePlanBrandingLink />
           </div>
-        : <div className="h-3 py-2 mt-auto mb-0 bg-transparent" />}
+        : <div className='h-3 py-2 mt-auto mb-0 bg-transparent' />}
     </div>
   )
 }

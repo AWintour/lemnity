@@ -62,6 +62,7 @@ export const CreateWidgetDtoTypeEnum = {
     TEASER: 'TEASER',
     FAB_MENU: 'FAB_MENU',
     ANNOUNCEMENT: 'ANNOUNCEMENT',
+    EVENT_TIMER: 'EVENT_TIMER',
     NOTIFICATION: 'NOTIFICATION'
 } as const;
 

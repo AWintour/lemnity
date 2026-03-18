@@ -41,6 +41,10 @@
       "types": "./dist/widgets/Announcement/schema.d.ts",
       "default": "./dist/widgets/Announcement/schema.js"
     },
+    "./widgets/event-timer": {
+      "types": "./dist/widgets/EventTimer/schema.d.ts",
+      "default": "./dist/widgets/EventTimer/schema.js"
+    },
     "./widgets/notification": {
       "types": "./dist/widgets/Notification/schema.d.ts",
       "default": "./dist/widgets/Notification/schema.js"

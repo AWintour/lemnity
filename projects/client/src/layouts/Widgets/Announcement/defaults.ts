@@ -11,8 +11,6 @@ import type {
 export const announcementWidgetDefaults: AnnouncementWidgetType = {
   type: WidgetTypeEnum.ANNOUNCEMENT,
   appearence: {
-    format: 'announcement',
-
     companyLogoEnabled: true,
     companyLogoUrl: undefined,
 
@@ -32,45 +30,11 @@ export const announcementWidgetDefaults: AnnouncementWidgetType = {
     descriptionFontWeight: 'regular',
     descriptionColor: '#000000',
 
-    countdownDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    countdownEnabled: true,
-    countdownBackgroundColor: '#FFFFFF',
-    countdownFontColor: '#000000',
-
     buttonText: 'Действие',
     buttonFontColor: '#000000',
     buttonBackgroundColor: '#FFB400',
     icon: 'Reload',
     link: 'https://lemnity.ru',
-  },
-  formSettings: {
-    title: 'Получите скидку',
-    titleFontWeight: 'medium',
-    titleFontColor: '#000000',
-    description: 'Укажите свой email и получите купон, который можно использовать при покупке',
-    descriptionFontWeight: 'regular',
-    descriptionFontColor: '#000000',
-
-    contactAcquisitionEnabled: true,
-    nameFieldEnabled: true,
-    nameFieldRequired: false,
-    emailFieldEnabled: true,
-    emailFieldRequired: true,
-    phoneFieldEnabled: false,
-    phoneFieldRequired: false,
-
-    agreement: {
-      enabled: true,
-      policyUrl: '',
-      agreementUrl: '',
-      color: '#000000'
-    },
-
-    adsInfo: {
-      enabled: true,
-      policyUrl: '',
-      color: '#000000'
-    }
   },
   rewardMessageSettings: {
     rewardScreenEnabled: true,

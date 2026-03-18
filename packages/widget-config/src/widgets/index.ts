@@ -5,6 +5,7 @@ import { actionTimerSchema } from './ActionTimer/schema.js'
 import { fabMenuSchema } from './FABMenu/schema.js'
 import { announcementSchema } from './Announcement/schema.js'
 import { notificationSchema } from './Notification/schema.js'
+import { eventTimerSchema } from './EventTimer/schema.js'
 
 export type WidgetSchemaAdapter = {
   type: WidgetTypeId
@@ -16,6 +17,7 @@ const adapters: WidgetSchemaAdapter[] = [
   { type: 'ACTION_TIMER', schema: actionTimerSchema },
   { type: 'FAB_MENU', schema: fabMenuSchema },
   { type: 'ANNOUNCEMENT', schema: announcementSchema },
+  { type: 'EVENT_TIMER', schema: eventTimerSchema },
   { type: 'NOTIFICATION', schema: notificationSchema },
 ]
 

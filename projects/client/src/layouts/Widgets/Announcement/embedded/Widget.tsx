@@ -4,16 +4,14 @@ import { useShallow } from 'zustand/react/shallow'
 import AnnouncementWidget, {
   type AnnouncementWidgetVariant,
 } from '../AnnouncementWidget'
-import CountdownAnnouncementWidget, {
-  type CountdownWidgetVariant,
-} from '../CountdownAnnouncementWidget'
 
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from '../utils/useUrlImage'
+import useUrlImage from '@/hooks/useUrlImage'
 
-import type { AnnouncementWidgetType } from '@lemnity/widget-config/widgets/announcement'
-import type { CountdownForm } from '../CountdownFormScreen'
+import type {
+  AnnouncementWidgetType,
+} from '@lemnity/widget-config/widgets/announcement'
 import { announcementWidgetDefaults } from '../defaults'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
@@ -21,16 +19,12 @@ const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f53
 export type WidgetProps = {
   ref: Ref<HTMLDivElement>
   focused: boolean
-  countdownVariant: CountdownWidgetVariant
   announementVariant: AnnouncementWidgetVariant
-  onCountdownScreenButtonPress: () => void
-  onFormScreenButtonPress: (formData: CountdownForm) => void
   onAnnouncementButtonPress: () => void
 }
 
 const Widget = ({ref, ...props}: WidgetProps) => {
   const {
-    format,
     colorScheme,
     backgroundColor,
     borderRadius,
@@ -45,14 +39,21 @@ const Widget = ({ref, ...props}: WidgetProps) => {
       const infoSettings = widget.infoSettings
 
       return {
-        format: appearence.format,
-        colorScheme: appearence.colorScheme,
-        backgroundColor: appearence.backgroundColor,
-        borderRadius: appearence.borderRadius,
+        colorScheme: appearence.colorScheme
+          ?? announcementWidgetDefaults.appearence.colorScheme,
+        backgroundColor:
+          appearence.backgroundColor && appearence.backgroundColor.length > 0
+            ? appearence.backgroundColor
+            : announcementWidgetDefaults.appearence.backgroundColor,
+        borderRadius: appearence.borderRadius
+          ?? announcementWidgetDefaults.appearence.borderRadius,
 
-        contentType: infoSettings.contentType,
-        contentAlignment: infoSettings.contentAlignment,
-        contentUrl: infoSettings.contentUrl,
+        contentType: infoSettings.contentType
+          ?? announcementWidgetDefaults.infoSettings.contentType,
+        contentAlignment: infoSettings.contentAlignment
+          ?? announcementWidgetDefaults.infoSettings.contentAlignment,
+        contentUrl: infoSettings.contentUrl
+          ?? announcementWidgetDefaults.infoSettings.contentUrl,
       }
     })
   )
@@ -61,19 +62,17 @@ const Widget = ({ref, ...props}: WidgetProps) => {
     base64Image: contentBase64Image,
     // error,
     isLoading,
-  } = useUrlImageOrDefault(contentUrl)
+  } = useUrlImage(contentUrl)
 
   const mobile = useIsMobileViewport()
 
   const containerStyle: CSSProperties = {
     backgroundColor: colorScheme === 'primary'
-      ? format === 'announcement' ? '#FFFFFF' : '#725DFF'
-      : backgroundColor && backgroundColor.length !== 0
-          ? backgroundColor
-          : announcementWidgetDefaults.appearence.backgroundColor,
+      ? '#FFFFFF'
+      : backgroundColor,
     borderRadius: mobile
       ? undefined
-      : borderRadius ?? announcementWidgetDefaults.appearence.borderRadius,
+      : borderRadius,
   }
 
   const backgroundImage = contentUrl && !isLoading
@@ -88,24 +87,12 @@ const Widget = ({ref, ...props}: WidgetProps) => {
 
   return (
     <>
-      {format === 'countdown' && (
-        <CountdownAnnouncementWidget
-          ref={ref}
-          variant={props.countdownVariant}
-          focused={props.focused}
-          containerStyle={containerStyle}
-          onCountdownScreenButtonPress={props.onCountdownScreenButtonPress}
-          onFormScreenButtonPress={props.onFormScreenButtonPress}
-        />
-      )}
-      {format === 'announcement' && (
-        <AnnouncementWidget
-          ref={ref}
-          variant={props.announementVariant}
-          focused={props.focused}
-          onButtonPress={props.onAnnouncementButtonPress}
-        />
-      )}
+      <AnnouncementWidget
+        ref={ref}
+        variant={props.announementVariant}
+        focused={props.focused}
+        onButtonPress={props.onAnnouncementButtonPress}
+      />
     </>
   )
 }

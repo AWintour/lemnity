@@ -13,7 +13,6 @@ import type {
   Content,
   ContentAlignment,
   FontWeight,
-  Format,
   MobileTrigger,
 } from '@lemnity/widget-config/widgets/announcement'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
@@ -75,7 +74,6 @@ export type WidgetActions = {
   setWheelBorderColor: (color: string) => void
   setWheelBorderThickness: (thickness: number) => void
   // Announcement actions
-  setAnnouncementWidgetFormat: (format: Format) => void
   setAnnouncementCompanyLogoEnabled: (enabled: boolean) => void
   setAnnouncementCompanyLogoUrl: (url: string | undefined) => void
   setAnnouncementColorScheme: (colorScheme: ColorScheme) => void
@@ -109,18 +107,6 @@ export type WidgetActions = {
   setAnnouncementInfoScreenDescriptionColor: (
     descriptionColor: string
   ) => void
-  setAnnouncementInfoScreenCountdownDate: (
-    countdownDate: string
-  ) => void
-  setAnnouncementInfoScreenCountdownEnabled: (
-    countdownEnabled: boolean
-  ) => void
-  setAnnouncementInfoScreenCountdownBackgroundColor: (
-    countdownBackgroundColor: string
-  ) => void
-  setAnnouncementInfoScreenCountdownFontColor: (
-    countdownFontColor: string
-  ) => void
   setAnnouncementInfoScreenButtonText: (
     buttonText: string
   ) => void
@@ -135,67 +121,6 @@ export type WidgetActions = {
   ) => void
   setAnnouncementInfoScreenLink: (
     link: string
-  ) => void
-  // FormSettingsSchema
-  setAnnouncementFormScreenTitle: (
-    title: string
-  ) => void
-  setAnnouncementFormScreenTitleFontWeight: (
-    weight: FontWeight
-  ) => void
-  setAnnouncementFormScreenTitleFontColor: (
-    titleFontColor: string
-  ) => void
-  setAnnouncementFormScreenDescription: (
-    description: string
-  ) => void
-  setAnnouncementFormScreenDescriptionFontWeight: (
-    weight: FontWeight
-  ) => void
-  setAnnouncementFormScreenDescriptionFontColor: (
-    descriptionFontColor: string
-  ) => void
-  setAnnouncementFormScreenContactAcquisitionEnabled: (
-    contactAcquisitionEnabled: boolean
-  ) => void
-  setAnnouncementFormScreenNameFieldEnabled: (
-    nameFieldEnabled: boolean
-  ) => void
-  setAnnouncementFormScreenNameFieldRequired: (
-    nameFieldRequired: boolean
-  ) => void
-  setAnnouncementFormScreenEmailFieldEnabled: (
-    emailFieldEnabled: boolean
-  ) => void
-  setAnnouncementFormScreenEmailFieldRequired: (
-    emailFieldRequired: boolean
-  ) => void
-  setAnnouncementFormScreenPhoneFieldEnabled: (
-    phoneFieldEnabled: boolean
-  ) => void
-  setAnnouncementFormScreenPhoneFieldRequired: (
-    phoneFieldRequired: boolean
-  ) => void
-  setAnnouncementFormScreenAgreementEnabled: (
-    enabled: boolean
-  ) => void
-  setAnnouncementFormScreenAgreementPolicyUrl: (
-    policyUrl: string
-  ) => void
-  setAnnouncementFormScreenAgreementUrl: (
-    agreementUrl: string
-  ) => void
-  setAnnouncementFormScreenAgreementColor: (
-    color: string
-  ) => void
-  setAnnouncementFormScreenAdsInfoEnabled: (
-    enabled: boolean
-  ) => void
-  setAnnouncementFormScreenAdsInfoPolicyUrl: (
-    policyUrl: string
-  ) => void
-  setAnnouncementFormScreenAdsInfoColor: (
-    color: string
   ) => void
   // RewardMessageSettingsSchema
   setAnnouncementRewardScreenEnabled: (
@@ -280,6 +205,221 @@ export type WidgetActions = {
     brandingEnabled: boolean
   ) => void
   resetAnnouncementColors: () => void
+  // ---------------------------------------------------------------------------
+  // Event Timer actions
+  setEventTimerCompanyLogoEnabled: (
+    enabled: boolean
+  ) => void
+  setEventTimerCompanyLogoUrl: (
+    url: string | undefined
+  ) => void
+  setEventTimerColorScheme: (
+    colorScheme: ColorScheme
+  ) => void
+  setEventTimerBackgroundColor: (
+    color: string
+  ) => void
+  setEventTimerBorderRadius: (
+    radius: number
+  ) => void
+  setEventTimerContentEnabled: (
+    contentEnabled: boolean
+  ) => void
+  setEventTimerContentUrl: (
+    url: string | undefined
+  ) => void
+  setEventTimerInfoScreenTitle: (
+    title: string
+  ) => void
+  setEventTimerInfoScreenTitleFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerInfoScreenTitleColor: (
+    titleColor: string
+  ) => void
+  setEventTimerInfoScreenDescriptionFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerInfoScreenDescription: (
+    description: string
+  ) => void
+  setEventTimerInfoScreenDescriptionColor: (
+    descriptionColor: string
+  ) => void
+  setEventTimerInfoScreenCountdownEnabled: (
+    countdownEnabled: boolean
+  ) => void
+  setEventTimerInfoScreenCountdownDate: (
+    countdownDate: string
+  ) => void
+  setEventTimerInfoScreenCountdownBackgroundColor: (
+    countdownBackgroundColor: string
+  ) => void
+  setEventTimerInfoScreenCountdownFontColor: (
+    countdownFontColor: string
+  ) => void
+  setEventTimerInfoScreenButtonText: (
+    buttonText: string
+  ) => void
+  setEventTimerInfoScreenButtonFontColor: (
+    buttonFontColor: string
+  ) => void
+  setEventTimerInfoScreenButtonBackgroundColor: (
+    buttonBackgroundColor: string
+  ) => void
+  setEventTimerInfoScreenIcon: (
+    icon: Icon
+  ) => void
+  setEventTimerInfoScreenLink: (
+    link: string
+  ) => void
+  setEventTimerFormScreenTitle: (
+    title: string
+  ) => void
+  setEventTimerFormScreenTitleFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerFormScreenTitleFontColor: (
+    titleFontColor: string
+  ) => void
+  setEventTimerFormScreenDescription: (
+    description: string
+  ) => void
+  setEventTimerFormScreenDescriptionFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerFormScreenDescriptionFontColor: (
+    descriptionFontColor: string
+  ) => void
+  setEventTimerFormScreenContactAcquisitionEnabled: (
+    contactAcquisitionEnabled: boolean
+  ) => void
+  setEventTimerFormScreenNameFieldEnabled: (
+    nameFieldEnabled: boolean
+  ) => void
+  setEventTimerFormScreenNameFieldRequired: (
+    nameFieldRequired: boolean
+  ) => void
+  setEventTimerFormScreenEmailFieldEnabled: (
+    emailFieldEnabled: boolean
+  ) => void
+  setEventTimerFormScreenEmailFieldRequired: (
+    emailFieldRequired: boolean
+  ) => void
+  setEventTimerFormScreenPhoneFieldEnabled: (
+    phoneFieldEnabled: boolean
+  ) => void
+  setEventTimerFormScreenPhoneFieldRequired: (
+    phoneFieldRequired: boolean
+  ) => void
+  setEventTimerFormScreenAgreementEnabled: (
+    enabled: boolean
+  ) => void
+  setEventTimerFormScreenAgreementPolicyUrl: (
+    policyUrl: string
+  ) => void
+  setEventTimerFormScreenAgreementUrl: (
+    agreementUrl: string
+  ) => void
+  setEventTimerFormScreenAgreementColor: (
+    color: string
+  ) => void
+  setEventTimerFormScreenAdsInfoEnabled: (
+    enabled: boolean
+  ) => void
+  setEventTimerFormScreenAdsInfoPolicyUrl: (
+    policyUrl: string
+  ) => void
+  setEventTimerFormScreenAdsInfoColor: (
+    color: string
+  ) => void
+  setEventTimerFormScreenAdsInfo: (
+    enabled: boolean,
+    policyUrl: string,
+    color: string
+  ) => void
+  setEventTimerRewardScreenEnabled: (
+    enabled: boolean
+  ) => void
+  setEventTimerRewardScreenTitle: (
+    title: string
+  ) => void
+  setEventTimerRewardScreenTitleFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerRewardScreenTitleFontSize: (
+    titleFontSize: number
+  ) => void
+  setEventTimerRewardScreenTitleFontColor: (
+    titleFontColor: string
+  ) => void
+  setEventTimerRewardScreenDescription: (
+    description: string
+  ) => void
+  setEventTimerRewardScreenDescriptionFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerRewardScreenDescriptionFontSize: (
+    descriptionFontSize: number
+  ) => void
+  setEventTimerRewardScreenDescriptionFontColor: (
+    descriptionFontColor: string
+  ) => void
+  setEventTimerRewardScreenDiscount: (
+    discount: string
+  ) => void
+  setEventTimerRewardScreenDiscountFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerRewardScreenDiscountFontSize: (
+    discountFontSize: number
+  ) => void
+  setEventTimerRewardScreenDiscountFontColor: (
+    discountFontColor: string
+  ) => void
+  setEventTimerRewardScreenPromo: (
+    promo: string
+  ) => void
+  setEventTimerRewardScreenPromoFontWeight: (
+    weight: FontWeight
+  ) => void
+  setEventTimerRewardScreenPromoFontSize: (
+    promoFontSize: number
+  ) => void
+  setEventTimerRewardScreenPromoFontColor: (
+    promoFontColor: string
+  ) => void
+  setEventTimerRewardScreenCustomColorSchemeEnabled: (
+    customColorSchemeEnabled: boolean
+  ) => void
+  setEventTimerRewardScreenDiscountBackgroundColor: (
+    customDiscountBackgroundColor: string
+  ) => void
+  setEventTimerRewardScreenPromoBackgroundColor: (
+    customPromoBackgroundColor: string
+  ) => void
+  setEventTimerMobileEnabled: (
+    mobileEnabled: boolean
+  ) => void
+  setEventTimerMobileTriggerType: (
+    triggerType: MobileTrigger
+  ) => void
+  setEventTimerMobileImageUrl: (
+    imageUrl: string | undefined
+  ) => void
+  setEventTimerMobileTriggerText: (
+    triggerText: string
+  ) => void
+  setEventTimerMobileTriggerFontColor: (
+    triggerFontColor: string
+  ) => void
+  setEventTimerMobileTriggerBackgroundColor: (
+    triggerBackgroundColor: string
+  ) => void
+  setEventTimerBrandingEnabled: (
+    brandingEnabled: boolean
+  ) => void
+  resetEventTimerColors: () => void
   // ---------------------------------------------------------------------------
   // Notification actions
   setNotificationTriggerText: (

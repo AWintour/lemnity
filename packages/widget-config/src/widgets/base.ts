@@ -5,6 +5,7 @@ export type WidgetTypeId =
   | 'ACTION_TIMER'
   | 'FAB_MENU'
   | 'ANNOUNCEMENT'
+  | 'EVENT_TIMER'
   | 'NOTIFICATION'
 
 export const IconButtonSchema = z.object({
