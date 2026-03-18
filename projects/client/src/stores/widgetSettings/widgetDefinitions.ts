@@ -29,6 +29,12 @@ import {
   buildAnnouncementIntegrationSettings
 } from '@/layouts/Widgets/Announcement/defaults'
 import {
+  buildEventTimerWidgetSettings,
+  buildEventTimerFieldsSettings,
+  buildEventTimerDisplaySettings,
+  buildEventTimerIntegrationSettings,
+} from '@/layouts/Widgets/EventTimer/defaults'
+import {
   buildNotificationWidgetSettings,
   buildNotificationFieldsSettings,
   buildNotificationDisplaySettings,
@@ -102,6 +108,17 @@ const implementedWidgetDefinitions: Partial<Record<WidgetTypeEnum, WidgetDefinit
     buildFieldsSettings: buildAnnouncementFieldsSettings,
     buildDisplaySettings: buildAnnouncementDisplaySettings,
     buildIntegrationSettings: buildAnnouncementIntegrationSettings,
+    settingsSurfaces: {
+      fields: 'custom',
+      display: 'custom',
+    }
+  },
+  [WidgetTypeEnum.EVENT_TIMER]: {
+    type: WidgetTypeEnum.EVENT_TIMER,
+    buildWidgetSettings: buildEventTimerWidgetSettings,
+    buildFieldsSettings: buildEventTimerFieldsSettings,
+    buildDisplaySettings: buildEventTimerDisplaySettings,
+    buildIntegrationSettings: buildEventTimerIntegrationSettings,
     settingsSurfaces: {
       fields: 'custom',
       display: 'custom',

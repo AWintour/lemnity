@@ -25,6 +25,7 @@ const advertisementDisclaimer = 'Нажимая на кнопку, вы даёт
 на получение рекламно-информационной рассылки.'
 
 type AgreementAndPolicyProps = {
+  variant: 'agreement' | 'advertisement'
   agreement: {
     enabled: boolean
     policyUrl: string
@@ -51,7 +52,7 @@ const AgreementAndPolicy = (props: AgreementAndPolicyProps) => {
   return (
     <SwitchableField
       title={
-        props.agreement.agreementUrl
+        props.variant === 'agreement'
           ? agreementTitle
           : advertisementTitle
       }
@@ -72,12 +73,13 @@ const AgreementAndPolicy = (props: AgreementAndPolicyProps) => {
               'text-[13px] text-[#AFAFAF]',
             )}
           >
-            {props.agreement.agreementUrl
+            {props.variant === 'agreement'
               ? agreementDisclaimer
               : advertisementDisclaimer}
           </span>
 
           <ColorPicker
+            popoverPlacement='bottom-end'
             triggerText={
               containerWidth < 467
                 ? 'Цвет текста'
@@ -88,7 +90,7 @@ const AgreementAndPolicy = (props: AgreementAndPolicyProps) => {
           />
         </div>
 
-        {props.agreement.agreementUrl && <>
+        {props.variant === 'agreement' && <>
           <span className="text-lg font-normal">URL согласие</span>
           <Input
             variant="bordered"

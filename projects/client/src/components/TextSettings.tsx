@@ -101,6 +101,7 @@ const TextSettings = (props: MessageSettingsProps) => {
             />
           </div>
           <ColorPicker
+            popoverPlacement='bottom-end'
             initialColor={props.textColor}
             onColorChange={props.onColorChange}
           />

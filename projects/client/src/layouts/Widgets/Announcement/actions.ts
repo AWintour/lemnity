@@ -6,7 +6,6 @@ import {
   type Content,
   type ContentAlignment,
   type FontWeight,
-  type Format,
   type MobileTrigger,
 } from '@lemnity/widget-config/widgets/announcement'
 import { announcementWidgetDefaults, buildAnnouncementWidgetSettings } from './defaults'
@@ -16,14 +15,6 @@ export const createAnnouncementActions = (
   updateWidget: TypedWidgetUpdater<AnnouncementWidgetType>
 ) => ({
   // WidgetAppearenceSchema
-  setAnnouncementWidgetFormat: (format: Format) =>
-    updateWidget(widget => ({
-      ...widget,
-      appearence: {
-        ...widget.appearence,
-        format,
-      }
-    })),
   setAnnouncementCompanyLogoEnabled: (enabled: boolean) =>
     updateWidget(widget => ({
       ...widget,
@@ -149,48 +140,6 @@ export const createAnnouncementActions = (
         }
       }
     }),
-  setAnnouncementInfoScreenCountdownDate: (countdownDate: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          countdownDate,
-        }
-      }
-    }),
-  setAnnouncementInfoScreenCountdownEnabled: (countdownEnabled: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          countdownEnabled,
-        }
-      }
-    }),
-  setAnnouncementInfoScreenCountdownBackgroundColor: (
-    countdownBackgroundColor: string
-  ) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          countdownBackgroundColor,
-        }
-      }
-    }),
-  setAnnouncementInfoScreenCountdownFontColor: (countdownFontColor: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        infoSettings: {
-          ...widget.infoSettings,
-          countdownFontColor,
-        }
-      }
-    }),
   setAnnouncementInfoScreenButtonText: (buttonText: string) =>
     updateWidget(widget => {
       return {
@@ -240,251 +189,6 @@ export const createAnnouncementActions = (
         infoSettings: {
           ...widget.infoSettings,
           link,
-        }
-      }
-    }),
-  // FormSettingsSchema
-  setAnnouncementFormScreenTitle: (title: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          title,
-        }
-      }
-    }),
-  setAnnouncementFormScreenTitleFontWeight: (weight: FontWeight) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          titleFontWeight: weight,
-        }
-      }
-    }),
-  setAnnouncementFormScreenTitleFontColor: (titleFontColor: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          titleFontColor,
-        }
-      }
-    }),
-  setAnnouncementFormScreenDescription: (description: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          description,
-        }
-      }
-    }),
-  setAnnouncementFormScreenDescriptionFontWeight: (weight: FontWeight) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          descriptionFontWeight: weight,
-        }
-      }
-    }),
-  setAnnouncementFormScreenDescriptionFontColor: (
-    descriptionFontColor: string
-  ) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          descriptionFontColor,
-        }
-      }
-    }),
-  setAnnouncementFormScreenContactAcquisitionEnabled: (
-    contactAcquisitionEnabled: boolean
-  ) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          contactAcquisitionEnabled,
-        }
-      }
-    }),
-  setAnnouncementFormScreenNameFieldEnabled: (nameFieldEnabled: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          nameFieldEnabled,
-        }
-      }
-    }),
-  setAnnouncementFormScreenNameFieldRequired: (nameFieldRequired: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          nameFieldRequired,
-        }
-      }
-    }),
-  setAnnouncementFormScreenEmailFieldEnabled: (emailFieldEnabled: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          emailFieldEnabled,
-        }
-      }
-    }),
-  setAnnouncementFormScreenEmailFieldRequired: (emailFieldRequired: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          emailFieldRequired,
-        }
-      }
-    }),
-  setAnnouncementFormScreenPhoneFieldEnabled: (phoneFieldEnabled: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          phoneFieldEnabled,
-        }
-      }
-    }),
-  setAnnouncementFormScreenPhoneFieldRequired: (phoneFieldRequired: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          phoneFieldRequired,
-        }
-      }
-    }),
-  setAnnouncementFormScreenAgreementEnabled: (enabled: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          agreement: {
-            ...widget.formSettings.agreement,
-            enabled: enabled,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAgreementPolicyUrl: (policyUrl: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          agreement: {
-            ...widget.formSettings.agreement,
-            policyUrl: policyUrl,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAgreementUrl: (agreementUrl: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          agreement: {
-            ...widget.formSettings.agreement,
-            agreementUrl: agreementUrl,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAgreementColor: (color: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          agreement: {
-            ...widget.formSettings.agreement,
-            color: color,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAdsInfoEnabled: (enabled: boolean) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          adsInfo: {
-            ...widget.formSettings.adsInfo,
-            enabled: enabled,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAdsInfoPolicyUrl: (policyUrl: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          adsInfo: {
-            ...widget.formSettings.adsInfo,
-            policyUrl: policyUrl,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAdsInfoColor: (color: string) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          adsInfo: {
-            ...widget.formSettings.adsInfo,
-            color: color,
-          }
-        }
-      }
-    }),
-  setAnnouncementFormScreenAdsInfo: (
-    enabled: boolean,
-    policyUrl: string,
-    color: string
-  ) =>
-    updateWidget(widget => {
-      return {
-        ...widget,
-        formSettings: {
-          ...widget.formSettings,
-          adsInfo: {
-            ...widget.formSettings.adsInfo,
-            enabled,
-            policyUrl,
-            color,
-          }
         }
       }
     }),
@@ -816,31 +520,10 @@ export const createAnnouncementActions = (
             defaults.infoSettings.titleColor,
           descriptionColor:
             defaults.infoSettings.descriptionColor,
-          countdownBackgroundColor:
-            defaults.infoSettings.countdownBackgroundColor,
-          countdownFontColor:
-            defaults.infoSettings.countdownFontColor,
           buttonFontColor:
             defaults.infoSettings.buttonFontColor,
           buttonBackgroundColor:
             defaults.infoSettings.buttonBackgroundColor,
-        },
-        formSettings: {
-          ...widget.formSettings,
-          titleFontColor:
-            defaults.formSettings.titleFontColor,
-          descriptionFontColor:
-            defaults.formSettings.descriptionFontColor,
-          agreement: {
-            ...widget.formSettings.agreement,
-            color:
-              defaults.formSettings.agreement.color,
-          },
-          adsInfo: {
-            ...widget.formSettings.adsInfo,
-            color:
-              defaults.formSettings.adsInfo.color,
-          },
         },
         rewardMessageSettings: {
           ...widget.rewardMessageSettings,
