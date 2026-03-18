@@ -22,11 +22,13 @@ const WidgetBackgroundColor = (props: WidgwtBackgroundColorProps) => {
     {
       label: 'Пользовательская',
       value: 'custom',
-      payloadNode: <ColorPicker
-        disabled={props.colorScheme !== 'custom'}
-        initialColor={props.backgroundColor}
-        onColorChange={(color) => props.onBackgroundColorChange(color)}
-      />
+      payloadNode:
+        <ColorPicker
+          popoverPlacement='bottom-end'
+          disabled={props.colorScheme !== 'custom'}
+          initialColor={props.backgroundColor}
+          onColorChange={(color) => props.onBackgroundColorChange(color)}
+        />
     },
   ]
 

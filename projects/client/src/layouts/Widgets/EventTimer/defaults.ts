@@ -58,14 +58,14 @@ export const eventTimerWidgetDefaults: EventTimertWidgetType = {
 
     agreement: {
       enabled: true,
-      policyUrl: '',
-      agreementUrl: '',
+      policyUrl: 'lemnity.ru/political',
+      agreementUrl: 'lemnity.ru/agreement',
       color: '#000000'
     },
 
     adsInfo: {
       enabled: true,
-      policyUrl: '',
+      policyUrl: 'lemnity.ru/ads',
       color: '#000000'
     }
   },

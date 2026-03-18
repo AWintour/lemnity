@@ -41,7 +41,7 @@
 
 /* Минимальные стили для встраиваемого виджета */
 html, body {
-  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Rubik', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   box-sizing: border-box;
   background: transparent;
   height: 100%;

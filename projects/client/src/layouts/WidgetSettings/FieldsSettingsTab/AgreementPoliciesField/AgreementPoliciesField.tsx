@@ -53,6 +53,7 @@ const AgreementPoliciesField = () => {
 
   return (
     <AgreementAndPolicy
+      variant="agreement"
       errorPath="fields.agreement"
       agreement={agreement}
       onToggle={handleToggle}

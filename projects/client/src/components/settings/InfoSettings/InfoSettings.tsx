@@ -72,6 +72,8 @@ const InfoSettings = (props: InfoSettingsProps) => {
     buttonBackgroundColor,
     icon,
     link,
+
+    rewardScreenEnabled,
   } = useWidgetSettingsStore(
     useShallow(s => {
       // a crutch because the store just works this way apparently
@@ -143,6 +145,9 @@ const InfoSettings = (props: InfoSettingsProps) => {
           ?? defaults.icon,
         link: settings?.link
           ?? defaults.link,
+        
+        rewardScreenEnabled: widget.rewardMessageSettings.rewardScreenEnabled
+          ?? props.defaults.rewardMessageSettings.rewardScreenEnabled,
       }
     })
   )
@@ -238,20 +243,24 @@ const InfoSettings = (props: InfoSettingsProps) => {
             buttonIcon={icon}
           />
 
-          <h2 className='text-[16px] leading-4.75'>Ссылка</h2>
-            <Input
-              value={link}
-              onValueChange={props.setButtonLink}
-              placeholder={'lemnity.ru/ads'}
-              classNames={{
-                base: 'min-w-76 flex-1',
-                inputWrapper: cn(
-                  'rounded-md border bg-white border-[#E8E8E8] rounded-[5px]',
-                  'shadow-none h-12.5 px-2.5',
-                ),
-                input: 'placeholder:text-[#AAAAAA] text-base'
-              }}
-            />
+          {!rewardScreenEnabled && (
+            <>
+              <h2 className='text-[16px] leading-4.75'>Ссылка</h2>
+              <Input
+                value={link}
+                onValueChange={props.setButtonLink}
+                placeholder={'lemnity.ru/ads'}
+                classNames={{
+                  base: 'min-w-76 flex-1',
+                  inputWrapper: cn(
+                    'rounded-md border bg-white border-[#E8E8E8] rounded-[5px]',
+                    'shadow-none h-12.5 px-2.5',
+                  ),
+                  input: 'placeholder:text-[#AAAAAA] text-base'
+                }}
+              />
+            </>
+          )}
         </div>
       </BorderedContainer>
     </div>

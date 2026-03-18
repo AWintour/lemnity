@@ -192,6 +192,7 @@ const FormSettings = (props: FormSettingsProps) => {
       />
       
       <AgreementAndPolicy
+        variant='agreement'
         errorPath=''
         agreement={agreement}
         onToggle={setAgreementEnabled}
@@ -201,6 +202,7 @@ const FormSettings = (props: FormSettingsProps) => {
       />
       
       <AgreementAndPolicy
+        variant='advertisement'
         errorPath=''
         agreement={adsInfo}
         onToggle={setAdsInfoEnabled}
