@@ -7,7 +7,6 @@ import Popover from '../Popover'
 import SvgIcon from '../SvgIcon'
 import PaymentStatus from './PaymentStatus'
 import PaymentPlanPicker from './PaymentPlanPicker'
-import PaymentProvider from './PaymentProvider'
 
 import { usePaymentContext } from './usePaymentContext'
 
@@ -148,16 +147,14 @@ const PaymentTrigger = () => {
           </button>
         </div>
 
-      <PaymentProvider>
         <PaymentStatus
           // isTestPeriod={variant === 'test'}
           balance={870}
           daysLeft={3}
         />
         <PaymentPlanPicker
-          paymentPlans={paymentPlans}
+          // paymentPlans={paymentPlans}
         />
-      </PaymentProvider>
       </PopoverContent>
     </Popover>
   )

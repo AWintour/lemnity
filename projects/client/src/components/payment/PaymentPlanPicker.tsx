@@ -10,12 +10,7 @@ import { cn } from '@heroui/theme'
 
 import { usePaymentContext } from './usePaymentContext'
 
-import type {
-  PaymentPeriod,
-  PaymentPeriodKey,
-  PaymentPlan,
-  PaymentPlanKey,
-} from './types'
+import type { PaymentPeriodKey, PaymentPlanKey } from './types'
 
 type CustomRadioProps = {
   children: React.ReactNode
@@ -72,7 +67,6 @@ const PaymentPeriodRadioGroup = () => {
     ?? { dispatch: () => {}, state: { paymentPeriods: [] } }
 
   const { paymentPeriods } = state
-  console.log(paymentPeriods)
 
   const handlePaymentPeriodChange = (value: string) => {
     dispatch({
@@ -88,8 +82,10 @@ const PaymentPeriodRadioGroup = () => {
 
   return (
     <RadioGroup
+      aria-labelledby='payment-period-picker-label'
       orientation='horizontal'
       classNames={radioGroupClassNames}
+      defaultValue={paymentPeriods[0]?.key ?? undefined}
       onValueChange={handlePaymentPeriodChange}
     >
       {paymentPeriods.map((paymentPeriod, index) => (
@@ -106,13 +102,27 @@ const PaymentPeriodRadioGroup = () => {
   )
 }
 
-type PaymentPlanPickerProps = {
-  paymentPlans: PaymentPlan[]
-}
+const PaymentPlanPicker = () => {
+  const { dispatch, state } = usePaymentContext()
+    ?? { dispatch: () => {}, state: { paymentPlans: [] } }
+  
+  const { paymentPlans, paymentPlan, paymentPeriod, paymentPeriods } = state
 
-const PaymentPlanPicker = (props: PaymentPlanPickerProps) => {
-  const { paymentPlans } = props
-  const { dispatch } = usePaymentContext() ?? { dispatch: () => {} }
+  const price = paymentPlans.find(plan => plan.key === paymentPlan)?.price ?? 0
+  const period = paymentPeriods?.find(period => period.key === paymentPeriod)
+
+  const discount = period?.discount ?? 0
+  const months = period?.months ?? 0
+  const sum = price * months * (1 - discount / 100)
+
+  const formattedSum = new Intl
+    .NumberFormat('ru-RU', {
+      minimumIntegerDigits: 3,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: false,
+    })
+    .format(sum)
 
   const handlePaymentPlanChange = (keys: SharedSelection) => {
     const first = Array.from(keys)[0]
@@ -135,10 +145,14 @@ const PaymentPlanPicker = (props: PaymentPlanPickerProps) => {
         'border border-[#E8E8E8] rounded-[10px]',
       )}
     >
-      <span className='text-base leading-4.75'>
+      <span
+        id='payment-plan-picker-label'
+        className='text-base leading-4.75'
+      >
         Выберите тарифный план:
       </span>
       <Select
+        aria-labelledby='payment-plan-picker-label'
         defaultSelectedKeys={['basic']}
         classNames={selectClassNames}
         onSelectionChange={handlePaymentPlanChange}
@@ -156,10 +170,18 @@ const PaymentPlanPicker = (props: PaymentPlanPickerProps) => {
         ))}
       </Select>
 
-      <span className='text-base leading-4.75 mb-4.5'>
+      <span
+        id='payment-period-picker-label'
+        className='text-base leading-4.75 mb-4.5'
+      >
         Выберите период оплаты:
       </span>
       <PaymentPeriodRadioGroup />
+
+      <div>
+        Сумма оплаты: {formattedSum} ₽
+        {/* <span className='text-sm text-[#797979]'></span> */}
+      </div>
     </div>
   )
 }
