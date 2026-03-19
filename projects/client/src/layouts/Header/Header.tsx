@@ -9,6 +9,7 @@ import SvgIcon from '@/components/SvgIcon'
 import iconMenuOpened from '@/assets/icons/menu-opened.svg'
 import iconMenuClosed from '@/assets/icons/menu-closed.svg'
 import { cn } from '@heroui/theme'
+import { PaymentTrigger } from '@/components/payment'
 
 const Header = () => {
   const { isVisible, toggle } = useSidebarStore()
@@ -16,26 +17,26 @@ const Header = () => {
   const getAriaLabel = () => (isVisible ? 'Свернуть боковую панель' : 'Показать боковую панель')
 
   return (
-    <header className="h-17.5 min-h-17.5 flex items-center justify-between mx-5">
-      <div className="flex items-center gap-3">
+    <header className='h-17.5 min-h-17.5 flex items-center justify-between mx-5'>
+      <div className='flex items-center gap-3'>
         <Button
           isIconOnly
-          radius="full"
-          className="p-0 m-0 bg-transparent w-[38px] h-[38px]"
-          color="default"
+          radius='full'
+          className='p-0 m-0 bg-transparent w-[38px] h-[38px]'
+          color='default'
           onClick={toggle}
           aria-label={getAriaLabel()}
         >
           <SvgIcon
             src={isVisible ? iconMenuOpened : iconMenuClosed}
-            className="text-gray-500"
-            size="24px"
+            className='text-gray-500'
+            size='24px'
           />
         </Button>
 
-        <a href="/" className="flex items-center">
-          <div className="w-42 h-9.5">
-            <SvgIcon src={lemnityBlackLogo} alt="Lemnity" />
+        <a href='/' className='flex items-center'>
+          <div className='w-42 h-9.5'>
+            <SvgIcon src={lemnityBlackLogo} alt='Lemnity' />
           </div>
         </a>
         <div
@@ -48,13 +49,14 @@ const Header = () => {
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="text-sm text-gray-500 flex flex-row gap-2.5">
-          <Button isIconOnly radius="full" className="bg-white w-[38px] h-[38px]" color="default">
-            <img src={iconLight} alt="Light" className="h-8 w-auto w-[19px] h-[19px]" />
+      <div className='flex items-center space-x-4'>
+        <div className='text-sm text-gray-500 flex flex-row gap-2.5'>
+          <PaymentTrigger />
+          <Button isIconOnly radius='full' className='bg-white w-[38px] h-[38px]' color='default'>
+            <img src={iconLight} alt='Light' className='h-8 w-auto w-[19px] h-[19px]' />
           </Button>
-          <Button isIconOnly radius="full" className="bg-white w-[38px] h-[38px]" color="default">
-            <img src={iconBell} alt="Bell" className="h-8 w-auto w-[19px] h-[19px]" />
+          <Button isIconOnly radius='full' className='bg-white w-[38px] h-[38px]' color='default'>
+            <img src={iconBell} alt='Bell' className='h-8 w-auto w-[19px] h-[19px]' />
           </Button>
           <ProfileButton />
         </div>
