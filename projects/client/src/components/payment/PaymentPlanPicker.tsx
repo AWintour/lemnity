@@ -72,9 +72,9 @@ const CustomRadio = (props: CustomRadioProps) => {
 
 const PaymentPeriodRadioGroup = () => {
   const { dispatch, state } = usePaymentContext()
-    ?? { dispatch: () => {}, state: { paymentPeriods: [] } }
 
   const { paymentPeriods } = state
+  const defaultValue = paymentPeriods[0]?.key ?? undefined
 
   const handlePaymentPeriodChange = (value: string) => {
     dispatch({
@@ -82,7 +82,6 @@ const PaymentPeriodRadioGroup = () => {
       paymentPeriod: value as PaymentPeriodKey,
     })
   }
-
   const radioGroupClassNames: RadioGroupProps['classNames'] = {
     wrapper: 'justify-between',
     base: 'px-2',
@@ -93,7 +92,7 @@ const PaymentPeriodRadioGroup = () => {
       aria-labelledby='payment-period-picker-label'
       orientation='horizontal'
       classNames={radioGroupClassNames}
-      defaultValue={paymentPeriods[0]?.key ?? undefined}
+      defaultValue={defaultValue}
       onValueChange={handlePaymentPeriodChange}
     >
       {paymentPeriods.map((paymentPeriod, index) => (
@@ -174,12 +173,9 @@ const Promo = () => {
 
 const PaymentPlanPicker = () => {
   const { dispatch, state } = usePaymentContext()
-    ?? { dispatch: () => {}, state: { paymentPlans: [] } }
   
   const { paymentPlans, paymentPlan, paymentPeriod } = state
   const { formattedTotalWithoutDiscount, formattedTotal } = usePrice()
-
-  console.log(paymentPeriod)
 
   const total = paymentPeriod === 'month'
     ? formattedTotalWithoutDiscount

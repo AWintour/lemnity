@@ -9,7 +9,7 @@ type PaymentStatusProps = {
 
 const PaymentStatus = (props: PaymentStatusProps) => {
   const { balance, daysLeft } = props
-  const { state } = usePaymentContext() ?? { state: { isTrialPeriod: true } }
+  const { state } = usePaymentContext()
   const { isTrialPeriod } = state
 
   const balanceSubtitle = isTrialPeriod
