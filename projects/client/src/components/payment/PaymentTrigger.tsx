@@ -50,7 +50,7 @@ const paymentPeriods: PaymentPeriod[] = [
 ]
 
 const PaymentTrigger = () => {
-  const [variant, _setVariant] = useState<PaymentTriggerVariant>('paid')
+  const [variant, _setVariant] = useState<PaymentTriggerVariant>('trial')
   const [open, setOpen] = useState(false)
   const { dispatch } = usePaymentContext()
   

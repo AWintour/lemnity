@@ -19,6 +19,7 @@ import { usePrice } from './usePrice'
 
 import type { PaymentPeriodKey, PaymentPlanKey } from './types'
 import crossIcon from '@/assets/icons/cross.svg'
+import Counter, { type PlaceValue } from '../Counter'
 
 type CustomRadioProps = {
   children: React.ReactNode
@@ -175,11 +176,15 @@ const PaymentPlanPicker = () => {
   const { dispatch, state } = usePaymentContext()
   
   const { paymentPlans, paymentPlan, paymentPeriod } = state
-  const { formattedTotalWithoutDiscount, formattedTotal } = usePrice()
+  const { totalWithoutDiscount, total } = usePrice()
 
-  const total = paymentPeriod === 'month'
-    ? formattedTotalWithoutDiscount
-    : formattedTotal
+  const places: PlaceValue[] = total !== 0 && total > 1000
+    ? [1000, 100, 10, 1, ',', .1, .01]
+    : [100, 10, 1, '.', .1, .01]
+
+  const totalToDisplay = paymentPeriod === 'month'
+    ? totalWithoutDiscount
+    : total
 
   const handlePaymentPlanChange = (keys: SharedSelection) => {
     const first = Array.from(keys)[0]
@@ -211,6 +216,7 @@ const PaymentPlanPicker = () => {
       <Select
         aria-labelledby='payment-plan-picker-label'
         defaultSelectedKeys={['basic']}
+        selectedKeys={[paymentPlan]}
         classNames={selectClassNames}
         onSelectionChange={handlePaymentPlanChange}
       >
@@ -239,8 +245,23 @@ const PaymentPlanPicker = () => {
         'h-8.75 mt-2.25 rounded-[5px] border border-[#5951E5]',
         'flex flex-row items-center justify-center text-base',
       )}>
-        <span className='text-base flex flex-row'>
-          Сумма оплаты: {total} ₽
+        <div className='text-base flex flex-row'>
+          {/* Сумма оплаты: {total} ₽ */}
+          <span>Оплатить</span>
+          <Counter value={totalToDisplay}
+            fontSize={16}
+            padding={0}
+            places={places}
+            gap={0}
+            // borderRadius={4}
+            containerStyle={{ alignSelf: 'center' }}
+            horizontalPadding={4}
+            textColor='black'
+            fontWeight='normal'
+            topGradientStyle={{}}
+            bottomGradientStyle={{}}
+          />
+          <span>₽</span>
 
           <AnimatePresence initial={false}>
           {paymentPeriod === 'month' && paymentPlan !== 'basic' && (
@@ -257,7 +278,7 @@ const PaymentPlanPicker = () => {
             </motion.div>
           )}
           </AnimatePresence>
-        </span>
+        </div>
       </div>
 
       <Promo />

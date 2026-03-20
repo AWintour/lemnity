@@ -6,10 +6,25 @@ import PaymentPlanPicker from './PaymentPlanPicker'
 
 import { usePrice } from './usePrice'
 import { usePaymentContext } from './usePaymentContext'
+import Counter, { type PlaceValue } from '../Counter'
 
 const Payment = () => {
-  const { paymentButtonText } = usePrice()
-  const { state } = usePaymentContext()
+  const { total } = usePrice()
+  const { dispatch, state } = usePaymentContext()
+  const { isTrialPeriod, paymentPlan } = state
+
+  const places: PlaceValue[] = total !== 0 && total > 1000
+    ? [1000, 100, 10, 1, ',', .1, .01]
+    : [100, 10, 1, '.', .1, .01]
+
+  const handlePayment = () => {
+    console.table(state, ['paymentPlan', 'paymentPeriod', 'isTrialPeriod'])
+    console.table(state.modifications)
+
+    if (isTrialPeriod && paymentPlan === 'basic') {
+      dispatch({ type: 'setPaymentPlan', paymentPlan: 'business'})
+    }
+  }
 
   return (
     <div className='w-87.5 flex flex-col gap-2.5'>
@@ -21,14 +36,29 @@ const Payment = () => {
 
       <Button
         className={cn(
-          'w-full h-11.25 rounded-[5px] bg-[#5951E5] text-white text-base'
+          'w-full h-11.25 rounded-[5px] bg-[#5951E5] text-white text-base',
+          'gap-0'
         )}
-        onPress={() => {
-          console.table(state, ['paymentPlan', 'paymentPeriod', 'isTrialPeriod'])
-          console.table(state.modifications)
-        }}
+        onPress={handlePayment}
       >
-        {paymentButtonText}
+        {isTrialPeriod
+          ? 'Переключиться на бизнес тариф'
+          : <>
+              <span className='text-base'>Оплатить</span>
+              <Counter value={total}
+                fontSize={16}
+                padding={0}
+                places={places}
+                gap={0}
+                horizontalPadding={4}
+                textColor='white'
+                fontWeight='normal'
+                topGradientStyle={{}}
+                bottomGradientStyle={{}}
+              />
+              <span className='text-base'>₽</span>
+            </>
+        }
       </Button>
 
       <div className='w-full h-11.25 flex items-center justify-center'>
