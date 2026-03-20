@@ -5,31 +5,15 @@ import { cn } from '@heroui/theme'
 
 import Popover from '../Popover'
 import SvgIcon from '../SvgIcon'
-import CustomSwitch from '../CustomSwitch'
-import PaymentStatus from './PaymentStatus'
-import PaymentPlanPicker from './PaymentPlanPicker'
+import Payment from './Payment'
+import Modifications from './Modifications'
 
 import { usePaymentContext } from './usePaymentContext'
-import { usePrice } from './usePrice'
 
-import type { ModificationKey } from './PaymentContext'
 import type { PaymentPeriod, PaymentPlan } from './types'
-import { AVAILABLE_WIDGETS, type WidgetType } from '@/layouts/Widgets/constants'
 import crossIcon from '@/assets/icons/cross.svg'
 
 type PaymentTriggerVariant = 'trial' | 'paid' | 'negative'
-type WidgetItem = {title: string, type: WidgetType}
-
-// filter widgets by their availability and return the titles
-const widgets = AVAILABLE_WIDGETS.reduce<Array<WidgetItem>>(
-  (acc, { isAvailable, title, type }) => {
-    if (isAvailable) {
-      acc.push({ title, type })
-    }
-    return acc
-  },
-  [],
-)
 
 const paymentPlans: PaymentPlan[] = [
   {
@@ -65,45 +49,11 @@ const paymentPeriods: PaymentPeriod[] = [
   },
 ]
 
-type ModificationItemProps = {
-  title: string
-  type: ModificationKey
-  enabled: boolean
-}
-
-const ModificationItem = (props: ModificationItemProps) => {
-  const { dispatch } = usePaymentContext()
-
-  const handleToggle = () => {
-    dispatch({ type: 'toggleModification', modification: props.type })
-  }
-
-  return (
-    <div className='w-full flex flex-row items-center justify-between'>
-      <span className='text-base leading-4.75'>
-        {props.title}
-      </span>
-
-      {/* i do not wish to knnw what is happening inside the CustomSwitch */}
-      {/* it isn't mine and this is done for consistency */}
-      <CustomSwitch
-        isSelected={props.enabled}  // selected? fr bruh? not that i'm better
-        onValueChange={handleToggle}
-        // ths was also pulled out of some random pre-existing code
-        selectedColor='group-data-[selected=true]:!bg-[#5951E5]'
-        size='sm'
-      />
-    </div>
-  )
-}
-
 const PaymentTrigger = () => {
   const [variant, _setVariant] = useState<PaymentTriggerVariant>('paid')
   const [open, setOpen] = useState(false)
-  const { dispatch, state } = usePaymentContext()
+  const { dispatch } = usePaymentContext()
   
-  const { modifications } = state
-
   const primaryLabel = variant === 'trial'
     ? 'Тестовый период'
     : 'Баланс: 870 ₽'
@@ -119,8 +69,6 @@ const PaymentTrigger = () => {
     dispatch({ type: 'setPaymentPeriods', paymentPeriods })
     dispatch({ type: 'setIsTrialPeriod', isTrialPeriod: variant === 'trial' })
   }, [dispatch])
-
-  const { paymentButtonText } = usePrice()
 
   const getVariantClasses = (variant: PaymentTriggerVariant) => {
     switch (variant) {
@@ -201,72 +149,8 @@ const PaymentTrigger = () => {
         </div>
 
         <div className='w-full flex flex-row gap-4'>  
-          <div className='w-87.5 flex flex-col gap-2.5'>
-            <PaymentStatus
-              balance={870}
-              daysLeft={3}
-            />
-            <PaymentPlanPicker />
-
-            <Button
-              className={cn(
-                'w-full h-11.25 rounded-[5px] bg-[#5951E5] text-white text-base'
-              )}
-              // onPress={() => {
-              //   console.table(state, ['paymentPlan', 'paymentPeriod', 'isTrialPeriod'])
-              //   console.table(state.modifications)
-              // }}
-            >
-              {paymentButtonText}
-            </Button>
-
-            <div className='w-full h-11.25 flex items-center justify-center'>
-              <button
-                className={cn(
-                  'w-fit h-fit bg-white text-[#5951E5] text-base cursor-pointer',
-                )}
-              >
-                Выставить счет
-              </button>
-            </div>
-
-            <hr className='w-full border-[#C0C0C0]' />
-
-            <span className='text-[10px] leading-3 text-[#919191]'>
-              Нажимая кнопку «Оплатить» вы даёте согласие на обработку персональных
-              данных в соответствии с Политикой конфиденциальности
-            </span>
-          </div>
-
-          <div
-            className={cn(
-              'w-87.5 p-4 flex flex-col gap-2.5 bg-[#F8F8F8]',
-              'border border-[#E8E8E8] rounded-[10px]',
-            )}
-          >
-            <h2 className='text-base leading-4.75'>
-              Модификации:
-            </h2>
-
-            <hr className='w-full border-[#C0C0C0]' />
-
-            {widgets.map(widget => (
-              <ModificationItem
-                key={widget.type}
-                title={widget.title}
-                type={widget.type}
-                enabled={modifications[widget.type]}
-              />
-            ))}
-
-            <ModificationItem
-              title='Лейбл “Сделано на Lemnity”'
-              type='BRANDING'
-              enabled={modifications['BRANDING']}
-            />
-
-            <hr className='w-full border-[#C0C0C0] mt-auto mb-0' />
-          </div>
+          <Payment />
+          <Modifications />
         </div>
       </PopoverContent>
     </Popover>
