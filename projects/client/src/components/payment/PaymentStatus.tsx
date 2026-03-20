@@ -1,16 +1,18 @@
 import { cn } from '@heroui/theme'
 import { getDaysWord } from './utils'
+import { usePaymentContext } from './usePaymentContext'
 
 type PaymentStatusProps = {
-  isTestPeriod?: boolean
   balance: number
   daysLeft: number
 }
 
 const PaymentStatus = (props: PaymentStatusProps) => {
-  const { isTestPeriod, balance, daysLeft } = props
+  const { balance, daysLeft } = props
+  const { state } = usePaymentContext() ?? { state: { isTrialPeriod: true } }
+  const { isTrialPeriod } = state
 
-  const balanceSubtitle = isTestPeriod
+  const balanceSubtitle = isTrialPeriod
     ? 'У вас тестовый период'
     : `Хватит на ${daysLeft} ${getDaysWord(daysLeft)}`
 
@@ -38,7 +40,7 @@ const PaymentStatus = (props: PaymentStatusProps) => {
         </span>
       </div>
 
-      {isTestPeriod
+      {isTrialPeriod
         ? <div className='flex flex-col gap-1'>
             <span className='text-sm text-[#797979] leading-4.25'>
               Осталось

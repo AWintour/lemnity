@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import type { SharedSelection } from '@heroui/system'
 import { Select, SelectItem, type SelectProps } from '@heroui/select'
+import { Input } from '@heroui/input'
 import {
   Radio,
   RadioGroup,
@@ -7,10 +9,16 @@ import {
   type RadioProps,
 } from '@heroui/radio'
 import { cn } from '@heroui/theme'
+import { AnimatePresence, motion } from 'framer-motion'
+
+import FadeInOut from '../FadeInOut'
+import SvgIcon from '../SvgIcon'
 
 import { usePaymentContext } from './usePaymentContext'
+import { usePrice } from './usePrice'
 
 import type { PaymentPeriodKey, PaymentPlanKey } from './types'
+import crossIcon from '@/assets/icons/cross.svg'
 
 type CustomRadioProps = {
   children: React.ReactNode
@@ -102,27 +110,80 @@ const PaymentPeriodRadioGroup = () => {
   )
 }
 
+const Promo = () => {
+  const [open, setOpen] = useState(false)
+
+  const toggleUserHasPromoOpen= () => {
+    setOpen(!open)
+  }
+
+  return (
+    <>
+      <div className='w-full flex flex-row items-center justify-between'>
+        <button
+          className={cn(
+            'w-fit text-[14px] leading-4.25 transition-colors duration-160',
+            open ? 'text-black' : 'text-[rgba(0,0,0,0.36)] cursor-pointer',
+          )}
+          onClick={open ? undefined : toggleUserHasPromoOpen}
+        >
+          У меня есть промокод
+        </button>
+
+        <FadeInOut visible={open}>
+          <button
+            className={cn(
+              'border-none size-4.25 cursor-pointer',
+              !open && 'hidden',
+            )}
+            onClick={toggleUserHasPromoOpen}
+          >
+            <SvgIcon src={crossIcon} />
+          </button>
+        </FadeInOut>
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className={`overflow-hidden`}
+          >
+            <Input
+              classNames={{
+                inputWrapper:
+                  'min-h-8.75 h-8.75 px-4 rounded-[5px] border border-[#5951E5]',
+                input: 'text-base',
+              }}
+              placeholder='Введите промокод'
+              endContent={
+                <button className='text-base text-[#5951E5] cursor-pointer'>
+                  Применить
+                </button>
+              }
+            />
+          </motion.div>
+      )}
+      </AnimatePresence>
+    </>
+  )
+}
+
 const PaymentPlanPicker = () => {
   const { dispatch, state } = usePaymentContext()
     ?? { dispatch: () => {}, state: { paymentPlans: [] } }
   
-  const { paymentPlans, paymentPlan, paymentPeriod, paymentPeriods } = state
+  const { paymentPlans, paymentPlan, paymentPeriod } = state
+  const { formattedTotalWithoutDiscount, formattedTotal } = usePrice()
 
-  const price = paymentPlans.find(plan => plan.key === paymentPlan)?.price ?? 0
-  const period = paymentPeriods?.find(period => period.key === paymentPeriod)
+  console.log(paymentPeriod)
 
-  const discount = period?.discount ?? 0
-  const months = period?.months ?? 0
-  const sum = price * months * (1 - discount / 100)
-
-  const formattedSum = new Intl
-    .NumberFormat('ru-RU', {
-      minimumIntegerDigits: 3,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      useGrouping: false,
-    })
-    .format(sum)
+  const total = paymentPeriod === 'month'
+    ? formattedTotalWithoutDiscount
+    : formattedTotal
 
   const handlePaymentPlanChange = (keys: SharedSelection) => {
     const first = Array.from(keys)[0]
@@ -133,7 +194,7 @@ const PaymentPlanPicker = () => {
 
   const selectClassNames: SelectProps['classNames'] = {
     trigger:
-      'h-8.75 min-h-8.75 rounded-[5px] border border-[#5951E5]',
+      'h-8.75 min-h-8.75 px-2.5 rounded-[5px] border border-[#5951E5]',
     value: 'text-base',
     popoverContent: 'rounded-[5px]',
   }
@@ -172,16 +233,38 @@ const PaymentPlanPicker = () => {
 
       <span
         id='payment-period-picker-label'
-        className='text-base leading-4.75 mb-4.5'
+        className='text-base leading-4.75 mb-2.5'
       >
         Выберите период оплаты:
       </span>
       <PaymentPeriodRadioGroup />
 
-      <div>
-        Сумма оплаты: {formattedSum} ₽
-        {/* <span className='text-sm text-[#797979]'></span> */}
+      <div className={cn(
+        'h-8.75 mt-2.25 rounded-[5px] border border-[#5951E5]',
+        'flex flex-row items-center justify-center text-base',
+      )}>
+        <span className='text-base flex flex-row'>
+          Сумма оплаты: {total} ₽
+
+          <AnimatePresence initial={false}>
+          {paymentPeriod === 'month' && paymentPlan !== 'basic' && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className='overflow-hidden self-end ml-1'
+            >
+              <span className='text-[8px] whitespace-nowrap'>
+                (без скидки)
+              </span>
+            </motion.div>
+          )}
+          </AnimatePresence>
+        </span>
       </div>
+
+      <Promo />
     </div>
   )
 }

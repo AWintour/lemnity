@@ -9,11 +9,12 @@ import PaymentStatus from './PaymentStatus'
 import PaymentPlanPicker from './PaymentPlanPicker'
 
 import { usePaymentContext } from './usePaymentContext'
+import { usePrice } from './usePrice'
 
 import type { PaymentPeriod, PaymentPlan } from './types'
 import crossIcon from '@/assets/icons/cross.svg'
 
-type PaymentTriggerVariant = 'test' | 'paid' | 'negative'
+type PaymentTriggerVariant = 'trial' | 'paid' | 'negative'
 
 const paymentPlans: PaymentPlan[] = [
   {
@@ -50,28 +51,31 @@ const paymentPeriods: PaymentPeriod[] = [
 ]
 
 const PaymentTrigger = () => {
-  const [variant, setVariant] = useState<PaymentTriggerVariant>('test')
+  const [variant, _setVariant] = useState<PaymentTriggerVariant>('trial')
   const [open, setOpen] = useState(false)
   const { dispatch } = usePaymentContext() ?? { dispatch: () => {} }
 
-  const primaryLabel = variant === 'test'
+  const primaryLabel = variant === 'trial'
     ? 'Тестовый период'
     : 'Баланс: 870 ₽'
-  const secondaryLabel = variant === 'test'
+  const secondaryLabel = variant === 'trial'
     ? 'Осталось 14 дней'
     : 'Хватит на 30 дней'
-  const title = variant === 'test'
+  const title = variant === 'trial'
     ? ''
     : 'Пополнение баланса'
 
   useEffect(() => {
     dispatch({ type: 'setPaymentPlans', paymentPlans })
     dispatch({ type: 'setPaymentPeriods', paymentPeriods })
+    dispatch({ type: 'setIsTrialPeriod', isTrialPeriod: variant === 'trial' })
   }, [dispatch])
+
+  const { paymentButtonText } = usePrice()
 
   const getVariantClasses = (variant: PaymentTriggerVariant) => {
     switch (variant) {
-      case 'test':
+      case 'trial':
         return 'border-[#553BB2] bg-[#553BB2]/15'
       case 'paid':
         return 'border-[#3BB240] bg-[#3BB240]/15'
@@ -121,7 +125,7 @@ const PaymentTrigger = () => {
           <span
             className={cn(
               'text-xs leading-3.75 font-medium',
-              variant !== 'test' && 'self-start',
+              variant !== 'trial' && 'self-start',
             )}
           >
             {primaryLabel}
@@ -148,13 +152,35 @@ const PaymentTrigger = () => {
         </div>
 
         <PaymentStatus
-          // isTestPeriod={variant === 'test'}
           balance={870}
           daysLeft={3}
         />
-        <PaymentPlanPicker
-          // paymentPlans={paymentPlans}
-        />
+        <PaymentPlanPicker />
+
+        <Button
+          className={cn(
+            'w-full h-11.25 rounded-[5px] bg-[#5951E5] text-white text-base'
+          )}
+        >
+          {paymentButtonText}
+        </Button>
+
+        <div className='w-full h-11.25 flex items-center justify-center'>
+          <button
+            className={cn(
+              'w-fit h-fit bg-white text-[#5951E5] text-base cursor-pointer',
+            )}
+          >
+            Выставить счет
+          </button>
+        </div>
+
+        <hr className='w-full border-[#C0C0C0]' />
+
+        <span className='text-[10px] leading-3 text-[#919191]'>
+          Нажимая кнопку «Оплатить» вы даете согласие на обработку персональных
+          данных в соответствии с Политикой конфиденциальности
+        </span>
       </PopoverContent>
     </Popover>
   )
