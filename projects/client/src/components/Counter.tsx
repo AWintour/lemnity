@@ -104,6 +104,25 @@ function Digit({ place, value, height, digitStyle }: DigitProps) {
   )
 }
 
+const initializePlaces = (value: number): PlaceValue[] => {
+  const places = [...value.toString()].map((ch, i, a) => {
+    if (ch === '.' || ch === ',') {
+      return ','
+    }
+
+    const dotIndex = a.indexOf('.')
+    const isInteger = dotIndex === -1
+
+    const exponent = isInteger
+      ? a.length - i - 1
+      : i < dotIndex ? dotIndex - i - 1 : -(i - dotIndex)
+
+    return 10 ** exponent
+  })
+
+  return places
+}
+
 interface CounterProps {
   value: number
   fontSize?: number
@@ -134,20 +153,7 @@ export default function Counter({
   value,
   fontSize = 100,
   padding = 0,
-  places = [...value.toString()].map((ch, i, a) => {
-    if (ch === '.' || ch === ',') {
-      return ','
-    }
-
-    const dotIndex = a.indexOf('.')
-    const isInteger = dotIndex === -1
-
-    const exponent = isInteger
-      ? a.length - i - 1
-      : i < dotIndex ? dotIndex - i - 1 : -(i - dotIndex)
-
-    return 10 ** exponent
-  }),
+  places,
   gap = 8,
   borderRadius = 4,
   horizontalPadding = 8,
@@ -162,6 +168,11 @@ export default function Counter({
   topGradientStyle,
   bottomGradientStyle
 }: CounterProps) {
+  // moved initialization into the function body because of
+  // Error 1: (BuildHIR::node.lowerReorderableExpression)
+  // Expression type CallExpression cannot be safely reordered
+  // the component is now memoized by the react compiler
+  const visibleDigitPlaces = places ?? initializePlaces(value)
   const height = fontSize + padding
 
   const defaultContainerStyle: React.CSSProperties = {
@@ -204,7 +215,7 @@ export default function Counter({
   return (
     <span style={{ ...defaultContainerStyle, ...containerStyle }}>
       <span style={{ ...defaultCounterStyle, ...counterStyle }}>
-        {places.map(place => (
+        {visibleDigitPlaces.map(place => (
           <Digit
             key={place}
             place={place}

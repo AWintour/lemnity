@@ -10,6 +10,8 @@ type PaymentProviderProps = { children: React.ReactNode }
 
 const paymentReducer = (state: State, action: Action): State => {
   switch (action.type) {
+    case 'setPopupOpen':
+      return { ...state, open: action.open }
     case 'setIsTrialPeriod':
       return { ...state, isTrialPeriod: action.isTrialPeriod }
     case 'setPaymentPlan':
@@ -30,6 +32,7 @@ const paymentReducer = (state: State, action: Action): State => {
 
 const PaymentProvider = ({ children }: PaymentProviderProps) => {
   const [state, dispatch] = useReducer(paymentReducer, {
+    open: false,
     isTrialPeriod: true,
     paymentPlan: 'basic',
     paymentPeriod: 'month',

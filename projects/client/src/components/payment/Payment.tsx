@@ -1,18 +1,24 @@
 import { Button } from '@heroui/button'
 import { cn } from '@heroui/theme'
 
+import Counter, { type PlaceValue } from '../Counter'
 import PaymentStatus from './PaymentStatus'
 import PaymentPlanPicker from './PaymentPlanPicker'
 
 import { usePrice } from './usePrice'
 import { usePaymentContext } from './usePaymentContext'
-import Counter, { type PlaceValue } from '../Counter'
+import { useCloudPayments } from '@/hooks/useCloudPayments'
 
 const Payment = () => {
   const { total } = usePrice()
   const { dispatch, state } = usePaymentContext()
+  const { status, launchWidget } = useCloudPayments((result) => {
+    console.log('callback result:', result)
+  })
+  
   const { isTrialPeriod, paymentPlan } = state
 
+  // visible precision of the total needed for the counter animation
   const places: PlaceValue[] = total !== 0 && total > 1000
     ? [1000, 100, 10, 1, ',', .1, .01]
     : [100, 10, 1, '.', .1, .01]
@@ -23,7 +29,15 @@ const Payment = () => {
 
     if (isTrialPeriod && paymentPlan === 'basic') {
       dispatch({ type: 'setPaymentPlan', paymentPlan: 'business'})
+      return
     }
+
+    if (status !== 'ready') {
+      return
+    }
+
+    dispatch({ type: 'setPopupOpen', open: false })
+    launchWidget()
   }
 
   return (
@@ -41,11 +55,12 @@ const Payment = () => {
         )}
         onPress={handlePayment}
       >
-        {isTrialPeriod
+        {isTrialPeriod && paymentPlan === 'basic'
           ? 'Переключиться на бизнес тариф'
           : <>
               <span className='text-base'>Оплатить</span>
-              <Counter value={total}
+              <Counter
+                value={total}
                 fontSize={16}
                 padding={0}
                 places={places}

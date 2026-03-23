@@ -50,9 +50,11 @@ const paymentPeriods: PaymentPeriod[] = [
 ]
 
 const PaymentTrigger = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [variant, _setVariant] = useState<PaymentTriggerVariant>('trial')
-  const [open, setOpen] = useState(false)
-  const { dispatch } = usePaymentContext()
+  const { state, dispatch } = usePaymentContext()
+
+  const { open } = state
   
   const primaryLabel = variant === 'trial'
     ? 'Тестовый период'
@@ -82,11 +84,11 @@ const PaymentTrigger = () => {
   }
 
   const handlePopoverOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen)
+    dispatch({ type: 'setPopupOpen', open: isOpen })
   }
 
   const handlePopoverClose = () => {
-    setOpen(false)
+    dispatch({ type: 'setPopupOpen', open: false })
   }
 
   const handlePopoverInteractOutside = (element: Element) => {

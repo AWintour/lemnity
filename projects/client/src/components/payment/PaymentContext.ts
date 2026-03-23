@@ -10,6 +10,7 @@ import { type WidgetType } from '@/layouts/Widgets/constants'
 export type ModificationKey = WidgetType | 'BRANDING'
 
 export type Action =
+  | { type: 'setPopupOpen', open: boolean }
   | { type: 'setIsTrialPeriod', isTrialPeriod: boolean }
   | { type: 'setPaymentPlan', paymentPlan: PaymentPlanKey }
   | { type: 'setPaymentPeriod', paymentPeriod: PaymentPeriodKey }
@@ -20,6 +21,7 @@ export type Action =
 export type Dispatch = (action: Action) => void
 
 export type State = {
+  open: boolean
   isTrialPeriod: boolean
   paymentPlan: PaymentPlanKey
   paymentPeriod: PaymentPeriodKey
