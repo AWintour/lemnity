@@ -1,3 +1,3 @@
-import RewardMessageSettings from './RewardMessageSettings'
+// import RewardMessageSettings from './RewardMessageSettings'
 
-export default RewardMessageSettings
+// export default RewardMessageSettings

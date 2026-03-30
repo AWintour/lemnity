@@ -7,7 +7,7 @@ import TriggerSettings from './TriggerSettings'
 import CompanyLogo from './CompanyLogo'
 import { BrTagsOnNewlines } from './BrTagsOnNewlines'
 import FadeInOut from './FadeInOut'
-import RewardScreen from './RewardScreen'
+// import RewardScreen from './RewardScreen'
 import SwitchableField from './SwitchableField'
 import CustomRadioGroup, {
   type CustomRadioGroupOption,
@@ -15,6 +15,7 @@ import CustomRadioGroup, {
 import ImageUploader from './ImageUploader'
 import CountdownTimer from './CountdownTimer'
 import SvgIcon from './SvgIcon'
+import DisableBranding from './DisableBranding'
 
 export {
   Input,
@@ -26,11 +27,12 @@ export {
   CompanyLogo,
   BrTagsOnNewlines,
   FadeInOut,
-  RewardScreen,
+  // RewardScreen,
   SwitchableField,
   CustomRadioGroup,
   type CustomRadioGroupOption,
   ImageUploader,
   CountdownTimer,
   SvgIcon,
+  DisableBranding,
 }

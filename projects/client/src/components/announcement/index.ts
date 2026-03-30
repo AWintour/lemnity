@@ -1,7 +1,7 @@
-import MobileWidgetTrigger from './MobileWidgetTrigger'
-import DesktopWidgetTrigger from './DesktopWidgetTrigger'
+// import MobileWidgetTrigger from './MobileWidgetTrigger'
+// import DesktopWidgetTrigger from './DesktopWidgetTrigger'
 
-export {
-  MobileWidgetTrigger,
-  DesktopWidgetTrigger,
-}
+// export {
+//   MobileWidgetTrigger,
+//   DesktopWidgetTrigger,
+// }

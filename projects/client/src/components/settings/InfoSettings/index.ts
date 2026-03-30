@@ -1,3 +1,3 @@
-import InfoSettings from './InfoSettings'
+// import InfoSettings from './InfoSettings'
 
-export default InfoSettings
+// export default InfoSettings

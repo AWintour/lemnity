@@ -4,12 +4,15 @@ import { createPortal } from 'react-dom'
 import { cn } from '@heroui/theme'
 
 import NotificationEmbedRuntime from './embedded/embedRuntime'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+// import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+
+import { useAppSelector } from '@/stores/redux/hooks'
+import { selectTriggerPosition } from './notificationSlice'
 
 import type {
   NotificationWidgetType,
 } from '@lemnity/widget-config/widgets/notification'
-import { notificationWidgetDefaults as defaults } from './defaults'
+// import { notificationWidgetDefaults as defaults } from './defaults'
 type FloatingPreviewProps = {
   onClose: () => void
 }
@@ -17,13 +20,7 @@ type FloatingPreviewProps = {
 const NotificationFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   const [mounted, setMounted] = useState(false)
 
-  const triggerPosition = useWidgetSettingsStore(
-    useShallow(s => {
-      const settings = (s.settings?.widget as NotificationWidgetType)
-      return settings.triggerPosition
-          ?? defaults.triggerPosition
-    })
-  )
+  const triggerPosition = useAppSelector(selectTriggerPosition)
 
   useEffect(() => {
     setMounted(true)

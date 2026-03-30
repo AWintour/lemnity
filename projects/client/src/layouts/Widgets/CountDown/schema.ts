@@ -1,3 +1,3 @@
-import { actionTimerSchema } from '@lemnity/widget-config/widgets/action-timer'
+// import { actionTimerSchema } from '@lemnity/widget-config/widgets/action-timer'
 
-export { actionTimerSchema }
+// export { actionTimerSchema }

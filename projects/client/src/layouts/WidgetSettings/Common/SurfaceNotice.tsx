@@ -1,5 +1,4 @@
-import type { SettingsSurface } from '@/stores/widgetSettings/widgetDefinitions'
-
+type SettingsSurface = 'fields' | 'display' | 'integration'
 type Props = {
   surface: SettingsSurface
   message?: string

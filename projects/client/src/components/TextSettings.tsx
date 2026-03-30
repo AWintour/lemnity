@@ -5,7 +5,7 @@ import { cn } from '@heroui/theme'
 import ColorPicker from '@/components/ColorPicker'
 import FontSizeSettings from './FontSizeSettings'
 
-import { getFontWeightClass } from '@/layouts/Widgets/Announcement/utils/getFontWeightClass'
+import { getFontWeightClass } from './utils/getFontWeightClass'
 import type { FontWeight } from '@lemnity/widget-config/widgets/announcement'
 
 type FontWeightButtonProps = {

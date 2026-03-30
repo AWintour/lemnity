@@ -1,8 +1,8 @@
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
-import ButtonPositionChooser from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonPositionChooser/ButtonPositionChooser'
+import ButtonPositionChooser from '@/components/ButtonPositionChooser'
 
-import type { ButtonPosition } from '@/stores/widgetSettingsStore'
+import type { ButtonPosition } from '@/components/ButtonPositionChooser'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
 import type { Position } from '@lemnity/widget-config/widgets/notification'
 

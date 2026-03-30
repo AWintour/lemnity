@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import type { ButtonPosition } from '@/stores/widgetSettingsStore'
+// import type { ButtonPosition } from '@/stores/widgetSettingsStore'
+export type ButtonPosition = 'bottom-left' | 'top-right' | 'bottom-right'
 
 type ButtonPositionChooserProps = {
   title?: string

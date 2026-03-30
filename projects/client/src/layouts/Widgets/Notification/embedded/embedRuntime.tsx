@@ -5,22 +5,34 @@ import {
   useState,
   type CSSProperties,
 } from 'react'
-import { useShallow } from 'zustand/react/shallow'
+// import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
 import Widget from './Widget'
 import DesktopWidgetTrigger from './DesktopWidgetTrigger'
 import MobileWidgetTrigger from './MobileWidgetTrigger'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+// import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { sendEvent } from '@/common/api/publicApi'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  // selectNotificationById,
+  selectAllNotifications,
+  selectBrandingEnabled,
+  selectDelay,
+  selectTriggerBackgroundColor,
+  selectTriggerFontColor,
+  selectTriggerIcon,
+  selectTriggerText,
+  selectTriggerPosition,
+} from '../notificationSlice'
 
 import type {
   Notification,
   NotificationWidgetType,
 } from '@lemnity/widget-config/widgets/notification'
-import { notificationWidgetDefaults as defaults } from '../defaults'
+// import { notificationWidgetDefaults as defaults } from '../defaults'
 import { DateTime } from 'luxon'
 
 type LocalStorageData = { [key: string]: Date }
@@ -31,47 +43,55 @@ type NotificationEmbedRuntimeProps = {
 }
 
 const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
-  const {
-    widgetId,
-    projectId,
-    triggerText,
-    triggerFontColor,
-    triggerIcon,
-    triggerBackgroundColor,
-    triggerPosition,
-    delay,
-    notifications,
-    brandingEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      const settings = (s.settings?.widget as NotificationWidgetType)
+  const triggerText = useAppSelector(selectTriggerText)
+  const triggerFontColor = useAppSelector(selectTriggerFontColor)
+  const triggerBackgroundColor = useAppSelector(selectTriggerBackgroundColor)
+  const triggerIcon = useAppSelector(selectTriggerIcon)
+  const delay = useAppSelector(selectDelay)
+  const brandingEnabled = useAppSelector(selectBrandingEnabled)
+  const notifications = useAppSelector(selectAllNotifications)
+  const triggerPosition = useAppSelector(selectTriggerPosition)
+  // const {
+  //   widgetId,
+  //   projectId,
+  //   triggerText,
+  //   triggerFontColor,
+  //   triggerIcon,
+  //   triggerBackgroundColor,
+  //   triggerPosition,
+  //   delay,
+  //   notifications,
+  //   brandingEnabled,
+  // } = useWidgetSettingsStore(
+  //   useShallow(s => {
+  //     const settings = (s.settings?.widget as NotificationWidgetType)
 
-      return {
-        widgetId: s.settings?.id,
-        projectId: s.projectId,
+  //     return {
+  //       widgetId: s.settings?.id,
+  //       projectId: s.projectId,
 
-        triggerText: settings.triggerText
-          ?? defaults.triggerText,
-        triggerFontColor: settings.triggerFontColor
-          ?? defaults.triggerFontColor,
-        triggerIcon: settings.triggerIcon
-          ?? defaults.triggerIcon,
-        triggerBackgroundColor: settings.triggerBackgroundColor
-          ?? defaults.triggerBackgroundColor,
-        triggerPosition: settings.triggerPosition
-          ?? defaults.triggerPosition,
+  //       triggerText: settings.triggerText
+  //         ?? defaults.triggerText,
+  //       triggerFontColor: settings.triggerFontColor
+  //         ?? defaults.triggerFontColor,
+  //       triggerIcon: settings.triggerIcon
+  //         ?? defaults.triggerIcon,
+  //       triggerBackgroundColor: settings.triggerBackgroundColor
+  //         ?? defaults.triggerBackgroundColor,
+  //       triggerPosition: settings.triggerPosition
+  //         ?? defaults.triggerPosition,
 
-        delay: settings.delay
-          ?? defaults.delay,
+  //       delay: settings.delay
+  //         ?? defaults.delay,
 
-        notifications: settings.notifications
-          ?? [],
+  //       notifications: settings.notifications
+  //         ?? [],
 
-        brandingEnabled: settings.brandingEnabled
-          ?? defaults.brandingEnabled,
-      }
-    })
-  )
+  //       brandingEnabled: settings.brandingEnabled
+  //         ?? defaults.brandingEnabled,
+  //     }
+  //   })
+  // )
 
   const [open, setOpen] = useState(false)
   // const [isHoveringOnTrigger, setIsHoveringOnTrigger] = useState(false)
@@ -238,15 +258,15 @@ const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
   const toggleOpen = () => {
     setOpen(!open)
 
-    if (!widgetId || !projectId) {
-      return
-    }
+    // if (!widgetId || !projectId) {
+    //   return
+    // }
 
-    void sendEvent({
-      event_name: !open ? 'notification.open' : 'notification.close',
-      widget_id: widgetId,
-      project_id: projectId,
-    })
+    // void sendEvent({
+    //   event_name: !open ? 'notification.open' : 'notification.close',
+    //   widget_id: widgetId,
+    //   project_id: projectId,
+    // })
   }
 
   const handleTriggerMouseEnter = () => {

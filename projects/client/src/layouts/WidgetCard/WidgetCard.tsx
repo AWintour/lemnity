@@ -14,6 +14,9 @@ export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
 export type WidgetBadge = 'new' | 'popular' | 'soon' | null
 import type { WidgetTypeEnum } from '@lemnity/api-sdk'
 
+import { useAppDispatch } from '@/stores/redux/hooks'
+import { currentWidgetChanged } from '@/stores/redux/editorSlice'
+
 interface WidgetProps {
   title?: string
   subtitle?: string
@@ -31,6 +34,7 @@ interface WidgetProps {
 
 const Widget = ({
   title,
+  type,
   subtitle,
   badge,
   enabled,
@@ -43,6 +47,16 @@ const Widget = ({
   onPreview
 }: WidgetProps): ReactElement => {
   const [isEnabled, setIsEnabled] = useState<boolean>(enabled)
+  
+  const dispatch = useAppDispatch()
+
+  const handleEdit = () => {
+    dispatch(currentWidgetChanged(type))
+
+    if (widgetId && onEdit) {
+      onEdit(widgetId)
+    }
+  }
 
   const handleToggle = useCallback(
     (value: boolean) => {
@@ -99,7 +113,7 @@ const Widget = ({
             isCreated && 'w-32 shrink-0'
           )}
           isDisabled={!isAvailable || (isCreated && !widgetId)}
-          onPress={isCreated && widgetId ? () => onEdit?.(widgetId) : onCreate}
+          onPress={isCreated && widgetId ? handleEdit : onCreate}
           startContent={
             !isCreated ? (
               <SvgIcon src={iconAdd} size={'16px'} />

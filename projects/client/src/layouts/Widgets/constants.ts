@@ -2,16 +2,16 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 // ... ?
 export const WidgetTypes = {
-  WHEEL_OF_FORTUNE: WidgetTypeEnum.WHEEL_OF_FORTUNE,
+  // WHEEL_OF_FORTUNE: WidgetTypeEnum.WHEEL_OF_FORTUNE,
   CONVEYOR_OF_GIFTS: WidgetTypeEnum.CONVEYOR_OF_GIFTS,
-  ACTION_TIMER: WidgetTypeEnum.ACTION_TIMER,
-  FAB_MENU: WidgetTypeEnum.FAB_MENU,
+  // ACTION_TIMER: WidgetTypeEnum.ACTION_TIMER,
+  // FAB_MENU: WidgetTypeEnum.FAB_MENU,
   POSTCARD: WidgetTypeEnum.POSTCARD,
   CHEST_WITH_ACTION: WidgetTypeEnum.CHEST_WITH_ACTION,
   ADVENT_CALENDAR: WidgetTypeEnum.ADVENT_CALENDAR,
   TEASER: WidgetTypeEnum.TEASER,
-  ANNOUNCEMENT: WidgetTypeEnum.ANNOUNCEMENT,
-  EVENT_TIMER: WidgetTypeEnum.EVENT_TIMER,
+  // ANNOUNCEMENT: WidgetTypeEnum.ANNOUNCEMENT,
+  // EVENT_TIMER: WidgetTypeEnum.EVENT_TIMER,
   NOTIFICATION: WidgetTypeEnum.NOTIFICATION,
 } as const
 
@@ -26,41 +26,41 @@ export interface AvailableWidget {
 }
 
 export const AVAILABLE_WIDGETS: AvailableWidget[] = [
-  {
-    type: WidgetTypes.WHEEL_OF_FORTUNE,
-    title: 'Колесо фортуны',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new'
-  },
-  {
-    type: WidgetTypes.ACTION_TIMER,
-    title: 'Лид-форма',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new'
-  },
-  {
-    type: WidgetTypes.FAB_MENU,
-    title: 'Мультикнопка',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new'
-  },
-  {
-    type: WidgetTypes.ANNOUNCEMENT,
-    title: 'Анонс',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new'
-  },
-  {
-    type: WidgetTypes.EVENT_TIMER,
-    title: 'Таймер событий',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new'
-  },
+  // {
+  //   type: WidgetTypes.WHEEL_OF_FORTUNE,
+  //   title: 'Колесо фортуны',
+  //   description: 'Лиды, вовлечение, вознаграждение',
+  //   isAvailable: true,
+  //   badge: 'new'
+  // },
+  // {
+  //   type: WidgetTypes.ACTION_TIMER,
+  //   title: 'Лид-форма',
+  //   description: 'Лиды, вовлечение, вознаграждение',
+  //   isAvailable: true,
+  //   badge: 'new'
+  // },
+  // {
+  //   type: WidgetTypes.FAB_MENU,
+  //   title: 'Мультикнопка',
+  //   description: 'Лиды, вовлечение, вознаграждение',
+  //   isAvailable: true,
+  //   badge: 'new'
+  // },
+  // {
+  //   type: WidgetTypes.ANNOUNCEMENT,
+  //   title: 'Анонс',
+  //   description: 'Лиды, вовлечение, вознаграждение',
+  //   isAvailable: true,
+  //   badge: 'new'
+  // },
+  // {
+  //   type: WidgetTypes.EVENT_TIMER,
+  //   title: 'Таймер событий',
+  //   description: 'Лиды, вовлечение, вознаграждение',
+  //   isAvailable: true,
+  //   badge: 'new'
+  // },
   {
     type: WidgetTypes.NOTIFICATION,
     title: 'Уведомления',
