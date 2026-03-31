@@ -1,9 +1,9 @@
-import { nanoid, type EntitySelectors } from '@reduxjs/toolkit'
 import { useState } from 'react'
+import { nanoid } from '@reduxjs/toolkit'
 import { cn } from '@heroui/theme'
 import { PopoverContent, PopoverTrigger } from '@heroui/popover'
 
-import EditableList, { type EditableListItem } from '@/components/EditableList'
+import EditableList from '@/components/EditableList'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import SvgIcon from '@/components/SvgIcon'
 import {
@@ -28,7 +28,6 @@ import {
 } from './notificationSlice'
 
 import type {
-  Notification,
   Expiration,
 } from '@lemnity/widget-config/widgets/notification'
 import gearIcon from '@/assets/icons/gear.svg'
@@ -54,6 +53,7 @@ const NotificationItem = (props: NotificationItemProps) => {
     ) {
       props.setPendingItemId(null)
       // костыль. я пока не знаю, как сделать правильно
+      // аналог vue nextTick()
       // https://stackoverflow.com/a/75403839/21210000
       // https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout#late_timeouts
       setTimeout(() => {

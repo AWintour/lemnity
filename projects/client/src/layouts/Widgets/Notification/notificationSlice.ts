@@ -1,22 +1,43 @@
 import {
   nanoid,
   createSlice,
-  createSelector,
   createEntityAdapter,
   type PayloadAction,
   type WithSlice,
 } from '@reduxjs/toolkit'
 
+import {
+  createAppAsyncThunk,
+  type RootState,
+  type FetchStatus,
+  type WidgetSettings,
+} from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
+import { getWidget } from '@/services/widgets'
 
-import { WidgetTypeEnum } from '@lemnity/api-sdk'
-import type { RootState } from '@/stores/redux/store'
+import { WidgetTypeEnum, type Widget } from '@lemnity/api-sdk'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type NotificationWidgetType,
   type Position,
   type Notification,
 } from '@lemnity/widget-config/widgets/notification'
+
+export const fetchNotificationWidget = createAppAsyncThunk(
+  'notification/fetchWidget',
+  async (widgetId: string) => {
+    const widget = await getWidget(widgetId)
+    return widget
+  },
+  {
+    condition(_, thunkApi) {
+      const fetchStatus = selectFetchStatus(thunkApi.getState())
+      if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
+        return false
+      }
+    }
+  }
+)
 
 const notificationAdapter = createEntityAdapter<Notification>()
 
@@ -25,6 +46,10 @@ export type NotificationEntities =
 
 type NotificationWidgetState = Omit<NotificationWidgetType, 'notifications'> & {
   notifications: NotificationEntities
+  widgetId?: string
+  projectId?: string
+  fetchStatus: FetchStatus
+  fetchError: string | null
 }
 
 type NotificationUpdate =
@@ -44,6 +69,8 @@ export const defaultNotifications: Notification[] = [
 
 const initialState: NotificationWidgetState = {
   type: WidgetTypeEnum.NOTIFICATION,
+  fetchStatus: 'idle',
+  fetchError: null,
   triggerText: '',
   triggerBackgroundColor: '#5951E5',
   triggerFontColor: '#FFFFFF',
@@ -103,6 +130,58 @@ export const notificationSlice = createSlice({
     selectTriggerPosition: (state) => state.triggerPosition,
     selectDelay: (state) => state.delay,
     selectBrandingEnabled: (state) => state.brandingEnabled,
+    selectFetchStatus: (state) => state.fetchStatus,
+    selectFetchError: (state) => state.fetchError,
+    selectWidgetId: (state) => state.widgetId,
+    selectProjectId: (state) => state.projectId,
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchNotificationWidget.pending, (state) => {
+        state.fetchStatus = 'pending'
+      })
+      .addCase(fetchNotificationWidget.fulfilled, (state, action) => {
+        state.fetchStatus = 'succeeded'
+        state.fetchError = null
+
+        const payload = action.payload as Widget | undefined
+
+        state.widgetId = payload?.id
+        state.projectId = payload?.projectId
+
+        const widgetConfig = payload?.config as WidgetSettings | undefined
+        const widgetSettings = widgetConfig?.widget
+
+        const settings = widgetSettings
+          // copy default state if undefined
+          || { ...initialState, notifications: [...defaultNotifications] }
+        
+        const {
+          triggerText,
+          triggerBackgroundColor,
+          triggerFontColor,
+          triggerIcon,
+          triggerPosition,
+          delay,
+          notifications,
+          brandingEnabled,
+        } = settings
+
+        state.triggerText = triggerText
+        state.triggerBackgroundColor = triggerBackgroundColor
+        state.triggerFontColor = triggerFontColor
+        state.triggerIcon = triggerIcon
+        state.triggerPosition = triggerPosition
+        state.delay = delay
+        state.brandingEnabled = brandingEnabled
+
+        notificationAdapter.setAll(state.notifications, notifications)
+      })
+      .addCase(fetchNotificationWidget.rejected, (state, action) => {
+        state.fetchStatus = 'rejected'
+        state.fetchError = action.error.message
+          || 'Не удалось загрузить виджет'
+      })
   }
 })
 
@@ -134,6 +213,10 @@ export const {
   selectTriggerPosition,
   selectDelay,
   selectBrandingEnabled,
+  selectFetchStatus,
+  selectFetchError,
+  selectWidgetId,
+  selectProjectId,
 } = injectedNotificationSlice.selectors
 
 export default notificationSlice.reducer

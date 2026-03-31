@@ -55,6 +55,19 @@ const NotificationWidgetSettings = lazy(
   () => import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
 )
 
+type WidgetSettingsProps = {
+  currentWidget: WidgetTypeEnum
+}
+
+const WidgetSettings = ({ currentWidget }: WidgetSettingsProps) => {
+  switch (currentWidget) {
+    case 'NOTIFICATION':
+      return <NotificationWidgetSettings />
+    default:
+      return null
+  }
+}
+
 const EditWidgetPage = () => {
   const dispatch = useAppDispatch()
   const currentWidget = useAppSelector(selectCurrentWidget)
@@ -97,16 +110,6 @@ const EditWidgetPage = () => {
       }
     }
   }, [widgetType, dispatch])
-
-  let Settings: LazyExoticComponent<() => JSX.Element> | null = null
-
-  switch (currentWidget) {
-    case 'NOTIFICATION':
-      Settings = NotificationWidgetSettings
-      break
-    default:
-      Settings = null
-  }
 
   // // Initialize widget settings store once per widgetId
   // useEffect(() => {
@@ -377,10 +380,10 @@ const EditWidgetPage = () => {
               <div ref={topRef} aria-hidden="true" className="sentinelTop"></div>
               {/* {tab === 'fields' && <FieldsSettingsTab />} */}
               {/* {tab === 'fields' && <div>Fields</div>} */}
-              {tab === 'fields' && Settings && (
-                <Suspense>
-                  <Settings />
-                </Suspense>
+              {tab === 'fields' && currentWidget && (
+                // <Suspense>
+                  <WidgetSettings currentWidget={currentWidget} />
+                // </Suspense>
               )}
               {/* {tab === 'display' && showDisplayTab && <DisplaySettingsTab />} */}
               {tab === 'display' && showDisplayTab && <div>Display</div>}

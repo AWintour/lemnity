@@ -73,7 +73,7 @@ const SwitchableField = ({
           size="sm"
         />
       </div>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {children && enabled ? (
           <motion.div
             // layout

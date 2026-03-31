@@ -1,14 +1,14 @@
 import type { CSSProperties } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { AnimatePresence, motion, type Transition } from 'framer-motion'
 import { cn } from '@heroui/theme'
 
 import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
 import SvgIcon from '@/components/SvgIcon'
 
-// import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
 import { sendEvent } from '@/common/api/publicApi'
+import { useAppSelector } from '@/stores/redux/hooks'
+import { selectWidgetId, selectProjectId } from '../notificationSlice'
 
 import iconBell from '@/assets/icons/bell-filled.svg'
 
@@ -40,17 +40,8 @@ type NotificationListItemProps = {
 }
 
 const NotificationListItem = (props: NotificationListItemProps) => {
-  // const {
-  //   widgetId,
-  //   projectId,
-  // } = useWidgetSettingsStore(
-  //   useShallow(s => {
-  //     return {
-  //       widgetId: s.settings?.id,
-  //       projectId: s.projectId,
-  //     }
-  //   })
-  // )
+  const widgetId = useAppSelector(selectWidgetId)
+  const projectId = useAppSelector(selectProjectId)
 
   const urlStyle: CSSProperties = {
     fontSize: props.notification.urlFontSize,
@@ -59,18 +50,18 @@ const NotificationListItem = (props: NotificationListItemProps) => {
   const handleUrlClick = () => {
     window.open(props.notification.url, '_blank')
 
-    // if (!widgetId || !projectId) {
-    //   return
-    // }
+    if (!widgetId || !projectId) {
+      return
+    }
 
-    // void sendEvent({
-    //   event_name: 'notification.link_opened',
-    //   widget_id: widgetId,
-    //   project_id: projectId,
-    //   payload: {
-    //     url: props.notification.url,
-    //   }
-    // })
+    void sendEvent({
+      event_name: 'notification.link_opened',
+      widget_id: widgetId,
+      project_id: projectId,
+      payload: {
+        url: props.notification.url,
+      }
+    })
   }
 
   return (

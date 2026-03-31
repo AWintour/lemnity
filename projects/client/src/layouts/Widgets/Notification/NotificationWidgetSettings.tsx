@@ -1,9 +1,9 @@
-import { useShallow } from 'zustand/react/shallow'
+import { useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 
 import { TriggerSettings, DisableBranding } from '@/components'
 import NotificationSettings from './NotificationSettings'
 
-// import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
 import {
   selectTriggerText,
@@ -12,6 +12,8 @@ import {
   selectTriggerBackgroundColor,
   selectTriggerPosition,
   selectBrandingEnabled,
+  selectFetchStatus,
+  fetchNotificationWidget,
   triggerTextChanged,
   triggerFontColorChanged,
   triggerIconChanged,
@@ -21,50 +23,28 @@ import {
 } from './notificationSlice'
 
 import type {
-  NotificationWidgetType,
   Position,
 } from '@lemnity/widget-config/widgets/notification'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
-// import { notificationWidgetDefaults as defaults } from './defaults'
 
 const NotificationWidgetSettings = () => {
+  const dispatch = useAppDispatch()
+
   const triggerText = useAppSelector(selectTriggerText)
   const triggerFontColor = useAppSelector(selectTriggerFontColor)
   const triggerIcon = useAppSelector(selectTriggerIcon)
   const triggerBackgroundColor = useAppSelector(selectTriggerBackgroundColor)
   const triggerPosition = useAppSelector(selectTriggerPosition)
   const brandingEnabled = useAppSelector(selectBrandingEnabled)
+  const fetchStatus = useAppSelector(selectFetchStatus)
 
-  const dispatch = useAppDispatch()
-  // const {
-  //   triggerText,
-  //   triggerFontColor,
-  //   triggerIcon,
-  //   triggerBackgroundColor,
-  //   triggerPosition,
+  const { widgetId } = useParams()
 
-  //   brandingEnabled,
-  // } = useWidgetSettingsStore(
-  //   useShallow(s => {
-  //     const settings = (s.settings?.widget as NotificationWidgetType)
-      
-  //     return {
-  //       triggerText: settings.triggerText
-  //         ?? defaults.triggerText,
-  //       triggerFontColor: settings.triggerFontColor
-  //         ?? defaults.triggerFontColor,
-  //       triggerIcon: settings.triggerIcon
-  //         ?? defaults.triggerIcon,
-  //       triggerBackgroundColor: settings.triggerBackgroundColor
-  //         ?? defaults.triggerBackgroundColor,
-  //       triggerPosition: settings.triggerPosition
-  //         ?? defaults.triggerPosition,
-
-  //       brandingEnabled: settings.brandingEnabled
-  //         ?? defaults.brandingEnabled,
-  //     }
-  //   })
-  // )
+  useEffect(() => {
+    if (fetchStatus === 'idle' && widgetId && widgetId.length > 0) {
+      dispatch(fetchNotificationWidget(widgetId))
+    }
+  }, [fetchStatus, dispatch, widgetId])
 
   const setTriggerText = (value: string) => {
     dispatch(triggerTextChanged(value))
