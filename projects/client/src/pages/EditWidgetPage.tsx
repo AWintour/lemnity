@@ -4,7 +4,7 @@ import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout'
 import { useParams } from 'react-router-dom'
 import { Breadcrumbs, BreadcrumbItem } from '@heroui/breadcrumbs'
 import { Button } from '@heroui/button'
-import { lazy, memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type HTMLProps, type JSX, type LazyExoticComponent, type ReactNode } from 'react'
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type HTMLProps, type JSX, type LazyExoticComponent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useProjectsStore } from '@/stores/projectsStore'
 import SvgIcon from '@/components/SvgIcon'
@@ -58,7 +58,7 @@ const NotificationWidgetSettings = lazy(
 const EditWidgetPage = () => {
   const dispatch = useAppDispatch()
   const currentWidget = useAppSelector(selectCurrentWidget)
-  // const notifications = useAppSelector(selectAllNotifications)
+  const initRef = useRef(false)
 
   const [previewScreen, setPreviewScreen] = useState<'main' | 'prize' | 'panel'>('main')
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -84,14 +84,19 @@ const EditWidgetPage = () => {
   // console.log(Com)
 
   useEffect(() => {
-    if (!currentWidget && widgetType) {
+    if (!currentWidget && widgetType && !initRef.current) {
       dispatch(currentWidgetChanged(widgetType))
+      // strict mode shenanigans
+      initRef.current = true
     }
 
     return () => {
-      dispatch(currentWidgetChanged(null))
+      if (initRef.current) {
+        dispatch(currentWidgetChanged(null))
+        initRef.current = false
+      }
     }
-  }, [])
+  }, [widgetType, dispatch])
 
   let Settings: LazyExoticComponent<() => JSX.Element> | null = null
 
@@ -372,7 +377,11 @@ const EditWidgetPage = () => {
               <div ref={topRef} aria-hidden="true" className="sentinelTop"></div>
               {/* {tab === 'fields' && <FieldsSettingsTab />} */}
               {/* {tab === 'fields' && <div>Fields</div>} */}
-              {tab === 'fields' && Settings && <Settings />}
+              {tab === 'fields' && Settings && (
+                <Suspense>
+                  <Settings />
+                </Suspense>
+              )}
               {/* {tab === 'display' && showDisplayTab && <DisplaySettingsTab />} */}
               {tab === 'display' && showDisplayTab && <div>Display</div>}
               {/* {tab === 'integration' && showIntegrationTab && <IntegrationTab />} */}

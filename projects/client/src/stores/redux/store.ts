@@ -4,14 +4,10 @@ import {
   type ThunkAction,
 } from '@reduxjs/toolkit'
 
-import editorReducer from './editorSlice'
-import notificationReducer from '@/layouts/Widgets/Notification/notificationSlice'
+import { rootReducer } from './reducer'
 
 export const store = configureStore({
-  reducer: {
-    editor: editorReducer,
-    notification: notificationReducer,
-  },
+  reducer: rootReducer,
 })
 
 export type AppStore = typeof store

@@ -4,7 +4,10 @@ import {
   createSelector,
   createEntityAdapter,
   type PayloadAction,
+  type WithSlice,
 } from '@reduxjs/toolkit'
+
+import { rootReducer } from '@/stores/redux/reducer'
 
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import type { RootState } from '@/stores/redux/store'
@@ -14,7 +17,6 @@ import {
   type Position,
   type Notification,
 } from '@lemnity/widget-config/widgets/notification'
-import { create } from 'zustand'
 
 const notificationAdapter = createEntityAdapter<Notification>()
 
@@ -118,6 +120,12 @@ export const {
   notificationsReordered,
 } = notificationSlice.actions
 
+declare module '@/stores/redux/reducer' {
+  export interface LazyLoadedSlices extends WithSlice<typeof notificationSlice> {}
+}
+
+const injectedNotificationSlice = notificationSlice.injectInto(rootReducer)
+
 export const {
   selectTriggerText,
   selectTriggerBackgroundColor,
@@ -126,7 +134,7 @@ export const {
   selectTriggerPosition,
   selectDelay,
   selectBrandingEnabled,
-} = notificationSlice.selectors
+} = injectedNotificationSlice.selectors
 
 export default notificationSlice.reducer
 
@@ -135,5 +143,6 @@ export const {
   selectById: selectNotificationById,
   selectIds: selectNotificationIds,
 } = notificationAdapter.getSelectors(
-  (state: RootState) => state.notification.notifications
+  (state: RootState) => state.notification?.notifications
+    || notificationAdapter.getInitialState()
 )

@@ -26,5 +26,6 @@ const editorSlice = createSlice({
 })
 
 export default editorSlice.reducer
+export { editorSlice }
 export const { currentWidgetChanged } = editorSlice.actions
 export const { selectCurrentWidget } = editorSlice.selectors

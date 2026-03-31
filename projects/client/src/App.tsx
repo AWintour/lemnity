@@ -1,23 +1,23 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import './App.css'
-import HomePage from './pages/HomePage.tsx'
-import LoginPage from './pages/LoginPage.tsx'
-import DashboardPage from './pages/DashboardPage.tsx'
-// import WidgetsPage from './pages/WidgetsPage.tsx'
-import NotFoundPage from './pages/NotFoundPage.tsx'
-import ProtectedRoute from './pages/ProtectedRoute.tsx'
-import FullWidthLayout from './layouts/FullWidthLayout.tsx'
-import PublicRoute from './pages/PublicRoute.tsx'
-import ProjectLayout from '@/layouts/ProjectLayout/ProjectLayout'
-import ProjectWidgetsPage from '@/pages/ProjectWidgetsPage'
-import CreateWidgetPage from '@/pages/CreateWidgetPage'
-import WidgetPage from '@/pages/WidgetPage'
-import EditWidgetPage from '@/pages/EditWidgetPage'
-import WidgetPreviewPage from '@/pages/WidgetPreviewPage'
-import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
-import AnalyticsPage from './pages/AnalyticsPage'
-import RequestsPage from './pages/RequestsPage/RequestsPage.tsx'
-import { memo } from 'react'
+import { memo, lazy } from 'react'
+
+const HomePage = lazy(() => import('./pages/HomePage.tsx'))
+const LoginPage = lazy(() => import('./pages/LoginPage.tsx'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.tsx'))
+const ProtectedRoute = lazy(() => import('./pages/ProtectedRoute.tsx'))
+const FullWidthLayout = lazy(() => import('./layouts/FullWidthLayout.tsx'))
+const PublicRoute = lazy(() => import('./pages/PublicRoute.tsx'))
+const ProjectLayout = lazy(() => import('@/layouts/ProjectLayout/ProjectLayout.tsx'))
+const ProjectWidgetsPage = lazy(() => import('@/pages/ProjectWidgetsPage.tsx'))
+const CreateWidgetPage = lazy(() => import('@/pages/CreateWidgetPage.tsx'))
+const WidgetPage = lazy(() => import('@/pages/WidgetPage.tsx'))
+const EditWidgetPage = lazy(() => import('@/pages/EditWidgetPage.tsx'))
+const WidgetPreviewPage = lazy(() => import('@/pages/WidgetPreviewPage.tsx'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.tsx'))
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.tsx'))
+const RequestsPage = lazy(() => import('./pages/RequestsPage/RequestsPage.tsx'))
 
 function App() {
   return (
