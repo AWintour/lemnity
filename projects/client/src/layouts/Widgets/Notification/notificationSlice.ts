@@ -165,7 +165,7 @@ export const notificationSlice = createSlice({
           delay,
           notifications,
           brandingEnabled,
-        } = settings
+        } = settings as NotificationWidgetType
 
         state.triggerText = triggerText
         state.triggerBackgroundColor = triggerBackgroundColor
@@ -219,7 +219,7 @@ export const {
   selectProjectId,
 } = injectedNotificationSlice.selectors
 
-export default notificationSlice.reducer
+export default injectedNotificationSlice.reducer
 
 export const {
   selectAll: selectAllNotifications,

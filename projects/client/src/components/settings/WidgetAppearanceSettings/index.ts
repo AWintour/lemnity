@@ -1,2 +1,2 @@
-// import WidgetAppearanceSettings from './WidgetAppearanceSettings'
-// export default WidgetAppearanceSettings
+import WidgetAppearanceSettings from './WidgetAppearanceSettings'
+export default WidgetAppearanceSettings

@@ -35,7 +35,7 @@ export type WidgetAppearence = z.infer<typeof WidgetAppearenceSchema>
 
 const InfoSettingsSchema = z.object({
   contentType: ContentEnum,
-  contentAlignment: ContentAlignmentEnum.optional(),
+  contentAlignment: ContentAlignmentEnum,
   contentUrl: z
     .string()
     .optional(),

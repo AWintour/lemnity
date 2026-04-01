@@ -8,9 +8,6 @@ import {
 import { rootReducer } from './reducer'
 
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
-import {
-  type NotificationWidgetType,
-} from '@lemnity/widget-config/widgets/notification'
 
 export const store = configureStore({
   reducer: rootReducer,
@@ -35,7 +32,7 @@ export type FetchStatus = 'idle' | 'pending' | 'succeeded' | 'rejected'
 export type WidgetSettings = {
   id: string
   widgetType: WidgetTypeEnum
-  widget: NotificationWidgetType
+  widget: object
   // legacy
   fields?: object
   display?: object

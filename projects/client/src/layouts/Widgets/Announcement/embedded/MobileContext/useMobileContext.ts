@@ -1,4 +1,4 @@
-// import { use } from 'react'
-// import { MobileContext } from './MobileContext'
+import { use } from 'react'
+import { MobileContext } from './MobileContext'
 
-// export const useMobileContext = () => use(MobileContext)
+export const useMobileContext = () => use(MobileContext)
