@@ -302,7 +302,7 @@ export const announcementSlice = createSlice({
     mobileTriggerFontColorChanged: (state, action: PayloadAction<string>) => {
       state.mobileSettings.triggerFontColor = action.payload
     },
-    mobileImageUrlChanged: (state, action: PayloadAction<string>) => {
+    mobileImageUrlChanged: (state, action: PayloadAction<string | undefined>) => {
       state.mobileSettings.imageUrl = action.payload
     },
 

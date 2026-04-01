@@ -31,7 +31,7 @@ const radioOptions: CustomRadioGroupOption[] = [
   { label: 'Кнопка', value: 'button' },
 ]
 
-const MobileVersionSettings = (props: MobileVersionSettingsProps) => {
+const MobileTriggerSettings = (props: MobileVersionSettingsProps) => {
   const {
     base64Image,
     // error,
@@ -112,4 +112,4 @@ const MobileVersionSettings = (props: MobileVersionSettingsProps) => {
   )
 }
 
-export default MobileVersionSettings
+export default MobileTriggerSettings

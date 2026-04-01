@@ -4,7 +4,27 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk/models'
 import { useAppSelector } from '@/stores/redux/hooks'
 import { selectCurrentWidget } from '@/stores/redux/editorSlice'
 
-const NotificationWidget = lazy(() => import('@/layouts/Widgets/Notification/WidgetPreview'))
+const NotificationWidget = lazy(
+  () => import('@/layouts/Widgets/Notification/WidgetPreview')
+)
+const AnnouncementWidget = lazy(
+  () => import('@/layouts/Widgets/Announcement/WidgetPreview')
+)
+
+type WidgetProps = {
+  widgetType: WidgetTypeEnum | null
+}
+
+const Widget = ({ widgetType }: WidgetProps) => {
+  switch (widgetType) {
+    case WidgetTypeEnum.NOTIFICATION:
+      return <NotificationWidget />
+    case WidgetTypeEnum.ANNOUNCEMENT:
+      return <AnnouncementWidget />
+    default:
+      return null
+  }
+}
 
 type WidgetPreviewProps = {
   children?: ReactNode
@@ -12,16 +32,6 @@ type WidgetPreviewProps = {
 
 const WidgetPreview = ({ children }: WidgetPreviewProps) => {
   const widgetType = useAppSelector(selectCurrentWidget)
-
-  let WidgetComponent: LazyExoticComponent<() => JSX.Element> | null = null
-
-  switch (widgetType) {
-    case WidgetTypeEnum.NOTIFICATION:
-      WidgetComponent = NotificationWidget
-      break
-    default:
-      WidgetComponent = null
-  }
 
   return (
     <div className="flex flex-col gap-3.75 h-full">
@@ -35,7 +45,7 @@ const WidgetPreview = ({ children }: WidgetPreviewProps) => {
          ? null
          : tabs()
       } */}
-      {WidgetComponent && <WidgetComponent />}
+      {<Widget widgetType={widgetType} />}
     </div>
   )
 }

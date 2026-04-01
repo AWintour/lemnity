@@ -1,10 +1,19 @@
 /* eslint-disable */
+import {
+  lazy,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+} from 'react'
 import Header from '@/layouts/Header/Header'
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout'
 import { useParams } from 'react-router-dom'
 import { Breadcrumbs, BreadcrumbItem } from '@heroui/breadcrumbs'
 import { Button } from '@heroui/button'
-import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type HTMLProps, type JSX, type LazyExoticComponent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useProjectsStore } from '@/stores/projectsStore'
 import SvgIcon from '@/components/SvgIcon'
@@ -29,7 +38,6 @@ import {
   currentWidgetChanged,
   selectCurrentWidget,
 } from '@/stores/redux/editorSlice'
-import { selectAllNotifications } from '@/layouts/Widgets/Notification/notificationSlice'
 
 import breadcrumbSeparator from '@/assets/icons/breadcrumb-separator.svg'
 import floppyIcon from '@/assets/icons/floppy-icon.svg'
@@ -54,6 +62,9 @@ type TabDescriptor = { key: TabKey; label: string; visible: boolean }
 const NotificationWidgetSettings = lazy(
   () => import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
 )
+const AnnouncementWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
+)
 
 type WidgetSettingsProps = {
   currentWidget: WidgetTypeEnum
@@ -63,6 +74,8 @@ const WidgetSettings = ({ currentWidget }: WidgetSettingsProps) => {
   switch (currentWidget) {
     case 'NOTIFICATION':
       return <NotificationWidgetSettings />
+    case 'ANNOUNCEMENT':
+      return <AnnouncementWidgetSettings />
     default:
       return null
   }
