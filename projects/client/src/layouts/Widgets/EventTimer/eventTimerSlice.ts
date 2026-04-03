@@ -1,4 +1,4 @@
-// i should figure out how to reuse reduces and selectors
+// i should figure out how to reuse reducers and selectors
 // (and memoization in lazy loaded slices)
 import {
   createSlice,
@@ -12,6 +12,16 @@ import {
   type WidgetSettings,
 } from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
+import { brandingEnabledChangedReducer } from '@/stores/redux/features/common'
+import { rewardScreenReducers } from '@/stores/redux/features/rewarrdScreen'
+import {
+  mobileEnabledReducer,
+  mobileImageUrlReducer,
+  mobileTriggerBackgroundColorReducer,
+  mobileTriggerFontColorReducer,
+  mobileTriggerTextReducer,
+  mobileTriggerTypeReducer,
+} from '@/stores/redux/features/mobileTrigger'
 import { getWidget } from '@/services/widgets'
 
 import { WidgetTypeEnum, type PublicWidget } from '@lemnity/api-sdk'
@@ -19,7 +29,6 @@ import type { ColorScheme, Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type EventTimerWidgetType,
   type FontWeight,
-  type MobileTrigger,
 } from '@lemnity/widget-config/widgets/event-timer'
 
 export const fetchEventTimerWidget = createAppAsyncThunk(
@@ -152,6 +161,8 @@ export const eventTimerSlice = createSlice({
   name: 'eventTimer',
   initialState,
   reducers: {
+    brandingEnabledChanged: brandingEnabledChangedReducer,
+
     companyLogoEnabledChanged:
       (state, action: PayloadAction<boolean>) => {
         state.appearence.companyLogoEnabled = action.payload
@@ -326,116 +337,20 @@ export const eventTimerSlice = createSlice({
         state.formSettings.adsInfo.color = action.payload
       },
 
-    rewardScreenEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.rewardMessageSettings.rewardScreenEnabled = action.payload
-      },
-    rewardTitleChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.title = action.payload
-      },
-    rewardTitleFontSizeChanged:
-      (state, action: PayloadAction<number>) => {
-        state.rewardMessageSettings.titleFontSize = action.payload
-      },
-    rewardTitleFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.rewardMessageSettings.titleFontWeight = action.payload
-      },
-    rewardTitleFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.titleFontColor = action.payload
-      },
-    rewardDescriptionChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.description = action.payload
-      },
-    rewardDescriptionFontSizeChanged:
-      (state, action: PayloadAction<number>) => {
-        state.rewardMessageSettings.descriptionFontSize = action.payload
-      },
-    rewardDescriptionFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.rewardMessageSettings.descriptionFontWeight = action.payload
-      },
-    rewardDescriptionFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.descriptionFontColor = action.payload
-      },
-    rewardDiscountChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.discount = action.payload
-      },
-    rewardDiscountFontSizeChanged:
-      (state, action: PayloadAction<number>) => {
-        state.rewardMessageSettings.discountFontSize = action.payload
-      },
-    rewardDiscountFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.rewardMessageSettings.discountFontWeight = action.payload
-      },
-    rewardDiscountFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.discountFontColor = action.payload
-      },
-    rewardPromoChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.promo = action.payload
-      },
-    rewardPromoFontSizeChanged:
-      (state, action: PayloadAction<number>) => {
-        state.rewardMessageSettings.promoFontSize = action.payload
-      },
-    rewardPromoFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.rewardMessageSettings.promoFontWeight = action.payload
-      },
-    rewardPromoFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.promoFontColor = action.payload
-      },
-    rewardCustomColorSchemeEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.rewardMessageSettings.customColorSchemeEnabled = action.payload
-      },
-    rewardCustomDiscountBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.customDiscountBackgroundColor =
-          action.payload
-      },
-    rewardCustomPromoBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.rewardMessageSettings.customPromoBackgroundColor = action.payload
-      },
-    brandingEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.brandingEnabled = action.payload
-      },
+    ...rewardScreenReducers,
 
     mobileEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.mobileSettings.mobileEnabled = action.payload
-      },
+      mobileEnabledReducer,
     mobileTriggerTypeChanged:
-      (state, action: PayloadAction<MobileTrigger>) => {
-        state.mobileSettings.triggerType = action.payload
-      },
+      mobileTriggerTypeReducer,
     mobileTriggerTextChanged:
-      (state, action: PayloadAction<string>) => {
-        state.mobileSettings.triggerText = action.payload
-      },
+      mobileTriggerTextReducer,
     mobileTriggerBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.mobileSettings.triggerBackgroundColor = action.payload
-      },
+      mobileTriggerBackgroundColorReducer,
     mobileTriggerFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.mobileSettings.triggerFontColor = action.payload
-      },
+      mobileTriggerFontColorReducer,
     mobileImageUrlChanged:
-      (state, action: PayloadAction<string | undefined>) => {
-        state.mobileSettings.imageUrl = action.payload
-      },
+      mobileImageUrlReducer,
   },
   extraReducers: (builder) => {
     builder.addCase(fetchEventTimerWidget.pending, (state) => {
