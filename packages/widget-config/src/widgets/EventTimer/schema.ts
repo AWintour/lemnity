@@ -146,7 +146,7 @@ const EventTimerWidgetSchema = z.object({
   brandingEnabled: z.boolean(),
 })
 
-export type EventTimertWidgetType =
+export type EventTimerWidgetType =
   z.infer<typeof EventTimerWidgetSchema>
 
 const customSurfaces = {
