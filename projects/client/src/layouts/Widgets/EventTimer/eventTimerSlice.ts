@@ -1,4 +1,3 @@
-// i should figure out how to reuse reducers and selectors
 import {
   createSlice,
   type PayloadAction,
@@ -6,12 +5,17 @@ import {
 } from '@reduxjs/toolkit'
 
 import {
-  createAppAsyncThunk,
   type FetchStatus,
   type WidgetSettings,
 } from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
-import { brandingEnabledChangedReducer } from '@/stores/redux/features/common'
+import {
+  fetchWidgetThunkFactory,
+} from '@/stores/redux/utils/fetchWidgetThunkFactory'
+import {
+  commonReducers,
+  commonSelectors,
+} from '@/stores/redux/features/common'
 import {
   rewardScreenReducers,
   rewardScreenSelectors,
@@ -20,11 +24,8 @@ import {
   mobileSettingsReducers,
   mobileSettingsSelectors,
 } from '@/stores/redux/features/mobileTrigger'
-import { getWidget } from '@/services/widgets'
 
 import {
-  PublicWidgetsApi,
-  Configuration,
   WidgetTypeEnum,
   type PublicWidget,
 } from '@lemnity/api-sdk'
@@ -34,33 +35,9 @@ import {
   type FontWeight,
 } from '@lemnity/widget-config/widgets/event-timer'
 
-const configuration = new Configuration({
-  basePath: 'http://localhost:3000'
-})
-const apiInstance = new PublicWidgetsApi(configuration)
-
-export const fetchEventTimerWidget = createAppAsyncThunk(
+export const fetchEventTimerWidget = fetchWidgetThunkFactory(
   'eventTimer/fetchWidget',
-  async ({ widgetId, embedded }: {widgetId: string, embedded?: boolean}) => {
-    if (embedded) {
-      const { data } = await apiInstance.publicWidgetControllerFindOne(
-        { id: widgetId }
-      )
-      return data
-    }
-    else {
-      const widget = await getWidget(widgetId)
-      return widget
-    }
-  },
-  {
-    condition(_, thunkApi) {
-      const fetchStatus = selectFetchStatus(thunkApi.getState())
-      if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
-        return false
-      }
-    }
-  }
+  (state) => state.eventTimer!.fetchStatus
 )
 
 type EventTimerWidgetState = EventTimerWidgetType & {
@@ -177,8 +154,6 @@ export const eventTimerSlice = createSlice({
   name: 'eventTimer',
   initialState,
   reducers: {
-    brandingEnabledChanged: brandingEnabledChangedReducer,
-
     companyLogoEnabledChanged:
       (state, action: PayloadAction<boolean>) => {
         state.appearence.companyLogoEnabled = action.payload
@@ -395,6 +370,7 @@ export const eventTimerSlice = createSlice({
           initialState.mobileSettings.triggerFontColor
       },
 
+    ...commonReducers,
     ...rewardScreenReducers,
     ...mobileSettingsReducers,
   },
@@ -440,17 +416,6 @@ export const eventTimerSlice = createSlice({
     })
   },
   selectors: {
-    selectWidgetId:
-      (state) => state.widgetId,
-    selectProjectId:
-      (state) => state.projectId,
-    selectFetchStatus:
-      (state) => state.fetchStatus,
-    selectFetchError:
-      (state) => state.fetchError,
-    selectBrandingEnabled:
-      (state) => state.brandingEnabled,
-
     selectCompanyLogoEnabled:
       (state) => state.appearence.companyLogoEnabled,
     selectCompanyLogoUrl:
@@ -534,6 +499,7 @@ export const eventTimerSlice = createSlice({
     selectFormAdsInfo:
       (state) => state.formSettings.adsInfo,
     
+    ...commonSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
   },

@@ -1,12 +1,12 @@
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { MobileTrigger } from '@lemnity/widget-config/widgets/announcement'
 
-export interface MobileEnabled {
+export interface IMobileEnabled {
   mobileSettings: { mobileEnabled: boolean }
 }
 
 export const mobileEnabledReducer =
-  <TState extends MobileEnabled>(
+  <TState extends IMobileEnabled>(
     state: TState,
     action: PayloadAction<TState['mobileSettings']['mobileEnabled']>
   ) => {
@@ -14,16 +14,16 @@ export const mobileEnabledReducer =
   }
 
 export const selectMobileEnabled =
-  <TState extends MobileEnabled>(state: TState) =>
+  <TState extends IMobileEnabled>(state: TState) =>
     state.mobileSettings.mobileEnabled
 
 
-export interface MobileTriggerType {
+export interface IMobileTriggerType {
   mobileSettings: { triggerType: MobileTrigger }
 }
 
 export const mobileTriggerTypeReducer =
-  <TState extends MobileTriggerType>(
+  <TState extends IMobileTriggerType>(
     state: TState,
     action: PayloadAction<TState['mobileSettings']['triggerType']>
   ) => {
@@ -31,16 +31,16 @@ export const mobileTriggerTypeReducer =
   }
 
 export const selectMobileTriggerType =
-  <TState extends MobileTriggerType>(state: TState) =>
+  <TState extends IMobileTriggerType>(state: TState) =>
     state.mobileSettings.triggerType
 
 
-export interface MobileTriggerText {
+export interface IMobileTriggerText {
   mobileSettings: { triggerText: string }
 }
 
 export const mobileTriggerTextReducer =
-  <TState extends MobileTriggerText>(
+  <TState extends IMobileTriggerText>(
     state: TState,
     action: PayloadAction<TState['mobileSettings']['triggerText']>
   ) => {
@@ -48,16 +48,16 @@ export const mobileTriggerTextReducer =
   }
 
 export const selectMobileTriggerText =
-  <TState extends MobileTriggerText>(state: TState) =>
+  <TState extends IMobileTriggerText>(state: TState) =>
     state.mobileSettings.triggerText
 
 
-export interface MobileTriggerBackgroundColor {
+export interface IMobileTriggerBackgroundColor {
   mobileSettings: { triggerBackgroundColor: string }
 }
 
 export const mobileTriggerBackgroundColorReducer =
-  <TState extends MobileTriggerBackgroundColor>(
+  <TState extends IMobileTriggerBackgroundColor>(
     state: TState,
     action: PayloadAction<TState['mobileSettings']['triggerBackgroundColor']>
   ) => {
@@ -65,16 +65,16 @@ export const mobileTriggerBackgroundColorReducer =
   }
 
 export const selectMobileTriggerBackgroundColor =
-  <TState extends MobileTriggerBackgroundColor>(state: TState) =>
+  <TState extends IMobileTriggerBackgroundColor>(state: TState) =>
     state.mobileSettings.triggerBackgroundColor
 
 
-export interface MobileTriggerFontColor {
+export interface IMobileTriggerFontColor {
   mobileSettings: { triggerFontColor: string }
 }
 
 export const mobileTriggerFontColorReducer =
-  <TState extends MobileTriggerFontColor>(
+  <TState extends IMobileTriggerFontColor>(
     state: TState,
     action: PayloadAction<TState['mobileSettings']['triggerFontColor']>
   ) => {
@@ -82,16 +82,16 @@ export const mobileTriggerFontColorReducer =
   }
 
 export const selectMobileTriggerFontColor =
-  <TState extends MobileTriggerFontColor>(state: TState) =>
+  <TState extends IMobileTriggerFontColor>(state: TState) =>
     state.mobileSettings.triggerFontColor
 
 
-export interface MobileImageUrl {
+export interface IMobileImageUrl {
   mobileSettings: { imageUrl?: string }
 }
 
 export const mobileImageUrlReducer =
-  <TState extends MobileImageUrl>(
+  <TState extends IMobileImageUrl>(
     state: TState,
     action: PayloadAction<TState['mobileSettings']['imageUrl']>
   ) => {
@@ -99,7 +99,7 @@ export const mobileImageUrlReducer =
   }
 
 export const selectMobileImageUrl =
-  <TState extends MobileImageUrl>(state: TState) =>
+  <TState extends IMobileImageUrl>(state: TState) =>
     state.mobileSettings.imageUrl
 
 

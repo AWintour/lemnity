@@ -5,16 +5,27 @@ import {
 } from '@reduxjs/toolkit'
 
 import {
-  createAppAsyncThunk,
   type FetchStatus,
   type WidgetSettings,
 } from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
-import { getWidget } from '@/services/widgets'
+import {
+  fetchWidgetThunkFactory,
+} from '@/stores/redux/utils/fetchWidgetThunkFactory'
+import {
+  commonReducers,
+  commonSelectors,
+} from '@/stores/redux/features/common'
+import {
+  rewardScreenReducers,
+  rewardScreenSelectors,
+} from '@/stores/redux/features/rewardScreen'
+import {
+  mobileSettingsReducers,
+  mobileSettingsSelectors,
+} from '@/stores/redux/features/mobileTrigger'
 
 import {
-  PublicWidgetsApi,
-  Configuration,
   WidgetTypeEnum,
   type PublicWidget,
 } from '@lemnity/api-sdk'
@@ -24,37 +35,11 @@ import {
   type Content,
   type ContentAlignment,
   type FontWeight,
-  type MobileTrigger,
 } from '@lemnity/widget-config/widgets/announcement'
 
-const configuration = new Configuration({
-  basePath: 'http://localhost:3000'
-})
-const apiInstance = new PublicWidgetsApi(configuration)
-
-// i should probably make this into a factory
-export const fetchAnnouncementWidget = createAppAsyncThunk(
+export const fetchAnnouncementWidget = fetchWidgetThunkFactory(
   'announcement/fetchWidget',
-  async ({ widgetId, embedded }: {widgetId: string, embedded?: boolean}) => {
-    if (embedded) {
-      const { data } = await apiInstance.publicWidgetControllerFindOne(
-        { id: widgetId }
-      )
-      return data
-    }
-    else {
-      const widget = await getWidget(widgetId)
-      return widget
-    }
-  },
-  {
-    condition(_, thunkApi) {
-      const fetchStatus = selectFetchStatus(thunkApi.getState())
-      if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
-        return false
-      }
-    }
-  }
+  (state) => state.announcement!.fetchStatus
 )
 
 type AnnouncementWidgetState = AnnouncementWidgetType & {
@@ -143,186 +128,83 @@ export const announcementSlice = createSlice({
   name: 'announcement',
   initialState,
   reducers: {
-    companyLogoEnabledChanged: (state, action: PayloadAction<boolean>) => {
-      state.appearence.companyLogoEnabled = action.payload
-    },
-    companyLogoUrlChanged: (
-      state,
-      action: PayloadAction<string | undefined>
-    ) => {
-      state.appearence.companyLogoUrl = action.payload
-    },
-    colorSchemeChanged: (state, action: PayloadAction<ColorScheme>) => {
-      state.appearence.colorScheme = action.payload
-    },
-    backgroundColorChanged: (state, action: PayloadAction<string>) => {
-      state.appearence.backgroundColor = action.payload
-    },
-    borderRadiusChanged: (state, action: PayloadAction<number>) => {
-      state.appearence.borderRadius = action.payload
-    },
+    companyLogoEnabledChanged:
+      (state, action: PayloadAction<boolean>) => {
+        state.appearence.companyLogoEnabled = action.payload
+      },
+    companyLogoUrlChanged:
+      (state, action: PayloadAction<string | undefined>) => {
+        state.appearence.companyLogoUrl = action.payload
+      },
+    colorSchemeChanged:
+      (state, action: PayloadAction<ColorScheme>) => {
+        state.appearence.colorScheme = action.payload
+      },
+    backgroundColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.appearence.backgroundColor = action.payload
+      },
+    borderRadiusChanged:
+      (state, action: PayloadAction<number>) => {
+        state.appearence.borderRadius = action.payload
+      },
 
-    contentTypeChanged: (state, action: PayloadAction<Content>) => {
-      state.infoSettings.contentType = action.payload
-    },
-    contentAlignmentChanged: (
-      state,
-      action: PayloadAction<ContentAlignment>
-    ) => {
-      state.infoSettings.contentAlignment = action.payload
-    },
-    contentUrlChanged: (state, action: PayloadAction<string | undefined>) => {
-      state.infoSettings.contentUrl = action.payload
-    },
-    titleChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.title = action.payload
-    },
-    titleFontWeightChanged: (state, action: PayloadAction<FontWeight>) => {
-      state.infoSettings.titleFontWeight = action.payload
-    },
-    titleColorChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.titleColor = action.payload
-    },
-    descriptionChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.description = action.payload
-    },
-    descriptionFontWeightChanged: (
-      state,
-      action: PayloadAction<FontWeight>
-    ) => {
-      state.infoSettings.descriptionFontWeight = action.payload
-    },
-    descriptionColorChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.descriptionColor = action.payload
-    },
-    buttonTextChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.buttonText = action.payload
-    },
-    buttonFontColorChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.buttonFontColor = action.payload
-    },
-    buttonBackgroundColorChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.buttonBackgroundColor = action.payload
-    },
-    iconChanged: (state, action: PayloadAction<Icon>) => {
-      state.infoSettings.icon = action.payload
-    },
-    linkChanged: (state, action: PayloadAction<string>) => {
-      state.infoSettings.link = action.payload
-    },
-
-    rewardScreenEnabledChanged: (state, action: PayloadAction<boolean>) => {
-      state.rewardMessageSettings.rewardScreenEnabled = action.payload
-    },
-    rewardTitleChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.title = action.payload
-    },
-    rewardTitleFontSizeChanged: (state, action: PayloadAction<number>) => {
-      state.rewardMessageSettings.titleFontSize = action.payload
-    },
-    rewardTitleFontWeightChanged: (
-      state,
-      action: PayloadAction<FontWeight>
-    ) => {
-      state.rewardMessageSettings.titleFontWeight = action.payload
-    },
-    rewardTitleFontColorChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.titleFontColor = action.payload
-    },
-    rewardDescriptionChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.description = action.payload
-    },
-    rewardDescriptionFontSizeChanged: (
-      state,
-      action: PayloadAction<number>
-    ) => {
-      state.rewardMessageSettings.descriptionFontSize = action.payload
-    },
-    rewardDescriptionFontWeightChanged: (
-      state,
-      action: PayloadAction<FontWeight>
-    ) => {
-      state.rewardMessageSettings.descriptionFontWeight = action.payload
-    },
-    rewardDescriptionFontColorChanged: (
-      state,
-      action: PayloadAction<string>
-    ) => {
-      state.rewardMessageSettings.descriptionFontColor = action.payload
-    },
-    rewardDiscountChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.discount = action.payload
-    },
-    rewardDiscountFontSizeChanged: (state, action: PayloadAction<number>) => {
-      state.rewardMessageSettings.discountFontSize = action.payload
-    },
-    rewardDiscountFontWeightChanged: (
-      state,
-      action: PayloadAction<FontWeight>
-    ) => {
-      state.rewardMessageSettings.discountFontWeight = action.payload
-    },
-    rewardDiscountFontColorChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.discountFontColor = action.payload
-    },
-    rewardPromoChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.promo = action.payload
-    },
-    rewardPromoFontSizeChanged: (state, action: PayloadAction<number>) => {
-      state.rewardMessageSettings.promoFontSize = action.payload
-    },
-    rewardPromoFontWeightChanged: (
-      state,
-      action: PayloadAction<FontWeight>
-    ) => {
-      state.rewardMessageSettings.promoFontWeight = action.payload
-    },
-    rewardPromoFontColorChanged: (state, action: PayloadAction<string>) => {
-      state.rewardMessageSettings.promoFontColor = action.payload
-    },
-    rewardCustomColorSchemeEnabledChanged: (
-      state,
-      action: PayloadAction<boolean>
-    ) => {
-      state.rewardMessageSettings.customColorSchemeEnabled = action.payload
-    },
-    rewardCustomDiscountBackgroundColorChanged: (
-      state,
-      action: PayloadAction<string>
-    ) => {
-      state.rewardMessageSettings.customDiscountBackgroundColor = action.payload
-    },
-    rewardCustomPromoBackgroundColorChanged: (
-      state,
-      action: PayloadAction<string>
-    ) => {
-      state.rewardMessageSettings.customPromoBackgroundColor = action.payload
-    },
-    brandingEnabledChanged: (state, action: PayloadAction<boolean>) => {
-      state.brandingEnabled = action.payload
-    },
-
-    mobileEnabledChanged: (state, action: PayloadAction<boolean>) => {
-      state.mobileSettings.mobileEnabled = action.payload
-    },
-    mobileTriggerTypeChanged: (state, action: PayloadAction<MobileTrigger>) => {
-      state.mobileSettings.triggerType = action.payload
-    },
-    mobileTriggerTextChanged: (state, action: PayloadAction<string>) => {
-      state.mobileSettings.triggerText = action.payload
-    },
-    mobileTriggerBackgroundColorChanged: (
-      state,
-      action: PayloadAction<string>
-    ) => {
-      state.mobileSettings.triggerBackgroundColor = action.payload
-    },
-    mobileTriggerFontColorChanged: (state, action: PayloadAction<string>) => {
-      state.mobileSettings.triggerFontColor = action.payload
-    },
-    mobileImageUrlChanged: (state, action: PayloadAction<string | undefined>) => {
-      state.mobileSettings.imageUrl = action.payload
-    },
+    contentTypeChanged:
+      (state, action: PayloadAction<Content>) => {
+        state.infoSettings.contentType = action.payload
+      },
+    contentAlignmentChanged:
+      (state, action: PayloadAction<ContentAlignment>) => {
+        state.infoSettings.contentAlignment = action.payload
+      },
+    contentUrlChanged:
+      (state, action: PayloadAction<string | undefined>) => {
+        state.infoSettings.contentUrl = action.payload
+      },
+    titleChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.title = action.payload
+      },
+    titleFontWeightChanged:
+      (state, action: PayloadAction<FontWeight>) => {
+        state.infoSettings.titleFontWeight = action.payload
+      },
+    titleColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.titleColor = action.payload
+      },
+    descriptionChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.description = action.payload
+      },
+    descriptionFontWeightChanged:
+      (state, action: PayloadAction<FontWeight>) => {
+        state.infoSettings.descriptionFontWeight = action.payload
+      },
+    descriptionColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.descriptionColor = action.payload
+      },
+    buttonTextChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.buttonText = action.payload
+      },
+    buttonFontColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.buttonFontColor = action.payload
+      },
+    buttonBackgroundColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.buttonBackgroundColor = action.payload
+      },
+    iconChanged:
+      (state, action: PayloadAction<Icon>) => {
+        state.infoSettings.icon = action.payload
+      },
+    linkChanged:
+      (state, action: PayloadAction<string>) => {
+        state.infoSettings.link = action.payload
+      },
 
     colorsReset: (state) => {
       state.appearence.backgroundColor =
@@ -352,14 +234,12 @@ export const announcementSlice = createSlice({
       state.mobileSettings.triggerFontColor =
         initialState.mobileSettings.triggerFontColor
     },
+
+    ...commonReducers,
+    ...rewardScreenReducers,
+    ...mobileSettingsReducers,
   },
   selectors: {
-    selectWidgetId: (state) => state.widgetId,
-    selectProjectId: (state) => state.projectId,
-    selectFetchStatus: (state) => state.fetchStatus,
-    selectFetchError: (state) => state.fetchError,
-    selectBrandingEnabled: (state) => state.brandingEnabled,
-
     selectCompanyLogoEnabled: (state) => {
       return state.appearence.companyLogoEnabled
     },
@@ -419,85 +299,9 @@ export const announcementSlice = createSlice({
       return state.infoSettings.link
     },
 
-    selectRewardScreenEnabled: (state) => {
-      return state.rewardMessageSettings.rewardScreenEnabled
-    },
-    selectRewardTitle: (state) => {
-      return state.rewardMessageSettings.title
-    },
-    selectRewardTitleFontSize: (state) => {
-      return state.rewardMessageSettings.titleFontSize
-    },
-    selectRewardTitleFontWeight: (state) => {
-      return state.rewardMessageSettings.titleFontWeight
-    },
-    selectRewardTitleFontColor: (state) => {
-      return state.rewardMessageSettings.titleFontColor
-    },
-    selectRewardDescription: (state) => {
-      return state.rewardMessageSettings.description
-    },
-    selectRewardDescriptionFontSize: (state) => {
-      return state.rewardMessageSettings.descriptionFontSize
-    },
-    selectRewardDescriptionFontWeight: (state) => {
-      return state.rewardMessageSettings.descriptionFontWeight
-    },
-    selectRewardDescriptionFontColor: (state) => {
-      return state.rewardMessageSettings.descriptionFontColor
-    },
-    selectRewardDiscount: (state) => {
-      return state.rewardMessageSettings.discount
-    },
-    selectRewardDiscountFontSize: (state) => {
-      return state.rewardMessageSettings.discountFontSize
-    },
-    selectRewardDiscountFontWeight: (state) => {
-      return state.rewardMessageSettings.discountFontWeight
-    },
-    selectRewardDiscountFontColor: (state) => {
-      return state.rewardMessageSettings.discountFontColor
-    },
-    selectRewardPromo: (state) => {
-      return state.rewardMessageSettings.promo
-    },
-    selectRewardPromoFontSize: (state) => {
-      return state.rewardMessageSettings.promoFontSize
-    },
-    selectRewardPromoFontWeight: (state) => {
-      return state.rewardMessageSettings.promoFontWeight
-    },
-    selectRewardPromoFontColor: (state) => {
-      return state.rewardMessageSettings.promoFontColor
-    },
-    selectRewardCustomColorSchemeEnabled: (state) => {
-      return state.rewardMessageSettings.customColorSchemeEnabled
-    },
-    selectRewardCustomDiscountBackgroundColor: (state) => {
-      return state.rewardMessageSettings.customDiscountBackgroundColor
-    },
-    selectRewardCustomPromoBackgroundColor: (state) => {
-      return state.rewardMessageSettings.customPromoBackgroundColor
-    },
-
-    selectMobileEnabled: (state) => {
-      return state.mobileSettings.mobileEnabled
-    },
-    selectMobileTriggerType: (state) => {
-      return state.mobileSettings.triggerType
-    },
-    selectMobileTriggerText: (state) => {
-      return state.mobileSettings.triggerText
-    },
-    selectMobileTriggerBackgroundColor: (state) => {
-      return state.mobileSettings.triggerBackgroundColor
-    },
-    selectMobileTriggerFontColor: (state) => {
-      return state.mobileSettings.triggerFontColor
-    },
-    selectMobileImageUrl: (state) => {
-      return state.mobileSettings.imageUrl
-    },
+    ...commonSelectors,
+    ...rewardScreenSelectors,
+    ...mobileSettingsSelectors,
   },
   extraReducers: (builder) => {
     builder

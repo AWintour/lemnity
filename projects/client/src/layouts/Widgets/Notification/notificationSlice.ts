@@ -7,17 +7,16 @@ import {
 } from '@reduxjs/toolkit'
 
 import {
-  createAppAsyncThunk,
   type RootState,
   type FetchStatus,
   type WidgetSettings,
 } from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
-import { getWidget } from '@/services/widgets'
+import {
+  fetchWidgetThunkFactory,
+} from '@/stores/redux/utils/fetchWidgetThunkFactory'
 
 import {
-  PublicWidgetsApi,
-  Configuration,
   WidgetTypeEnum,
   type PublicWidget,
 } from '@lemnity/api-sdk'
@@ -28,33 +27,9 @@ import {
   type Notification,
 } from '@lemnity/widget-config/widgets/notification'
 
-const configuration = new Configuration({
-  basePath: 'http://localhost:3000'
-})
-const apiInstance = new PublicWidgetsApi(configuration)
-
-export const fetchNotificationWidget = createAppAsyncThunk(
+export const fetchNotificationWidget = fetchWidgetThunkFactory(
   'notification/fetchWidget',
-  async ({ widgetId, embedded }: {widgetId: string, embedded?: boolean}) => {
-    if (embedded) {
-      const { data } = await apiInstance.publicWidgetControllerFindOne(
-        { id: widgetId }
-      )
-      return data
-    }
-    else {
-      const widget = await getWidget(widgetId)
-      return widget
-    }
-  },
-  {
-    condition(_, thunkApi) {
-      const fetchStatus = selectFetchStatus(thunkApi.getState())
-      if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
-        return false
-      }
-    }
-  }
+  (state) => state.notification!.fetchStatus
 )
 
 const notificationAdapter = createEntityAdapter<Notification>()

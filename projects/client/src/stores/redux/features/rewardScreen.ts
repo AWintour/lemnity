@@ -1,12 +1,12 @@
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { FontWeight } from '@lemnity/widget-config/widgets/announcement'
 
-export interface RewardScreenEnabled {
+export interface IRewardScreenEnabled {
   rewardMessageSettings: { rewardScreenEnabled: boolean }
 }
 
 export const rewardScreenEnabledReducer =
-  <TState extends RewardScreenEnabled>(
+  <TState extends IRewardScreenEnabled>(
     state:
       TState,
     action:
@@ -16,16 +16,16 @@ export const rewardScreenEnabledReducer =
   }
 
 export const selectRewardScreenEnabled =
-  <TState extends RewardScreenEnabled>(state: TState) =>
+  <TState extends IRewardScreenEnabled>(state: TState) =>
     state.rewardMessageSettings.rewardScreenEnabled
 
 
-export interface RewardScreenTitle {
+export interface IRewardScreenTitle {
   rewardMessageSettings: { title: string }
 }
 
 export const rewardTitleReducer =
-  <TState extends RewardScreenTitle>(
+  <TState extends IRewardScreenTitle>(
     state:
       TState,
     action:
@@ -35,16 +35,16 @@ export const rewardTitleReducer =
   }
 
 export const selectRewardTitle =
-  <TState extends RewardScreenTitle>(state: TState) =>
+  <TState extends IRewardScreenTitle>(state: TState) =>
     state.rewardMessageSettings.title
 
 
-export interface RewardScreenTitleFontSize {
+export interface IRewardScreenTitleFontSize {
   rewardMessageSettings: { titleFontSize: number }
 }
 
 export const rewardTitleFontSizeReducer =
-  <TState extends RewardScreenTitleFontSize>(
+  <TState extends IRewardScreenTitleFontSize>(
     state:
       TState,
     action:
@@ -54,16 +54,16 @@ export const rewardTitleFontSizeReducer =
   }
 
 export const selectRewardTitleFontSize =
-  <TState extends RewardScreenTitleFontSize>(state: TState) =>
+  <TState extends IRewardScreenTitleFontSize>(state: TState) =>
     state.rewardMessageSettings.titleFontSize
 
 
-export interface RewardScreenFontWeight {
+export interface IRewardScreenFontWeight {
   rewardMessageSettings: { titleFontWeight: FontWeight }
 }
 
 export const rewardTitleFontWeightReducer =
-  <TState extends RewardScreenFontWeight>(
+  <TState extends IRewardScreenFontWeight>(
     state:
       TState,
     action:
@@ -73,15 +73,15 @@ export const rewardTitleFontWeightReducer =
   }
 
 export const selectRewardTitleFontWeight =
-  <TState extends RewardScreenFontWeight>(state: TState) =>
+  <TState extends IRewardScreenFontWeight>(state: TState) =>
     state.rewardMessageSettings.titleFontWeight
 
-export interface RewardScreenFontColor {
+export interface IRewardScreenFontColor {
   rewardMessageSettings: { titleFontColor: string }
 }
 
 export const rewardTitleFontColorReducer =
-  <TState extends RewardScreenFontColor>(
+  <TState extends IRewardScreenFontColor>(
     state:
       TState,
     action:
@@ -91,15 +91,15 @@ export const rewardTitleFontColorReducer =
   }
 
 export const selectRewardTitleFontColor =
-  <TState extends RewardScreenFontColor>(state: TState) =>
+  <TState extends IRewardScreenFontColor>(state: TState) =>
     state.rewardMessageSettings.titleFontColor
 
-export interface RewardScreenDescription {
+export interface IRewardScreenDescription {
   rewardMessageSettings: { description: string }
 }
 
 export const rewardDescriptionReducer =
-  <TState extends RewardScreenDescription>(
+  <TState extends IRewardScreenDescription>(
     state:
       TState,
     action:
@@ -109,16 +109,16 @@ export const rewardDescriptionReducer =
   }
 
 export const selectRewardDescription =
-  <TState extends RewardScreenDescription>(state: TState) =>
+  <TState extends IRewardScreenDescription>(state: TState) =>
     state.rewardMessageSettings.description
 
 
-export interface RewardScreenDescriptionFontSize {
+export interface IRewardScreenDescriptionFontSize {
   rewardMessageSettings: { descriptionFontSize: number }
 }
 
 export const rewardDescriptionFontSizeReducer =
-  <TState extends RewardScreenDescriptionFontSize>(
+  <TState extends IRewardScreenDescriptionFontSize>(
     state:
       TState,
     action:
@@ -128,16 +128,16 @@ export const rewardDescriptionFontSizeReducer =
   }
 
 export const selectRewardDescriptionFontSize =
-  <TState extends RewardScreenDescriptionFontSize>(state: TState) =>
+  <TState extends IRewardScreenDescriptionFontSize>(state: TState) =>
     state.rewardMessageSettings.descriptionFontSize
 
 
-export interface RewardScreenDescriptionFontWeight {
+export interface IRewardScreenDescriptionFontWeight {
   rewardMessageSettings: { descriptionFontWeight: FontWeight }
 }
 
 export const rewardDescriptionFontWeighReducer =
-  <TState extends RewardScreenDescriptionFontWeight>(
+  <TState extends IRewardScreenDescriptionFontWeight>(
     state:
       TState,
     action:
@@ -147,16 +147,16 @@ export const rewardDescriptionFontWeighReducer =
   }
 
 export const selectRewardDescriptionFontWeight =
-  <TState extends RewardScreenDescriptionFontWeight>(state: TState) =>
+  <TState extends IRewardScreenDescriptionFontWeight>(state: TState) =>
     state.rewardMessageSettings.descriptionFontWeight
 
 
-export interface RewardScreenDescriptionFontColor {
+export interface IRewardScreenDescriptionFontColor {
   rewardMessageSettings: { descriptionFontColor: string }
 }
 
 export const rewardDescriptionFontColorReducer =
-  <TState extends RewardScreenDescriptionFontColor>(
+  <TState extends IRewardScreenDescriptionFontColor>(
     state:
       TState,
     action:
@@ -166,16 +166,16 @@ export const rewardDescriptionFontColorReducer =
   }
 
 export const selectRewardDescriptionFontColor =
-  <TState extends RewardScreenDescriptionFontColor>(state: TState) =>
+  <TState extends IRewardScreenDescriptionFontColor>(state: TState) =>
     state.rewardMessageSettings.descriptionFontColor
 
 
-export interface RewardScreenDiscount {
+export interface IRewardScreenDiscount {
   rewardMessageSettings: { discount: string }
 }
 
 export const rewardDiscountReducer =
-  <TState extends RewardScreenDiscount>(
+  <TState extends IRewardScreenDiscount>(
     state:
       TState,
     action:
@@ -185,16 +185,16 @@ export const rewardDiscountReducer =
   }
 
 export const selectRewardDiscount =
-  <TState extends RewardScreenDiscount>(state: TState) =>
+  <TState extends IRewardScreenDiscount>(state: TState) =>
     state.rewardMessageSettings.discount
 
 
-export interface RewardScreenDiscountFontSize {
+export interface IRewardScreenDiscountFontSize {
   rewardMessageSettings: { discountFontSize: number }
 }
 
 export const rewardDiscountFontSizeReducer =
-  <TState extends RewardScreenDiscountFontSize>(
+  <TState extends IRewardScreenDiscountFontSize>(
     state:
       TState,
     action:
@@ -204,16 +204,16 @@ export const rewardDiscountFontSizeReducer =
   }
 
 export const selectRewardDiscountFontSize =
-  <TState extends RewardScreenDiscountFontSize>(state: TState) =>
+  <TState extends IRewardScreenDiscountFontSize>(state: TState) =>
     state.rewardMessageSettings.discountFontSize
 
 
-export interface RewardScreenDiscountFontWeight {
+export interface IRewardScreenDiscountFontWeight {
   rewardMessageSettings: { discountFontWeight: FontWeight }
 }
 
 export const rewardDiscountFontWeightReducer =
-  <TState extends RewardScreenDiscountFontWeight>(
+  <TState extends IRewardScreenDiscountFontWeight>(
     state:
       TState,
     action:
@@ -223,16 +223,16 @@ export const rewardDiscountFontWeightReducer =
   }
 
 export const selectRewardDiscountFontWeight =
-  <TState extends RewardScreenDiscountFontWeight>(state: TState) =>
+  <TState extends IRewardScreenDiscountFontWeight>(state: TState) =>
     state.rewardMessageSettings.discountFontWeight
 
 
-export interface RewardScreenDiscountFontColor {
+export interface IRewardScreenDiscountFontColor {
   rewardMessageSettings: { discountFontColor: string }
 }
 
 export const rewardDiscountFontColorReduer =
-  <TState extends RewardScreenDiscountFontColor>(
+  <TState extends IRewardScreenDiscountFontColor>(
     state:
       TState,
     action:
@@ -242,16 +242,16 @@ export const rewardDiscountFontColorReduer =
   }
 
 export const selectRewardDiscountFontColor =
-  <TState extends RewardScreenDiscountFontColor>(state: TState) =>
+  <TState extends IRewardScreenDiscountFontColor>(state: TState) =>
     state.rewardMessageSettings.discountFontColor
 
 
-export interface RewardScreenPromo {
+export interface IRewardScreenPromo {
   rewardMessageSettings: { promo: string }
 }
 
 export const rewardPromoReducer =
-  <TState extends RewardScreenPromo>(
+  <TState extends IRewardScreenPromo>(
     state:
       TState,
     action:
@@ -261,16 +261,16 @@ export const rewardPromoReducer =
   }
 
 export const selectRewardPromo =
-  <TState extends RewardScreenPromo>(state: TState) =>
+  <TState extends IRewardScreenPromo>(state: TState) =>
     state.rewardMessageSettings.promo
 
 
-export interface RewardScreenPromoFontSize {
+export interface IRewardScreenPromoFontSize {
   rewardMessageSettings: { promoFontSize: number }
 }
 
 export const rewardPromoFontSizeReducer =
-  <TState extends RewardScreenPromoFontSize>(
+  <TState extends IRewardScreenPromoFontSize>(
     state:
       TState,
     action:
@@ -280,16 +280,16 @@ export const rewardPromoFontSizeReducer =
   }
 
 export const selectRewardPromoFontSize =
-  <TState extends RewardScreenPromoFontSize>(state: TState) =>
+  <TState extends IRewardScreenPromoFontSize>(state: TState) =>
     state.rewardMessageSettings.promoFontSize
 
 
-export interface RewardScreenPromoFontWeight {
+export interface IRewardScreenPromoFontWeight {
   rewardMessageSettings: { promoFontWeight: FontWeight }
 }
 
 export const rewardPromoFontWeightReducer =
-  <TState extends RewardScreenPromoFontWeight>(
+  <TState extends IRewardScreenPromoFontWeight>(
     state:
       TState,
     action:
@@ -299,16 +299,16 @@ export const rewardPromoFontWeightReducer =
   }
 
 export const selectRewardPromoFontWeight =
-  <TState extends RewardScreenPromoFontWeight>(state: TState) =>
+  <TState extends IRewardScreenPromoFontWeight>(state: TState) =>
     state.rewardMessageSettings.promoFontWeight
 
 
-export interface RewardScreenPromoFontColor {
+export interface IRewardScreenPromoFontColor {
   rewardMessageSettings: { promoFontColor: string }
 }
 
 export const rewardPromoFontColorReducer =
-  <TState extends RewardScreenPromoFontColor>(
+  <TState extends IRewardScreenPromoFontColor>(
     state:
       TState,
     action:
@@ -318,15 +318,15 @@ export const rewardPromoFontColorReducer =
   }
 
 export const selectRewardPromoFontColor =
-  <TState extends RewardScreenPromoFontColor>(state: TState) =>
+  <TState extends IRewardScreenPromoFontColor>(state: TState) =>
     state.rewardMessageSettings.promoFontColor
 
-export interface RewardScreenCustomColorSchemeEnabled {
+export interface IRewardScreenCustomColorSchemeEnabled {
   rewardMessageSettings: { customColorSchemeEnabled: boolean }
 }
 
 export const rewardCustomColorSchemeEnabledReducer =
-  <TState extends RewardScreenCustomColorSchemeEnabled>(
+  <TState extends IRewardScreenCustomColorSchemeEnabled>(
     state:
       TState,
     action:
@@ -336,16 +336,16 @@ export const rewardCustomColorSchemeEnabledReducer =
   }
 
 export const selectRewardCustomColorSchemeEnabled =
-  <TState extends RewardScreenCustomColorSchemeEnabled>(state: TState) =>
+  <TState extends IRewardScreenCustomColorSchemeEnabled>(state: TState) =>
     state.rewardMessageSettings.customColorSchemeEnabled
 
 
-export interface RewardScreenCustomDiscountBackgroundColor {
+export interface IRewardScreenCustomDiscountBackgroundColor {
   rewardMessageSettings: { customDiscountBackgroundColor: string }
 }
 
 export const rewardCustomDiscountBackgroundColorReducer =
-  <TState extends RewardScreenCustomDiscountBackgroundColor>(
+  <TState extends IRewardScreenCustomDiscountBackgroundColor>(
     state:
       TState,
     action:
@@ -357,16 +357,16 @@ export const rewardCustomDiscountBackgroundColorReducer =
   }
 
 export const selectRewardCustomDiscountBackgroundColor =
-  <TState extends RewardScreenCustomDiscountBackgroundColor>(state: TState) =>
+  <TState extends IRewardScreenCustomDiscountBackgroundColor>(state: TState) =>
     state.rewardMessageSettings.customDiscountBackgroundColor
 
 
-export interface RewardScreenCustomPromoBackgroundColor {
+export interface IRewardScreenCustomPromoBackgroundColor {
   rewardMessageSettings: { customPromoBackgroundColor: string }
 }
 
 export const rewardCustomPromoBackgroundColorReducer =
-  <TState extends RewardScreenCustomPromoBackgroundColor>(
+  <TState extends IRewardScreenCustomPromoBackgroundColor>(
     state:
       TState,
     action:
@@ -378,7 +378,7 @@ export const rewardCustomPromoBackgroundColorReducer =
   }
 
 export const selectRewardCustomPromoBackgroundColor =
-  <TState extends RewardScreenCustomPromoBackgroundColor>(state: TState) =>
+  <TState extends IRewardScreenCustomPromoBackgroundColor>(state: TState) =>
     state.rewardMessageSettings.customPromoBackgroundColor
 
 
