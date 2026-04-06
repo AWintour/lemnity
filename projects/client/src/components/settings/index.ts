@@ -4,7 +4,7 @@ import WidgetAppearanceSettings from './WidgetAppearanceSettings'
 import WidgetBackgroundColor from './WidgetAppearanceSettings/WidgetBackgroundColor'
 import WidgetBorderRadius from './WidgetAppearanceSettings/WidgetBorderRadius'
 import ContactAcquisitionSettings from './FormSettings/ContactAcquisitionSettings'
-// import FormSettings from './FormSettings'
+import FormSettings from './FormSettings'
 import InfoSettings from './InfoSettings'
 import RewardMessageSettings from './RewardMessageSettings'
 import MobileTriggerSettings from './MobileTriggerSettings'
@@ -16,7 +16,7 @@ export {
   WidgetBackgroundColor,
   WidgetBorderRadius,
   ContactAcquisitionSettings,
-  // FormSettings,
+  FormSettings,
   InfoSettings,
   RewardMessageSettings,
   MobileTriggerSettings

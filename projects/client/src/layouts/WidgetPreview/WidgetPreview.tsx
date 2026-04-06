@@ -1,4 +1,4 @@
-import { lazy, type JSX, type LazyExoticComponent, type ReactNode } from "react"
+import { lazy, type ReactNode } from "react"
 
 import { WidgetTypeEnum } from '@lemnity/api-sdk/models'
 import { useAppSelector } from '@/stores/redux/hooks'
@@ -9,6 +9,9 @@ const NotificationWidget = lazy(
 )
 const AnnouncementWidget = lazy(
   () => import('@/layouts/Widgets/Announcement/WidgetPreview')
+)
+const EventTimerWidget = lazy(
+  () => import('@/layouts/Widgets/EventTimer/WidgetPreview')
 )
 
 type WidgetProps = {
@@ -21,6 +24,8 @@ const Widget = ({ widgetType }: WidgetProps) => {
       return <NotificationWidget />
     case WidgetTypeEnum.ANNOUNCEMENT:
       return <AnnouncementWidget />
+    case WidgetTypeEnum.EVENT_TIMER:
+      return <EventTimerWidget />
     default:
       return null
   }

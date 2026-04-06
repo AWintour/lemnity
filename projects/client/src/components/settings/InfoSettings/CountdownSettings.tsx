@@ -6,7 +6,7 @@ import SwitchableField from '@/components/SwitchableField'
 import ColorPicker from '@/components/ColorPicker'
 
 type CountdownSettingsProps = {
-  enabled: boolean
+  enabled?: boolean
   date: ZonedDateTime
   backgroundColor: string
   fontColor: string
@@ -29,7 +29,7 @@ const CountdownSettings = (props: CountdownSettingsProps) => {
       <div className="w-full flex flex-row flex-wrap gap-2.5">
         <DateInput
           hourCycle={24}
-          defaultValue={props.date}
+          value={props.date}
           onChange={props.onDateChange}
           classNames={{
             base: 'min-w-76 flex-1',

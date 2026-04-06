@@ -15,7 +15,12 @@ import {
 import { rootReducer } from '@/stores/redux/reducer'
 import { getWidget } from '@/services/widgets'
 
-import { WidgetTypeEnum, type Widget } from '@lemnity/api-sdk'
+import {
+  PublicWidgetsApi,
+  Configuration,
+  WidgetTypeEnum,
+  type PublicWidget,
+} from '@lemnity/api-sdk'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type NotificationWidgetType,
@@ -23,11 +28,24 @@ import {
   type Notification,
 } from '@lemnity/widget-config/widgets/notification'
 
+const configuration = new Configuration({
+  basePath: 'http://localhost:3000'
+})
+const apiInstance = new PublicWidgetsApi(configuration)
+
 export const fetchNotificationWidget = createAppAsyncThunk(
   'notification/fetchWidget',
-  async (widgetId: string) => {
-    const widget = await getWidget(widgetId)
-    return widget
+  async ({ widgetId, embedded }: {widgetId: string, embedded?: boolean}) => {
+    if (embedded) {
+      const { data } = await apiInstance.publicWidgetControllerFindOne(
+        { id: widgetId }
+      )
+      return data
+    }
+    else {
+      const widget = await getWidget(widgetId)
+      return widget
+    }
   },
   {
     condition(_, thunkApi) {
@@ -144,7 +162,7 @@ export const notificationSlice = createSlice({
         state.fetchStatus = 'succeeded'
         state.fetchError = null
 
-        const payload = action.payload as Widget | undefined
+        const payload = action.payload as PublicWidget | undefined
 
         state.widgetId = payload?.id
         state.projectId = payload?.projectId

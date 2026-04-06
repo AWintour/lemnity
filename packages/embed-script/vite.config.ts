@@ -3,8 +3,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+// import { analyzer, adapter } from 'vite-bundle-analyzer'
 
 export default defineConfig({
+  base: 'http://localhost:5173',
   server: {
     port: 5174,
   },
@@ -13,7 +15,8 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths({
       projects: [path.resolve(__dirname, 'tsconfig.app.json')]
-    })
+    }),
+    // adapter(analyzer()),
   ],
   resolve: {
     alias: {
@@ -32,19 +35,33 @@ export default defineConfig({
     'process.env': '{}'
   },
   build: {
-    lib: {
-      entry: path.resolve(__dirname, 'src/embed/index.tsx'),
-      name: 'LemnityWidgets',
-      fileName: () => 'embed.js',
-      formats: ['iife']
+    // lib: {
+    //   entry: path.resolve(__dirname, 'src/embed/index.tsx'),
+    //   name: 'LemnityWidgets',
+    //   fileName: () => 'embed.js',
+    //   formats: ['iife']
+    // },
+    rollupOptions: {
+      input: path.resolve(__dirname, 'src/embed/index.tsx'),
+      output: {
+        dir: 'dist',
+        // format: 'iife',
+        entryFileNames: 'embed.js',
+        manualChunks: {
+          vendor: [
+            'react',
+            'react-redux',
+            'react-dom/client',
+            '@tanstack/react-query',
+            // '@reduxjs/toolkit',
+            'axios',
+            'zod',
+          ],
+          // luxon: ['luxon'],
+        },
+      }
     },
     outDir: 'dist',
     emptyOutDir: true,
-    cssCodeSplit: false,
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true
-      }
-    }
   }
 })

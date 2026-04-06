@@ -5,7 +5,7 @@ import CustomSwitch from './CustomSwitch'
 export type SwitchableFieldProps = {
   title: string
   switchLabel?: string
-  enabled: boolean
+  enabled?: boolean
   onToggle: (nextEnabled: boolean) => void
   disabled?: boolean
   children?: React.ReactNode

@@ -20,8 +20,9 @@ import type {
 
 type InfoSettingsProps = {
   variant: 'countdown' | 'announcement'
-  contentType: Content
-  contentAlignment: ContentAlignment
+  contentEnabled?: boolean
+  contentType?: Content
+  contentAlignment?: ContentAlignment
   contentUrl: string | undefined
 
   title: string
@@ -54,9 +55,7 @@ type InfoSettingsProps = {
   setCountdownEnabled?: (countdownEnabled: boolean) => void
   setCountdownDate?: (countdownDate: string) => void
   setCountdownFontColor?: (countdownFontColor: string) => void
-  setCountdownBackgroundColor?: (
-    countdownBackgroundColor: string
-  ) => void
+  setCountdownBackgroundColor?: (countdownBackgroundColor: string) => void
   setButtonText: (buttonText: string) => void
   setButtonFontColor: (buttonFontColor: string) => void
   setButtonBackgroundColor: (buttonBackgroundColor: string) => void
@@ -66,6 +65,7 @@ type InfoSettingsProps = {
 
 const InfoSettings = (props: InfoSettingsProps) => {
   const {
+    contentEnabled,
     contentType,
     contentAlignment,
     contentUrl,
@@ -77,8 +77,6 @@ const InfoSettings = (props: InfoSettingsProps) => {
 
     countdownEnabled,
     countdownDate,
-    countdownFontColor,
-    countdownBackgroundColor,
     
     buttonText,
     buttonFontColor,
@@ -89,11 +87,15 @@ const InfoSettings = (props: InfoSettingsProps) => {
     rewardScreenEnabled,
   } = props
 
+  const countdownFontColor = countdownEnabled
+    ? props.countdownFontColor
+    : '#000000'
+  const countdownBackgroundColor = countdownEnabled
+    ? props.countdownBackgroundColor
+    : '#FFFFFF'
+
   const showCountdownSettings =
     props.variant === 'countdown'
-    && countdownEnabled
-    && countdownBackgroundColor
-    && countdownFontColor
     && props.setCountdownEnabled
     && props.setCountdownBackgroundColor
     && props.setCountdownFontColor
@@ -113,6 +115,7 @@ const InfoSettings = (props: InfoSettingsProps) => {
       
       <ContentSettings
         format={props.variant}
+        contentEnabled={contentEnabled}
         contentType={contentType}
         contentAlignment={contentAlignment}
         contentUrl={contentUrl}
@@ -163,9 +166,9 @@ const InfoSettings = (props: InfoSettingsProps) => {
                 : parseAbsoluteToLocal(new Date().toISOString())
             }
             onDateChange={handleCountdownDateChange}
-            backgroundColor={countdownBackgroundColor}
+            backgroundColor={countdownBackgroundColor!}
             onBackgroundColorChange={props.setCountdownBackgroundColor!}
-            fontColor={countdownFontColor}
+            fontColor={countdownFontColor!}
             onFontColorChange={props.setCountdownFontColor!}
           />}
 

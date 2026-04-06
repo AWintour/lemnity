@@ -9,12 +9,12 @@ import type {
   Content,
   ContentAlignment,
 } from '@lemnity/widget-config/widgets/announcement'
-import { useEffect, useState } from 'react'
 
 type ContentSettingsProps = {
-  contentType: Content
+  contentType?: Content
   contentAlignment?: ContentAlignment
   contentUrl?: string
+  contentEnabled?: boolean
   format: 'countdown' | 'announcement'
   onContentTypeChange?: (contentType: Content) => void
   onContentToggle?: (enabled: boolean) => void
@@ -102,14 +102,7 @@ const Settings = (props: ContentSettingsProps) => {
 }
 
 const ContentSettings = (props: ContentSettingsProps) => {
-  const [enabled, setEnabled] = useState(false)
-
-  useEffect(() => {
-    setEnabled(props.contentType === 'background')
-  }, [props.contentType])
-
   const handleContentToggle = (value: boolean) => {
-    setEnabled(value)
     props?.onContentToggle?.(value)
   }
 
@@ -124,7 +117,7 @@ const ContentSettings = (props: ContentSettingsProps) => {
           </BorderedContainer>
         : <SwitchableField
             title="Контент"
-            enabled={enabled}
+            enabled={props.contentEnabled}
             onToggle={handleContentToggle}
             classNames={{
               title: 'text-[16px] leading-4.75 font-normal',

@@ -1,5 +1,4 @@
 // i should figure out how to reuse reducers and selectors
-// (and memoization in lazy loaded slices)
 import {
   createSlice,
   type PayloadAction,
@@ -13,29 +12,46 @@ import {
 } from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
 import { brandingEnabledChangedReducer } from '@/stores/redux/features/common'
-import { rewardScreenReducers } from '@/stores/redux/features/rewarrdScreen'
 import {
-  mobileEnabledReducer,
-  mobileImageUrlReducer,
-  mobileTriggerBackgroundColorReducer,
-  mobileTriggerFontColorReducer,
-  mobileTriggerTextReducer,
-  mobileTriggerTypeReducer,
+  rewardScreenReducers,
+  rewardScreenSelectors,
+} from '@/stores/redux/features/rewardScreen'
+import {
+  mobileSettingsReducers,
+  mobileSettingsSelectors,
 } from '@/stores/redux/features/mobileTrigger'
 import { getWidget } from '@/services/widgets'
 
-import { WidgetTypeEnum, type PublicWidget } from '@lemnity/api-sdk'
+import {
+  PublicWidgetsApi,
+  Configuration,
+  WidgetTypeEnum,
+  type PublicWidget,
+} from '@lemnity/api-sdk'
 import type { ColorScheme, Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type EventTimerWidgetType,
   type FontWeight,
 } from '@lemnity/widget-config/widgets/event-timer'
 
+const configuration = new Configuration({
+  basePath: 'http://localhost:3000'
+})
+const apiInstance = new PublicWidgetsApi(configuration)
+
 export const fetchEventTimerWidget = createAppAsyncThunk(
   'eventTimer/fetchWidget',
-  async (widgetId: string) => {
-    const widget = await getWidget(widgetId)
-    return widget
+  async ({ widgetId, embedded }: {widgetId: string, embedded?: boolean}) => {
+    if (embedded) {
+      const { data } = await apiInstance.publicWidgetControllerFindOne(
+        { id: widgetId }
+      )
+      return data
+    }
+    else {
+      const widget = await getWidget(widgetId)
+      return widget
+    }
   },
   {
     condition(_, thunkApi) {
@@ -255,7 +271,7 @@ export const eventTimerSlice = createSlice({
         state.infoSettings.link = action.payload
       },
     
-    forrmTitleChanged:
+    formTitleChanged:
       (state, action: PayloadAction<string>) => {
         state.formSettings.title = action.payload
       },
@@ -336,21 +352,51 @@ export const eventTimerSlice = createSlice({
       (state, action: PayloadAction<string>) => {
         state.formSettings.adsInfo.color = action.payload
       },
+    
+    colorsReset:
+      (state) => {
+        state.appearence.backgroundColor =
+          initialState.appearence.backgroundColor
+        state.infoSettings.titleColor =
+          initialState.infoSettings.titleColor
+        state.infoSettings.descriptionColor =
+          initialState.infoSettings.descriptionColor
+        state.infoSettings.countdownBackgroundColor =
+          initialState.infoSettings.countdownBackgroundColor
+        state.infoSettings.countdownFontColor =
+          initialState.infoSettings.countdownFontColor
+        state.infoSettings.buttonFontColor =
+          initialState.infoSettings.buttonFontColor
+        state.infoSettings.buttonBackgroundColor =
+          initialState.infoSettings.buttonBackgroundColor
+        state.formSettings.titleFontColor =
+          initialState.formSettings.titleFontColor
+        state.formSettings.descriptionFontColor =
+          initialState.formSettings.descriptionFontColor
+        state.formSettings.agreement.color =
+          initialState.formSettings.agreement.color
+        state.formSettings.adsInfo.color =
+          initialState.formSettings.adsInfo.color
+        state.rewardMessageSettings.titleFontColor =
+          initialState.rewardMessageSettings.titleFontColor
+        state.rewardMessageSettings.descriptionFontColor =
+          initialState.rewardMessageSettings.descriptionFontColor
+        state.rewardMessageSettings.discountFontColor =
+          initialState.rewardMessageSettings.discountFontColor
+        state.rewardMessageSettings.promoFontColor =
+          initialState.rewardMessageSettings.promoFontColor
+        state.rewardMessageSettings.customDiscountBackgroundColor =
+          initialState.rewardMessageSettings.customDiscountBackgroundColor
+        state.rewardMessageSettings.customPromoBackgroundColor =
+          initialState.rewardMessageSettings.customPromoBackgroundColor
+        state.mobileSettings.triggerBackgroundColor =
+          initialState.mobileSettings.triggerBackgroundColor
+        state.mobileSettings.triggerFontColor =
+          initialState.mobileSettings.triggerFontColor
+      },
 
     ...rewardScreenReducers,
-
-    mobileEnabledChanged:
-      mobileEnabledReducer,
-    mobileTriggerTypeChanged:
-      mobileTriggerTypeReducer,
-    mobileTriggerTextChanged:
-      mobileTriggerTextReducer,
-    mobileTriggerBackgroundColorChanged:
-      mobileTriggerBackgroundColorReducer,
-    mobileTriggerFontColorChanged:
-      mobileTriggerFontColorReducer,
-    mobileImageUrlChanged:
-      mobileImageUrlReducer,
+    ...mobileSettingsReducers,
   },
   extraReducers: (builder) => {
     builder.addCase(fetchEventTimerWidget.pending, (state) => {
@@ -488,59 +534,8 @@ export const eventTimerSlice = createSlice({
     selectFormAdsInfo:
       (state) => state.formSettings.adsInfo,
     
-    selectRewardScreenEnabled:
-      (state) => state.rewardMessageSettings.rewardScreenEnabled,
-    selectRewardTitle:
-      (state) => state.rewardMessageSettings.title,
-    selectRewardTitleFontSize:
-      (state) => state.rewardMessageSettings.titleFontSize,
-    selectRewardTitleFontWeight:
-      (state) => state.rewardMessageSettings.titleFontWeight,
-    selectRewardTitleFontColor:
-      (state) => state.rewardMessageSettings.titleFontColor,
-    selectRewardDescription:
-      (state) => state.rewardMessageSettings.description,
-    selectRewardDescriptionFontSize:
-      (state) => state.rewardMessageSettings.descriptionFontSize,
-    selectRewardDescriptionFontWeight:
-      (state) => state.rewardMessageSettings.descriptionFontWeight,
-    selectRewardDescriptionFontColor:
-      (state) => state.rewardMessageSettings.descriptionFontColor,
-    selectRewardDiscount:
-      (state) => state.rewardMessageSettings.discount,
-    selectRewardDiscountFontSize:
-      (state) => state.rewardMessageSettings.discountFontSize,
-    selectRewardDiscountFontWeight:
-      (state) => state.rewardMessageSettings.discountFontWeight,
-    selectRewardDiscountFontColor:
-      (state) => state.rewardMessageSettings.discountFontColor,
-    selectRewardPromo:
-      (state) => state.rewardMessageSettings.promo,
-    selectRewardPromoFontSize:
-      (state) => state.rewardMessageSettings.promoFontSize,
-    selectRewardPromoFontWeight:
-      (state) => state.rewardMessageSettings.promoFontWeight,
-    selectRewardPromoFontColor:
-      (state) => state.rewardMessageSettings.promoFontColor,
-    selectRewardCustomColorSchemeEnabled:
-      (state) => state.rewardMessageSettings.customColorSchemeEnabled,
-    selectRewardCustomDiscountBackgroundColor:
-      (state) => state.rewardMessageSettings.customDiscountBackgroundColor,
-    selectRewardCustomPromoBackgroundColor:
-      (state) => state.rewardMessageSettings.customPromoBackgroundColor,
-    
-    selectMobileEnabled:
-      (state) => state.mobileSettings.mobileEnabled,
-    selectMobileTriggerType:
-      (state) => state.mobileSettings.triggerType,
-    selectMobileTriggerText:
-      (state) => state.mobileSettings.triggerText,
-    selectMobileTriggerBackgroundColor:
-      (state) => state.mobileSettings.triggerBackgroundColor,
-    selectMobileTriggerFontColor:
-      (state) => state.mobileSettings.triggerFontColor,
-    selectMobileImageUrl:
-      (state) => state.mobileSettings.imageUrl,
+    ...rewardScreenSelectors,
+    ...mobileSettingsSelectors,
   },
 })
 
@@ -567,7 +562,7 @@ export const {
   buttonBackgroundColorChanged,
   iconChanged,
   linkChanged,
-  forrmTitleChanged,
+  formTitleChanged,
   formTitleFontWeightChanged,
   formTitleFontColorChanged,
   formDescriptionChanged,
@@ -614,6 +609,7 @@ export const {
   mobileTriggerFontColorChanged,
   mobileImageUrlChanged,
   brandingEnabledChanged,
+  colorsReset,
 } = eventTimerSlice.actions
 
 declare module '@/stores/redux/reducer' {

@@ -1,14 +1,46 @@
-// import type { InitOptions } from './types'
-// import EmbedManager from './embedManager'
-// import { findEmbedScript } from './utils'
+import { lazy } from 'react'
+import { createRoot } from 'react-dom/client'
+import { HeroUIProvider } from '@heroui/system'
+import { cn } from '@heroui/theme'
+import { Provider } from 'react-redux'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-// const manager = new EmbedManager()
+import {
+  fetchAnnouncementWidget,
+} from '@/layouts/Widgets/Announcement/announcementSlice'
 
-// const api = {
-//   init: (options: InitOptions) => manager.init(options),
-//   destroy: (widgetId?: string) => manager.destroy(widgetId),
-//   postMessage: (message: unknown) => manager.postMessage(message)
-// }
+import { PublicWidgetsApi, Configuration } from '@lemnity/api-sdk'
+import { store } from '@/stores/redux/store'
+import {
+  fetchNotificationWidget,
+  triggerPositionChanged,
+} from '@/layouts/Widgets/Notification/notificationSlice'
+import styles from './embed.css?inline'
+
+const NotificationEmbedRuntime = lazy(
+  () => import('@/layouts/Widgets/Notification/embedded/embedRuntime')
+)
+const AnnouncementEmbedRuntime = lazy(
+  () => import('@/layouts/Widgets/Announcement/embedded/embedRuntime')
+)
+
+type WidgetsProps = {
+  allowed: number
+}
+
+const Widgets = ({ allowed }: WidgetsProps) => {
+  if (allowed === 2) {
+    return (
+      <>
+        <NotificationEmbedRuntime />
+        <AnnouncementEmbedRuntime />
+      </>
+    )
+  }
+  else {
+    return <AnnouncementEmbedRuntime />
+  }
+}
 
 // const autoInitFromQuery = () => {
 //   const currentScript = findEmbedScript()
@@ -20,34 +52,61 @@
 //     if (!widgetId) return
 
 //     console.debug('[LemnityWidgets] init from query', { widgetId })
-//     api.init({ widgetId }).catch(err => console.error('[LemnityWidgets]', err))
+//     // api.init({ widgetId }).catch(err => console.error('[LemnityWidgets]', err))
 //   } catch {
 //     // ignore parse errors
 //   }
 // }
 
-// const bootstrap = () => {
-//   const w = window as unknown as typeof window & {
-//     LemnityWidgets?: {
-//       init?: (options: InitOptions) => Promise<void>
-//       destroy?: (widgetId?: string) => Promise<void>
-//       postMessage?: (message: unknown) => void
-//       queue?: { type: 'init'; payload: InitOptions }[]
-//     }
-//   }
+const queryClient = new QueryClient()
 
-//   const queued = w.LemnityWidgets?.queue ?? []
-//   w.LemnityWidgets = { ...w.LemnityWidgets, ...api, queue: [] }
-//   queued.forEach(job => {
-//     if (job?.type === 'init' && job.payload) {
-//       api.init(job.payload).catch((err: unknown) => console.error('[LemnityWidgets]', err))
-//     }
-//   })  
-//   autoInitFromQuery()
-// }
+const bootstrap = async () => {
+  console.log('[OwO] we are in.')
 
-// if (document.readyState === 'complete') {
-//   bootstrap()
-// } else {
-//   window.addEventListener('load', bootstrap, { once: true })
-// }
+  const host = document.createElement('div')
+  host.style.zIndex = '9999999'
+  host.id = 'shadow-host'
+  const shadowRoot = host.attachShadow({ mode: 'closed' })
+  const reactRoot = createRoot(shadowRoot)
+  
+  const shadowStyle = document.createElement('style')
+  shadowStyle.textContent = styles
+  shadowRoot.appendChild(shadowStyle)
+
+  const notificationWidgetId = 'cmmahc07x0000dbn8t7ss7ldn'
+  const announcementWidgetId = 'cmm4qe93a0000diqwr5bfdsq6'
+
+  store.dispatch(fetchAnnouncementWidget({
+    widgetId: announcementWidgetId,
+    embedded: true,
+  }))
+
+  store.dispatch(fetchNotificationWidget({
+    widgetId: notificationWidgetId,
+    embedded: true,
+  }))
+
+  setTimeout(() => {
+    store.dispatch(triggerPositionChanged('bottom-left'))
+  }, 1000)
+
+  const el = document.getElementById('root')
+
+  reactRoot.render(
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <HeroUIProvider>
+          <Widgets allowed={ el ? 2 : 1} />
+        </HeroUIProvider>
+      </QueryClientProvider>
+    </Provider>
+  )
+  
+  document.body.appendChild(host)
+}
+
+if (document.readyState === 'complete') {
+  bootstrap()
+} else {
+  window.addEventListener('load', bootstrap, { once: true })
+}

@@ -65,6 +65,9 @@ const NotificationWidgetSettings = lazy(
 const AnnouncementWidgetSettings = lazy(
   () => import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
 )
+const EventTimerWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
+)
 
 type WidgetSettingsProps = {
   currentWidget: WidgetTypeEnum
@@ -76,6 +79,8 @@ const WidgetSettings = ({ currentWidget }: WidgetSettingsProps) => {
       return <NotificationWidgetSettings />
     case 'ANNOUNCEMENT':
       return <AnnouncementWidgetSettings />
+    case 'EVENT_TIMER':
+      return <EventTimerWidgetSettings />
     default:
       return null
   }

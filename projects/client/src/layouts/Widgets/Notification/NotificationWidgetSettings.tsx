@@ -42,7 +42,7 @@ const NotificationWidgetSettings = () => {
 
   useEffect(() => {
     if (fetchStatus === 'idle' && widgetId && widgetId.length > 0) {
-      dispatch(fetchNotificationWidget(widgetId))
+      dispatch(fetchNotificationWidget({ widgetId }))
     }
   }, [fetchStatus, dispatch, widgetId])
 

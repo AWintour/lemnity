@@ -61,7 +61,15 @@ const AnnouncementWidgetButton = (props: AnnouncementWidgetButtonProps) => {
         'text-black text-[20px] transition-colors duration-250',
       )}
       style={props.buttonStyle}
-      onPress={props.onButtonPress}
+      // react-aria does not fully support Shadow DOM in main branch
+      // we are relying on a soon to be deprecated version of Hero UI
+      // which makes this even worse
+      // my suggestion would be to migrate all components to react-aria
+      // since neither Hero UI's functionality nor styles are used
+      // and react-aria actually intends to roll out Shadow DOM support
+      // eventually
+      // onPress={handleClick}
+      onPressEnd={props.onButtonPress}
     >
       {/* Билеты */}
       {props.icon !== 'HeartDislike' && (
@@ -106,6 +114,7 @@ const AnnouncementWidgetContent = (
   }
 
   const handleButtonPress = () => {
+    console.log('[OwO] handleButtonPress in AnnouncementWidgetContent', { onButtonPress: typeof props.onButtonPress })
     if (rewardScreenEnabled) {
       props.onButtonPress?.()
     }

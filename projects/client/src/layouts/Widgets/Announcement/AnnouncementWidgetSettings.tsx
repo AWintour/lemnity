@@ -28,7 +28,7 @@ const AnnouncementWidgetSettings = () => {
 
   useEffect(() => {
     if (fetchStatus === 'idle' && widgetId && widgetId.length > 0) {
-      dispatch(fetchAnnouncementWidget(widgetId))
+      dispatch(fetchAnnouncementWidget({ widgetId }))
     }
   }, [fetchStatus, dispatch, widgetId])
 
@@ -45,10 +45,10 @@ const AnnouncementWidgetSettings = () => {
 
   return (
     <div className='w-full px-4.75 flex flex-col gap-2.5'>
-      <WidgetAppearanceSettings {...appearenceSettings}/>
+      <WidgetAppearanceSettings {...appearenceSettings} />
       <InfoSettings variant='announcement' {...infoScreenSettings} />
-      <RewardMessageSettings {...rewardScreenSettings}/>
-      <MobileTriggerSettings {...mobileTriggerSettings}/>
+      <RewardMessageSettings {...rewardScreenSettings} />
+      <MobileTriggerSettings {...mobileTriggerSettings} />
       <DisableBranding
         enabled={brandingEnabled}
         onBrandingEnabledToggle={setBrandingEnabled}
