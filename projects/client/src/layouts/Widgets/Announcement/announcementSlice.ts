@@ -1,6 +1,6 @@
 import {
   createSlice,
-  type PayloadAction,
+  // type PayloadAction,
   type WithSlice,
 } from '@reduxjs/toolkit'
 
@@ -17,6 +17,40 @@ import {
   commonSelectors,
 } from '@/stores/redux/features/common'
 import {
+  widgetAppearenceReducers,
+  widgetAppearenceSelectors,
+} from '@/stores/redux/features/widgetAppearence'
+import {
+  infoScreenContentTypedReducer,
+  infoScreenContentAlignmentReducer,
+  infoScreenContentUrldReducer,
+  infoScreenTitleReducer,
+  infoScreenTitleFontWeightReducer,
+  infoScreenTitleColorReducer,
+  infoScreenDescriptionReducer,
+  infoScreenDescriptionColortReducer,
+  infoScreenDescriptionFontWeightReducer,
+  infoScreenButtonTextReducer,
+  infoScreenButtonFontColorReducer,
+  infoScreenButtonBackgroundColorReducer,
+  infoScreenIconReducer,
+  infoScreenLinkReducer,
+  selectContentType as selectInfoContentType,
+  selectContentAlignment as selectInfoContentAlignment,
+  selectContentUrl as selectInfoContentUrl,
+  selectTitle as selectInfoTitle,
+  selectTitleFontWeight as selectInfoTitleFontWeight,
+  selectTitleColor as selectInfoTitleColor,
+  selectDescription as selectInfoDescription,
+  selectDescriptionColor as selectInfoDescriptionColor,
+  selectDescriptionFontWeight as selectInfoDescriptionFontWeight,
+  selectButtonText as selectInfoButtonText,
+  selectButtonFontColor as selectInfoButtonFontColor,
+  selectButtonBackgroundColor as selectInfoButtonBackgroundColor,
+  selectIcon as selectInfoIcon,
+  selectLink as selectInfoLink,
+} from '@/stores/redux/features/infoScreen'
+import {
   rewardScreenReducers,
   rewardScreenSelectors,
 } from '@/stores/redux/features/rewardScreen'
@@ -29,12 +63,8 @@ import {
   WidgetTypeEnum,
   type PublicWidget,
 } from '@lemnity/api-sdk'
-import type { ColorScheme, Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type AnnouncementWidgetType,
-  type Content,
-  type ContentAlignment,
-  type FontWeight,
 } from '@lemnity/widget-config/widgets/announcement'
 
 export const fetchAnnouncementWidget = fetchWidgetThunkFactory(
@@ -124,87 +154,77 @@ export const initialState: AnnouncementWidgetState = {
   brandingEnabled: true,
 }
 
+const infoScreenReducers = {
+  contentTypeChanged:
+    infoScreenContentTypedReducer,
+  contentAlignmentChanged:
+    infoScreenContentAlignmentReducer,
+  contentUrlChanged:
+    infoScreenContentUrldReducer,
+  titleChanged:
+    infoScreenTitleReducer,
+  titleFontWeightChanged:
+    infoScreenTitleFontWeightReducer,
+  titleColorChanged:
+    infoScreenTitleColorReducer,
+  descriptionChanged:
+    infoScreenDescriptionReducer,
+  descriptionColorChanged:
+    infoScreenDescriptionColortReducer,
+  descriptionFontWeightChanged:
+    infoScreenDescriptionFontWeightReducer,
+  buttonTextChanged:
+    infoScreenButtonTextReducer,
+  buttonFontColorChanged:
+    infoScreenButtonFontColorReducer,
+  buttonBackgroundColorChanged:
+    infoScreenButtonBackgroundColorReducer,
+  iconChanged:
+    infoScreenIconReducer,
+  linkChanged:
+    infoScreenLinkReducer,
+}
+
+const infoScreenSelectors = {
+  selectContentType:
+    selectInfoContentType,
+  selectContentAlignment:
+    selectInfoContentAlignment,
+  selectContentUrl:
+    selectInfoContentUrl,
+  selectTitle:
+    selectInfoTitle,
+  selectTitleFontWeight:
+    selectInfoTitleFontWeight,
+  selectTitleColor:
+    selectInfoTitleColor,
+  selectDescription:
+    selectInfoDescription,
+  selectDescriptionColor:
+    selectInfoDescriptionColor,
+  selectDescriptionFontWeight:
+    selectInfoDescriptionFontWeight,
+  selectButtonText:
+    selectInfoButtonText,
+  selectButtonFontColor:
+    selectInfoButtonFontColor,
+  selectButtonBackgroundColor:
+    selectInfoButtonBackgroundColor,
+  selectIcon:
+    selectInfoIcon,
+  selectLink:
+    selectInfoLink,
+}
+
 export const announcementSlice = createSlice({
   name: 'announcement',
   initialState,
   reducers: {
-    companyLogoEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.appearence.companyLogoEnabled = action.payload
-      },
-    companyLogoUrlChanged:
-      (state, action: PayloadAction<string | undefined>) => {
-        state.appearence.companyLogoUrl = action.payload
-      },
-    colorSchemeChanged:
-      (state, action: PayloadAction<ColorScheme>) => {
-        state.appearence.colorScheme = action.payload
-      },
-    backgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.appearence.backgroundColor = action.payload
-      },
-    borderRadiusChanged:
-      (state, action: PayloadAction<number>) => {
-        state.appearence.borderRadius = action.payload
-      },
-
-    contentTypeChanged:
-      (state, action: PayloadAction<Content>) => {
-        state.infoSettings.contentType = action.payload
-      },
-    contentAlignmentChanged:
-      (state, action: PayloadAction<ContentAlignment>) => {
-        state.infoSettings.contentAlignment = action.payload
-      },
-    contentUrlChanged:
-      (state, action: PayloadAction<string | undefined>) => {
-        state.infoSettings.contentUrl = action.payload
-      },
-    titleChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.title = action.payload
-      },
-    titleFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.infoSettings.titleFontWeight = action.payload
-      },
-    titleColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.titleColor = action.payload
-      },
-    descriptionChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.description = action.payload
-      },
-    descriptionFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.infoSettings.descriptionFontWeight = action.payload
-      },
-    descriptionColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.descriptionColor = action.payload
-      },
-    buttonTextChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.buttonText = action.payload
-      },
-    buttonFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.buttonFontColor = action.payload
-      },
-    buttonBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.buttonBackgroundColor = action.payload
-      },
-    iconChanged:
-      (state, action: PayloadAction<Icon>) => {
-        state.infoSettings.icon = action.payload
-      },
-    linkChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.link = action.payload
-      },
+    ...commonReducers,
+    ...widgetAppearenceReducers,
+    ...infoScreenReducers,
+    ...rewardScreenReducers,
+    ...mobileSettingsReducers,
 
     colorsReset: (state) => {
       state.appearence.backgroundColor =
@@ -234,72 +254,11 @@ export const announcementSlice = createSlice({
       state.mobileSettings.triggerFontColor =
         initialState.mobileSettings.triggerFontColor
     },
-
-    ...commonReducers,
-    ...rewardScreenReducers,
-    ...mobileSettingsReducers,
   },
   selectors: {
-    selectCompanyLogoEnabled: (state) => {
-      return state.appearence.companyLogoEnabled
-    },
-    selectCompanyLogoUrl: (state) => {
-      return state.appearence.companyLogoUrl
-    },
-    selectColorScheme: (state) => {
-      return state.appearence.colorScheme
-    },
-    selectBackgroundColor: (state) => {
-      return state.appearence.backgroundColor
-    },
-    selectBorderRadius: (state) => {
-      return state.appearence.borderRadius
-    },
-
-    selectContentType: (state) => {
-      return state.infoSettings.contentType
-    },
-    selectContentAlignment: (state) => {
-      return state.infoSettings.contentAlignment
-    },
-    selectContentUrl: (state) => {
-      return state.infoSettings.contentUrl
-    },
-    selectTitle: (state) => {
-      return state.infoSettings.title
-    },
-    selectTitleFontWeight: (state) => {
-      return state.infoSettings.titleFontWeight
-    },
-    selectTitleColor: (state) => {
-      return state.infoSettings.titleColor
-    },
-    selectDescription: (state) => {
-      return state.infoSettings.description
-    },
-    selectDescriptionFontWeight: (state) => {
-      return state.infoSettings.descriptionFontWeight
-    },
-    selectDescriptionColor: (state) => {
-      return state.infoSettings.descriptionColor
-    },
-    selectButtonText: (state) => {
-      return state.infoSettings.buttonText
-    },
-    selectButtonFontColor: (state) => {
-      return state.infoSettings.buttonFontColor
-    },
-    selectButtonBackgroundColor: (state) => {
-      return state.infoSettings.buttonBackgroundColor
-    },
-    selectIcon: (state) => {
-      return state.infoSettings.icon
-    },
-    selectLink: (state) => {
-      return state.infoSettings.link
-    },
-
     ...commonSelectors,
+    ...widgetAppearenceSelectors,
+    ...infoScreenSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
   },

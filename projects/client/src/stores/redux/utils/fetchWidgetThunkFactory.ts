@@ -16,7 +16,7 @@ type ThunkParams = {
   embedded?: boolean
 }
 
-export const fetchWidgetThunkFactory =(
+export const fetchWidgetThunkFactory = (
   actionName: string,
   selectFetchStatus: (state: RootState) => FetchStatus
 ) => {

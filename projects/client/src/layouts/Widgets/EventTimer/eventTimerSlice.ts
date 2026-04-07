@@ -1,6 +1,6 @@
 import {
   createSlice,
-  type PayloadAction,
+  // type PayloadAction,
   type WithSlice,
 } from '@reduxjs/toolkit'
 
@@ -17,6 +17,50 @@ import {
   commonSelectors,
 } from '@/stores/redux/features/common'
 import {
+  widgetAppearenceReducers,
+  widgetAppearenceSelectors,
+} from '@/stores/redux/features/widgetAppearence'
+import {
+  infoScreenContentEnabledReducer,
+  infoScreenContentUrldReducer,
+  infoScreenTitleReducer,
+  infoScreenTitleFontWeightReducer,
+  infoScreenTitleColorReducer,
+  infoScreenDescriptionReducer,
+  infoScreenDescriptionColortReducer,
+  infoScreenDescriptionFontWeightReducer,
+  infoScreenCountdownEnabledtReducer,
+  infoScreenCountdownDateReducer,
+  infoScreenCountdownBackgroundColorReducer,
+  infoScreenCountdownFontColorReducer,
+  infoScreenButtonTextReducer,
+  infoScreenButtonFontColorReducer,
+  infoScreenButtonBackgroundColorReducer,
+  infoScreenIconReducer,
+  infoScreenLinkReducer,
+  selectContentEnabled as selectInfoContentEnabled,
+  selectContentUrl as selectInfoContentUrl,
+  selectTitle as selectInfoTitle,
+  selectTitleFontWeight as selectInfoTitleFontWeight,
+  selectTitleColor as selectInfoTitleColor,
+  selectDescription as selectInfoDescription,
+  selectDescriptionColor as selectInfoDescriptionColor,
+  selectDescriptionFontWeight as selectInfoDescriptionFontWeight,
+  selectCountdownEnabled as selectInfoCountdownEnabled,
+  selectCountdownDate as selectInfoCountdownDate,
+  selectCountdownBackgroundColor as selectInfoCountdownBackgroundColor,
+  selectCountdownFontColor as selectInfoCountdownFontColor,
+  selectButtonText as selectInfoButtonText,
+  selectButtonFontColor as selectInfoButtonFontColor,
+  selectButtonBackgroundColor as selectInfoButtonBackgroundColor,
+  selectIcon as selectInfoIcon,
+  selectLink as selectInfoLink,
+} from '@/stores/redux/features/infoScreen'
+import {
+  formScreenReducers,
+  formScreenSelectors,
+} from '@/stores/redux/features/formScreen'
+import {
   rewardScreenReducers,
   rewardScreenSelectors,
 } from '@/stores/redux/features/rewardScreen'
@@ -29,10 +73,8 @@ import {
   WidgetTypeEnum,
   type PublicWidget,
 } from '@lemnity/api-sdk'
-import type { ColorScheme, Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type EventTimerWidgetType,
-  type FontWeight,
 } from '@lemnity/widget-config/widgets/event-timer'
 
 export const fetchEventTimerWidget = fetchWidgetThunkFactory(
@@ -150,183 +192,90 @@ export const initialState: EventTimerWidgetState = {
   brandingEnabled: true,
 }
 
+const infoScreenReducers = {
+  contentEnabledChanged:
+    infoScreenContentEnabledReducer,
+  contentUrlChanged:
+    infoScreenContentUrldReducer,
+  titleChanged:
+    infoScreenTitleReducer,
+  titleFontWeightChanged:
+    infoScreenTitleFontWeightReducer,
+  titleColorChanged:
+    infoScreenTitleColorReducer,
+  descriptionChanged:
+    infoScreenDescriptionReducer,
+  descriptionColorChanged:
+    infoScreenDescriptionColortReducer,
+  descriptionFontWeightChanged:
+    infoScreenDescriptionFontWeightReducer,
+  countdownEnabledChanged:
+    infoScreenCountdownEnabledtReducer,
+  countdownDateChanged:
+    infoScreenCountdownDateReducer,
+  countdownBackgroundColorChanged:
+    infoScreenCountdownBackgroundColorReducer,
+  countdownFontColorChanged:
+    infoScreenCountdownFontColorReducer,
+  buttonTextChanged:
+    infoScreenButtonTextReducer,
+  buttonFontColorChanged:
+    infoScreenButtonFontColorReducer,
+  buttonBackgroundColorChanged:
+    infoScreenButtonBackgroundColorReducer,
+  iconChanged:
+    infoScreenIconReducer,
+  linkChanged:
+    infoScreenLinkReducer,
+}
+
+const infoScreenSelectors = {
+  selectContentEnabled:
+    selectInfoContentEnabled,
+  selectContentUrl:
+    selectInfoContentUrl,
+  selectTitle:
+    selectInfoTitle,
+  selectTitleFontWeight:
+    selectInfoTitleFontWeight,
+  selectTitleColor:
+    selectInfoTitleColor,
+  selectDescription:
+    selectInfoDescription,
+  selectDescriptionColor:
+    selectInfoDescriptionColor,
+  selectDescriptionFontWeight:
+    selectInfoDescriptionFontWeight,
+  selectCountdownEnabled:
+    selectInfoCountdownEnabled,
+  selectCountdownDate:
+    selectInfoCountdownDate,
+  selectCountdownBackgroundColor:
+    selectInfoCountdownBackgroundColor,
+  selectCountdownFontColor:
+    selectInfoCountdownFontColor,
+  selectButtonText:
+    selectInfoButtonText,
+  selectButtonFontColor:
+    selectInfoButtonFontColor,
+  selectButtonBackgroundColor:
+    selectInfoButtonBackgroundColor,
+  selectIcon:
+    selectInfoIcon,
+  selectLink:
+    selectInfoLink,
+}
+
 export const eventTimerSlice = createSlice({
   name: 'eventTimer',
   initialState,
   reducers: {
-    companyLogoEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.appearence.companyLogoEnabled = action.payload
-      },
-    companyLogoUrlChanged:
-      (state, action: PayloadAction<string | undefined>) => {
-        state.appearence.companyLogoUrl = action.payload
-      },
-    colorSchemeChanged:
-      (state, action: PayloadAction<ColorScheme>) => {
-        state.appearence.colorScheme = action.payload
-      },
-    backgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.appearence.backgroundColor = action.payload
-      },
-    borderRadiusChanged:
-      (state, action: PayloadAction<number>) => {
-        state.appearence.borderRadius = action.payload
-      },
-
-    contentEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.infoSettings.contentEnabled = action.payload
-      },
-    contentUrlChanged:
-      (state, action: PayloadAction<string | undefined>) => {
-        state.infoSettings.contentUrl = action.payload
-      },
-    titleChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.title = action.payload
-      },
-    titleFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.infoSettings.titleFontWeight = action.payload
-      },
-    titleColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.titleColor = action.payload
-      },
-    descriptionChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.description = action.payload
-      },
-    descriptionFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.infoSettings.descriptionFontWeight = action.payload
-      },
-    descriptionColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.descriptionColor = action.payload
-      },
-    
-    countdownEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.infoSettings.countdownEnabled = action.payload
-      },
-    countdownDateChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.countdownDate = action.payload
-      },
-    countdownBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.countdownBackgroundColor = action.payload
-      },
-    countdownFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.countdownFontColor = action.payload
-      },
-    
-    buttonTextChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.buttonText = action.payload
-      },
-    buttonFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.buttonFontColor = action.payload
-      },
-    buttonBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.buttonBackgroundColor = action.payload
-      },
-    iconChanged:
-      (state, action: PayloadAction<Icon>) => {
-        state.infoSettings.icon = action.payload
-      },
-    linkChanged:
-      (state, action: PayloadAction<string>) => {
-        state.infoSettings.link = action.payload
-      },
-    
-    formTitleChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.title = action.payload
-      },
-    formTitleFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.formSettings.titleFontWeight = action.payload
-      },
-    formTitleFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.titleFontColor = action.payload
-      },
-    formDescriptionChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.description = action.payload
-      },
-    formDescriptionFontWeightChanged:
-      (state, action: PayloadAction<FontWeight>) => {
-        state.formSettings.descriptionFontWeight = action.payload
-      },
-    formDescriptionFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.descriptionFontColor = action.payload
-      },
-    formContactacquisitionEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.contactAcquisitionEnabled = action.payload
-      },
-    formNameFieldEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.nameFieldEnabled = action.payload
-      },
-    formNameFieldRequiredChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.nameFieldRequired = action.payload
-      },
-    formEmailFieldEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.emailFieldEnabled = action.payload
-      },
-    formEmailFieldRequiredChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.emailFieldRequired = action.payload
-      },
-    formPhoneFieldEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.phoneFieldEnabled = action.payload
-      },
-    formPhoneFieldRequiredChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.phoneFieldRequired = action.payload
-      },
-    
-    formAgreementEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.agreement.enabled = action.payload
-      },
-    formAgreementPolicyURLChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.agreement.policyUrl = action.payload
-      },
-    formAgreementURLChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.agreement.agreementUrl = action.payload
-      },
-    formAgreementColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.agreement.color = action.payload
-      },
-    formAdsInfoEnabledChanged:
-      (state, action: PayloadAction<boolean>) => {
-        state.formSettings.adsInfo.enabled = action.payload
-      },
-    formAdsInfoPolicyURLChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.adsInfo.policyUrl = action.payload
-      },
-    formAdsInfoColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.formSettings.adsInfo.color = action.payload
-      },
+    ...commonReducers,
+    ...widgetAppearenceReducers,
+    ...infoScreenReducers,
+    ...formScreenReducers,
+    ...rewardScreenReducers,
+    ...mobileSettingsReducers,
     
     colorsReset:
       (state) => {
@@ -369,10 +318,6 @@ export const eventTimerSlice = createSlice({
         state.mobileSettings.triggerFontColor =
           initialState.mobileSettings.triggerFontColor
       },
-
-    ...commonReducers,
-    ...rewardScreenReducers,
-    ...mobileSettingsReducers,
   },
   extraReducers: (builder) => {
     builder.addCase(fetchEventTimerWidget.pending, (state) => {
@@ -416,90 +361,10 @@ export const eventTimerSlice = createSlice({
     })
   },
   selectors: {
-    selectCompanyLogoEnabled:
-      (state) => state.appearence.companyLogoEnabled,
-    selectCompanyLogoUrl:
-      (state) => state.appearence.companyLogoUrl,
-    selectColorScheme:
-      (state) => state.appearence.colorScheme,
-    selectBackgroundColor:
-      (state) => state.appearence.backgroundColor,
-    selectBorderRadius:
-      (state) => state.appearence.borderRadius,
-
-    selectContentEnabled:
-      (state) => state.infoSettings.contentEnabled,
-    selectContentUrl:
-      (state) => state.infoSettings.contentUrl,
-    selectTitle:
-      (state) => state.infoSettings.title,
-    selectTitleFontWeight:
-      (state) => state.infoSettings.titleFontWeight,
-    selectTitleColor:
-      (state) => state.infoSettings.titleColor,
-    selectDescription:
-      (state) => state.infoSettings.description,
-    selectDescriptionFontWeight:
-      (state) => state.infoSettings.descriptionFontWeight,
-    selectDescriptionColor:
-      (state) => state.infoSettings.descriptionColor,
-    selectCountdownEnabled:
-      (state) => state.infoSettings.countdownEnabled,
-    selectCountdownDate:
-      (state) => state.infoSettings.countdownDate,
-    selectCountdownBackgroundColor:
-      (state) => state.infoSettings.countdownBackgroundColor,
-    selectCountdownFontColor:
-      (state) => state.infoSettings.countdownFontColor,
-    selectButtonText:
-      (state) => state.infoSettings.buttonText,
-    selectButtonFontColor:
-      (state) => state.infoSettings.buttonFontColor,
-    selectButtonBackgroundColor:
-      (state) => state.infoSettings.buttonBackgroundColor,
-    selectIcon:
-      (state) => state.infoSettings.icon,
-    selectLink:
-      (state) => state.infoSettings.link,
-
-    selectFormTitle:
-      (state) => state.formSettings.title,
-    selectFormTitleFontWeight:
-      (state) => state.formSettings.titleFontWeight,
-    selectFormTitleFontColor:
-      (state) => state.formSettings.titleFontColor,
-    selectFormDescription:
-      (state) => state.formSettings.description,
-    selectFormDescriptionFontWeight:
-      (state) => state.formSettings.descriptionFontWeight,
-    selectFormDescriptionFontColor:
-      (state) => state.formSettings.descriptionFontColor,
-    
-    selectFormContactAcquisitionEnabled:
-      (state) => state.formSettings.contactAcquisitionEnabled,
-    selectFormNameFieldEnabled:
-      (state) => state.formSettings.nameFieldEnabled,
-    selectFormNameFieldRequired:
-      (state) => state.formSettings.nameFieldRequired,
-    selectFormEmailFieldEnabled:
-      (state) => state.formSettings.emailFieldEnabled,
-    selectFormEmailFieldRequired:
-      (state) => state.formSettings.emailFieldRequired,
-    selectFormPhoneFieldEnabled:
-      (state) => state.formSettings.phoneFieldEnabled,
-    selectFormPhoneFieldRequired:
-      (state) => state.formSettings.phoneFieldRequired,
-    selectFormAgreementEnabled:
-      (state) => state.formSettings.agreement.enabled,
-    selectFormAgreementPolicyUrl:
-      (state) => state.formSettings.agreement.policyUrl,
-
-    selectFormAgreement:
-      (state) => state.formSettings.agreement,
-    selectFormAdsInfo:
-      (state) => state.formSettings.adsInfo,
-    
     ...commonSelectors,
+    ...widgetAppearenceSelectors,
+    ...infoScreenSelectors,
+    ...formScreenSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
   },
@@ -534,7 +399,7 @@ export const {
   formDescriptionChanged,
   formDescriptionFontWeightChanged,
   formDescriptionFontColorChanged,
-  formContactacquisitionEnabledChanged,
+ formContactAcquisitionEnabledChanged,
   formNameFieldEnabledChanged,
   formNameFieldRequiredChanged,
   formEmailFieldEnabledChanged,

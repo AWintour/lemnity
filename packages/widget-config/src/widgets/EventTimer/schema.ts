@@ -9,11 +9,9 @@ import {
 
 const WidgetType: WidgetTypeId = 'EVENT_TIMER'
 
-const ContentAlignmentEnum = z.enum(['top', 'center', 'bottom'])
 const FontWeightEnum = z.enum(['regular', 'medium', 'bold'])
 const MobileTriggerEnum = z.enum(['image', 'button'])
 
-export type ContentAlignment = z.infer<typeof ContentAlignmentEnum>
 export type Icon = z.infer<typeof IconEnum>
 export type FontWeight = z.infer<typeof FontWeightEnum>
 export type MobileTrigger = z.infer<typeof MobileTriggerEnum>

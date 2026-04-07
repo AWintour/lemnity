@@ -25,9 +25,7 @@ const WidgetAppearenceSchema = z.object({
   companyLogoUrl: z.string().optional(),
 
   colorScheme: ColorSchemeEnum,
-  backgroundColor: z
-    .string()
-    .optional(),
+  backgroundColor: z.string(),
   borderRadius: z.number(),
 })
 

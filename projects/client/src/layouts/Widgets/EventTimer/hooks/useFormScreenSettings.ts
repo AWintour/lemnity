@@ -20,7 +20,7 @@ import {
   formDescriptionChanged,
   formDescriptionFontWeightChanged,
   formDescriptionFontColorChanged,
-  formContactacquisitionEnabledChanged,
+  formContactAcquisitionEnabledChanged,
   formNameFieldEnabledChanged,
   formNameFieldRequiredChanged,
   formEmailFieldEnabledChanged,
@@ -86,7 +86,7 @@ export const useFormScreenSettings = () => {
     dispatch(formDescriptionFontColorChanged(color))
   }
   const setFormScreenContactAcquisitionEnabled = (enabled: boolean) => {
-    dispatch(formContactacquisitionEnabledChanged(enabled))
+    dispatch(formContactAcquisitionEnabledChanged(enabled))
   }
   const setFormScreenNameFieldEnabled = (enabled: boolean) => {
     dispatch(formNameFieldEnabledChanged(enabled))
