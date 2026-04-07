@@ -43,6 +43,26 @@ import breadcrumbSeparator from '@/assets/icons/breadcrumb-separator.svg'
 import floppyIcon from '@/assets/icons/floppy-icon.svg'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
+const NotificationWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
+)
+const AnnouncementWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
+)
+const EventTimerWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
+)
+
+const getSaveWidgetThunk = async (currentWidget: WidgetTypeEnum) => {
+  switch (currentWidget) {
+    case 'ANNOUNCEMENT':
+      const { saveAnnouncementWidget } = await import(
+        '@/layouts/Widgets/Announcement/announcementSlice'
+      )
+      return saveAnnouncementWidget
+  }
+}
+
 const BreadcrumbSeparator = () => (
   <div className="w-2.5 h-2.5">
     <SvgIcon src={breadcrumbSeparator} />
@@ -58,16 +78,6 @@ const FloppyIcon = () => (
 type TabKey = 'fields' | 'display' | 'integration'
 type TabDescriptor = { key: TabKey; label: string; visible: boolean }
 // use store action to keep state in sync after update
-
-const NotificationWidgetSettings = lazy(
-  () => import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
-)
-const AnnouncementWidgetSettings = lazy(
-  () => import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
-)
-const EventTimerWidgetSettings = lazy(
-  () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
-)
 
 type WidgetSettingsProps = {
   currentWidget: WidgetTypeEnum
@@ -197,6 +207,19 @@ const EditWidgetPage = () => {
   }
 
   const handleSave = async () => {
+    if (!widgetType) {
+      alert('no widget types! >~<')
+      return
+    }
+
+    const saveWidgetThunk = await getSaveWidgetThunk(widgetType)
+
+    if (!saveWidgetThunk) {
+      alert('failed to load saveWidgetThunk! >~<')
+      return
+    }
+
+    dispatch(saveWidgetThunk())
     // useWidgetSettingsStore.getState().setValidationVisible(true)
     // const res = useWidgetSettingsStore.getState().prepareForSave()
 

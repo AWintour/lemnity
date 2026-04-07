@@ -5,6 +5,7 @@ import {
 } from '@reduxjs/toolkit'
 
 import {
+  createAppAsyncThunk,
   type FetchStatus,
   type WidgetSettings,
 } from '@/stores/redux/store'
@@ -58,10 +59,13 @@ import {
   mobileSettingsReducers,
   mobileSettingsSelectors,
 } from '@/stores/redux/features/mobileTrigger'
+import { updateWidget } from '@/services/widgets'
+// import { widgetSaved } from '@/stores/redux/editorSlice'
 
 import {
   WidgetTypeEnum,
   type PublicWidget,
+  type UpdateWidgetDto,
 } from '@lemnity/api-sdk'
 import {
   type AnnouncementWidgetType,
@@ -70,6 +74,26 @@ import {
 export const fetchAnnouncementWidget = fetchWidgetThunkFactory(
   'announcement/fetchWidget',
   (state) => state.announcement!.fetchStatus
+)
+export const saveAnnouncementWidget = createAppAsyncThunk(
+  'announcement/saveWiddget',
+  async (_, thunkApi) => {
+    const state = thunkApi.getState()
+    const widgetId = selectWidgetId(state)
+
+    if (!widgetId) {
+      // dispatch an action here
+      return
+    }
+
+    const self = selectSelfForSaving(state)
+    const payload: UpdateWidgetDto = {
+      config: self
+    }
+
+    console.log(payload)
+    await updateWidget(widgetId, payload)
+  },
 )
 
 type AnnouncementWidgetState = AnnouncementWidgetType & {
@@ -261,6 +285,15 @@ export const announcementSlice = createSlice({
     ...infoScreenSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
+
+    selectSelfForSaving: (state): AnnouncementWidgetType => ({
+      type: state.type,
+      appearence: state.appearence,
+      infoSettings: state.infoSettings,
+      rewardMessageSettings: state.rewardMessageSettings,
+      mobileSettings: state.mobileSettings,
+      brandingEnabled: state.brandingEnabled,
+    })
   },
   extraReducers: (builder) => {
     builder
@@ -419,6 +452,8 @@ export const {
   selectMobileTriggerBackgroundColor,
   selectMobileTriggerFontColor,
   selectMobileImageUrl,
+
+  selectSelfForSaving,
 } = injectedAnnouncementSlice.selectors
 
 export default injectedAnnouncementSlice.reducer
