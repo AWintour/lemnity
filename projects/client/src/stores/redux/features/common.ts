@@ -1,5 +1,6 @@
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { FetchStatus, RootState } from '../store'
+import type { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 export interface IWidgetId {
   widgetId?: string
@@ -8,6 +9,15 @@ export interface IWidgetId {
 export const selectWidgetId =
   <TState extends IWidgetId>(state: TState) =>
     state.widgetId
+
+
+export interface IWidgetType {
+  type: WidgetTypeEnum
+}
+
+export const selectWidgetType =
+  <TState extends IWidgetType>(state: TState) =>
+    state.type
 
 
 export interface IProjectId {
@@ -60,6 +70,7 @@ export const commonReducers = {
 
 export const commonSelectors = {
   selectWidgetId,
+  selectWidgetType,
   selectProjectId,
   selectFetchStatus,
   selectFetchError,

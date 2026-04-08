@@ -5,14 +5,15 @@ import {
 } from '@reduxjs/toolkit'
 
 import {
-  createAppAsyncThunk,
+  // createAppAsyncThunk,
   type FetchStatus,
   type WidgetSettings,
 } from '@/stores/redux/store'
 import { rootReducer } from '@/stores/redux/reducer'
 import {
   fetchWidgetThunkFactory,
-} from '@/stores/redux/utils/fetchWidgetThunkFactory'
+  saveWidgetThunkFactory,
+} from '@/stores/redux/factories'
 import {
   commonReducers,
   commonSelectors,
@@ -59,13 +60,10 @@ import {
   mobileSettingsReducers,
   mobileSettingsSelectors,
 } from '@/stores/redux/features/mobileTrigger'
-import { updateWidget } from '@/services/widgets'
-// import { widgetSaved } from '@/stores/redux/editorSlice'
 
 import {
   WidgetTypeEnum,
   type PublicWidget,
-  type UpdateWidgetDto,
 } from '@lemnity/api-sdk'
 import {
   type AnnouncementWidgetType,
@@ -75,30 +73,27 @@ export const fetchAnnouncementWidget = fetchWidgetThunkFactory(
   'announcement/fetchWidget',
   (state) => state.announcement!.fetchStatus
 )
-export const saveAnnouncementWidget = createAppAsyncThunk(
-  'announcement/saveWiddget',
-  async (_, thunkApi) => {
-    const state = thunkApi.getState()
-    const widgetId = selectWidgetId(state)
-    const widgetType = selectWidgetType(state)
 
-    if (!widgetId) {
-      // dispatch an action here
-      return
-    }
-
-    const self = selectSelfForSaving(state)
-    const payload: UpdateWidgetDto = {
-      config: {
-        id: widgetId,
-        widget: self,
-      },
-      type: widgetType,
-    }
-
-    console.log(payload)
-    await updateWidget(widgetId, payload)
-  },
+// this action will only be dispatched when the store is aleady mounted
+// if it's not then we are having a bigger problem
+export const saveAnnouncementWidget = saveWidgetThunkFactory(
+  'announcement/saveWidget',
+  (state) => state.announcement!.widgetId,
+  (state) => state.announcement!.type,
+  (state): AnnouncementWidgetType => ({
+    type:
+      state.announcement!.type,
+    appearence:
+      state.announcement!.appearence,
+    infoSettings:
+      state.announcement!.infoSettings,
+    rewardMessageSettings:
+      state.announcement!.rewardMessageSettings,
+    mobileSettings:
+      state.announcement!.mobileSettings,
+    brandingEnabled:
+      state.announcement!.brandingEnabled,
+  })
 )
 
 type AnnouncementWidgetState = AnnouncementWidgetType & {
@@ -291,15 +286,15 @@ export const announcementSlice = createSlice({
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
 
-    selectSelfForSaving: (state): AnnouncementWidgetType => ({
-      type: state.type,
-      appearence: state.appearence,
-      infoSettings: state.infoSettings,
-      rewardMessageSettings: state.rewardMessageSettings,
-      mobileSettings: state.mobileSettings,
-      brandingEnabled: state.brandingEnabled,
-    }),
-    selectWidgetType: (state) => state.type,
+    // selectSelfForSaving: (state): AnnouncementWidgetType => ({
+    //   type: state.type,
+    //   appearence: state.appearence,
+    //   infoSettings: state.infoSettings,
+    //   rewardMessageSettings: state.rewardMessageSettings,
+    //   mobileSettings: state.mobileSettings,
+    //   brandingEnabled: state.brandingEnabled,
+    // }),
+    // selectWidgetType: (state) => state.type,
   },
   extraReducers: (builder) => {
     builder
@@ -459,7 +454,7 @@ export const {
   selectMobileTriggerFontColor,
   selectMobileImageUrl,
 
-  selectSelfForSaving,
+  // selectSelfForSaving,
   selectWidgetType,
 } = injectedAnnouncementSlice.selectors
 

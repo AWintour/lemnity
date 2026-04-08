@@ -11,7 +11,8 @@ import {
 import { rootReducer } from '@/stores/redux/reducer'
 import {
   fetchWidgetThunkFactory,
-} from '@/stores/redux/utils/fetchWidgetThunkFactory'
+  saveWidgetThunkFactory,
+} from '@/stores/redux/factories'
 import {
   commonReducers,
   commonSelectors,
@@ -80,6 +81,30 @@ import {
 export const fetchEventTimerWidget = fetchWidgetThunkFactory(
   'eventTimer/fetchWidget',
   (state) => state.eventTimer!.fetchStatus
+)
+
+// this action will only be dispatched when the store is aleady mounted
+// if it's not then we are having a bigger problem
+export const saveEventTimerWidget = saveWidgetThunkFactory(
+  'eventTimer/saveWidget',
+  (state) => state.eventTimer!.widgetId,
+  (state) => state.eventTimer!.type,
+  (state): EventTimerWidgetType => ({
+    type:
+      state.eventTimer!.type,
+    appearence:
+      state.eventTimer!.appearence,
+    infoSettings:
+      state.eventTimer!.infoSettings,
+    formSettings:
+      state.eventTimer!.formSettings,
+    rewardMessageSettings:
+      state.eventTimer!.rewardMessageSettings,
+    mobileSettings:
+      state.eventTimer!.mobileSettings,
+    brandingEnabled:
+      state.eventTimer!.brandingEnabled,
+  })
 )
 
 type EventTimerWidgetState = EventTimerWidgetType & {

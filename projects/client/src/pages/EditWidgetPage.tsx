@@ -60,6 +60,16 @@ const getSaveWidgetThunk = async (currentWidget: WidgetTypeEnum) => {
         '@/layouts/Widgets/Announcement/announcementSlice'
       )
       return saveAnnouncementWidget
+    case 'EVENT_TIMER':
+      const { saveEventTimerWidget } = await import(
+        '@/layouts/Widgets/EventTimer/eventTimerSlice'
+      )
+      return saveEventTimerWidget
+    case 'NOTIFICATION':
+      const { saveNotificationWidget } = await import(
+        '@/layouts/Widgets/Notification/notificationSlice'
+      )
+      return saveNotificationWidget
   }
 }
 

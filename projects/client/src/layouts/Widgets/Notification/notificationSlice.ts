@@ -14,7 +14,8 @@ import {
 import { rootReducer } from '@/stores/redux/reducer'
 import {
   fetchWidgetThunkFactory,
-} from '@/stores/redux/utils/fetchWidgetThunkFactory'
+  saveWidgetThunkFactory,
+} from '@/stores/redux/factories'
 
 import {
   WidgetTypeEnum,
@@ -30,6 +31,34 @@ import {
 export const fetchNotificationWidget = fetchWidgetThunkFactory(
   'notification/fetchWidget',
   (state) => state.notification!.fetchStatus
+)
+
+// this action will only be dispatched when the store is aleady mounted
+// if it's not then we are having a bigger problem
+export const saveNotificationWidget = saveWidgetThunkFactory(
+  'notification/saveWidget',
+  (state) => state.notification!.widgetId,
+  (state) => state.notification!.type,
+  (state): NotificationWidgetType => ({
+    type:
+      state.notification!.type,
+    triggerText:
+      state.notification!.triggerText,
+    triggerFontColor:
+      state.notification!.triggerFontColor,
+    triggerBackgroundColor:
+      state.notification!.triggerBackgroundColor,
+    triggerIcon:
+      state.notification!.triggerIcon,
+    triggerPosition:
+      state.notification!.triggerPosition,
+    delay:
+      state.notification!.delay,
+    notifications:
+      selectAllNotifications(state),
+    brandingEnabled:
+      state.notification!.brandingEnabled,
+  })
 )
 
 const notificationAdapter = createEntityAdapter<Notification>()
