@@ -80,6 +80,7 @@ export const saveAnnouncementWidget = createAppAsyncThunk(
   async (_, thunkApi) => {
     const state = thunkApi.getState()
     const widgetId = selectWidgetId(state)
+    const widgetType = selectWidgetType(state)
 
     if (!widgetId) {
       // dispatch an action here
@@ -88,7 +89,11 @@ export const saveAnnouncementWidget = createAppAsyncThunk(
 
     const self = selectSelfForSaving(state)
     const payload: UpdateWidgetDto = {
-      config: self
+      config: {
+        id: widgetId,
+        widget: self,
+      },
+      type: widgetType,
     }
 
     console.log(payload)
@@ -293,7 +298,8 @@ export const announcementSlice = createSlice({
       rewardMessageSettings: state.rewardMessageSettings,
       mobileSettings: state.mobileSettings,
       brandingEnabled: state.brandingEnabled,
-    })
+    }),
+    selectWidgetType: (state) => state.type,
   },
   extraReducers: (builder) => {
     builder
@@ -454,6 +460,7 @@ export const {
   selectMobileImageUrl,
 
   selectSelfForSaving,
+  selectWidgetType,
 } = injectedAnnouncementSlice.selectors
 
 export default injectedAnnouncementSlice.reducer

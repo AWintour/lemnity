@@ -291,11 +291,11 @@ export const buildWidgetSettingsSchema = (
 ) =>
   z.object({
     id: z.string(),
-    widgetType: z.literal(widgetType),
+    // widgetType: z.literal(widgetType),
     widget: widgetSchema,
-    display: resolveSurface(surfaces, 'display'),
-    fields: resolveSurface(surfaces, 'fields'),
-    integration: resolveSurface(surfaces, 'integration')
+    // display: resolveSurface(surfaces, 'display'),
+    // fields: resolveSurface(surfaces, 'fields'),
+    // integration: resolveSurface(surfaces, 'integration')
   })
 
 
