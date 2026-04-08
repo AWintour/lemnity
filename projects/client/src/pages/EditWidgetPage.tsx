@@ -53,7 +53,7 @@ const EventTimerWidgetSettings = lazy(
   () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
 )
 
-const getSaveWidgetThunk = async (currentWidget: WidgetTypeEnum) => {
+const getSaveWidgetConfigThunk = async (currentWidget: WidgetTypeEnum) => {
   switch (currentWidget) {
     case 'ANNOUNCEMENT':
       const { saveAnnouncementWidget } = await import(
@@ -222,7 +222,7 @@ const EditWidgetPage = () => {
       return
     }
 
-    const saveWidgetThunk = await getSaveWidgetThunk(widgetType)
+    const saveWidgetThunk = await getSaveWidgetConfigThunk(widgetType)
 
     if (!saveWidgetThunk) {
       alert('failed to load saveWidgetThunk! >~<')

@@ -1,3 +1,5 @@
+import styles from './embed.css?inline'
+
 import { lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HeroUIProvider } from '@heroui/system'
@@ -5,23 +7,16 @@ import { cn } from '@heroui/theme'
 import { Provider } from 'react-redux'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-import {
-  fetchAnnouncementWidget,
-} from '@/layouts/Widgets/Announcement/announcementSlice'
-
-import { PublicWidgetsApi, Configuration } from '@lemnity/api-sdk'
 import { store } from '@/stores/redux/store'
-import {
-  fetchNotificationWidget,
-  triggerPositionChanged,
-} from '@/layouts/Widgets/Notification/notificationSlice'
-import styles from './embed.css?inline'
 
 const NotificationEmbedRuntime = lazy(
   () => import('@/layouts/Widgets/Notification/embedded/embedRuntime')
 )
 const AnnouncementEmbedRuntime = lazy(
   () => import('@/layouts/Widgets/Announcement/embedded/embedRuntime')
+)
+const EventTimerEmbedRuntime = lazy(
+  () => import('@/layouts/Widgets/EventTimer/embedded/embedRuntime')
 )
 
 type WidgetsProps = {
@@ -63,46 +58,61 @@ const queryClient = new QueryClient()
 const bootstrap = async () => {
   console.log('[OwO] we are in.')
 
-  const host = document.createElement('div')
-  host.style.zIndex = '9999999'
-  host.id = 'shadow-host'
-  const shadowRoot = host.attachShadow({ mode: 'closed' })
-  const reactRoot = createRoot(shadowRoot)
-  
-  const shadowStyle = document.createElement('style')
-  shadowStyle.textContent = styles
-  shadowRoot.appendChild(shadowStyle)
-
-  const notificationWidgetId = 'cmmahc07x0000dbn8t7ss7ldn'
-  const announcementWidgetId = 'cmm4qe93a0000diqwr5bfdsq6'
-
-  store.dispatch(fetchAnnouncementWidget({
-    widgetId: announcementWidgetId,
-    embedded: true,
-  }))
-
-  store.dispatch(fetchNotificationWidget({
-    widgetId: notificationWidgetId,
-    embedded: true,
-  }))
-
-  setTimeout(() => {
-    store.dispatch(triggerPositionChanged('bottom-left'))
-  }, 1000)
-
-  const el = document.getElementById('root')
-
-  reactRoot.render(
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <HeroUIProvider>
-          <Widgets allowed={ el ? 2 : 1} />
-        </HeroUIProvider>
-      </QueryClientProvider>
-    </Provider>
+  const self: HTMLScriptElement | null = document.querySelector(
+    'script[data-id="lemnnity-widgets"]'
   )
+  console.log('[lemnity] script:', self)
+
+  if (!self) {
+    console.log('[lemnity] Проверьте, что Вы правильно установили скрипт')
+    console.log('[lemnity] Скрипт должен быть следующего вида:')
+
+    const exampleScript = document.createElement('script')
+
+    exampleScript.setAttribute('data-id', 'lemnnity-widgets')
+    exampleScript.src =
+      'http://app.lemnity.ru/embed.js?projectId=<ID ВАШЕГО ПРОЕКТА>'
+    exampleScript.type = 'module'
+    exampleScript.defer = true
+
+    console.log(exampleScript)
+    return
+  }
+
+  const url = new URL(self.src)
+  console.log('[lemnity]', url)
+
+  const projectId = url.searchParams.get('projectId')
+  console.log('[lemnity] projectId', projectId)
+
+  const fetchWidgetsUrl = `http://localhost:3000/api/public/projects/${projectId}`
+  const data = await fetch(fetchWidgetsUrl)
+  const widgets = await data.json()
+
+  console.log('[lemnity] widgets', widgets)
+  // const host = document.createElement('div')
+  // host.style.zIndex = '9999999'
+  // host.id = 'shadow-host'
+  // const shadowRoot = host.attachShadow({ mode: 'closed' })
+  // const reactRoot = createRoot(shadowRoot)
   
-  document.body.appendChild(host)
+  // const shadowStyle = document.createElement('style')
+  // shadowStyle.textContent = styles
+  // shadowRoot.appendChild(shadowStyle)
+
+  // const el = document.getElementById('root')
+
+  // reactRoot.render(
+  //   <Provider store={store}>
+  //     <QueryClientProvider client={queryClient}>
+  //       <HeroUIProvider>
+  //         <Widgets allowed={ el ? 2 : 1} />
+  //       </HeroUIProvider>
+  //     </QueryClientProvider>
+  //   </Provider>
+  // )
+  
+  // document.body.appendChild(host)
 }
 
 if (document.readyState === 'complete') {
