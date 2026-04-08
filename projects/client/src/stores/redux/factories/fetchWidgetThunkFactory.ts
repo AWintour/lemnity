@@ -16,6 +16,28 @@ type ThunkParams = {
   embedded?: boolean
 }
 
+/**
+ * A factory that produces Redux thunks for fetching the widget's config.
+ * The resulting thunk uses different endpoints depending on its `embedded`
+ * named parameter
+ * 
+ * @param actionName name of the redux action! >w<
+ * @param selectFetchStatus a selector for the `FetchStatus`
+ * @returns an `AsyncThunk`. durrr.
+ * 
+ * @example
+ *   // this action will should be dispatched when the store is aleady mounted
+ *   // if it's not then we are having a bigger problem
+ *   export const fetchAnnouncementWidget = fetchWidgetThunkFactory(
+ *     'announcement/fetchWidget',
+ *     (state) => state.announcement!.fetchStatus
+ *   )
+ * 
+ *   // later in some React component
+ *   dispatch(fetchEventTimerWidget({ widgetId: 'aboba' }))
+ *   // or an embedded environment
+ *   dispatch(fetchEventTimerWidget({ widgetId: 'aboba', embedded: true }))
+ */
 export const fetchWidgetThunkFactory = (
   actionName: string,
   selectFetchStatus: (state: RootState) => FetchStatus

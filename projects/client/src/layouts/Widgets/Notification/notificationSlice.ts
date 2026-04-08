@@ -16,6 +16,10 @@ import {
   fetchWidgetThunkFactory,
   saveWidgetThunkFactory,
 } from '@/stores/redux/factories'
+import {
+  commonReducers,
+  commonSelectors,
+} from '@/stores/redux/features/common'
 
 import {
   WidgetTypeEnum,
@@ -109,53 +113,65 @@ export const notificationSlice = createSlice({
   name: 'notification',
   initialState,
   reducers: {
-    triggerTextChanged: (state, action: PayloadAction<string>) => {
-      state.triggerText = action.payload
-    },
-    triggerBackgroundColorChanged: (state, action: PayloadAction<string>) => {
-      state.triggerBackgroundColor = action.payload
-    },
-    triggerFontColorChanged: (state, action: PayloadAction<string>) => {
-      state.triggerFontColor = action.payload
-    },
-    triggerIconChanged: (state, action: PayloadAction<Icon>) => {
-      state.triggerIcon = action.payload
-    },
-    triggerPositionChanged: (state, action: PayloadAction<Position>) => {
-      state.triggerPosition = action.payload
-    },
-    delayChanged: (state, action: PayloadAction<number>) => {
-      state.delay = action.payload
-    },
-    brandingEnabledChanged: (state, action: PayloadAction<boolean>) => {
-      state.brandingEnabled = action.payload
-    },
-    notificationAdded: (state, action: PayloadAction<Notification>) => {
-      notificationAdapter.addOne(state.notifications, action.payload)
-    },
-    notificationDeleted: (state, action: PayloadAction<string>) => {
-      notificationAdapter.removeOne(state.notifications, action.payload)
-    },
-    notificationUpdated: (state, action: PayloadAction<NotificationUpdate>) => {
-      const { id, ...changes } = action.payload
-      notificationAdapter.updateOne(state.notifications, { id, changes })
-    },
-    notificationsReordered: (state, action: PayloadAction<string[]>) => {
-      state.notifications.ids = action.payload
-    },
+    ...commonReducers,
+
+    triggerTextChanged:
+      (state, action: PayloadAction<string>) => {
+        state.triggerText = action.payload
+      },
+    triggerBackgroundColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.triggerBackgroundColor = action.payload
+      },
+    triggerFontColorChanged:
+      (state, action: PayloadAction<string>) => {
+        state.triggerFontColor = action.payload
+      },
+    triggerIconChanged:
+      (state, action: PayloadAction<Icon>) => {
+        state.triggerIcon = action.payload
+      },
+    triggerPositionChanged:
+      (state, action: PayloadAction<Position>) => {
+        state.triggerPosition = action.payload
+      },
+    delayChanged:
+      (state, action: PayloadAction<number>) => {
+        state.delay = action.payload
+      },
+    notificationAdded:
+      (state, action: PayloadAction<Notification>) => {
+        notificationAdapter.addOne(state.notifications, action.payload)
+      },
+    notificationDeleted:
+      (state, action: PayloadAction<string>) => {
+        notificationAdapter.removeOne(state.notifications, action.payload)
+      },
+    notificationUpdated:
+      (state, action: PayloadAction<NotificationUpdate>) => {
+        const { id, ...changes } = action.payload
+        notificationAdapter.updateOne(state.notifications, { id, changes })
+      },
+    notificationsReordered:
+      (state, action: PayloadAction<string[]>) => {
+        state.notifications.ids = action.payload
+      },
   },
   selectors: {
-    selectTriggerText: (state) => state.triggerText,
-    selectTriggerBackgroundColor: (state) => state.triggerBackgroundColor,
-    selectTriggerFontColor: (state) => state.triggerFontColor,
-    selectTriggerIcon: (state) => state.triggerIcon,
-    selectTriggerPosition: (state) => state.triggerPosition,
-    selectDelay: (state) => state.delay,
-    selectBrandingEnabled: (state) => state.brandingEnabled,
-    selectFetchStatus: (state) => state.fetchStatus,
-    selectFetchError: (state) => state.fetchError,
-    selectWidgetId: (state) => state.widgetId,
-    selectProjectId: (state) => state.projectId,
+    ...commonSelectors,
+
+    selectTriggerText:
+      (state) => state.triggerText,
+    selectTriggerBackgroundColor:
+      (state) => state.triggerBackgroundColor,
+    selectTriggerFontColor:
+      (state) => state.triggerFontColor,
+    selectTriggerIcon:
+      (state) => state.triggerIcon,
+    selectTriggerPosition:
+      (state) => state.triggerPosition,
+    selectDelay:
+      (state) => state.delay,
   },
   extraReducers: (builder) => {
     builder

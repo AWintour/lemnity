@@ -126,7 +126,7 @@ export const initialState: AnnouncementWidgetState = {
     title: 'Укажите заголовок',
     titleFontWeight: 'medium',
     titleColor: '#000000',
-    description: 'Напишите описание к действию или какое нибудь предложение',
+    description: 'Напишите описание к действию или какое-нибудь предложение',
     descriptionFontWeight: 'regular',
     descriptionColor: '#000000',
 
@@ -178,6 +178,11 @@ export const initialState: AnnouncementWidgetState = {
   brandingEnabled: true,
 }
 
+// i cannot both import these names and export them form the injected slice's
+// actions so here's some boilerplate >w<
+// i also am not sure that i should export it like this from the feature file
+// like i have done with commonReducers since the currrent wisgets using
+// this feature require a unique subset of all the exports
 const infoScreenReducers = {
   contentTypeChanged:
     infoScreenContentTypedReducer,
@@ -285,16 +290,6 @@ export const announcementSlice = createSlice({
     ...infoScreenSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
-
-    // selectSelfForSaving: (state): AnnouncementWidgetType => ({
-    //   type: state.type,
-    //   appearence: state.appearence,
-    //   infoSettings: state.infoSettings,
-    //   rewardMessageSettings: state.rewardMessageSettings,
-    //   mobileSettings: state.mobileSettings,
-    //   brandingEnabled: state.brandingEnabled,
-    // }),
-    // selectWidgetType: (state) => state.type,
   },
   extraReducers: (builder) => {
     builder
@@ -454,7 +449,6 @@ export const {
   selectMobileTriggerFontColor,
   selectMobileImageUrl,
 
-  // selectSelfForSaving,
   selectWidgetType,
 } = injectedAnnouncementSlice.selectors
 

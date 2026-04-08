@@ -217,6 +217,11 @@ export const initialState: EventTimerWidgetState = {
   brandingEnabled: true,
 }
 
+// i cannot both import these names and export them form the injected slice's
+// actions so here's some boilerplate >w<
+// i also am not sure that i should export it like this from the feature file
+// like i have done with commonReducers since the currrent wisgets using
+// this feature require a unique subset of all the exports
 const infoScreenReducers = {
   contentEnabledChanged:
     infoScreenContentEnabledReducer,
