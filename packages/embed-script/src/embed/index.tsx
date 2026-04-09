@@ -8,111 +8,168 @@ import { Provider } from 'react-redux'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { store } from '@/stores/redux/store'
+import type { WidgetTypeId } from '@lemnity/widget-config/widgets/base'
 
-const NotificationEmbedRuntime = lazy(
-  () => import('@/layouts/Widgets/Notification/embedded/embedRuntime')
+
+const NotificationWidget = lazy(
+  () => import('@/layouts/Widgets/Notification/embedded/EmbeddedWidget')
 )
-const AnnouncementEmbedRuntime = lazy(
-  () => import('@/layouts/Widgets/Announcement/embedded/embedRuntime')
+const AnnouncementWidget = lazy(
+  () => import('@/layouts/Widgets/Announcement/embedded/EmbeddedWidget')
 )
-const EventTimerEmbedRuntime = lazy(
-  () => import('@/layouts/Widgets/EventTimer/embedded/embedRuntime')
+const EventTimerWidget = lazy(
+  () => import('@/layouts/Widgets/EventTimer/embedded/EmbeddedWidget')
 )
 
-type WidgetsProps = {
-  allowed: number
+
+type WidgetProps = {
+  widgetId: string
+  type: WidgetTypeId
 }
 
-const Widgets = ({ allowed }: WidgetsProps) => {
-  if (allowed === 2) {
-    return (
-      <>
-        <NotificationEmbedRuntime />
-        <AnnouncementEmbedRuntime />
-      </>
-    )
-  }
-  else {
-    return <AnnouncementEmbedRuntime />
+const Widget = ({ widgetId, type }: WidgetProps) => {
+  switch (type) {
+    case 'ANNOUNCEMENT':
+      return <AnnouncementWidget widgetId={widgetId} />
+    case 'NOTIFICATION':
+      return <NotificationWidget widgetId={widgetId} />
+    case 'EVENT_TIMER':
+      return <EventTimerWidget widgetId={widgetId} />
   }
 }
 
-// const autoInitFromQuery = () => {
-//   const currentScript = findEmbedScript()
-//   console.debug('[LemnityWidgets] autoInitFromQuery start', currentScript?.src ?? null)
-//   if (!currentScript?.src) return
-//   try {
-//     const url = new URL(currentScript.src)
-//     const widgetId = url.searchParams.get('widgetId')
-//     if (!widgetId) return
 
-//     console.debug('[LemnityWidgets] init from query', { widgetId })
-//     // api.init({ widgetId }).catch(err => console.error('[LemnityWidgets]', err))
-//   } catch {
-//     // ignore parse errors
-//   }
-// }
+const displayScriptInstallationGuide = () => {
+  console.log('[lemnity] Проверьте, что Вы правильно установили скрипт')
+  console.log('[lemnity] Скрипт должен быть следующего вида:')
 
-const queryClient = new QueryClient()
+  const exampleScript = document.createElement('script')
 
-const bootstrap = async () => {
-  console.log('[OwO] we are in.')
+  exampleScript.setAttribute('data-id', 'lemnnity-widgets')
+  exampleScript.setAttribute('data-project-id', '<ID ВАШЕГО ПРОЕКТА>')
+  exampleScript.src = 'http://app.lemnity.ru/embed.js'
+  exampleScript.type = 'module'
+  exampleScript.defer = true
 
+  console.log(exampleScript)
+}
+
+
+const getProjectId = () => {
   const self: HTMLScriptElement | null = document.querySelector(
     'script[data-id="lemnnity-widgets"]'
   )
   console.log('[lemnity] script:', self)
 
   if (!self) {
-    console.log('[lemnity] Проверьте, что Вы правильно установили скрипт')
-    console.log('[lemnity] Скрипт должен быть следующего вида:')
-
-    const exampleScript = document.createElement('script')
-
-    exampleScript.setAttribute('data-id', 'lemnnity-widgets')
-    exampleScript.src =
-      'http://app.lemnity.ru/embed.js?projectId=<ID ВАШЕГО ПРОЕКТА>'
-    exampleScript.type = 'module'
-    exampleScript.defer = true
-
-    console.log(exampleScript)
+    displayScriptInstallationGuide()
     return
   }
 
-  const url = new URL(self.src)
-  console.log('[lemnity]', url)
+  const projectId = self.attributes.getNamedItem('data-project-id')?.value
 
-  const projectId = url.searchParams.get('projectId')
+  if (!projectId) {
+    console.log('[lemnity] Не найден projectId в атрибутах скрипта')
+    displayScriptInstallationGuide()
+    return
+  }
+
   console.log('[lemnity] projectId', projectId)
 
-  const fetchWidgetsUrl = `http://localhost:3000/api/public/projects/${projectId}`
+  return projectId
+}
+
+
+type WidgetIdsAndTypes = {
+  widgets: { id: string, type: WidgetTypeId }[]
+}
+
+const fetchActiveWidgetsForAProject = async (projectId: string) => {
+  console.log('[lemnity] BASE_URL', import.meta.env.BASE_URL)
+
+  const fetchWidgetsUrl =
+    `http://localhost:3000/api/public/projects/${projectId}`
   const data = await fetch(fetchWidgetsUrl)
-  const widgets = await data.json()
+  const json: WidgetIdsAndTypes | undefined = await data.json()
 
+  if (!json) {
+    console.log('[lemnity] Не удалось загруить идентификаторы виджетов')
+    return
+  }
+
+  return json.widgets
+}
+
+
+const fetchActiveProjectWidgets = async () => {
+  const projectId = getProjectId()
+  
+  if (!projectId) {
+    return
+  }
+  
+  const widgets = await fetchActiveWidgetsForAProject(projectId)
+  
+  if (!widgets || widgets.length === 0) {
+    console.log(
+      '[lemnity] Убедитесь, что Вы создали и активировали хотя бы один виджет' +
+      'в проекте'
+    )
+    return
+  }
+  
   console.log('[lemnity] widgets', widgets)
-  // const host = document.createElement('div')
-  // host.style.zIndex = '9999999'
-  // host.id = 'shadow-host'
-  // const shadowRoot = host.attachShadow({ mode: 'closed' })
-  // const reactRoot = createRoot(shadowRoot)
-  
-  // const shadowStyle = document.createElement('style')
-  // shadowStyle.textContent = styles
-  // shadowRoot.appendChild(shadowStyle)
+  return widgets
+}
 
-  // const el = document.getElementById('root')
 
-  // reactRoot.render(
-  //   <Provider store={store}>
-  //     <QueryClientProvider client={queryClient}>
-  //       <HeroUIProvider>
-  //         <Widgets allowed={ el ? 2 : 1} />
-  //       </HeroUIProvider>
-  //     </QueryClientProvider>
-  //   </Provider>
-  // )
+const queryClient = new QueryClient()
+
+const bootstrap = async () => {
+  console.log('[OwO] we are in.')
+
+  if ((window as any).LEMNNITY_INITIALIZATION_GUARD) {
+    console.log(
+      '[lemnity] Скрипт уже был инициализирован, пропускаю повторную' +
+      'инициализацию...'
+    )
+    console.log(
+      '[lemnity] Проверьте, что скрипт не установлен дважды на одной странице'
+    )
+    return
+  }
+
+  (window as any).LEMNNITY_INITIALIZATION_GUARD = true
+
+  const widgets = await fetchActiveProjectWidgets()
+
+  if (!widgets || widgets.length === 0) {
+    return
+  }
+
+  const host = document.createElement('div')
+  host.style.zIndex = '9999999'
+  host.id = 'shadow-host'
+  const shadowRoot = host.attachShadow({ mode: 'closed' })
+  const reactRoot = createRoot(shadowRoot)
   
-  // document.body.appendChild(host)
+  const shadowStyle = document.createElement('style')
+  shadowStyle.textContent = styles
+  shadowRoot.appendChild(shadowStyle)
+
+  reactRoot.render(
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <HeroUIProvider>
+          {widgets.map((widget) => (
+            <Widget key={widget.type} widgetId={widget.id} type={widget.type}/>
+          ))}
+        </HeroUIProvider>
+      </QueryClientProvider>
+    </Provider>
+  )
+  
+  document.body.appendChild(host)
 }
 
 if (document.readyState === 'complete') {

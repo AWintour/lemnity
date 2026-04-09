@@ -12,11 +12,12 @@ import MobileWidgetTrigger from './MobileWidgetTrigger'
 
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { sendEvent } from '@/common/api/publicApi'
-import { useAppSelector } from '@/stores/redux/hooks'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
 import {
   selectAllNotifications,
   selectBrandingEnabled,
   selectDelay,
+  selectFetchStatus,
   selectTriggerBackgroundColor,
   selectTriggerFontColor,
   selectTriggerIcon,
@@ -24,6 +25,7 @@ import {
   selectTriggerPosition,
   selectWidgetId,
   selectProjectId,
+  fetchNotificationWidget,
 } from '../notificationSlice'
 
 import type {
@@ -36,9 +38,24 @@ const localStorageKey = 'lemnity-notifications'
 
 type NotificationEmbedRuntimeProps = {
   preview?: boolean
+  widgetId?: string
 }
 
 const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
+  const fetchStatus = useAppSelector(selectFetchStatus)
+  const readyToRender = props.preview || fetchStatus === 'succeeded'
+
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!props.preview && props.widgetId) {
+      dispatch(fetchNotificationWidget({
+        widgetId: props.widgetId,
+        embedded: true,
+      }))
+    }
+  }, [dispatch, props.preview, props.widgetId])
+
   const triggerText = useAppSelector(selectTriggerText)
   const triggerFontColor = useAppSelector(selectTriggerFontColor)
   const triggerBackgroundColor = useAppSelector(selectTriggerBackgroundColor)
@@ -60,6 +77,10 @@ const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
   const isMobileViewport = useIsMobileViewport()
 
   useEffect(() => {
+    if (!readyToRender) {
+      return
+    }
+
     setLiveNotifications([])
 
     let localStorageData: LocalStorageData | undefined
@@ -148,6 +169,10 @@ const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
 
     return () => timers.forEach(timer => clearTimeout(timer))
   }, [notifications, delay])
+
+  if (!readyToRender) {
+    return null
+  }
 
   const toggleOpen = () => {
     setOpen(!open)

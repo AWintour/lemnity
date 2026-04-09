@@ -46,6 +46,7 @@ export const fetchWidgetThunkFactory = (
     actionName,
     async ({ widgetId, embedded }: ThunkParams) => {
       if (embedded) {
+        console.log(`[lemnity][fetchWidgetThunkFactory] fetching widget ${widgetId} from public endpoint...`)
         const { data } = await apiInstance.publicWidgetControllerFindOne(
           { id: widgetId }
         )
@@ -58,7 +59,21 @@ export const fetchWidgetThunkFactory = (
     },
     {
       condition(_, thunkApi) {
-        const fetchStatus = selectFetchStatus(thunkApi.getState())
+        let fetchStatus: FetchStatus = 'idle'
+
+        try {
+          fetchStatus = selectFetchStatus(thunkApi.getState())
+        }
+        catch {
+          // the widget slice might not be mounted yet in embedded bootstrap
+          // (see packages/embed-script/src/embed/index.tsx)
+          // in that case the first fetch should be allowed to proceed
+          // once the fetch has happened it will generate an action
+          // that action will be reduced and the slice will be mounted
+          // then the fetchStatus will be updated
+          fetchStatus = 'idle'
+        }
+
         if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
           return false
         }

@@ -114,6 +114,9 @@ importers:
       '@lemnity/api-sdk':
         specifier: workspace:*
         version: link:../api-sdk
+      '@lemnity/widget-config':
+        specifier: workspace:*
+        version: link:../widget-config
       '@react-aria/overlays':
         specifier: ^3.31.0
         version: 3.31.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)

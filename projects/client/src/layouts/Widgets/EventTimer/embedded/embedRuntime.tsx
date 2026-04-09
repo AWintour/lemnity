@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import Widget from './Widget'
 import MobileWidgetTrigger from './MobileWidgetTrigger'
@@ -7,11 +7,13 @@ import { MobileProvider } from './MobileContext'
 
 import { sendEvent, sendPublicRequest } from '@/common/api/publicApi'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
-import { useAppSelector } from '@/stores/redux/hooks'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
 import {
   selectWidgetId,
   selectProjectId,
   selectRewardScreenEnabled,
+  selectFetchStatus,
+  fetchEventTimerWidget,
 } from '../eventTimerSlice'
 
 import type { CountdownForm } from '../EventTimerFormScreen'
@@ -19,9 +21,24 @@ import { type EventTimerWidgetVariant } from '../EventTimerWidget'
 
 type EmbedRuntimeProps = {
   isPreview?: boolean
+  widgetId?: string
 }
 
 const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
+  const fetchStatus = useAppSelector(selectFetchStatus)
+  const readyToRender = props.isPreview || fetchStatus === 'succeeded'
+
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!props.isPreview && props.widgetId) {
+      dispatch(fetchEventTimerWidget({
+        widgetId: props.widgetId,
+        embedded: true,
+      }))
+    }
+  }, [dispatch, props.isPreview, props.widgetId])
+
   const widgetId = useAppSelector(selectWidgetId)
   const projectId = useAppSelector(selectProjectId)
   const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
@@ -29,6 +46,15 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
   const [focused, setFocused] = useState(false)
 
   const isMobile = useIsMobileViewport()
+
+  const [countdownVariant, setCountdownVariant] =
+    useState<EventTimerWidgetVariant>('countdown')
+
+  const widgetRef = useRef<HTMLDivElement | null>(null)
+
+  if (!readyToRender) {
+    return null
+  }
 
   const handleClickOutside = () => {
     setFocused(false)
@@ -57,9 +83,6 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
       project_id: projectId,
     })
   }
-
-  const [countdownVariant, setCountdownVariant] =
-    useState<EventTimerWidgetVariant>('countdown')
 
   const handleCountdownScreenButtonPress = () => {
     if (rewardScreenEnabled) {
@@ -103,8 +126,6 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
       userAgent: navigator.userAgent,
     })
   }
-
-  const widgetRef = useRef<HTMLDivElement | null>(null)
 
   return (
     <>

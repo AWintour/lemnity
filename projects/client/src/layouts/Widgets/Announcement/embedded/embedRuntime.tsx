@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import Widget from './Widget'
 import MobileWidgetTrigger from './MobileWidgetTrigger'
@@ -6,32 +6,52 @@ import DesktopWidgetTrigger from './DesktopWidgetTrigger'
 
 import { sendEvent } from '@/common/api/publicApi'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
-import { useAppSelector } from '@/stores/redux/hooks'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
 import {
   selectWidgetId,
   selectProjectId,
   selectRewardScreenEnabled,
+  selectFetchStatus,
+  fetchAnnouncementWidget,
 } from '../announcementSlice'
 
 import { type AnnouncementWidgetVariant } from '../AnnouncementWidget'
 import { MobileProvider } from './MobileContext'
 
-export type Rect = {
-  width: number
-  height: number
-}
-
 type EmbedRuntimeProps = {
   isPreview?: boolean
+  widgetId?: string
 }
 
 const AnnouncementEmbedRuntime = (props: EmbedRuntimeProps) => {
+  const fetchStatus = useAppSelector(selectFetchStatus)
+  const readyToRender = props.isPreview || fetchStatus === 'succeeded'
+
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!props.isPreview && props.widgetId) {
+      dispatch(fetchAnnouncementWidget({
+        widgetId: props.widgetId,
+        embedded: true,
+      }))
+    }
+  }, [dispatch, props.isPreview, props.widgetId])
+
   const widgetId = useAppSelector(selectWidgetId)
   const projectId = useAppSelector(selectProjectId)
   const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
 
   const [focused, setFocused] = useState(false)
+  const [announementVariant, setAnnouncementVariant] =
+    useState<AnnouncementWidgetVariant>('announcement')
+
   const isMobile = useIsMobileViewport()
+  const widgetRef = useRef<HTMLDivElement | null>(null)
+
+  if (!readyToRender) {
+    return null
+  }
 
   const handleClickOutside = () => {
     setFocused(false)
@@ -61,9 +81,6 @@ const AnnouncementEmbedRuntime = (props: EmbedRuntimeProps) => {
     })
   }
 
-  const [announementVariant, setAnnouncementVariant] =
-    useState<AnnouncementWidgetVariant>('announcement')
-
   const handleAnnouncementButtonPress = () => {
     if (rewardScreenEnabled) {
       setAnnouncementVariant('reward')
@@ -85,8 +102,6 @@ const AnnouncementEmbedRuntime = (props: EmbedRuntimeProps) => {
       project_id: projectId,
     })
   }
-
-  const widgetRef = useRef<HTMLDivElement | null>(null)
 
   return (
     <>

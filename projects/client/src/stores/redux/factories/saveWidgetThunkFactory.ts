@@ -50,7 +50,6 @@ export const saveWidgetThunkFactory = (
   // typeof UpdateWidgetDto['config']['widget'] === object
   selectSelfForSaving: (state: RootState) => unknown
 ) => {
-  console.log('[saveWidgetThunkFactory]')
   const thunk = createAppAsyncThunk(
     actionName,
     async (_, thunkApi) => {

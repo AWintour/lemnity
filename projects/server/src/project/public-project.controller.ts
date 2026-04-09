@@ -1,9 +1,10 @@
 import { Controller, Get, Param } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { PrismaService } from '../prisma.service'
+import { WidgetType } from '@lemnity/database'
 
 type PublicProjectWidgetsResponse = {
-  widgets: string[]
+  widgets: { id: string, type: WidgetType }[]
 }
 
 @ApiTags('public-projects')
@@ -18,9 +19,9 @@ export class PublicProjectController {
   ): Promise<PublicProjectWidgetsResponse> {
     const widgets = await this.prisma.widget.findMany({
       where: { projectId: id, enabled: true, project: { enabled: true } },
-      select: { id: true }
+      select: { id: true, type: true }
     })
 
-    return { widgets: widgets.map(widget => widget.id) }
+    return { widgets }
   }
 }

@@ -20,7 +20,7 @@ const DesktopWidgetTrigger = ({
   // useClickOutside(containerRef, props.onClickOutside)
 
   return (
-    <div className='fixed bottom-6 right-6 pointer-events-none'>
+    <div className='fixed bottom-3 right-3 pointer-events-none'>
       {/* TODO: should i replace this with a switch statement? */}
       <div
         ref={containerRef}
