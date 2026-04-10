@@ -35,17 +35,10 @@ export default defineConfig({
     'process.env': '{}'
   },
   build: {
-    // lib: {
-    //   entry: path.resolve(__dirname, 'src/embed/index.tsx'),
-    //   name: 'LemnityWidgets',
-    //   fileName: () => 'embed.js',
-    //   formats: ['iife']
-    // },
     rollupOptions: {
       input: path.resolve(__dirname, 'src/embed/index.tsx'),
       output: {
         dir: 'dist',
-        // format: 'iife',
         entryFileNames: 'embed.js',
         manualChunks: {
           vendor: [
@@ -53,7 +46,6 @@ export default defineConfig({
             'react-redux',
             'react-dom/client',
             '@tanstack/react-query',
-            // '@reduxjs/toolkit',
             'axios',
             'zod',
           ],

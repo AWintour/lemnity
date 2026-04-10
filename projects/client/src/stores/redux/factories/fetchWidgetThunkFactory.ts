@@ -46,7 +46,10 @@ export const fetchWidgetThunkFactory = (
     actionName,
     async ({ widgetId, embedded }: ThunkParams) => {
       if (embedded) {
-        console.log(`[lemnity][fetchWidgetThunkFactory] fetching widget ${widgetId} from public endpoint...`)
+        // console.log(
+        //   `[lemnity][fetchWidgetThunkFactory] fetching widget ${widgetId} ` +
+        //   'from public endpoint...'
+        // )
         const { data } = await apiInstance.publicWidgetControllerFindOne(
           { id: widgetId }
         )

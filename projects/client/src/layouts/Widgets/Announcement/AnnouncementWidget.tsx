@@ -114,7 +114,6 @@ const AnnouncementWidgetContent = (
   }
 
   const handleButtonPress = () => {
-    console.log('[OwO] handleButtonPress in AnnouncementWidgetContent', { onButtonPress: typeof props.onButtonPress })
     if (rewardScreenEnabled) {
       props.onButtonPress?.()
     }
@@ -224,8 +223,6 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
     containerStyle.backgroundPosition = contentAlignment
   }
 
-  
-
   const [hidden, setHidden] = useState(false)
 
   const closeButtonStyle: CSSProperties = {
@@ -259,7 +256,7 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
           props.focused || mobile ? 'flex' : 'hidden group-hover:flex',
         )}
         style={closeButtonStyle}
-        onPress={handleCloseButtonPress}
+        onPressEnd={handleCloseButtonPress}
       >
         <div className='w-4 h-4 fill-black'>
           <SvgIcon src={crossIcon} alt='Close' />

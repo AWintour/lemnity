@@ -165,7 +165,7 @@ const CountdownScreen = (props: CountdownScreenProps) => {
             'transition-colors duration-250',
           )}
           style={buttonStyle}
-          onPress={handleButtonPress}
+          onPressEnd={handleButtonPress}
         >
           {/* Хочу скидку! */}
           {icon !== 'HeartDislike' && (

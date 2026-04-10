@@ -85,10 +85,8 @@ type WidgetIdsAndTypes = {
 }
 
 const fetchActiveWidgetsForAProject = async (projectId: string) => {
-  console.log('[lemnity] BASE_URL', import.meta.env.BASE_URL)
-
   const fetchWidgetsUrl =
-    `http://localhost:3000/api/public/projects/${projectId}`
+    `http://localhost/api/public/projects/${projectId}`
   const data = await fetch(fetchWidgetsUrl)
   const json: WidgetIdsAndTypes | undefined = await data.json()
 

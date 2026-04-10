@@ -99,7 +99,7 @@ const EventTimerWidget = (
           'pointer-events-auto',
           props.focused || mobile ? 'flex' : 'hidden group-hover:flex',
         )}
-        onPress={handleCloseButtonPress}
+        onPressEnd={handleCloseButtonPress}
       >
         <div className='w-4 h-4 fill-black'>
           <SvgIcon src={crossIcon} alt='Close' />
