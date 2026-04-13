@@ -20,15 +20,17 @@ import {
   commonReducers,
   commonSelectors,
 } from '@/stores/redux/features/common'
+import {
+  triggerSettingsReducers,
+  triggerSettingsSelectors,
+} from '@/stores/redux/features/triggerSettings'
 
 import {
   WidgetTypeEnum,
   type PublicWidget,
 } from '@lemnity/api-sdk'
-import type { Icon } from '@lemnity/widget-config/widgets/base'
 import {
   type NotificationWidgetType,
-  type Position,
   type Notification,
 } from '@lemnity/widget-config/widgets/notification'
 
@@ -114,27 +116,8 @@ export const notificationSlice = createSlice({
   initialState,
   reducers: {
     ...commonReducers,
+    ...triggerSettingsReducers,
 
-    triggerTextChanged:
-      (state, action: PayloadAction<string>) => {
-        state.triggerText = action.payload
-      },
-    triggerBackgroundColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.triggerBackgroundColor = action.payload
-      },
-    triggerFontColorChanged:
-      (state, action: PayloadAction<string>) => {
-        state.triggerFontColor = action.payload
-      },
-    triggerIconChanged:
-      (state, action: PayloadAction<Icon>) => {
-        state.triggerIcon = action.payload
-      },
-    triggerPositionChanged:
-      (state, action: PayloadAction<Position>) => {
-        state.triggerPosition = action.payload
-      },
     delayChanged:
       (state, action: PayloadAction<number>) => {
         state.delay = action.payload
@@ -159,17 +142,8 @@ export const notificationSlice = createSlice({
   },
   selectors: {
     ...commonSelectors,
+    ...triggerSettingsSelectors,
 
-    selectTriggerText:
-      (state) => state.triggerText,
-    selectTriggerBackgroundColor:
-      (state) => state.triggerBackgroundColor,
-    selectTriggerFontColor:
-      (state) => state.triggerFontColor,
-    selectTriggerIcon:
-      (state) => state.triggerIcon,
-    selectTriggerPosition:
-      (state) => state.triggerPosition,
     selectDelay:
       (state) => state.delay,
   },
