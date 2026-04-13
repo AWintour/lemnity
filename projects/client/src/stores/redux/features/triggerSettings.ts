@@ -90,7 +90,7 @@ export const selectTriggerIcon =
 
 
 export interface ITriggerPosition {
-  triggerPosition: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  triggerPosition: 'bottom-left' | 'bottom-right'
 }
 
 export const triggerPositionReducer =

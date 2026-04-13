@@ -3,12 +3,12 @@ import {
   CustomRadioGroup,
   type CustomRadioGroupOption,
   ImageUploader,
+  ButtonAppearenceSettings,
 } from '@/components'
 
 import { uploadImage } from '@/api/upload'
 
 import type { MobileTrigger } from '@lemnity/widget-config/widgets/announcement'
-import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
 import useUrlImage from '@/hooks/useUrlImage'
 
 type MobileVersionSettingsProps = {

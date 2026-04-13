@@ -51,7 +51,7 @@ import {
 
 export const fetchFabMenuWidget = fetchWidgetThunkFactory(
   'FABMenu/fetchWidget',
-  (state) => state.notification!.fetchStatus
+  (state) => state.FABMenu!.fetchStatus
 )
 
 export const saveFabMenuWidget = saveWidgetThunkFactory(
@@ -69,12 +69,15 @@ export const saveFabMenuWidget = saveWidgetThunkFactory(
       state.FABMenu!.triggerBackgroundColor,
     triggerIcon:
       state.FABMenu!.triggerIcon,
-    triggerPosition:
-      state.FABMenu!.triggerPosition,
     sectors:
       selectAllSectors(state),
+    // patch for old widgets that do not have these fields in the database
+    triggerPosition:
+      state.FABMenu!.triggerPosition
+        || initialState.triggerPosition,
     brandingEnabled:
-      state.FABMenu!.brandingEnabled,
+      state.FABMenu!.brandingEnabled
+        || initialState.brandingEnabled,
   })
 )
 
@@ -206,6 +209,31 @@ export const FABMenuSlice = createSlice({
 
         const widgetConfig = payload?.config as WidgetSettings | undefined
         const widgetSettings = widgetConfig?.widget
+
+        const settings = widgetSettings
+          || { ...initialState, sectors: [...defaultSectors] }
+
+        const {
+          triggerText,
+          triggerBackgroundColor,
+          triggerTextColor,
+          triggerIcon,
+          triggerPosition,
+          sectors,
+          brandingEnabled,
+        } = settings as FabMenuWidgetType
+        
+        state.triggerText = triggerText
+        state.triggerBackgroundColor = triggerBackgroundColor
+        state.triggerTextColor = triggerTextColor
+        state.triggerIcon = triggerIcon
+        state.triggerPosition = triggerPosition
+        state.brandingEnabled = brandingEnabled
+        
+        sectorAdapter.setAll(
+          state.sectors,
+          (sectors as any).items ? (sectors as any).items : sectors
+        )
       })
       .addCase(fetchFabMenuWidget.rejected, (state, action) => {
         state.fetchStatus = 'rejected'

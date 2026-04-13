@@ -9,7 +9,7 @@ import { ContentSettings } from '../'
 import CountdownSettings from './CountdownSettings'
 import TextSettings from '@/components/TextSettings'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
-import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
+import { ButtonAppearenceSettings } from '@/components'
 
 import type {
   Content,

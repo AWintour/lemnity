@@ -5,7 +5,7 @@ export const WidgetTypes = {
   // WHEEL_OF_FORTUNE: WidgetTypeEnum.WHEEL_OF_FORTUNE,
   CONVEYOR_OF_GIFTS: WidgetTypeEnum.CONVEYOR_OF_GIFTS,
   // ACTION_TIMER: WidgetTypeEnum.ACTION_TIMER,
-  // FAB_MENU: WidgetTypeEnum.FAB_MENU,
+  FAB_MENU: WidgetTypeEnum.FAB_MENU,
   POSTCARD: WidgetTypeEnum.POSTCARD,
   CHEST_WITH_ACTION: WidgetTypeEnum.CHEST_WITH_ACTION,
   ADVENT_CALENDAR: WidgetTypeEnum.ADVENT_CALENDAR,
@@ -40,13 +40,13 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
   //   isAvailable: true,
   //   badge: 'new'
   // },
-  // {
-  //   type: WidgetTypes.FAB_MENU,
-  //   title: 'Мультикнопка',
-  //   description: 'Лиды, вовлечение, вознаграждение',
-  //   isAvailable: true,
-  //   badge: 'new'
-  // },
+  {
+    type: WidgetTypes.FAB_MENU,
+    title: 'Мультикнопка',
+    description: 'Лиды, вовлечение, вознаграждение',
+    isAvailable: true,
+    badge: 'new'
+  },
   {
     type: WidgetTypes.ANNOUNCEMENT,
     title: 'Анонс',

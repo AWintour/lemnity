@@ -16,6 +16,8 @@ import ImageUploader from './ImageUploader'
 import CountdownTimer from './CountdownTimer'
 import SvgIcon from './SvgIcon'
 import DisableBranding from './DisableBranding'
+import ButtonPositionChooser from './ButtonPositionChooser'
+import ButtonAppearenceSettings from './ButtonAppearenceSettings'
 
 export {
   Input,
@@ -35,4 +37,6 @@ export {
   CountdownTimer,
   SvgIcon,
   DisableBranding,
+  ButtonPositionChooser,
+  ButtonAppearenceSettings,
 }

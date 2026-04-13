@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 // import type { ButtonPosition } from '@/stores/widgetSettingsStore'
-export type ButtonPosition = 'bottom-left' | 'top-right' | 'bottom-right'
+export type ButtonPosition = 
+  | 'bottom-left'
+  // | 'top-right'
+  // | 'top-left'
+  | 'bottom-right'
 
 type ButtonPositionChooserProps = {
   title?: string
@@ -38,11 +42,16 @@ const OptionCard = ({ selected, onClick, children }: CardProps) => {
 
 const POSITION_DOT_CLASS: Record<ButtonPosition, string> = {
   'bottom-left': 'left-2.5 bottom-[7px]',
-  'top-right': 'top-2 right-3',
+  // 'top-right': 'top-2 right-3',
+  // 'top-left': 'top-2 left-3',
   'bottom-right': 'bottom-[7px] right-2.5'
 }
 
-const DEFAULT_POSITIONS: ButtonPosition[] = ['bottom-left', 'top-right', 'bottom-right']
+const DEFAULT_POSITIONS: ButtonPosition[] = [
+  'bottom-left',
+  // 'top-right',
+  'bottom-right',
+]
 
 const ButtonPositionChooser = ({
   title = 'Положение кнопки открытия',
