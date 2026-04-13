@@ -45,13 +45,22 @@ const FABMenuSectorSchema = z.object({
   description: z.string().optional()
 })
 
+export const PositionEnum = z.enum(['bottom-left', 'bottom-right'])
+
+export type FABMenuIcon = z.infer<typeof FABMenuIconEnum>
+export type FABMenuPayloadType = z.infer<typeof FABMenuPayloadTypeEnum>
+export type FABMenuSector = z.infer<typeof FABMenuSectorSchema>
+export type FABMenuPosition = z.infer<typeof PositionEnum>
+
+
 const WidgetType: WidgetTypeId = 'FAB_MENU'
 
 const FABMenuWidgetSchema = z.object({
   type: z.literal(WidgetType),
-  sectors: z.object({
-    items: z.array(FABMenuSectorSchema)
-  }),
+  // sectors: z.object({
+  //   items: z.array(FABMenuSectorSchema)
+  // }),
+  sectors: z.array(FABMenuSectorSchema),
   triggerTextColor: z
     .string()
     .regex(
@@ -67,8 +76,12 @@ const FABMenuWidgetSchema = z.object({
   triggerText: z
     .string()
     .max(20, 'Текст должен быть не длиннее 20 символов'),
-  triggerIcon: IconEnum
+  triggerIcon: IconEnum,
+  triggerPosition: PositionEnum,
+  brandingEnabled: z.boolean(),
 })
+
+export type FabMenuWidgetType = z.infer<typeof FABMenuWidgetSchema>
 
 const customSurfaces = {
   fields: LooseSurfaceSchema,
