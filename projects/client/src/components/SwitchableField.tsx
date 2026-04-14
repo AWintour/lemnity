@@ -46,7 +46,7 @@ const SwitchableField = ({
         <div className="flex items-center justify-between grow gap-2.5">
           <span
             className={cn(
-              'text-black text-base font-medium',
+              'text-black text-base',
               classNames.title
             )}
           >

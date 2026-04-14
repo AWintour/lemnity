@@ -18,6 +18,7 @@ import SvgIcon from './SvgIcon'
 import DisableBranding from './DisableBranding'
 import ButtonPositionChooser from './ButtonPositionChooser'
 import ButtonAppearenceSettings from './ButtonAppearenceSettings'
+import AgreementAndPolicy from './AgreementAndPolicy'
 
 export {
   Input,
@@ -39,4 +40,5 @@ export {
   DisableBranding,
   ButtonPositionChooser,
   ButtonAppearenceSettings,
+  AgreementAndPolicy,
 }

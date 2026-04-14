@@ -4,7 +4,7 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk'
 export const WidgetTypes = {
   // WHEEL_OF_FORTUNE: WidgetTypeEnum.WHEEL_OF_FORTUNE,
   CONVEYOR_OF_GIFTS: WidgetTypeEnum.CONVEYOR_OF_GIFTS,
-  // ACTION_TIMER: WidgetTypeEnum.ACTION_TIMER,
+  ACTION_TIMER: WidgetTypeEnum.ACTION_TIMER,
   FAB_MENU: WidgetTypeEnum.FAB_MENU,
   POSTCARD: WidgetTypeEnum.POSTCARD,
   CHEST_WITH_ACTION: WidgetTypeEnum.CHEST_WITH_ACTION,
@@ -33,13 +33,13 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
   //   isAvailable: true,
   //   badge: 'new'
   // },
-  // {
-  //   type: WidgetTypes.ACTION_TIMER,
-  //   title: 'Лид-форма',
-  //   description: 'Лиды, вовлечение, вознаграждение',
-  //   isAvailable: true,
-  //   badge: 'new'
-  // },
+  {
+    type: WidgetTypes.ACTION_TIMER,
+    title: 'Лид-форма',
+    description: 'Лиды, вовлечение, вознаграждение',
+    isAvailable: true,
+    badge: 'new'
+  },
   {
     type: WidgetTypes.FAB_MENU,
     title: 'Мультикнопка',

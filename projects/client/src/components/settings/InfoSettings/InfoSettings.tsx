@@ -6,6 +6,9 @@ import {
 } from '@internationalized/date'
 
 import { ContentSettings } from '../'
+import type {
+  ContentSettingsProps,
+} from '../WidgetAppearanceSettings/ContentSettings'
 import CountdownSettings from './CountdownSettings'
 import TextSettings from '@/components/TextSettings'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
@@ -107,6 +110,18 @@ const InfoSettings = (props: InfoSettingsProps) => {
     props?.setCountdownDate?.(value.toAbsoluteString())
   }
 
+  const contentSettingsProps: ContentSettingsProps<'top' | 'center' | 'bottom'> = {
+    format: props.variant,
+    contentEnabled: contentEnabled,
+    contentType: contentType,
+    contentAlignment: contentAlignment,
+    contentUrl: contentUrl,
+    onContentTypeChange: props.setContentType,
+    onContentToggle: props.setContentEnabled,
+    onContentAlignmentChange: props.setContentAlignment,
+    onContentUrlChange: props.setContentUrl,
+  }
+
   return (
     <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
       <h1 className='text-[25px] leading-7.5 font-normal text-[#060606]'>
@@ -114,15 +129,7 @@ const InfoSettings = (props: InfoSettingsProps) => {
       </h1>
       
       <ContentSettings
-        format={props.variant}
-        contentEnabled={contentEnabled}
-        contentType={contentType}
-        contentAlignment={contentAlignment}
-        contentUrl={contentUrl}
-        onContentTypeChange={props.setContentType}
-        onContentToggle={props.setContentEnabled}
-        onContentAlignmentChange={props.setContentAlignment}
-        onContentUrlChange={props.setContentUrl}
+        {...contentSettingsProps}
       />
 
       <BorderedContainer>

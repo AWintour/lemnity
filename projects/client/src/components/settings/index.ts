@@ -8,6 +8,7 @@ import FormSettings from './FormSettings'
 import InfoSettings from './InfoSettings'
 import RewardMessageSettings from './RewardMessageSettings'
 import MobileTriggerSettings from './MobileTriggerSettings'
+import ContentPlacement from './ContentPlacement'
 
 export {
   CompanyLogo,
@@ -19,5 +20,6 @@ export {
   FormSettings,
   InfoSettings,
   RewardMessageSettings,
-  MobileTriggerSettings
+  MobileTriggerSettings,
+  ContentPlacement,
 }

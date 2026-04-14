@@ -7,18 +7,20 @@ import SwitchableField from '@/components/SwitchableField'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import type {
   Content,
-  ContentAlignment,
+  // ContentAlignment,
 } from '@lemnity/widget-config/widgets/announcement'
 
-type ContentSettingsProps = {
+type ContentAlignment = 'top' | 'center' | 'bottom' | 'left' | 'right'
+
+export type ContentSettingsProps<T extends ContentAlignment = ContentAlignment> = {
   contentType?: Content
-  contentAlignment?: ContentAlignment
+  contentAlignment?: T
   contentUrl?: string
   contentEnabled?: boolean
-  format: 'countdown' | 'announcement'
+  format: 'countdown' | 'announcement' | 'actionTimer'
   onContentTypeChange?: (contentType: Content) => void
   onContentToggle?: (enabled: boolean) => void
-  onContentAlignmentChange?: (alignment: ContentAlignment) => void
+  onContentAlignmentChange?: (alignment: T) => void
   onContentUrlChange: (url: string | undefined) => void
 }
 
@@ -27,19 +29,45 @@ type ContentAlignmentOptions = {
   value: ContentAlignment
 }
 
-const contentTypeOptions: CustomRadioGroupOption[] = [
+const announcementContentTypeOptions: CustomRadioGroupOption[] = [
   { label: 'Картинка сверху', value: 'imageOnTop' },
   { label: 'Фон всего окна', value: 'background' },
   { label: 'Видео', value: 'video', disabled: true },
 ]
 
-const contentAlignmentOptions: ContentAlignmentOptions[] = [
+const actionTimerContentTypeOptions: CustomRadioGroupOption[] = [
+  { label: 'Картинка сбоку', value: 'imageOnSide' },
+  { label: 'Фон всего окна', value: 'background' },
+]
+
+const announcementContentAlignmentOptions: ContentAlignmentOptions[] = [
   { label: 'Сверху', value: 'top' },
   { label: 'По центру', value: 'center' },
   { label: 'Снизу', value: 'bottom' },
 ]
 
-const Settings = (props: ContentSettingsProps) => {
+const actionTimerContentAlignmentOptions: ContentAlignmentOptions[] = [
+  { label: 'Слева', value: 'left' },
+  { label: 'По центру', value: 'center' },
+  { label: 'Справа', value: 'right' },
+]
+
+const Settings = <T extends ContentAlignment>(
+  props: ContentSettingsProps<T>
+) => {
+  const contentTypeOptions = props.format === 'announcement'
+    ? announcementContentTypeOptions
+    : actionTimerContentTypeOptions
+  const contentAlignmentOptions = props.format === 'announcement'
+    ? announcementContentAlignmentOptions
+    : actionTimerContentAlignmentOptions
+  
+  const showContentTypeSettings =
+    props.format === 'announcement' || props.format === 'actionTimer'
+  const showAlignmentSettings =
+    props.contentType !== 'video' && (
+      props.format === 'announcement' || props.format === 'actionTimer'
+    )
 
   const handleContentTypeChange = (value: string) => {
     // because generics are for loosers apparently
@@ -48,7 +76,7 @@ const Settings = (props: ContentSettingsProps) => {
   }
 
   const handleAlignmentChange = (value: string) => {
-    props?.onContentAlignmentChange?.(value as ContentAlignment)
+    props?.onContentAlignmentChange?.(value as T)
   }
 
   const handleImageUpload = (file: File | null) => {
@@ -64,13 +92,13 @@ const Settings = (props: ContentSettingsProps) => {
 
   return (
     <div className="flex flex-col gap-2.5">
-      {props.format === 'announcement' && <>
+      {showContentTypeSettings && (
         <CustomRadioGroup
           options={contentTypeOptions}
           value={props.contentType}
           onValueChange={handleContentTypeChange}
         />
-      </>}
+      )}
 
       <ImageUploader
         classNames={{ container: 'w-full' }}
@@ -87,7 +115,7 @@ const Settings = (props: ContentSettingsProps) => {
         // errorMessage={imageUrlError?.message}
       />
 
-      {props.contentType !== 'video' && props.format === 'announcement' && (
+      {showAlignmentSettings && (
         <>
           <h2 className="text-[16px] leading-4.75">Выравнивание</h2>
           <CustomRadioGroup
@@ -101,14 +129,16 @@ const Settings = (props: ContentSettingsProps) => {
   )
 }
 
-const ContentSettings = (props: ContentSettingsProps) => {
+const ContentSettings = <T extends ContentAlignment>(
+  props: ContentSettingsProps<T>
+) => {
   const handleContentToggle = (value: boolean) => {
     props?.onContentToggle?.(value)
   }
 
   return (
     <>
-      {props.format === 'announcement'
+      {props.format === 'announcement' || props.format === 'actionTimer'
         ? <BorderedContainer>
             <div className="w-full flex flex-col gap-6">
               <h2 className="text-[16px] leading-4.75 font-normal">Контент</h2>

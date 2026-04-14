@@ -52,8 +52,11 @@ const AnnouncementWidgetSettings = lazy(
 const EventTimerWidgetSettings = lazy(
   () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
 )
-const FABMenuSettings = lazy(
+const FABMenuWidgetSettings = lazy(
   () => import('@/layouts/Widgets/FABMenu/FABMenuSettings')
+)
+const ActionTimerWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/ActionTimerWidgetSettings')
 )
 
 const getSaveWidgetConfigThunk = async (currentWidget: WidgetTypeEnum) => {
@@ -110,7 +113,9 @@ const WidgetSettings = ({ currentWidget }: WidgetSettingsProps) => {
     case 'EVENT_TIMER':
       return <EventTimerWidgetSettings />
     case 'FAB_MENU':
-      return <FABMenuSettings />
+      return <FABMenuWidgetSettings />
+    case 'ACTION_TIMER':
+      return <ActionTimerWidgetSettings />
     default:
       return null
   }
