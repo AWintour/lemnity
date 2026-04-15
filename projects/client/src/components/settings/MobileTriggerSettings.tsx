@@ -8,7 +8,7 @@ import {
 
 import { uploadImage } from '@/api/upload'
 
-import type { MobileTrigger } from '@lemnity/widget-config/widgets/announcement'
+import type { MobileTrigger } from '@lemnity/widget-config/features/mobileTrigger'
 import useUrlImage from '@/hooks/useUrlImage'
 
 type MobileVersionSettingsProps = {

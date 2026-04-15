@@ -15,7 +15,9 @@ import {
   mobileImageUrlChanged,
   initialState,
 } from '../announcementSlice'
-import type { MobileTrigger } from '@lemnity/widget-config/widgets/announcement'
+import type {
+  MobileTrigger,
+} from '@lemnity/widget-config/features/mobileTrigger'
 
 export const useMobileTriggerSettings = () => {
   const enabled = useAppSelector(selectMobileEnabled)

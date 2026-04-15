@@ -48,6 +48,18 @@
     "./widgets/notification": {
       "types": "./dist/widgets/Notification/schema.d.ts",
       "default": "./dist/widgets/Notification/schema.js"
+    },
+    "./features/mobileTrigger": {
+      "types": "./dist/features/mobileTrigger.d.ts",
+      "default": "./dist/features/mobileTrigger.js"
+    },
+    "./features/rewardMessage": {
+      "types": "./dist/features/rewardMessage.d.ts",
+      "default": "./dist/features/rewardMessage.js"
+    },
+    "./features/widgetAppearence": {
+      "types": "./dist/features/widgetAppearence.d.ts",
+      "default": "./dist/features/widgetAppearence.js"
     }
   },
   "dependencies": {

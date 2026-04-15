@@ -15,7 +15,9 @@ import {
   mobileImageUrlChanged,
   initialState,
 } from '../eventTimerSlice'
-import type { MobileTrigger } from '@lemnity/widget-config/widgets/event-timer'
+import type {
+  MobileTrigger,
+} from '@lemnity/widget-config/features/mobileTrigger'
 
 export const useMobileTriggerSettings = () => {
   const enabled =

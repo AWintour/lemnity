@@ -1,12 +1,44 @@
-import { AgreementAndPolicy, ButtonAppearenceSettings, Input } from '@/components'
+import { useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { parseAbsoluteToLocal } from '@internationalized/date'
+
+import {
+  AgreementAndPolicy,
+  ButtonAppearenceSettings,
+  Input,
+} from '@/components'
 import ColorPicker from '@/components/ColorPicker'
-import { CompanyLogo, ContactAcquisitionSettings, ContentPlacement, ContentSettings, RewardMessageSettings, WidgetBackgroundColor, WidgetBorderRadius } from '@/components/settings'
+import {
+  CompanyLogo,
+  ContactAcquisitionSettings,
+  ContentPlacement,
+  ContentSettings,
+  RewardMessageSettings,
+  WidgetBackgroundColor,
+  WidgetBorderRadius,
+} from '@/components/settings'
 import CountdownSettings from '@/components/settings/InfoSettings/CountdownSettings'
 import TextSettings from '@/components/TextSettings'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
-import { parseAbsoluteToLocal } from '@internationalized/date'
+import {
+  fetchActionTimerWidget,
+  selectFetchStatus,
+} from './actionTimerSlice'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
 
 const ActionTimerWidgetSettings = () => {
+  const dispatch = useAppDispatch()
+
+  const fetchStatus = useAppSelector(selectFetchStatus)
+
+  const { widgetId } = useParams()
+  
+  useEffect(() => {
+    if (fetchStatus === 'idle' && widgetId && widgetId.length > 0) {
+      dispatch(fetchActionTimerWidget({ widgetId }))
+    }
+  }, [fetchStatus, dispatch, widgetId])
+
   return (
     <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
       <h1 className='text-[25px] leading-7.5 font-normal text-[#060606]'>
