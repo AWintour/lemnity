@@ -330,8 +330,8 @@ export const actionTimerSlice = createSlice({
         state.fetchStatus = 'pending'
       })
       .addCase(fetchActionTimerWidget.fulfilled, (state, action) => {
-        state.fetchStatus = 'succeeded'
-        state.fetchError = null
+        // state.fetchStatus = 'succeeded'
+        // state.fetchError = null
 
         const payload = action.payload as PublicWidget | undefined
 
@@ -343,6 +343,10 @@ export const actionTimerSlice = createSlice({
 
         if ((widgetConfig as { fields?: object }).fields) {
           // got an old config
+          // i need to figure out the types and split this into another
+          // possibly dynamically loaded function
+          // the slice's compressed size is ~4KB though so that's probably
+          // not even necessary
           state.appearence.companyLogoEnabled =
             (widgetConfig as any)
               ?.fields?.companyLogo?.enabled
@@ -355,7 +359,7 @@ export const actionTimerSlice = createSlice({
           state.appearence.colorScheme =
             (widgetConfig as any)
               ?.fields?.template?.templateSettings.colorScheme
-          // old logs did not have this setting
+          // old config did not have this setting
           state.appearence.borderRadius =
             initialState.appearence.borderRadius
 
@@ -478,11 +482,80 @@ export const actionTimerSlice = createSlice({
           state.contentPlacement =
             (widgetConfig as any)
               ?.fields?.template?.templateSettings?.contentPosition
+            
+          state.badgeText =
+            (widgetSettings as any)
+              ?.countdown.badgeText
+          state.badgeBackgroundColor =
+            (widgetSettings as any)
+              ?.countdown.badgeBackground
+          state.badgeFontColor =
+            (widgetSettings as any)
+              ?.countdown.badgeColor
+          
+          state.title =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.title?.text
+          state.titleColor =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.title?.color
+          state.titleFontSize =
+            initialState.titleFontSize
+          state.titleFontWeight =
+            initialState.titleFontWeight
+          
+          state.description =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.description?.text
+          state.descriptionColor =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.description?.color
+          state.descriptionFontSize =
+            initialState.titleFontSize
+          state.descriptionFontWeight =
+            initialState.titleFontWeight
+          
+          state.buttonText =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.button?.text
+          state.buttonFontColor =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.button?.color
+          state.buttonBackgroundColor =
+            (widgetConfig as any)
+              ?.fields?.formTexts?.button?.backgroundColor
+          state.buttonLink =
+            (widgetConfig as any)
+              ?.fields?.link
+          state.buttonIcon =
+            initialState.buttonIcon
+          
+          state.formBorderEnabled =
+            (widgetConfig as any)
+              ?.fields?.border?.enabled
+          state.formBorderColor =
+            (widgetConfig as any)
+              ?.fields?.border?.color
+          
+          state.brandingEnabled =
+            (widgetConfig as any)
+              ?.display?.brandingEnabled
 
           return
         }
 
         // got a new config
+        const settings = widgetSettings as
+          Partial<Pick<ActionTimerWidgetType, 'type'>>
+          & Omit<ActionTimerWidgetType, 'type'>
+        delete settings.type
+
+        state = {
+          ...settings,
+          type: 'ACTION_TIMER',
+          fetchStatus: 'succeeded',
+          fetchError: null,
+        }
       })
       .addCase(fetchActionTimerWidget.rejected, (state, action) => {
         state.fetchStatus = 'rejected'
