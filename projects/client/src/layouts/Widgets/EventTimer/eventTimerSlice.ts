@@ -429,7 +429,7 @@ export const {
   formDescriptionChanged,
   formDescriptionFontWeightChanged,
   formDescriptionFontColorChanged,
- formContactAcquisitionEnabledChanged,
+  formContactAcquisitionEnabledChanged,
   formNameFieldEnabledChanged,
   formNameFieldRequiredChanged,
   formEmailFieldEnabledChanged,
