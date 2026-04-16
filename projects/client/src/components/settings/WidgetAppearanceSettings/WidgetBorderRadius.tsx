@@ -4,12 +4,12 @@ import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 
 type WidgetBorderRadiusProps = {
   widgetBorderRadius: number
-  onBorderRadiuschange: (radius: number) => void
+  onBorderRadiusChange: (radius: number) => void
 }
 
 const WidgetBorderRadius = (props: WidgetBorderRadiusProps) => {
   const handleBorderRadiusChange = (value: number | number[]) => {
-    props.onBorderRadiuschange(Number(value))
+    props.onBorderRadiusChange(Number(value))
   }
 
   return (

@@ -60,7 +60,7 @@ const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
       />
       <WidgetBorderRadius
         widgetBorderRadius={borderRadius}
-        onBorderRadiuschange={props.setBorderRadius}
+        onBorderRadiusChange={props.setBorderRadius}
       />
     </div>
   )

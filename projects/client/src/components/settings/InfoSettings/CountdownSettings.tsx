@@ -42,6 +42,7 @@ const CountdownSettings = (props: CountdownSettingsProps) => {
           <ColorPicker
             initialColor={props.textColor!}
             onColorChange={props.onTextColorChange!}
+            popoverPlacement='bottom-end'
           />
         </div>
       )}

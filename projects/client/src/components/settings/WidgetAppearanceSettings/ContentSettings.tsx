@@ -5,20 +5,20 @@ import CustomRadioGroup, {
 import ImageUploader from '@/components/ImageUploader'
 import SwitchableField from '@/components/SwitchableField'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
-import type {
-  Content,
-  // ContentAlignment,
-} from '@lemnity/widget-config/widgets/announcement'
 
+type Content = 'background' | 'imageOnTop' | 'video' | 'imageOnSide'
 type ContentAlignment = 'top' | 'center' | 'bottom' | 'left' | 'right'
 
-export type ContentSettingsProps<T extends ContentAlignment = ContentAlignment> = {
-  contentType?: Content
+export type ContentSettingsProps<
+  T extends ContentAlignment = ContentAlignment,
+  K extends Content = Content
+> = {
+  contentType?: K
   contentAlignment?: T
   contentUrl?: string
   contentEnabled?: boolean
   format: 'countdown' | 'announcement' | 'actionTimer'
-  onContentTypeChange?: (contentType: Content) => void
+  onContentTypeChange?: (contentType: K) => void
   onContentToggle?: (enabled: boolean) => void
   onContentAlignmentChange?: (alignment: T) => void
   onContentUrlChange: (url: string | undefined) => void
@@ -52,8 +52,11 @@ const actionTimerContentAlignmentOptions: ContentAlignmentOptions[] = [
   { label: 'Справа', value: 'right' },
 ]
 
-const Settings = <T extends ContentAlignment>(
-  props: ContentSettingsProps<T>
+const Settings = <
+  T extends ContentAlignment,
+  K extends Content
+>(
+  props: ContentSettingsProps<T, K>
 ) => {
   const contentTypeOptions = props.format === 'announcement'
     ? announcementContentTypeOptions
@@ -72,7 +75,7 @@ const Settings = <T extends ContentAlignment>(
   const handleContentTypeChange = (value: string) => {
     // because generics are for loosers apparently
     // (looking at you, Hero UI)
-    props?.onContentTypeChange?.(value as Content)
+    props?.onContentTypeChange?.(value as K)
   }
 
   const handleAlignmentChange = (value: string) => {
@@ -129,8 +132,11 @@ const Settings = <T extends ContentAlignment>(
   )
 }
 
-const ContentSettings = <T extends ContentAlignment>(
-  props: ContentSettingsProps<T>
+const ContentSettings = <
+  T extends ContentAlignment,
+  K extends Content
+>(
+  props: ContentSettingsProps<T, K>
 ) => {
   const handleContentToggle = (value: boolean) => {
     props?.onContentToggle?.(value)

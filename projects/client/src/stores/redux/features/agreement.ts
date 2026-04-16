@@ -76,6 +76,20 @@ export const selectAgreementColor =
     state.agreement.color
 
 
+export interface IAgreement {
+  agreement: {
+    enabled: boolean
+    policyUrl: string
+    agreementUrl: string
+    color: string
+  }
+}
+
+export const selectAgreement =
+  <TState extends IAgreement>(state: TState) =>
+    state.agreement
+
+
 export const agreementReducers = {
   agreementEnabledChanged:
     agreementEnabledReducer,
@@ -92,4 +106,5 @@ export const agreementSelectors = {
   selectAgreementPolicyUrl,
   selectAgreementUrl,
   selectAgreementColor,
+  selectAgreement,
 }

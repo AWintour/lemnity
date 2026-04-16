@@ -1,12 +1,22 @@
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import CustomRadioGroup from '../CustomRadioGroup'
+import type {
+  ContentPlacement as Placement,
+} from '@lemnity/widget-config/widgets/action-timer'
 
 const customRadioGroupOptions = [
   { label: 'С левой стороны', value: 'left' },
   { label: 'С правой стороны', value: 'right' },
 ]
 
-const ContentPlacement = () => {
+type ContentPlacementProps = {
+  placement: Placement
+  onPlacementChange: (value: string) => void
+}
+
+const ContentPlacement = (
+  { placement, onPlacementChange }: ContentPlacementProps
+) => {
   return (
     <BorderedContainer>
       <div className='w-full flex flex-col gap-6'>
@@ -15,7 +25,8 @@ const ContentPlacement = () => {
         </h2>
 
         <CustomRadioGroup
-          value='left'
+          value={placement}
+          onValueChange={onPlacementChange}
           options={customRadioGroupOptions}
         />
       </div>

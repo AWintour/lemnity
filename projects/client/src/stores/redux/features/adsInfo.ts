@@ -57,6 +57,19 @@ export const selectAdsInfoColor =
     state.adsInfo.color
 
 
+export interface IAdsInfo {
+  adsInfo: {
+    enabled: boolean
+    policyUrl: string
+    color: string
+  }
+}
+
+export const selectAdsInfo =
+  <TState extends IAdsInfo>(state: TState) =>
+    state.adsInfo
+
+
 export const adsInfoReducers = {
   adsInfoEnabledChanged:
     adsInfoEnabledReducer,
@@ -70,4 +83,5 @@ export const adsInfoSelectors = {
   selectAdsInfoEnabled,
   selectAdsInfoPolicyUrl,
   selectAdsInfoColor,
+  selectAdsInfo,
 }

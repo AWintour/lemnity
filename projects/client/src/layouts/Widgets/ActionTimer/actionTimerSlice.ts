@@ -32,6 +32,24 @@ import {
   rewardScreenReducers,
   rewardScreenSelectors,
 } from '@/stores/redux/features/rewardScreen'
+import {
+  contactAcquisitionReducers,
+  contactAcquisitionSelectors,
+} from '@/stores/redux/features/contactAcquisition'
+import {
+  countdownBackgroundColorReducer,
+  countdownDateReducer,
+  countdownEnabledReducer,
+  countdownFontColorReducer,
+  textBeforeCountdownColorReducer,
+  textBeforeCountdownReducer,
+  selectCountdownEnabled as featSelectCountdownEnabled,
+  selectCountdownBackgroundColor as featSelectCountdownBackgroundColor,
+  selectCountdownDate as featSelectCountdownDate,
+  selectCountdownFontColor as featSelectCountdownFontColor,
+  selectTextBeforeCountdown as featSelectTextBeforeCountdown,
+  selectTextBeforeCountdownColor as featSelectTextBeforeCountdownColor,
+} from '@/stores/redux/features/countdown'
 
 import {
   WidgetTypeEnum,
@@ -163,12 +181,44 @@ const initialState: ActionTimerWidgetState = {
   brandingEnabled: true,
 }
 
+const countdownReducers = {
+  countdownEnabledChanged:
+    countdownEnabledReducer,
+  textBeforeCountdownChanged:
+    textBeforeCountdownReducer,
+  textBeforeCountdownColorChanged:
+    textBeforeCountdownColorReducer,
+  countdownDateChanged:
+    countdownDateReducer,
+  countdownBackgroundColorChanged:
+    countdownBackgroundColorReducer,
+  countdownFontColorChanged:
+    countdownFontColorReducer,
+}
+
+const countdownSelectors = {
+  selectCountdownEnabled:
+    featSelectCountdownEnabled,
+  selectCountdownBackgroundColor:
+    featSelectCountdownBackgroundColor,
+  selectCountdownDate:
+    featSelectCountdownDate,
+  selectCountdownFontColor:
+    featSelectCountdownFontColor,
+  selectTextBeforeCountdown:
+    featSelectTextBeforeCountdown,
+  selectTextBeforeCountdownColor:
+    featSelectTextBeforeCountdownColor,
+}
+
 export const actionTimerSlice = createSlice({
   name: 'actionTimer',
   initialState,
   reducers: {
     ...commonReducers,
     ...widgetAppearenceReducers,
+    ...countdownReducers,
+    ...contactAcquisitionReducers,
     ...agreementReducers,
     ...adsInfoReducers,
     ...rewardScreenReducers,
@@ -255,7 +305,7 @@ export const actionTimerSlice = createSlice({
       },
     buttonLinkChanged:
       (state, action: PayloadAction<string>) => {
-        state.buttonText = action.payload
+        state.buttonLink = action.payload
       },
 
     formBorderEnabledChanged:
@@ -270,6 +320,8 @@ export const actionTimerSlice = createSlice({
   selectors: {
     ...commonSelectors,
     ...widgetAppearenceSelectors,
+    ...countdownSelectors,
+    ...contactAcquisitionSelectors,
     ...agreementSelectors,
     ...adsInfoSelectors,
     ...rewardScreenSelectors,
@@ -330,8 +382,8 @@ export const actionTimerSlice = createSlice({
         state.fetchStatus = 'pending'
       })
       .addCase(fetchActionTimerWidget.fulfilled, (state, action) => {
-        // state.fetchStatus = 'succeeded'
-        // state.fetchError = null
+        state.fetchStatus = 'succeeded'
+        state.fetchError = null
 
         const payload = action.payload as PublicWidget | undefined
 
@@ -356,6 +408,8 @@ export const actionTimerSlice = createSlice({
           state.appearence.backgroundColor =
             (widgetConfig as any)
               ?.fields?.template?.templateSettings?.customColor
+            ||
+            initialState.appearence.backgroundColor
           state.appearence.colorScheme =
             (widgetConfig as any)
               ?.fields?.template?.templateSettings.colorScheme
@@ -464,9 +518,13 @@ export const actionTimerSlice = createSlice({
           state.rewardMessageSettings.customDiscountBackgroundColor =
             (widgetConfig as any)
               ?.fields?.messages?.onWin?.colorScheme?.discount?.bgColor
+            ||
+            initialState.rewardMessageSettings.customDiscountBackgroundColor
           state.rewardMessageSettings.customPromoBackgroundColor =
             (widgetConfig as any)
               ?.fields?.messages?.onWin?.colorScheme?.promo?.bgColor
+            ||
+            initialState.rewardMessageSettings.customPromoBackgroundColor
           
           state.contentType =
             (widgetConfig as any)
@@ -567,6 +625,19 @@ export const actionTimerSlice = createSlice({
 
 export const {
   brandingEnabledChanged,
+  countdownBackgroundColorChanged,
+  countdownDateChanged,
+  countdownEnabledChanged,
+  countdownFontColorChanged,
+  textBeforeCountdownChanged,
+  textBeforeCountdownColorChanged,
+  contactAcquisitionEnabledChanged,
+  emailFieldEnabledChanged,
+  emailFieldRequiredChanged,
+  nameFieldEnabledChanged,
+  nameFieldRequiredChanged,
+  phoneFieldEnabledChanged,
+  phoneFieldRequiredChanged,
   adsInfoColorChanged,
   adsInfoEnabledChanged,
   adsInfoPolicyUrlChanged,
@@ -635,6 +706,19 @@ export const {
   selectWidgetId,
   selectProjectId,
   selectWidgetType,
+  selectCountdownBackgroundColor,
+  selectCountdownDate,
+  selectCountdownEnabled,
+  selectCountdownFontColor,
+  selectTextBeforeCountdown,
+  selectTextBeforeCountdownColor,
+  selectContactAcquisitionEnabled,
+  selectEmailFieldEnabled,
+  selectEmailFieldRequired,
+  selectNameFieldEnabled,
+  selectNameFieldRequired,
+  selectPhoneFieldEnabled,
+  selectPhoneFieldRequired,
   selectRewardScreenEnabled,
   selectRewardTitle,
   selectRewardTitleFontColor,
@@ -659,9 +743,11 @@ export const {
   selectAdsInfoColor,
   selectAdsInfoEnabled,
   selectAdsInfoPolicyUrl,
+  selectAdsInfo,
   selectAgreementColor,
   selectAgreementEnabled,
   selectAgreementPolicyUrl,
+  selectAgreement,
   selectAgreementUrl,
   selectBackgroundColor,
   selectBadgeBackgroundColor,

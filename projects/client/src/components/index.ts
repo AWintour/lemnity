@@ -19,6 +19,8 @@ import DisableBranding from './DisableBranding'
 import ButtonPositionChooser from './ButtonPositionChooser'
 import ButtonAppearenceSettings from './ButtonAppearenceSettings'
 import AgreementAndPolicy from './AgreementAndPolicy'
+import ColorPicker from './ColorPicker'
+import TextSettings from './TextSettings'
 
 export {
   Input,
@@ -41,4 +43,6 @@ export {
   ButtonPositionChooser,
   ButtonAppearenceSettings,
   AgreementAndPolicy,
+  ColorPicker,
+  TextSettings,
 }

@@ -1,7 +1,7 @@
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface IContactsEnabled {
-  contactAcquisitionEnabled: boolean
+  contactAcquisition: { contactAcquisitionEnabled: boolean }
 }
 
 export const contactAcquisitionEnabledReducer =
@@ -9,18 +9,18 @@ export const contactAcquisitionEnabledReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['contactAcquisitionEnabled']>
+      PayloadAction<TState['contactAcquisition']['contactAcquisitionEnabled']>
   ) => {
-    state.contactAcquisitionEnabled = action.payload
+    state.contactAcquisition.contactAcquisitionEnabled = action.payload
   }
 
 export const selectContactAcquisitionEnabled =
   <TState extends IContactsEnabled>(state: TState) =>
-    state.contactAcquisitionEnabled
+    state.contactAcquisition.contactAcquisitionEnabled
 
 
 export interface IContactsNameFieldEnabled {
-  nameFieldEnabled: boolean
+  contactAcquisition: { nameFieldEnabled: boolean }
 }
 
 export const contactsNameFieldEnabledReducer =
@@ -28,18 +28,18 @@ export const contactsNameFieldEnabledReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['nameFieldEnabled']>
+      PayloadAction<TState['contactAcquisition']['nameFieldEnabled']>
   ) => {
-    state.nameFieldEnabled = action.payload
+    state.contactAcquisition.nameFieldEnabled = action.payload
   }
 
 export const selectNameFieldEnabled =
   <TState extends IContactsNameFieldEnabled>(state: TState) =>
-    state.nameFieldEnabled
+    state.contactAcquisition.nameFieldEnabled
 
 
 export interface IContactsNameFieldRequired {
-  nameFieldRequired: boolean
+  contactAcquisition: { nameFieldRequired: boolean }
 }
 
 export const contactsNameFieldRequiredReducer =
@@ -47,18 +47,18 @@ export const contactsNameFieldRequiredReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['nameFieldRequired']>
+      PayloadAction<TState['contactAcquisition']['nameFieldRequired']>
   ) => {
-    state.nameFieldRequired = action.payload
+    state.contactAcquisition.nameFieldRequired = action.payload
   }
 
 export const selectNameFieldRequired =
   <TState extends IContactsNameFieldRequired>(state: TState) =>
-    state.nameFieldRequired
+    state.contactAcquisition.nameFieldRequired
 
 
 export interface IContactsEmailFieldEnabled {
-  emailFieldEnabled: boolean
+  contactAcquisition: { emailFieldEnabled: boolean }
 }
 
 export const contactsEmailFieldEnabledReducer =
@@ -66,18 +66,18 @@ export const contactsEmailFieldEnabledReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['emailFieldEnabled']>
+      PayloadAction<TState['contactAcquisition']['emailFieldEnabled']>
   ) => {
-    state.emailFieldEnabled = action.payload
+    state.contactAcquisition.emailFieldEnabled = action.payload
   }
 
 export const selectEmailFieldEnabled =
   <TState extends IContactsEmailFieldEnabled>(state: TState) =>
-    state.emailFieldEnabled
+    state.contactAcquisition.emailFieldEnabled
 
 
 export interface IContactsEmailFieldRequired {
-  emailFieldRequired: boolean
+  contactAcquisition: { emailFieldRequired: boolean }
 }
 
 export const contactsEmailFieldRequiredReducer =
@@ -85,18 +85,18 @@ export const contactsEmailFieldRequiredReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['emailFieldRequired']>
+      PayloadAction<TState['contactAcquisition']['emailFieldRequired']>
   ) => {
-    state.emailFieldRequired = action.payload
+    state.contactAcquisition.emailFieldRequired = action.payload
   }
 
 export const selectEmailFieldRequired =
   <TState extends IContactsEmailFieldRequired>(state: TState) =>
-    state.emailFieldRequired
+    state.contactAcquisition.emailFieldRequired
 
 
 export interface IContactsPhoneFieldEnabled {
-  phoneFieldEnabled: boolean
+  contactAcquisition: { phoneFieldEnabled: boolean }
 }
 
 export const contactsPhoneFieldEnabledReducer =
@@ -104,18 +104,18 @@ export const contactsPhoneFieldEnabledReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['phoneFieldEnabled']>
+      PayloadAction<TState['contactAcquisition']['phoneFieldEnabled']>
   ) => {
-    state.phoneFieldEnabled = action.payload
+    state.contactAcquisition.phoneFieldEnabled = action.payload
   }
 
 export const selectPhoneFieldEnabled =
   <TState extends IContactsPhoneFieldEnabled>(state: TState) =>
-    state.phoneFieldEnabled
+    state.contactAcquisition.phoneFieldEnabled
 
 
 export interface IContactsPhoneFieldRequired {
-  phoneFieldRequired: boolean
+  contactAcquisition: { phoneFieldRequired: boolean }
 }
 
 export const contactsPhoneFieldRequiredReducer =
@@ -123,14 +123,14 @@ export const contactsPhoneFieldRequiredReducer =
     state:
       TState,
     action:
-      PayloadAction<TState['phoneFieldRequired']>
+      PayloadAction<TState['contactAcquisition']['phoneFieldRequired']>
   ) => {
-    state.phoneFieldRequired = action.payload
+    state.contactAcquisition.phoneFieldRequired = action.payload
   }
 
 export const selectPhoneFieldRequired =
   <TState extends IContactsPhoneFieldRequired>(state: TState) =>
-    state.phoneFieldRequired
+    state.contactAcquisition.phoneFieldRequired
 
 
 export const contactAcquisitionReducers = {

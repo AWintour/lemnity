@@ -110,7 +110,10 @@ const InfoSettings = (props: InfoSettingsProps) => {
     props?.setCountdownDate?.(value.toAbsoluteString())
   }
 
-  const contentSettingsProps: ContentSettingsProps<'top' | 'center' | 'bottom'> = {
+  const contentSettingsProps: ContentSettingsProps<
+    ContentAlignment,
+    Content
+  > = {
     format: props.variant,
     contentEnabled: contentEnabled,
     contentType: contentType,
