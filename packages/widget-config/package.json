@@ -60,6 +60,14 @@
     "./features/widgetAppearence": {
       "types": "./dist/features/widgetAppearence.d.ts",
       "default": "./dist/features/widgetAppearence.js"
+    },
+    "./features/agreement": {
+      "types": "./dist/features/agreement.d.ts",
+      "default": "./dist/features/agreement.js"
+    },
+    "./features/adsInfo": {
+      "types": "./dist/features/adsInfo.d.ts",
+      "default": "./dist/features/adsInfo.js"
     }
   },
   "dependencies": {

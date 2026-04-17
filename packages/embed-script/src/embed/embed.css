@@ -50,6 +50,7 @@ html, body {
 
 *, *::before, *::after {
   box-sizing: inherit;
+  font-family: 'Rubik', 'Inter', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .lemnity-embed-root {

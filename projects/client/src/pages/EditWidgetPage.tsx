@@ -81,6 +81,11 @@ const getSaveWidgetConfigThunk = async (currentWidget: WidgetTypeEnum) => {
         '@/layouts/Widgets/FABMenu/FABMenuSlice'
       )
       return saveFabMenuWidget
+    case 'ACTION_TIMER':
+      const { saveActionTimerWidget } = await import(
+        '@/layouts/Widgets/ActionTimer/actionTimerSlice'
+      )
+      return saveActionTimerWidget
   }
 }
 

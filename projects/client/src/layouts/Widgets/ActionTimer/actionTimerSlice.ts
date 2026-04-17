@@ -64,8 +64,27 @@ import {
 import type { FontWeight, Icon } from '@lemnity/widget-config/widgets/base'
 
 export const fetchActionTimerWidget = fetchWidgetThunkFactory(
-  'notification/fetchWidget',
+  'actionTimer/fetchWidget',
   (state) => state.actionTimer!.fetchStatus
+)
+
+// this action will only be dispatched when the store is aleady mounted
+// if it's not then we are having a bigger problem
+export const saveActionTimerWidget = saveWidgetThunkFactory(
+  'actionTimer/saveWidget',
+  (state) => state.actionTimer!.widgetId,
+  (state) => state.actionTimer!.type,
+  (state): ActionTimerWidgetType => {
+    const {
+      widgetId,
+      projectId,
+      fetchStatus,
+      fetchError,
+      ...result
+    } = state.actionTimer!
+
+    return result
+  }
 )
 
 type ActionTimerWidgetState = ActionTimerWidgetType & {
@@ -75,7 +94,7 @@ type ActionTimerWidgetState = ActionTimerWidgetType & {
   fetchError: string | null
 }
 
-const initialState: ActionTimerWidgetState = {
+export const initialState: ActionTimerWidgetState = {
   type: WidgetTypeEnum.ACTION_TIMER,
   fetchStatus: 'idle',
   fetchError: null,
@@ -382,14 +401,7 @@ export const actionTimerSlice = createSlice({
         state.fetchStatus = 'pending'
       })
       .addCase(fetchActionTimerWidget.fulfilled, (state, action) => {
-        state.fetchStatus = 'succeeded'
-        state.fetchError = null
-
         const payload = action.payload as PublicWidget | undefined
-
-        state.widgetId = payload?.id
-        state.projectId = payload?.projectId
-
         const widgetConfig = payload?.config as WidgetSettings | undefined
         const widgetSettings = widgetConfig?.widget
 
@@ -399,6 +411,11 @@ export const actionTimerSlice = createSlice({
           // possibly dynamically loaded function
           // the slice's compressed size is ~4KB though so that's probably
           // not even necessary
+          state.fetchStatus = 'succeeded'
+          state.fetchError = null
+          state.widgetId = payload?.id
+          state.projectId = payload?.projectId
+
           state.appearence.companyLogoEnabled =
             (widgetConfig as any)
               ?.fields?.companyLogo?.enabled
@@ -608,9 +625,11 @@ export const actionTimerSlice = createSlice({
           & Omit<ActionTimerWidgetType, 'type'>
         delete settings.type
 
-        state = {
+        return {
           ...settings,
           type: 'ACTION_TIMER',
+          widgetId: payload?.id,
+          projectId: payload?.projectId,
           fetchStatus: 'succeeded',
           fetchError: null,
         }

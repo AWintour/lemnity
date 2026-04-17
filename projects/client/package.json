@@ -38,6 +38,7 @@
     "@lemnity/api-sdk": "workspace:*",
     "@lemnity/nest-common": "workspace:*",
     "@lemnity/widget-config": "workspace:*",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@react-input/mask": "^2.0.4",
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "catalog:tailwind",

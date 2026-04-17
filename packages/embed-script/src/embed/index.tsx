@@ -23,14 +23,18 @@ const EventTimerWidget = lazy(
 const FABMenuWidget = lazy(
   () => import('@/layouts/Widgets/FABMenu/embedded/EmbeddedWidget')
 )
+const ActionTimerWidget = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/embedded/EmbeddedWidget')
+)
 
 
 type WidgetProps = {
   widgetId: string
   type: WidgetTypeId
+  container: ShadowRoot
 }
 
-const Widget = ({ widgetId, type }: WidgetProps) => {
+const Widget = ({ widgetId, type, container }: WidgetProps) => {
   switch (type) {
     case 'ANNOUNCEMENT':
       return <AnnouncementWidget widgetId={widgetId} />
@@ -40,6 +44,8 @@ const Widget = ({ widgetId, type }: WidgetProps) => {
       return <EventTimerWidget widgetId={widgetId} />
     case 'FAB_MENU':
       return <FABMenuWidget widgetId={widgetId} />
+    case 'ACTION_TIMER':
+      return <ActionTimerWidget widgetId={widgetId} container={container} />
     default:
       return null
   }
@@ -152,6 +158,11 @@ const bootstrap = async () => {
     return
   }
 
+  const rubikFontLink = document.createElement('link')
+  rubikFontLink.href = 'https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap'
+  rubikFontLink.rel = 'stylesheet'
+  document.head.appendChild(rubikFontLink)
+
   const host = document.createElement('div')
   host.style.zIndex = '9999999'
   host.id = 'shadow-host'
@@ -167,7 +178,12 @@ const bootstrap = async () => {
       <QueryClientProvider client={queryClient}>
         <HeroUIProvider>
           {widgets.map((widget) => (
-            <Widget key={widget.type} widgetId={widget.id} type={widget.type}/>
+            <Widget
+              key={widget.type}
+              widgetId={widget.id}
+              type={widget.type}
+              container={shadowRoot}
+            />
           ))}
         </HeroUIProvider>
       </QueryClientProvider>
