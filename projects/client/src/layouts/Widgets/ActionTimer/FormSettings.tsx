@@ -25,6 +25,7 @@ type FomSettingsProps = {
   buttonLink: string
   formBorderEnabled: boolean
   formBorderColor: string
+  rewardScreenEnabled: boolean
   onBadgeTextChange:
     (value: string) => void
   onBadgeBackgroundColorChange:
@@ -81,6 +82,7 @@ const FormSettings = (props: FomSettingsProps) => {
     buttonLink,
     formBorderEnabled,
     formBorderColor,
+    rewardScreenEnabled,
     onBadgeTextChange,
     onBadgeBackgroundColorChange,
     onBadgeFontColorChange,
@@ -176,14 +178,18 @@ const FormSettings = (props: FomSettingsProps) => {
             onTriggerIconChange={onButtonIconChange}
           />
 
-          <span className='text-black text-base'>
-            Ссылка
-          </span>
-          <Input
-            value={buttonLink}
-            onValueChange={onButtonLinkChange}
-            placeholder='lemnity.ru/ads'
-          />
+          {!rewardScreenEnabled && (
+            <>
+              <span className='text-black text-base'>
+                Ссылка
+              </span>
+              <Input
+                value={buttonLink}
+                onValueChange={onButtonLinkChange}
+                placeholder='lemnity.ru/ads'
+              />
+            </>
+          )}
         </div>
       </BorderedContainer>
 

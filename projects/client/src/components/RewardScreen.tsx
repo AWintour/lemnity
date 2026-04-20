@@ -9,7 +9,7 @@ import { getFontWeightClass } from './utils/getFontWeightClass'
 import type { FontWeight } from '@lemnity/widget-config/widgets/announcement'
 
 type RewardScreenProps = {
-  isAnnouncement?: boolean
+  variant: 'announcement' | 'eventTimer' | 'actionTimer'
   companyLogoEnabled?: boolean
   companyLogo?: string
 
@@ -56,7 +56,11 @@ const RewardScreen = (props: RewardScreenProps) => {
     customColorSchemeEnabled,
     customDiscountBackgroundColor,
     customPromoBackgroundColor,
+    variant,
   } = props
+
+  const isAnnouncement = variant === 'announcement'
+  const isActionTimer = variant === 'actionTimer'
 
   const titleStyle: CSSProperties = {
     fontSize: titleFontSize,
@@ -80,26 +84,31 @@ const RewardScreen = (props: RewardScreenProps) => {
 
   return (
     <>
-      <div className='w-42 h-9.5 mt-20.75'>
-        {props.companyLogoEnabled && (
-          <CompanyLogo
-            black={props.isAnnouncement}
-            companyLogo={props.companyLogo}
-          />
-        )}
-      </div>
+      {!isActionTimer && (
+        <div className={'w-42 h-9.5 mt-20.75'}>
+          {props.companyLogoEnabled && (
+            <CompanyLogo
+              black={isAnnouncement}
+              companyLogo={props.companyLogo}
+            />
+          )}
+        </div>
+      )}
 
       <div
         className={cn(
-          'w-full max-w-99.5 flex flex-col items-center justify-center',
+          'flex flex-col items-center justify-center',
           'mt-3.75 gap-3.75',
+          isActionTimer
+            ? 'h-full'
+            : 'max-w-99.5 w-full',
         )}
       >
         <span
           className={cn(
             'font-semibold text-[40px] leading-11.75 ',
             'transition-all duration-250',
-            props.isAnnouncement ? 'text-black' : 'text-white',
+            isAnnouncement ? 'text-black' : 'text-white',
             getFontWeightClass(titleFontWeight),
           )}
           style={titleStyle}
@@ -136,7 +145,7 @@ const RewardScreen = (props: RewardScreenProps) => {
           className={cn(
             'text-[16px] leading-4.75 text-center',
             'transition-all duration-250',
-            props.isAnnouncement ? 'text-black' : 'text-white',
+            isAnnouncement ? 'text-black' : 'text-white',
             getFontWeightClass(descriptionFontWeight),
           )}
           style={descriptionStyle}
@@ -150,7 +159,7 @@ const RewardScreen = (props: RewardScreenProps) => {
             'w-full p-4 flex flex-col items-center justify-center gap-1',
             'rounded-[3px] border border-dashed bg-[#0069FF]/59',
             'transition-colors duration-250',
-            props.isAnnouncement ? 'border-black' : 'border-white',
+            isAnnouncement ? 'border-black' : 'border-white',
           )}
           style={{
             backgroundColor: customColorSchemeEnabled
@@ -162,7 +171,7 @@ const RewardScreen = (props: RewardScreenProps) => {
             className={cn(
               'text-[12px] leading-3.5',
               'transition-colors duration-250',
-              props.isAnnouncement ? 'text-black' : 'text-white',
+              isAnnouncement ? 'text-black' : 'text-white',
             )}
           >
             Промокод
@@ -171,7 +180,7 @@ const RewardScreen = (props: RewardScreenProps) => {
             className={cn(
               'font-semibold text-[25px] leading-7.5',
               'transition-all duration-250',
-              props.isAnnouncement ? 'text-black' : 'text-white',
+              isAnnouncement ? 'text-black' : 'text-white',
               getFontWeightClass(promoFontWeight),
             )}
             style={promoStyle}

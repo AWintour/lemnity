@@ -82,7 +82,7 @@ const AnnouncementRewardScreen = () => {
 
   return (
     <RewardScreen
-      isAnnouncement
+      variant='announcement'
       companyLogoEnabled={companyLogoEnabled}
       companyLogo={companyLogo}
       title={rewardTitle}

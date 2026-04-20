@@ -27,6 +27,7 @@ import {
   selectDescriptionFontSize,
   selectFormBorderColor,
   selectFormBorderEnabled,
+  selectRewardScreenEnabled,
   selectTitle,
   selectTitleColor,
   selectTitleFontSize,
@@ -70,6 +71,8 @@ export const useFormSettings = () => {
     useAppSelector(selectFormBorderEnabled)
   const formBorderColor =
     useAppSelector(selectFormBorderColor)
+  const rewardScreenEnabled =
+    useAppSelector(selectRewardScreenEnabled)
   
   const dispatch = useAppDispatch()
   
@@ -145,6 +148,7 @@ export const useFormSettings = () => {
     buttonLink,
     formBorderEnabled,
     formBorderColor,
+    rewardScreenEnabled,
     onBadgeTextChange,
     onBadgeBackgroundColorChange,
     onBadgeFontColorChange,

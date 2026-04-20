@@ -88,6 +88,7 @@ const EventTimerRewardScreen = () => {
 
   return (
     <RewardScreen
+      variant='eventTimer'
       companyLogoEnabled={companyLogoEnabled}
       companyLogo={companyLogo}
       title={rewardTitle}

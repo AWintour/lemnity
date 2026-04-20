@@ -1,6 +1,6 @@
 import '@/layouts/Widgets/ActionTimer/actionTimerSlice'
 import ActionTimerEmbedRuntime from './embedRuntime'
-import { DialogContext } from './DaalogContext'
+import { DialogContext } from './DialogContext'
 
 type EmbedProps = {
   widgetId: string

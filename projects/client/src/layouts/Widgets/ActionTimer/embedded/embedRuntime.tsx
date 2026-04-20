@@ -8,11 +8,11 @@ import {
 } from '@radix-ui/react-dialog'
 import { cn } from '@heroui/theme'
 
-import { Button, SvgIcon, CompanyLogo, BrTagsOnNewlines, CountdownTimer } from '@/components'
+import { Button, SvgIcon, CompanyLogo, BrTagsOnNewlines, CountdownTimer, RewardScreen } from '@/components'
 
 import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
-import { fetchActionTimerWidget, initialState, selectAdsInfo, selectAgreement, selectBackgroundColor, selectBadgeBackgroundColor, selectBadgeFontColor, selectBadgeText, selectBorderRadius, selectButtonBackgroundColor, selectButtonFontColor, selectButtonIcon, selectButtonText, selectColorScheme, selectCompanyLogoEnabled, selectCompanyLogoUrl, selectContactAcquisitionEnabled, selectContentAlignment, selectContentUrl, selectCountdownBackgroundColor, selectCountdownDate, selectCountdownEnabled, selectCountdownFontColor, selectEmailFieldEnabled, selectEmailFieldRequired, selectNameFieldEnabled, selectNameFieldRequired, selectPhoneFieldEnabled, selectPhoneFieldRequired, selectTextBeforeCountdown, selectTextBeforeCountdownColor, selectTitle, selectTitleColor, selectTitleFontSize, selectTitleFontWeight } from '../actionTimerSlice'
-import { useDialogContext } from './DaalogContext'
+import { fetchActionTimerWidget, initialState, selectAdsInfo, selectAgreement, selectBackgroundColor, selectBadgeBackgroundColor, selectBadgeFontColor, selectBadgeText, selectBorderRadius, selectButtonBackgroundColor, selectButtonFontColor, selectButtonIcon, selectButtonLink, selectButtonText, selectColorScheme, selectCompanyLogoEnabled, selectCompanyLogoUrl, selectContactAcquisitionEnabled, selectContentAlignment, selectContentPlacement, selectContentType, selectContentUrl, selectCountdownBackgroundColor, selectCountdownDate, selectCountdownEnabled, selectCountdownFontColor, selectDescription, selectDescriptionColor, selectDescriptionFontSize, selectDescriptionFontWeight, selectEmailFieldEnabled, selectEmailFieldRequired, selectFormBorderColor, selectFormBorderEnabled, selectNameFieldEnabled, selectNameFieldRequired, selectPhoneFieldEnabled, selectPhoneFieldRequired, selectRewardCustomColorSchemeEnabled, selectRewardCustomDiscountBackgroundColor, selectRewardCustomPromoBackgroundColor, selectRewardDescription, selectRewardDescriptionFontColor, selectRewardDescriptionFontSize, selectRewardDescriptionFontWeight, selectRewardDiscount, selectRewardDiscountFontColor, selectRewardDiscountFontSize, selectRewardDiscountFontWeight, selectRewardPromo, selectRewardPromoFontColor, selectRewardPromoFontSize, selectRewardPromoFontWeight, selectRewardScreenEnabled, selectRewardTitle, selectRewardTitleFontColor, selectRewardTitleFontSize, selectRewardTitleFontWeight, selectTextBeforeCountdown, selectTextBeforeCountdownColor, selectTitle, selectTitleColor, selectTitleFontSize, selectTitleFontWeight } from '../actionTimerSlice'
+import { useDialogContext } from './DialogContext'
 
 import crossIcon from '@/assets/icons/cross.svg'
 import { getFontWeightClass } from '@/components/utils/getFontWeightClass'
@@ -20,13 +20,99 @@ import useUrlImage from '@/hooks/useUrlImage'
 import { DateTime } from 'luxon'
 import ContactAcquisition from '@/components/ContactAcquisition'
 
-const ActionTimerContent = () => {
+const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
+
+const ActionTimerRewardScreen = () => {
+  const title =
+    useAppSelector(selectRewardTitle)
+  const titleFontSize =
+    useAppSelector(selectRewardTitleFontSize)
+  const titleFontWeight =
+    useAppSelector(selectRewardTitleFontWeight)
+  const titleFontColor =
+    useAppSelector(selectRewardTitleFontColor)
+  const description =
+    useAppSelector(selectRewardDescription)
+  const descriptionFontSize =
+    useAppSelector(selectRewardDescriptionFontSize)
+  const descriptionFontWeight =
+    useAppSelector(selectRewardDescriptionFontWeight)
+  const descriptionFontColor =
+    useAppSelector(selectRewardDescriptionFontColor)
+  const discount =
+    useAppSelector(selectRewardDiscount)
+  const discountFontSize =
+    useAppSelector(selectRewardDiscountFontSize)
+  const discountFontWeight =
+    useAppSelector(selectRewardDiscountFontWeight)
+  const discountFontColor =
+    useAppSelector(selectRewardDiscountFontColor)
+  const promo =
+    useAppSelector(selectRewardPromo)
+  const promoFontSize =
+    useAppSelector(selectRewardPromoFontSize)
+  const promoFontWeight =
+    useAppSelector(selectRewardPromoFontWeight)
+  const promoFontColor =
+    useAppSelector(selectRewardPromoFontColor)
+
+  const customColorSchemeEnabled =
+    useAppSelector(selectRewardCustomColorSchemeEnabled)
+  const customDiscountBackgroundColor =
+    useAppSelector(selectRewardCustomDiscountBackgroundColor)
+  const customPromoBackgroundColor =
+    useAppSelector(selectRewardCustomPromoBackgroundColor)
+
+  return (
+    <div
+      className={cn(
+        'min-w-[403px] max-w-[403px]',
+        'self-stretch flex flex-col items-center justify-center',
+      )}
+    >
+      <RewardScreen
+        variant='actionTimer'
+        title={title}
+        titleFontSize={titleFontSize}
+        titleFontWeight={titleFontWeight}
+        titleFontColor={titleFontColor}
+        description={description}
+        descriptionFontSize={descriptionFontSize}
+        descriptionFontWeight={descriptionFontWeight}
+        descriptionFontColor={descriptionFontColor}
+        discount={discount}
+        discountFontSize={discountFontSize}
+        discountFontWeight={discountFontWeight}
+        discountFontColor={discountFontColor}
+        promo={promo}
+        promoFontSize={promoFontSize}
+        promoFontWeight={promoFontWeight}
+        promoFontColor={promoFontColor}
+        customColorSchemeEnabled={customColorSchemeEnabled}
+        customDiscountBackgroundColor={
+          customDiscountBackgroundColor
+        }
+        customPromoBackgroundColor={
+          customPromoBackgroundColor
+        }
+      />
+    </div>
+  )
+}
+
+type ActionTimerContentProps = {
+  onButtonPress: () => void
+}
+
+const ActionTimerContent = (props: ActionTimerContentProps) => {
   const badgeText =
     useAppSelector(selectBadgeText)
   const badgeBackgroundColor =
     useAppSelector(selectBadgeBackgroundColor)
+      || initialState.badgeBackgroundColor
   const badgeFontColor =
     useAppSelector(selectBadgeFontColor)
+      || initialState.badgeFontColor
   const colorScheme =
     useAppSelector(selectColorScheme)
 
@@ -43,11 +129,23 @@ const ActionTimerContent = () => {
     useAppSelector(selectTitleFontWeight)
   const titleColor =
     useAppSelector(selectTitleColor)
+      || initialState.titleColor
+  
+  const description =
+    useAppSelector(selectDescription)
+  const descriptionFontSize =
+    useAppSelector(selectDescriptionFontSize)
+  const descriptionFontWeight =
+    useAppSelector(selectDescriptionFontWeight)
+  const descriptionColor =
+    useAppSelector(selectDescriptionColor)
+      || initialState.descriptionColor
 
   const textBeforeCountdown =
     useAppSelector(selectTextBeforeCountdown)
   const textBeforeCountdownColor =
     useAppSelector(selectTextBeforeCountdownColor)
+      || initialState.countdown.textBeforeCountdownColor
 
   const countdownEnabled =
     useAppSelector(selectCountdownEnabled)
@@ -58,11 +156,7 @@ const ActionTimerContent = () => {
     useAppSelector(selectCountdownBackgroundColor)
   const countdownFontColor =
     useAppSelector(selectCountdownFontColor)
-
-  const contentAlignment =
-    useAppSelector(selectContentAlignment)
-  const contentUrl =
-   useAppSelector(selectContentUrl)
+      || initialState.countdown.countdownFontColor
   
   const buttonText =
     useAppSelector(selectButtonText)
@@ -70,7 +164,7 @@ const ActionTimerContent = () => {
     useAppSelector(selectButtonFontColor)
   const buttonBackgroundColor =
     useAppSelector(selectButtonBackgroundColor)
-  const icon =
+  const buttonIcon =
     useAppSelector(selectButtonIcon)
   const contactAcquisitionEnabled =
     useAppSelector(selectContactAcquisitionEnabled)
@@ -90,6 +184,17 @@ const ActionTimerContent = () => {
     useAppSelector(selectAgreement)
   const adsInfo =
     useAppSelector(selectAdsInfo)
+  
+  const formBorderEnabled =
+    useAppSelector(selectFormBorderEnabled)
+  const formBorderColor =
+    useAppSelector(selectFormBorderColor)
+      || initialState.formBorderColor
+  
+  const formBorderStyle: CSSProperties | undefined =
+    formBorderEnabled
+      ? { borderColor: formBorderColor }
+      : undefined
 
   const {
     base64Image: companyBase64Logo,
@@ -100,10 +205,6 @@ const ActionTimerContent = () => {
   const companyLogo = companyLogoUrl && !isLoading
     ? companyBase64Logo as string
     : undefined
-
-  const imageStyle: CSSProperties = {
-    objectPosition: contentAlignment
-  }
 
   const badgeStyles: CSSProperties = {
     backgroundColor:
@@ -120,6 +221,11 @@ const ActionTimerContent = () => {
     fontSize: titleFontSize,
     lineHeight: `${titleFontSize}px`,
     color: titleColor,
+  }
+  const descriptionStyles: CSSProperties = {
+    fontSize: descriptionFontSize,
+    lineHeight: `${descriptionFontSize}px`,
+    color: descriptionColor,
   }
 
   const textBeforeCountdownStyles: CSSProperties = {
@@ -174,53 +280,71 @@ const ActionTimerContent = () => {
           <BrTagsOnNewlines input={title} />
         </div>
 
-        {textBeforeCountdown.length > 0 && (
-          <div
-            className='text-base leading-4.75'
-            style={textBeforeCountdownStyles}
-          >
-            {textBeforeCountdown}
-          </div>
-        )}
+        <div
+          className={cn(
+            'h-[148px] flex flex-col gap-2.5 items-center justify-center',
+          )}
+        >
+          {textBeforeCountdown.length > 0 && (
+            <div
+              className='text-base leading-4.75'
+              style={textBeforeCountdownStyles}
+            >
+              {textBeforeCountdown}
+            </div>
+          )}
 
-        {countdownEnabled && (
-          <CountdownTimer
-            mini
-            initialTime={initialTime}
-            backgroundColor={countdownBackgroundColor}
-            fontColor={countdownFontColor}
-          />
-        )}
+          {countdownEnabled && (
+            <CountdownTimer
+              mini
+              initialTime={initialTime}
+              backgroundColor={countdownBackgroundColor}
+              fontColor={countdownFontColor}
+            />
+          )}
+        </div>
 
         {contactAcquisitionEnabled && (
-          <ContactAcquisition
-            buttonText={buttonText}
-            buttonFontColor={buttonFontColor}
-            buttonBackgroundColor={buttonBackgroundColor}
-            icon={icon}
-            contactAcquisitionEnabled={contactAcquisitionEnabled}
-            nameFieldEnabled={nameFieldEnabled}
-            nameFieldRequired={nameFieldRequired}
-            emailFieldEnabled={emailFieldEnabled}
-            emailFieldRequired={emailFieldRequired}
-            phoneFieldEnabled={phoneFieldEnabled}
-            phoneFieldRequired={phoneFieldRequired}
-            agreement={agreement}
-            adsInfo={adsInfo}
-            borderRadius={10}
-            checkboxBorderColor='#000000'
-            largeButton
-          />
-        )}
-      </div>
+          <div
+            className={cn(
+              formBorderEnabled && 'p-3.75 border rounded-[15px]',
+              'flex flex-col gap-2.5',
+            )}
+            style={formBorderStyle}
+          >
+            {description && description.length > 0 && (
+              <h2
+                className={cn(
+                  getFontWeightClass(descriptionFontWeight),
+                  'self-center text-center',
+                )}
+                style={descriptionStyles}
+              >
+                {description}
+              </h2>
+            )}
 
-      <div className='grow h-full'>
-        <img
-          src={contentUrl}
-          alt='Изображение'
-          className='w-full h-full object-cover rounded-[15px]'
-          style={imageStyle}
-        />
+            <ContactAcquisition
+              buttonText={buttonText}
+              buttonFontColor={buttonFontColor}
+              buttonBackgroundColor={buttonBackgroundColor}
+              icon={buttonIcon}
+              contactAcquisitionEnabled={contactAcquisitionEnabled}
+              nameFieldEnabled={nameFieldEnabled}
+              nameFieldRequired={nameFieldRequired}
+              emailFieldEnabled={emailFieldEnabled}
+              emailFieldRequired={emailFieldRequired}
+              phoneFieldEnabled={phoneFieldEnabled}
+              phoneFieldRequired={phoneFieldRequired}
+              agreement={agreement}
+              adsInfo={adsInfo}
+              borderRadius={10}
+              checkboxBorderColor='#000000'
+              largeButton
+              onFormScreenButtonPress={props.onButtonPress}
+            />
+          </div>
+        )}
       </div>
     </>
   )
@@ -247,9 +371,37 @@ export const ActionTimerEmbedRuntime = (
     }
   }, [dispatch, widgetId])
 
-  const backgroundColor = useAppSelector(selectBackgroundColor)
-  const borderRadius = useAppSelector(selectBorderRadius)
-  const colorScheme = useAppSelector(selectColorScheme)
+  const backgroundColor =
+    useAppSelector(selectBackgroundColor)
+      || initialState.appearence.backgroundColor
+  const borderRadius =
+    useAppSelector(selectBorderRadius)
+  const colorScheme =
+    useAppSelector(selectColorScheme)
+  const contentType =
+    useAppSelector(selectContentType)
+  const contentAlignment =
+    useAppSelector(selectContentAlignment)
+  const contentUrl =
+    useAppSelector(selectContentUrl)
+  const contentPlacement =
+    useAppSelector(selectContentPlacement)
+  const rewardScreenEnabled =
+    useAppSelector(selectRewardScreenEnabled)
+  const buttonLink =
+    useAppSelector(selectButtonLink)
+  
+  const [showRrewardScreen, setShowRewardScreen] = useState(false)
+  
+  const {
+    base64Image: contentBase64Image,
+    // error,
+    isLoading,
+  } = useUrlImage(contentUrl)
+
+  const backgroundImage = contentUrl && !isLoading
+    ? contentBase64Image as string
+    : noBackgroundImageUrl
 
   const dialogContentStyles: CSSProperties = {
     backgroundColor:
@@ -259,8 +411,26 @@ export const ActionTimerEmbedRuntime = (
     borderRadius: borderRadius,
   }
 
+  if (contentType === 'background') {
+    dialogContentStyles.backgroundImage = `url('${backgroundImage}')`
+    dialogContentStyles.backgroundSize = 'cover'
+  }
+
+  const imageStyle: CSSProperties = {
+    objectPosition: contentAlignment
+  }
+
   const handleOpen = () => {
     setOpen(prev => !prev)
+  }
+
+  const handleFormButtonPress = () => {
+    if (rewardScreenEnabled) {
+      setShowRewardScreen(true)
+    }
+    else {
+      window.open(buttonLink, '_blank')
+    }
   }
 
   return (
@@ -285,8 +455,11 @@ export const ActionTimerEmbedRuntime = (
           <DialogContent
             className={cn(
               'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-              'z-2147483646 w-[928px] h-[525px]',
-              'px-5 py-3.75 flex flex-row gap-3.75',
+              'z-2147483646 w-[928px] min-h-[525px]',
+              'px-5 py-3.75 flex items-stretch gap-3.75',
+              contentPlacement === 'right'
+               ? 'flex-row'
+               : 'flex-row-reverse',
             )}
             style={dialogContentStyles}
           >
@@ -295,7 +468,10 @@ export const ActionTimerEmbedRuntime = (
                 className={cn(
                   'min-w-[34px] w-[34px] h-[34px] bg-white',
                   'border border-black flex items-center justify-center',
-                  'absolute top-[15px] right-[20px] rounded-[10px]',
+                  'absolute top-[15px] rounded-[10px]',
+                  contentPlacement === 'right'
+                    ? 'right-[20px]'
+                    : 'left-[20px]',
                 )}
                 aria-label='Закрыть'
                 onPressEnd={handleOpen}
@@ -311,7 +487,21 @@ export const ActionTimerEmbedRuntime = (
               </Button>
             </DialogClose>
 
-            <ActionTimerContent />
+            {rewardScreenEnabled && showRrewardScreen
+              ? <ActionTimerRewardScreen />
+              : <ActionTimerContent onButtonPress={handleFormButtonPress} />
+            }
+
+            <div className='self-stretch'>
+              {contentType === 'imageOnSide' && (
+                <img
+                  src={contentUrl}
+                  alt='Изображение'
+                  className='w-full h-full object-cover rounded-[15px]'
+                  style={imageStyle}
+                />
+              )}
+            </div>
           </DialogContent>
         </DialogPortal>
       </Root>

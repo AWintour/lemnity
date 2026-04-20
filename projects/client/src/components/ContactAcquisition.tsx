@@ -76,8 +76,10 @@ const ContactAcquisition = (props: ContactAcquisitionProps) => {
   const IconComponent = Icons[icon]
 
   const inputStyles = {
-    inputWrapper:
+    inputWrapper: cn(
       `rounded-[${borderRadius}px] px-2.25 border border-[#9A9A9A] bg-white`,
+      'data-[hover=true]:bg-white',
+    ),
     input: 'placeholder:text-black text-[16px] leading-4.75',
   }
 
@@ -91,7 +93,12 @@ const ContactAcquisition = (props: ContactAcquisitionProps) => {
       }`,
       'before:rounded-[4px] after:rounded-[4px] after:bg-transparent',
     ),
-    icon: 'w-3 h-3 text-white group-hover/checkbox:text-black',
+    icon: cn(
+      'w-3 h-3 group-hover/checkbox:text-black',
+      checkboxBorderColor
+        ? `text-[${checkboxBorderColor}]`
+        : 'text-white',
+    ),
     base: 'self-start',
   }
 
@@ -105,8 +112,8 @@ const ContactAcquisition = (props: ContactAcquisitionProps) => {
       name: '',
       phone: '',
       email: '',
-      agreementCheckbox: agreement.enabled,
-      adsInfoCheckbox: adsInfo.enabled,
+      agreementCheckbox: true,
+      adsInfoCheckbox: false,
     }
   })
 
@@ -120,7 +127,7 @@ const ContactAcquisition = (props: ContactAcquisitionProps) => {
         onSubmit={handleSubmit(onSubmit)}
         className={cn(
           'w-full max-w-99.5 flex flex-col items-center justify-center',
-          'mt-3.75 gap-3.75',
+          'gap-2.5',
         )}
       >
         {contactAcquisitionEnabled
@@ -242,48 +249,53 @@ const ContactAcquisition = (props: ContactAcquisitionProps) => {
               control={control}
               rules={{ required: true }}
               render={({ field: { onChange, value, ...field }, fieldState }) => (
-                <Checkbox
-                  {...field}
-                  isRequired
-                  isSelected={value}
-                  onValueChange={onChange}
-                  classNames={checkboxStyles}
-                  isInvalid={fieldState.invalid}
-                />
+                <>
+                  <Checkbox
+                    {...field}
+                    // isRequired
+                    isSelected={value}
+                    onValueChange={onChange}
+                    classNames={checkboxStyles}
+                    isInvalid={fieldState.invalid}
+                  />
+
+                  <span
+                    className={cn(
+                      'text-[9px] leading-2.75 text-white ml-1',
+                      'transition-colors duration-250',
+                    )}
+                    style={{
+                      color: fieldState.invalid ? '#fb2c36' : agreement.color,
+                    }}
+                  >
+                    Я даю&nbsp;
+                    <a
+                      href={
+                        agreement.agreementUrl && agreement.agreementUrl.length > 0
+                          ? agreement.agreementUrl
+                          : 'https://lemnity.ru/agreement'
+                      }
+                      target="_blank"
+                      className='underline'
+                    >
+                      Согласие
+                    </a>
+                    &nbsp;на обработку персональных данных в соответствии с&nbsp;
+                    <a
+                      href={
+                        agreement.policyUrl && agreement.policyUrl.length > 0
+                          ? agreement.policyUrl
+                          : 'https://lemnity.ru/political'
+                      }
+                      target="_blank"
+                      className='underline'
+                    >
+                      Политикой конфиденциальности.
+                    </a>
+                  </span>
+                </>
               )}
             />
-            <span
-              className={cn(
-                'text-[9px] leading-2.75 text-white ml-1',
-                'transition-colors duration-250',
-              )}
-              style={{ color: agreement.color }}
-            >
-              Я даю&nbsp;
-              <a
-                href={
-                  agreement.agreementUrl && agreement.agreementUrl.length > 0
-                    ? agreement.agreementUrl
-                    : 'https://lemnity.ru/agreement'
-                }
-                target="_blank"
-                className='underline'
-              >
-                Согласие
-              </a>
-              &nbsp;на обработку персональных данных в соответствии с&nbsp;
-              <a
-                href={
-                  agreement.policyUrl && agreement.policyUrl.length > 0
-                    ? agreement.policyUrl
-                    : 'https://lemnity.ru/political'
-                }
-                target="_blank"
-                className='underline'
-              >
-                Политикой конфиденциальности.
-              </a>
-            </span>
           </div>
         )}
 
