@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { AgreementAndPolicy } from '@/components'
+import { AgreementAndPolicy, DisableBranding } from '@/components'
 import {
   ContactAcquisitionSettings,
   RewardMessageSettings,
@@ -23,7 +23,9 @@ import {
   useWidgetAppearenceSettings,
 } from './hooks/useWidgetAppearenceSettings'
 import {
+  brandingEnabledChanged,
   fetchActionTimerWidget,
+  selectBrandingEnabled,
   selectFetchStatus,
 } from './actionTimerSlice'
 
@@ -47,6 +49,11 @@ const ActionTimerWidgetSettings = () => {
   const agreementSettings = useAgreeementSettings()
   const adsInfoSettings = useAdsInfoSettings()
   const rewardScreenSettings = useRewardMessageSettings()
+  const brandingEnabled = useAppSelector(selectBrandingEnabled)
+
+  const onBrandingEnabledChange = (value: boolean) => {
+    dispatch(brandingEnabledChanged(value))
+  }
   
   return (
     <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
@@ -57,6 +64,10 @@ const ActionTimerWidgetSettings = () => {
       <AgreementAndPolicy {...agreementSettings} />
       <AgreementAndPolicy {...adsInfoSettings}/>
       <RewardMessageSettings {...rewardScreenSettings} />
+      <DisableBranding
+        enabled={brandingEnabled}
+        onBrandingEnabledToggle={onBrandingEnabledChange}
+      />
     </div>
   )
 }

@@ -8,17 +8,95 @@ import {
 } from '@radix-ui/react-dialog'
 import { cn } from '@heroui/theme'
 
-import { Button, SvgIcon, CompanyLogo, BrTagsOnNewlines, CountdownTimer, RewardScreen } from '@/components'
+import {
+  Button,
+  SvgIcon,
+  CompanyLogo,
+  BrTagsOnNewlines,
+  CountdownTimer,
+  RewardScreen,
+} from '@/components'
 
 import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
-import { fetchActionTimerWidget, initialState, selectAdsInfo, selectAgreement, selectBackgroundColor, selectBadgeBackgroundColor, selectBadgeFontColor, selectBadgeText, selectBorderRadius, selectButtonBackgroundColor, selectButtonFontColor, selectButtonIcon, selectButtonLink, selectButtonText, selectColorScheme, selectCompanyLogoEnabled, selectCompanyLogoUrl, selectContactAcquisitionEnabled, selectContentAlignment, selectContentPlacement, selectContentType, selectContentUrl, selectCountdownBackgroundColor, selectCountdownDate, selectCountdownEnabled, selectCountdownFontColor, selectDescription, selectDescriptionColor, selectDescriptionFontSize, selectDescriptionFontWeight, selectEmailFieldEnabled, selectEmailFieldRequired, selectFormBorderColor, selectFormBorderEnabled, selectNameFieldEnabled, selectNameFieldRequired, selectPhoneFieldEnabled, selectPhoneFieldRequired, selectRewardCustomColorSchemeEnabled, selectRewardCustomDiscountBackgroundColor, selectRewardCustomPromoBackgroundColor, selectRewardDescription, selectRewardDescriptionFontColor, selectRewardDescriptionFontSize, selectRewardDescriptionFontWeight, selectRewardDiscount, selectRewardDiscountFontColor, selectRewardDiscountFontSize, selectRewardDiscountFontWeight, selectRewardPromo, selectRewardPromoFontColor, selectRewardPromoFontSize, selectRewardPromoFontWeight, selectRewardScreenEnabled, selectRewardTitle, selectRewardTitleFontColor, selectRewardTitleFontSize, selectRewardTitleFontWeight, selectTextBeforeCountdown, selectTextBeforeCountdownColor, selectTitle, selectTitleColor, selectTitleFontSize, selectTitleFontWeight } from '../actionTimerSlice'
+import {
+  fetchActionTimerWidget,
+  initialState,
+  selectAdsInfo,
+  selectAgreement,
+  selectBackgroundColor,
+  selectBadgeBackgroundColor,
+  selectBadgeFontColor,
+  selectBadgeText,
+  selectBorderRadius,
+  selectBrandingEnabled,
+  selectButtonBackgroundColor,
+  selectButtonFontColor,
+  selectButtonIcon,
+  selectButtonLink,
+  selectButtonText,
+  selectColorScheme,
+  selectCompanyLogoEnabled,
+  selectCompanyLogoUrl,
+  selectContactAcquisitionEnabled,
+  selectContentAlignment,
+  selectContentPlacement,
+  selectContentType,
+  selectContentUrl,
+  selectCountdownBackgroundColor,
+  selectCountdownDate,
+  selectCountdownEnabled,
+  selectCountdownFontColor,
+  selectDescription,
+  selectDescriptionColor,
+  selectDescriptionFontSize,
+  selectDescriptionFontWeight,
+  selectEmailFieldEnabled,
+  selectEmailFieldRequired,
+  selectFormBorderColor,
+  selectFormBorderEnabled,
+  selectNameFieldEnabled,
+  selectNameFieldRequired,
+  selectPhoneFieldEnabled,
+  selectPhoneFieldRequired,
+  selectProjectId,
+  selectRewardCustomColorSchemeEnabled,
+  selectRewardCustomDiscountBackgroundColor,
+  selectRewardCustomPromoBackgroundColor,
+  selectRewardDescription,
+  selectRewardDescriptionFontColor,
+  selectRewardDescriptionFontSize,
+  selectRewardDescriptionFontWeight,
+  selectRewardDiscount,
+  selectRewardDiscountFontColor,
+  selectRewardDiscountFontSize,
+  selectRewardDiscountFontWeight,
+  selectRewardPromo,
+  selectRewardPromoFontColor,
+  selectRewardPromoFontSize,
+  selectRewardPromoFontWeight,
+  selectRewardScreenEnabled,
+  selectRewardTitle,
+  selectRewardTitleFontColor,
+  selectRewardTitleFontSize,
+  selectRewardTitleFontWeight,
+  selectTextBeforeCountdown,
+  selectTextBeforeCountdownColor,
+  selectTitle,
+  selectTitleColor,
+  selectTitleFontSize,
+  selectTitleFontWeight,
+} from '../actionTimerSlice'
 import { useDialogContext } from './DialogContext'
 
 import crossIcon from '@/assets/icons/cross.svg'
 import { getFontWeightClass } from '@/components/utils/getFontWeightClass'
 import useUrlImage from '@/hooks/useUrlImage'
 import { DateTime } from 'luxon'
-import ContactAcquisition from '@/components/ContactAcquisition'
+import ContactAcquisition, {
+  type ContactAcquisitionForm,
+} from '@/components/ContactAcquisition'
+import { sendEvent, sendPublicRequest } from '@/common/api/publicApi'
+import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
 
@@ -101,7 +179,7 @@ const ActionTimerRewardScreen = () => {
 }
 
 type ActionTimerContentProps = {
-  onButtonPress: () => void
+  onButtonPress: (formData: ContactAcquisitionForm) => void
 }
 
 const ActionTimerContent = (props: ActionTimerContentProps) => {
@@ -190,6 +268,9 @@ const ActionTimerContent = (props: ActionTimerContentProps) => {
   const formBorderColor =
     useAppSelector(selectFormBorderColor)
       || initialState.formBorderColor
+  
+  const brandingEnabled =
+    useAppSelector(selectBrandingEnabled)
   
   const formBorderStyle: CSSProperties | undefined =
     formBorderEnabled
@@ -345,6 +426,8 @@ const ActionTimerContent = (props: ActionTimerContentProps) => {
             />
           </div>
         )}
+
+        {brandingEnabled && <FreePlanBrandingLink />}
       </div>
     </>
   )
@@ -390,6 +473,8 @@ export const ActionTimerEmbedRuntime = (
     useAppSelector(selectRewardScreenEnabled)
   const buttonLink =
     useAppSelector(selectButtonLink)
+  const projectId =
+    useAppSelector(selectProjectId)
   
   const [showRrewardScreen, setShowRewardScreen] = useState(false)
   
@@ -422,15 +507,64 @@ export const ActionTimerEmbedRuntime = (
 
   const handleOpen = () => {
     setOpen(prev => !prev)
+
+    if (!widgetId) {
+      return
+    }
+
+    void sendEvent({
+      event_name:
+        open
+          ? 'action_timer.close'
+          : 'action_timer.open',
+      widget_id: widgetId,
+      project_id: projectId,
+    })
   }
 
-  const handleFormButtonPress = () => {
+  const handleFormButtonPress = (formData: ContactAcquisitionForm) => {
     if (rewardScreenEnabled) {
       setShowRewardScreen(true)
+
+      if (!widgetId) {
+        return
+      }
+
+      void sendEvent({
+        event_name: 'action_timer.transition_to_reward',
+        widget_id: widgetId,
+        project_id: projectId,
+        payload: formData,
+      })
     }
     else {
       window.open(buttonLink, '_blank')
+
+      if (!widgetId) {
+        return
+      }
+
+      void sendEvent({
+        event_name: 'action_timer.link_opened',
+        widget_id: widgetId,
+        project_id: projectId,
+        payload: formData,
+      })
     }
+
+    if (!widgetId) {
+      return
+    }
+
+    void sendPublicRequest({
+      widgetId: widgetId,
+      fullName: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      url: window.location.href,
+      referrer: document.referrer || undefined,
+      userAgent: navigator.userAgent,
+    })
   }
 
   return (

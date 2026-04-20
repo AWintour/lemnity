@@ -165,7 +165,7 @@ const bootstrap = async () => {
 
   const host = document.createElement('div')
   host.style.zIndex = '9999999'
-  host.id = 'shadow-host'
+  host.id = 'lemnity-shadow-host'
   const shadowRoot = host.attachShadow({ mode: 'closed' })
   const reactRoot = createRoot(shadowRoot)
   
