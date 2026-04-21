@@ -100,7 +100,7 @@ import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
 
-const ActionTimerRewardScreen = () => {
+export const ActionTimerRewardScreen = () => {
   const title =
     useAppSelector(selectRewardTitle)
   const titleFontSize =
@@ -182,7 +182,7 @@ type ActionTimerContentProps = {
   onButtonPress: (formData: ContactAcquisitionForm) => void
 }
 
-const ActionTimerContent = (props: ActionTimerContentProps) => {
+export const ActionTimerContent = (props: ActionTimerContentProps) => {
   const badgeText =
     useAppSelector(selectBadgeText)
   const badgeBackgroundColor =
@@ -329,14 +329,17 @@ const ActionTimerContent = (props: ActionTimerContentProps) => {
     <>
       <div
         className={cn(
-          'min-w-[403px] max-w-[403px] h-full',
+          'min-w-[403px] max-w-[403px]',
           'flex flex-col items-center gap-2.5',
+          countdownEnabled
+            ? 'h-full'
+            : 'self-stretch',
         )}
       >
         <div
          className={cn(
           'rounded-full h-5 px-2.5 flex items-center justify-center w-fit',
-          'text-[14px] leading-3.5',
+          'text-[14px] leading-3.5 transition-colors duration-250',
          )}
          style={badgeStyles}
         >
@@ -354,42 +357,44 @@ const ActionTimerContent = (props: ActionTimerContentProps) => {
         <div
           className={cn(
             getFontWeightClass(titleFontWeight),
-            'self-center text-center',
+            'self-center text-center transition-all duration-250',
+            !countdownEnabled && 'mt-auto mb-auto',
           )}
           style={titleStyles}
         >
           <BrTagsOnNewlines input={title} />
         </div>
 
-        <div
-          className={cn(
-            'h-[148px] flex flex-col gap-2.5 items-center justify-center',
-          )}
-        >
-          {textBeforeCountdown.length > 0 && (
-            <div
-              className='text-base leading-4.75'
-              style={textBeforeCountdownStyles}
-            >
-              {textBeforeCountdown}
-            </div>
-          )}
+        {countdownEnabled && (
+          <div
+            className={cn(
+              'h-[148px] flex flex-col gap-2.5 items-center justify-center',
+            )}
+          >
+            {textBeforeCountdown.length > 0 && (
+              <div
+                className='text-base leading-4.75 transition-colors duration-250'
+                style={textBeforeCountdownStyles}
+              >
+                {textBeforeCountdown}
+              </div>
+            )}
 
-          {countdownEnabled && (
-            <CountdownTimer
-              mini
-              initialTime={initialTime}
-              backgroundColor={countdownBackgroundColor}
-              fontColor={countdownFontColor}
-            />
-          )}
-        </div>
+              <CountdownTimer
+                mini
+                initialTime={initialTime}
+                backgroundColor={countdownBackgroundColor}
+                fontColor={countdownFontColor}
+              />
+          </div>
+        )}
 
         {contactAcquisitionEnabled && (
           <div
             className={cn(
               formBorderEnabled && 'p-3.75 border rounded-[15px]',
-              'flex flex-col gap-2.5',
+              'flex flex-col gap-2.5 transition-colors duration-250',
+              !countdownEnabled && 'mb-0',
             )}
             style={formBorderStyle}
           >
@@ -397,7 +402,7 @@ const ActionTimerContent = (props: ActionTimerContentProps) => {
               <h2
                 className={cn(
                   getFontWeightClass(descriptionFontWeight),
-                  'self-center text-center',
+                  'self-center text-center transition-all duration-250',
                 )}
                 style={descriptionStyles}
               >
@@ -434,11 +439,12 @@ const ActionTimerContent = (props: ActionTimerContentProps) => {
 }
 
 type ActionTimerEmbedRuntimeProps = {
+  preview?: boolean
   widgetId?: string
 }
 
 export const ActionTimerEmbedRuntime = (
-  { widgetId }: ActionTimerEmbedRuntimeProps
+  { widgetId, preview }: ActionTimerEmbedRuntimeProps
 ) => {
   const container = useDialogContext()
   const [open, setOpen] = useState(false)
@@ -446,7 +452,7 @@ export const ActionTimerEmbedRuntime = (
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    if (widgetId) {
+    if (widgetId && !preview) {
       dispatch(fetchActionTimerWidget({
         widgetId: widgetId,
         embedded: true,
@@ -508,7 +514,7 @@ export const ActionTimerEmbedRuntime = (
   const handleOpen = () => {
     setOpen(prev => !prev)
 
-    if (!widgetId) {
+    if (!widgetId || preview) {
       return
     }
 
@@ -525,36 +531,23 @@ export const ActionTimerEmbedRuntime = (
   const handleFormButtonPress = (formData: ContactAcquisitionForm) => {
     if (rewardScreenEnabled) {
       setShowRewardScreen(true)
-
-      if (!widgetId) {
-        return
-      }
-
-      void sendEvent({
-        event_name: 'action_timer.transition_to_reward',
-        widget_id: widgetId,
-        project_id: projectId,
-        payload: formData,
-      })
     }
     else {
       window.open(buttonLink, '_blank')
-
-      if (!widgetId) {
-        return
-      }
-
-      void sendEvent({
-        event_name: 'action_timer.link_opened',
-        widget_id: widgetId,
-        project_id: projectId,
-        payload: formData,
-      })
     }
 
-    if (!widgetId) {
+    if (!widgetId || preview) {
       return
     }
+
+    void sendEvent({
+      event_name: rewardScreenEnabled
+        ? 'action_timer.transition_to_reward'
+        : 'action_timer.link_opened',
+      widget_id: widgetId,
+      project_id: projectId,
+      payload: formData,
+    })
 
     void sendPublicRequest({
       widgetId: widgetId,
@@ -592,8 +585,9 @@ export const ActionTimerEmbedRuntime = (
               'z-2147483646 w-[928px] min-h-[525px]',
               'px-5 py-3.75 flex items-stretch gap-3.75',
               contentPlacement === 'right'
-               ? 'flex-row'
-               : 'flex-row-reverse',
+                ? 'flex-row'
+                : 'flex-row-reverse',
+              'transition-colors duration-250',
             )}
             style={dialogContentStyles}
           >

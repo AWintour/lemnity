@@ -16,6 +16,9 @@ const EventTimerWidget = lazy(
 const FABMenuWidget = lazy(
   () => import('@/layouts/Widgets/FABMenu/WidgetPreview')
 )
+const ActionTimerWidget = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/WidgetPreview')
+)
 
 type WidgetProps = {
   widgetType: WidgetTypeEnum | null
@@ -31,6 +34,8 @@ const Widget = ({ widgetType }: WidgetProps) => {
       return <EventTimerWidget />
     case WidgetTypeEnum.FAB_MENU:
       return <FABMenuWidget />
+    case WidgetTypeEnum.ACTION_TIMER:
+      return <ActionTimerWidget />
     default:
       return null
   }
