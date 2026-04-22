@@ -7,6 +7,8 @@ import SvgIcon from '@/components/SvgIcon'
 import * as Icons from '@/components/Icons'
 import { selectBrandingEnabled } from './FABMenuSlice'
 import { useAppSelector } from '@/stores/redux/hooks'
+import type { PositionType } from '@lemnity/widget-config/features/trigger'
+import type { CSSProperties } from 'react'
 
 type FabMenuWidgetProps = {
   anchorBaseClassName?: string
@@ -18,6 +20,8 @@ type FabMenuWidgetProps = {
   triggerClassName?: string
   signatureClassName?: string
   widgetId?: string
+  shouldDisplayAsMegaButton?: boolean
+  triggerPosition: PositionType
 }
 
 const FabMenuWidget = ({
@@ -25,6 +29,8 @@ const FabMenuWidget = ({
   anchorOffsetClassName,
   listClassName = '',
   widgetId,
+  shouldDisplayAsMegaButton,
+  triggerPosition,
 }: FabMenuWidgetProps) => {
   const {
     triggerText,
@@ -42,12 +48,36 @@ const FabMenuWidget = ({
 
   const brandingEnabled = useAppSelector(selectBrandingEnabled)
 
-  const TriggerIcon = triggerIcon ? Icons[triggerIcon] : null
+  const TriggerIcon =
+    triggerIcon
+      ? triggerIcon === 'HeartDislike' && shouldDisplayAsMegaButton
+        ? Icons['Balloon']
+        : Icons[triggerIcon]
+      : shouldDisplayAsMegaButton
+        ? Icons['Balloon']
+        : null
 
   const horizontalOffset =
     safePosition === 'bottom-left'
       ? (anchorOffsetClassName?.left ?? 'left-6')
       : (anchorOffsetClassName?.right ?? 'right-6')
+  
+  const shouldShowHoverLabel =
+    ((!triggerText || triggerText.length === 0) || shouldDisplayAsMegaButton)
+    && !expanded
+  
+  const triggerHoverTextStyle: CSSProperties = {
+    backgroundColor:
+      `color-mix(in oklab, ${triggerBackgroundColor} 14%, transparent)`,
+    color: triggerBackgroundColor,
+  }
+  const triggerHoverDivStyle = {
+    clipPath: triggerPosition === 'bottom-right'
+      // group-hover:-translate-x-[73%]
+      ? 'polygon(-73% 0%, 30% 0%, 30% 100%, -73% 100%)'
+      // group-hover:translate-x-[73%]
+      : 'polygon(73% 0%, 173% 0%, 173% 100%, 73% 100%)',
+  }
 
   return (
     <div
@@ -129,7 +159,8 @@ const FabMenuWidget = ({
           'flex items-center justify-center rounded-full',
           'text-white ring-1 ring-white/20',
           'transition-transform motion-reduce:transition-none duration-250 hover:scale-105',
-          'h-15.5 min-w-15.5 gap-2.5 px-4'
+          'h-15.5 min-w-15.5 gap-2.5 px-4',
+          'group relative',
         )}
         style={{
           backgroundColor: triggerBackgroundColor,
@@ -137,12 +168,18 @@ const FabMenuWidget = ({
         }}
         aria-label={expanded ? 'Скрыть кнопки' : 'Показать кнопки'}
       >
-        {safePosition === 'bottom-right' && triggerText && <span>{triggerText}</span>}
+        {
+          shouldDisplayAsMegaButton
+            ? null
+            : safePosition === 'bottom-right'
+              && triggerText
+              && <span>{triggerText}</span>
+        }
 
         {expanded ? (
           <FabMenuAddIcon color={triggerTextColor} />
         ) : (
-          triggerIcon !== 'HeartDislike' &&
+          (triggerIcon !== 'HeartDislike' || shouldDisplayAsMegaButton) &&
           TriggerIcon && (
             <div className={`w-7.5 h-7.5 ${alignClassName}`}>
               <TriggerIcon />
@@ -150,7 +187,35 @@ const FabMenuWidget = ({
           )
         )}
 
-        {safePosition !== 'bottom-right' && triggerText && <span>{triggerText}</span>}
+        {
+          shouldDisplayAsMegaButton
+            ? null
+            : safePosition !== 'bottom-right'
+              && triggerText
+              && <span>{triggerText}</span>
+        }
+
+        {shouldShowHoverLabel && (
+          <div className='absolute' style={triggerHoverDivStyle}>
+            <div
+              className={cn(
+                'bg-white',
+                'rounded-full opacity-0 transition-all duration-300',
+                'group-hover:opacity-100',
+                triggerPosition === 'bottom-right'
+                  ? 'group-hover:-translate-x-[73%]'
+                  : 'group-hover:translate-x-[73%]',
+              )}
+            >
+              <div
+                className='w-full h-full rounded-full text-[20px] leading-5 p-4'
+                style={triggerHoverTextStyle}
+              >
+                Мультикнопка
+              </div>
+            </div>
+          </div>
+        )}
       </button>
     </div>
   )

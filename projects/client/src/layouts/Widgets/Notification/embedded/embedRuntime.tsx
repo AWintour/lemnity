@@ -27,6 +27,7 @@ import {
   selectProjectId,
   fetchNotificationWidget,
 } from '../notificationSlice'
+import { notificationTriggerPositionChanged } from '@/stores/redux/editorSlice'
 
 import type {
   Notification,
@@ -56,16 +57,30 @@ const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
     }
   }, [dispatch, props.preview, props.widgetId])
 
-  const triggerText = useAppSelector(selectTriggerText)
-  const triggerFontColor = useAppSelector(selectTriggerFontColor)
-  const triggerBackgroundColor = useAppSelector(selectTriggerBackgroundColor)
-  const triggerIcon = useAppSelector(selectTriggerIcon)
-  const delay = useAppSelector(selectDelay)
-  const brandingEnabled = useAppSelector(selectBrandingEnabled)
-  const notifications = useAppSelector(selectAllNotifications)
-  const triggerPosition = useAppSelector(selectTriggerPosition)
-  const widgetId = useAppSelector(selectWidgetId)
-  const projectId = useAppSelector(selectProjectId)
+  const triggerText =
+    useAppSelector(selectTriggerText)
+  const triggerFontColor =
+    useAppSelector(selectTriggerFontColor)
+  const triggerBackgroundColor =
+    useAppSelector(selectTriggerBackgroundColor)
+  const triggerIcon =
+    useAppSelector(selectTriggerIcon)
+  const delay =
+    useAppSelector(selectDelay)
+  const brandingEnabled =
+    useAppSelector(selectBrandingEnabled)
+  const notifications =
+    useAppSelector(selectAllNotifications)
+  const triggerPosition =
+    useAppSelector(selectTriggerPosition)
+  const widgetId =
+    useAppSelector(selectWidgetId)
+  const projectId =
+    useAppSelector(selectProjectId)
+
+  useEffect(() => {
+    dispatch(notificationTriggerPositionChanged(triggerPosition))
+  }, [triggerPosition])
 
   const [open, setOpen] = useState(false)
   const [liveNotifications, setLiveNotifications] = useState<Notification[]>([])

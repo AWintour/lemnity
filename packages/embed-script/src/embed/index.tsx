@@ -3,11 +3,12 @@ import styles from './embed.css?inline'
 import { lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HeroUIProvider } from '@heroui/system'
-import { cn } from '@heroui/theme'
 import { Provider } from 'react-redux'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { store } from '@/stores/redux/store'
+import { megaButtonEnabledChanged } from '@/stores/redux/editorSlice'
+
 import type { WidgetTypeId } from '@lemnity/widget-config/widgets/base'
 
 
@@ -156,6 +157,28 @@ const bootstrap = async () => {
 
   if (!widgets || widgets.length === 0) {
     return
+  }
+
+  let FABMenuEnabled: boolean = false
+  let NotificationsEnabled: boolean = false
+
+  for (let widget of widgets) {
+    if (FABMenuEnabled && NotificationsEnabled) {
+      break
+    }
+
+    switch (widget.type) {
+      case 'FAB_MENU':
+        FABMenuEnabled = true
+        break
+      case 'NOTIFICATION':
+        NotificationsEnabled = true
+        break
+    }
+  }
+
+  if (FABMenuEnabled && NotificationsEnabled) {
+    store.dispatch(megaButtonEnabledChanged(true))
   }
 
   const rubikFontLink = document.createElement('link')

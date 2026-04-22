@@ -1,6 +1,10 @@
+import { useAppSelector } from '@/stores/redux/hooks'
 import FabMenuWidget from './FabMenuWidget'
+import { selectTriggerPosition } from './FABMenuSlice'
 
 const FABMenuPreview = () => {
+  const triggerPosition = useAppSelector(selectTriggerPosition)
+
   return (
     <div className="flex h-full flex-col gap-4">
       <div className='flex flex-1'>
@@ -17,6 +21,7 @@ const FABMenuPreview = () => {
             anchorOffsetClassName={{ left: 'left-4', right: 'right-4' }}
             listClassName="max-w-[280px]"
             triggerClassName="h-16 w-16"
+            triggerPosition={triggerPosition}
           />
         </div>
       </div>
