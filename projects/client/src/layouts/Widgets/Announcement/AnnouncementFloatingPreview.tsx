@@ -5,7 +5,7 @@ import { cn } from '@heroui/theme'
 import AnnouncementEmbedRuntime from './embedded/embedRuntime'
 
 type FloatingPreviewProps = {
-  onClose: () => void
+  onClose?: () => void
 }
 
 const AnnouncementFloatingPreview = ({ onClose }: FloatingPreviewProps) => {

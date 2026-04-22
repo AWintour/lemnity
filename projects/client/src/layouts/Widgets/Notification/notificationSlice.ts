@@ -21,8 +21,17 @@ import {
   commonSelectors,
 } from '@/stores/redux/features/common'
 import {
-  triggerSettingsReducers,
-  triggerSettingsSelectors,
+  triggerBackgroundColorReducer,
+  triggerFontColorReducer,
+  triggerIconReducer,
+  triggerPositionReducer,
+  triggerTextReducer,
+
+  selectTriggerText as selectTriggerTextFeature,
+  selectTriggerBackgroundColor as selectTriggerBackgroundColorFeature,
+  selectTriggerFontColor as selectTriggerFontColorFeature,
+  selectTriggerIcon as selectTriggerIconFeature,
+  selectTriggerPosition as selectTriggerPositionFeature,
 } from '@/stores/redux/features/triggerSettings'
 
 import {
@@ -33,6 +42,9 @@ import {
   type NotificationWidgetType,
   type Notification,
 } from '@lemnity/widget-config/widgets/notification'
+import {
+  type TriggerType,
+} from '@lemnity/widget-config/features/trigger'
 
 export const fetchNotificationWidget = fetchWidgetThunkFactory(
   'notification/fetchWidget',
@@ -48,16 +60,8 @@ export const saveNotificationWidget = saveWidgetThunkFactory(
   (state): NotificationWidgetType => ({
     type:
       state.notification!.type,
-    triggerText:
-      state.notification!.triggerText,
-    triggerFontColor:
-      state.notification!.triggerFontColor,
-    triggerBackgroundColor:
-      state.notification!.triggerBackgroundColor,
-    triggerIcon:
-      state.notification!.triggerIcon,
-    triggerPosition:
-      state.notification!.triggerPosition,
+    trigger:
+      state.notification!.trigger,
     delay:
       state.notification!.delay,
     notifications:
@@ -99,11 +103,13 @@ const initialState: NotificationWidgetState = {
   type: WidgetTypeEnum.NOTIFICATION,
   fetchStatus: 'idle',
   fetchError: null,
-  triggerText: '',
-  triggerBackgroundColor: '#5951E5',
-  triggerFontColor: '#FFFFFF',
-  triggerIcon: 'Sparkles',
-  triggerPosition: 'bottom-right',
+  trigger: {
+    triggerText: '',
+    triggerBackgroundColor: '#5951E5',
+    triggerFontColor: '#FFFFFF',
+    triggerIcon: 'Sparkles',
+    triggerPosition: 'bottom-right',
+  },
   delay: 10,
   brandingEnabled: true,
   notifications: {
@@ -111,12 +117,38 @@ const initialState: NotificationWidgetState = {
   },
 }
 
+const notificationTriggerSettingsReducers = {
+  triggerTextChanged:
+    triggerTextReducer,
+  triggerBackgroundColorChanged:
+    triggerBackgroundColorReducer,
+  triggerFontColorChanged:
+    triggerFontColorReducer,
+  triggerIconChanged:
+    triggerIconReducer,
+  triggerPositionChanged:
+    triggerPositionReducer,
+}
+
+const notificationTriggerSettingsSelectors = {
+  selectTriggerText:
+    selectTriggerTextFeature,
+  selectTriggerBackgroundColor:
+    selectTriggerBackgroundColorFeature,
+  selectTriggerFontColor:
+    selectTriggerFontColorFeature,
+  selectTriggerIcon:
+    selectTriggerIconFeature,
+  selectTriggerPosition:
+    selectTriggerPositionFeature,
+}
+
 export const notificationSlice = createSlice({
   name: 'notification',
   initialState,
   reducers: {
     ...commonReducers,
-    ...triggerSettingsReducers,
+    ...notificationTriggerSettingsReducers,
 
     delayChanged:
       (state, action: PayloadAction<number>) => {
@@ -142,7 +174,7 @@ export const notificationSlice = createSlice({
   },
   selectors: {
     ...commonSelectors,
-    ...triggerSettingsSelectors,
+    ...notificationTriggerSettingsSelectors,
 
     selectDelay:
       (state) => state.delay,
@@ -169,25 +201,35 @@ export const notificationSlice = createSlice({
           || { ...initialState, notifications: [...defaultNotifications] }
         
         const {
-          triggerText,
-          triggerBackgroundColor,
-          triggerFontColor,
-          triggerIcon,
-          triggerPosition,
           delay,
           notifications,
           brandingEnabled,
         } = settings as NotificationWidgetType
 
-        state.triggerText = triggerText
-        state.triggerBackgroundColor = triggerBackgroundColor
-        state.triggerFontColor = triggerFontColor
-        state.triggerIcon = triggerIcon
-        state.triggerPosition = triggerPosition
         state.delay = delay
         state.brandingEnabled = brandingEnabled
 
         notificationAdapter.setAll(state.notifications, notifications)
+
+        // accomodation for legacy configs
+        if ((settings as { trigger: TriggerType }).trigger) {
+          state.trigger = (settings as { trigger: TriggerType }).trigger
+        }
+        else {
+          const {
+            triggerText,
+            triggerBackgroundColor,
+            triggerFontColor,
+            triggerIcon,
+            triggerPosition,
+          } = settings as any
+
+          state.trigger.triggerText = triggerText
+          state.trigger.triggerBackgroundColor = triggerBackgroundColor
+          state.trigger.triggerFontColor = triggerFontColor
+          state.trigger.triggerIcon = triggerIcon
+          state.trigger.triggerPosition = triggerPosition
+        }
       })
       .addCase(fetchNotificationWidget.rejected, (state, action) => {
         state.fetchStatus = 'rejected'

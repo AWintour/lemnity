@@ -11,6 +11,7 @@ import { CountdownSchema } from '../../features/countdown.js'
 import { ContactAcquisitionSchema } from '../../features/contactAcquisition.js'
 import { AgreementSchema } from '../../features/agreement.js'
 import { AdsInfoSchema } from '../../features/adsInfo.js'
+import { TriggerSchema } from '../../features/trigger.js'
 
 const WidgetType: WidgetTypeId = 'ACTION_TIMER'
 
@@ -33,6 +34,7 @@ const ActionTimerWidgetSchema = z.object({
   agreement: AgreementSchema,
   adsInfo: AdsInfoSchema,
   rewardMessageSettings: RewardMessageSettingsSchema,
+  trigger: TriggerSchema,
 
   contentType: ContentEnum,
   contentAlignment: ContentAlignmentEnum,

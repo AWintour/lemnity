@@ -26,17 +26,17 @@ import {
   commonSelectors,
 } from '@/stores/redux/features/common'
 import {
-  triggerTextReducer,
   triggerBackgroundColorReducer,
-  triggerTextColorReducer,
+  triggerFontColorReducer,
   triggerIconReducer,
   triggerPositionReducer,
+  triggerTextReducer,
 
-  selectTriggerText as selectFABMenuTriggerText,
-  selectTriggerBackgroundColor as selectFABMenuTriggerBackgroundColor,
-  selectTriggerTextColor as selectFABMenuTriggerTextColor,
-  selectTriggerIcon as selectFABMenuTriggerIcon,
-  selectTriggerPosition as selectFABMenuTriggerPosition,
+  selectTriggerText as selectTriggerTextFeature,
+  selectTriggerBackgroundColor as selectTriggerBackgroundColorFeature,
+  selectTriggerFontColor as selectTriggerFontColorFeature,
+  selectTriggerIcon as selectTriggerIconFeature,
+  selectTriggerPosition as selectTriggerPositionFeature,
 } from '@/stores/redux/features/triggerSettings'
 
 import {
@@ -48,6 +48,9 @@ import {
   type FABMenuSector,
   type FabMenuWidgetType,
 } from '@lemnity/widget-config/widgets/fab-menu'
+import {
+  type TriggerType,
+} from '@lemnity/widget-config/features/trigger'
 
 export const fetchFabMenuWidget = fetchWidgetThunkFactory(
   'FABMenu/fetchWidget',
@@ -61,20 +64,15 @@ export const saveFabMenuWidget = saveWidgetThunkFactory(
   (state): FabMenuWidgetType => ({
     type:
       state.FABMenu!.type,
-    triggerText:
-      state.FABMenu!.triggerText,
-    triggerTextColor:
-      state.FABMenu!.triggerTextColor,
-    triggerBackgroundColor:
-      state.FABMenu!.triggerBackgroundColor,
-    triggerIcon:
-      state.FABMenu!.triggerIcon,
     sectors:
       selectAllSectors(state),
     // patch for old widgets that do not have these fields in the database
-    triggerPosition:
-      state.FABMenu!.triggerPosition
-        || initialState.triggerPosition,
+    trigger: {
+      ...state.FABMenu!.trigger,
+      triggerPosition:
+        state.FABMenu!.trigger.triggerPosition
+          || initialState.trigger.triggerPosition,
+    },
     brandingEnabled:
       state.FABMenu!.brandingEnabled
         || initialState.brandingEnabled,
@@ -127,41 +125,43 @@ export const initialState: FABMenuWidgetState = {
   type: WidgetTypeEnum.FAB_MENU,
   fetchStatus: 'idle',
   fetchError: null,
-  triggerText: 'Супер-кнопка',
-  triggerBackgroundColor: '#5951E5',
-  triggerTextColor: '#FFFFFF',
-  triggerIcon: 'Sparkles',
-  triggerPosition: 'bottom-right',
-  brandingEnabled: true,
+  trigger: {
+    triggerText: 'Супер-кнопка',
+    triggerBackgroundColor: '#5951E5',
+    triggerFontColor: '#FFFFFF',
+    triggerIcon: 'Sparkles',
+    triggerPosition: 'bottom-right',
+  },
   sectors: {
     ...sectorAdapter.getInitialState({}, defaultSectors)
-  }
+  },
+  brandingEnabled: true,
 }
 
-const triggerSettingsReducers = {
+const FABMenuTriggerSettingsReducers = {
   triggerTextChanged:
     triggerTextReducer,
   triggerBackgroundColorChanged:
     triggerBackgroundColorReducer,
-  triggerTextColorChanged:
-    triggerTextColorReducer,
+  triggerFontColorChanged:
+    triggerFontColorReducer,
   triggerIconChanged:
     triggerIconReducer,
   triggerPositionChanged:
     triggerPositionReducer,
 }
 
-const triggerSettingsSelectors = {
+const FABMenuTriggerSettingsSelectors = {
   selectTriggerText:
-    selectFABMenuTriggerText,
+    selectTriggerTextFeature,
   selectTriggerBackgroundColor:
-    selectFABMenuTriggerBackgroundColor,
-  selectTriggerTextColor:
-    selectFABMenuTriggerTextColor,
+    selectTriggerBackgroundColorFeature,
+  selectTriggerFontColor:
+    selectTriggerFontColorFeature,
   selectTriggerIcon:
-    selectFABMenuTriggerIcon,
+    selectTriggerIconFeature,
   selectTriggerPosition:
-    selectFABMenuTriggerPosition,
+    selectTriggerPositionFeature,
 }
 
 export const FABMenuSlice = createSlice({
@@ -169,7 +169,7 @@ export const FABMenuSlice = createSlice({
   initialState,
   reducers: {
     ...commonReducers,
-    ...triggerSettingsReducers,
+    ...FABMenuTriggerSettingsReducers,
 
     sectorAdded:
       (state, action: PayloadAction<FABMenuSector>) => {
@@ -191,7 +191,7 @@ export const FABMenuSlice = createSlice({
   },
   selectors: {
     ...commonSelectors,
-    ...triggerSettingsSelectors,
+    ...FABMenuTriggerSettingsSelectors,
   },
   extraReducers: (builder) => {
     builder
@@ -214,26 +214,36 @@ export const FABMenuSlice = createSlice({
           || { ...initialState, sectors: [...defaultSectors] }
 
         const {
-          triggerText,
-          triggerBackgroundColor,
-          triggerTextColor,
-          triggerIcon,
-          triggerPosition,
           sectors,
           brandingEnabled,
         } = settings as FabMenuWidgetType
         
-        state.triggerText = triggerText
-        state.triggerBackgroundColor = triggerBackgroundColor
-        state.triggerTextColor = triggerTextColor
-        state.triggerIcon = triggerIcon
-        state.triggerPosition = triggerPosition
         state.brandingEnabled = brandingEnabled
         
         sectorAdapter.setAll(
           state.sectors,
           (sectors as any).items ? (sectors as any).items : sectors
         )
+
+        // accomodation for legacy configs
+        if ((settings as { trigger: TriggerType }).trigger) {
+          state.trigger = (settings as { trigger: TriggerType }).trigger
+        }
+        else {
+          const {
+            triggerText,
+            triggerBackgroundColor,
+            triggerTextColor,
+            triggerIcon,
+            triggerPosition,
+          } = settings as any
+
+          state.trigger.triggerText = triggerText
+          state.trigger.triggerBackgroundColor = triggerBackgroundColor
+          state.trigger.triggerFontColor = triggerTextColor
+          state.trigger.triggerIcon = triggerIcon
+          state.trigger.triggerPosition = triggerPosition
+        }
       })
       .addCase(fetchFabMenuWidget.rejected, (state, action) => {
         state.fetchStatus = 'rejected'
@@ -246,7 +256,7 @@ export const FABMenuSlice = createSlice({
 export const {
   triggerTextChanged,
   triggerBackgroundColorChanged,
-  triggerTextColorChanged,
+  triggerFontColorChanged: triggerTextColorChanged,
   triggerIconChanged,
   triggerPositionChanged,
   sectorAdded,
@@ -265,7 +275,7 @@ const injectedFABMenuSlice = FABMenuSlice.injectInto(rootReducer)
 export const {
   selectTriggerText,
   selectTriggerBackgroundColor,
-  selectTriggerTextColor,
+  selectTriggerFontColor: selectTriggerTextColor,
   selectTriggerIcon,
   selectTriggerPosition,
   selectBrandingEnabled,

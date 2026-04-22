@@ -69,6 +69,10 @@ import {
   mobileSettingsReducers,
   mobileSettingsSelectors,
 } from '@/stores/redux/features/mobileTrigger'
+import {
+  triggerPositionReducer,
+  selectTriggerPosition as selectTriggerPositionFeature,
+} from '@/stores/redux/features/triggerSettings'
 
 import {
   WidgetTypeEnum,
@@ -104,6 +108,8 @@ export const saveEventTimerWidget = saveWidgetThunkFactory(
       state.eventTimer!.mobileSettings,
     brandingEnabled:
       state.eventTimer!.brandingEnabled,
+    trigger:
+      state.eventTimer!.trigger,
   })
 )
 
@@ -214,7 +220,12 @@ export const initialState: EventTimerWidgetState = {
     triggerFontColor: '#000000',
     imageUrl: 'https://app.lemnity.ru/uploads/images/2026/01/57534833-dc83-4a33-9108-79c952ca1940-sparkles.svg',
   },
+
   brandingEnabled: true,
+
+  trigger: {
+    triggerPosition: 'bottom-right',
+  },
 }
 
 // i cannot both import these names and export them form the injected slice's
@@ -307,6 +318,9 @@ export const eventTimerSlice = createSlice({
     ...rewardScreenReducers,
     ...mobileSettingsReducers,
     
+    triggerPositionChanged:
+      triggerPositionReducer,
+    
     colorsReset:
       (state) => {
         state.appearence.backgroundColor =
@@ -375,6 +389,7 @@ export const eventTimerSlice = createSlice({
         rewardMessageSettings,
         mobileSettings,
         brandingEnabled,
+        trigger,
       } = settings as EventTimerWidgetType
 
       state.appearence = appearence
@@ -383,6 +398,8 @@ export const eventTimerSlice = createSlice({
       state.rewardMessageSettings = rewardMessageSettings
       state.mobileSettings = mobileSettings
       state.brandingEnabled = brandingEnabled
+      state.trigger = trigger
+        ?? initialState.trigger
     })
     .addCase(fetchEventTimerWidget.rejected, (state, action) => {
       state.fetchStatus = 'rejected'
@@ -397,6 +414,9 @@ export const eventTimerSlice = createSlice({
     ...formScreenSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
+
+    selectTriggerPosition:
+      selectTriggerPositionFeature,
   },
 })
 
@@ -471,6 +491,7 @@ export const {
   mobileImageUrlChanged,
   brandingEnabledChanged,
   colorsReset,
+  triggerPositionChanged,
 } = eventTimerSlice.actions
 
 declare module '@/stores/redux/reducer' {
@@ -550,6 +571,7 @@ export const {
   selectMobileTriggerBackgroundColor,
   selectMobileTriggerFontColor,
   selectMobileImageUrl,
+  selectTriggerPosition,
 } = injectedEventTimerSlice.selectors
 
 export default injectedEventTimerSlice.reducer

@@ -8,7 +8,7 @@ import { useAppSelector } from '@/stores/redux/hooks'
 import { selectTriggerPosition } from './notificationSlice'
 
 type FloatingPreviewProps = {
-  onClose: () => void
+  onClose?: () => void
 }
 
 const NotificationFloatingPreview = ({ onClose }: FloatingPreviewProps) => {

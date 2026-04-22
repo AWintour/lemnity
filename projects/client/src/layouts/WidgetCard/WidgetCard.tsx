@@ -38,6 +38,7 @@ const preloadWidgetOnHover = async (type: WidgetTypeEnum) => {
     case 'ACTION_TIMER':
       import('@/layouts/Widgets/ActionTimer/ActionTimerWidgetSettings')
       import('@/layouts/Widgets/ActionTimer/WidgetPreview')
+      import('@/layouts/Widgets/ActionTimer/ActionTimerDisplaySettings')
       break
   }
 }

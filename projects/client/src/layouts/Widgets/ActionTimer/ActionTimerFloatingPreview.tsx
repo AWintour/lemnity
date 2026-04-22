@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@heroui/theme'
 
-import EventTimerEmbedRuntime from './embedded/embedRuntime'
+import ActionTimerEmbedRuntime from './embedded/embedRuntime'
 
 type FloatingPreviewProps = {
   onClose?: () => void
 }
 
-const EventTimerFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
+const ActionTimerFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -31,11 +31,11 @@ const EventTimerFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
       >
         Закрыть
       </button>
-      <EventTimerEmbedRuntime isPreview />
+      <ActionTimerEmbedRuntime preview />
     </div>,
     document.body
   )
 }
 
-export default EventTimerFloatingPreview
+export default ActionTimerFloatingPreview
 

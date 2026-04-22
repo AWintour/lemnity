@@ -67,10 +67,10 @@ const buildActionHref = (item: FABMenuSectorItem): string | null => {
 export const useFabMenuPreviewModel = (widgetIdParam?: string) => {
   const triggerTextColor =
     useAppSelector(selectTriggerTextColor)
-      || initialState.triggerTextColor
+      || initialState.trigger.triggerFontColor
   const triggerBackgroundColor =
     useAppSelector(selectTriggerBackgroundColor)
-      || initialState.triggerBackgroundColor
+      || initialState.trigger.triggerBackgroundColor
   const triggerText =
     useAppSelector(selectTriggerText)
   const triggerIcon =

@@ -15,6 +15,7 @@ import {
   BrTagsOnNewlines,
   CountdownTimer,
   RewardScreen,
+  WidgetTrigger,
 } from '@/components'
 
 import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
@@ -52,6 +53,7 @@ import {
   selectDescriptionFontWeight,
   selectEmailFieldEnabled,
   selectEmailFieldRequired,
+  selectFetchStatus,
   selectFormBorderColor,
   selectFormBorderEnabled,
   selectNameFieldEnabled,
@@ -85,6 +87,13 @@ import {
   selectTitleColor,
   selectTitleFontSize,
   selectTitleFontWeight,
+  selectTriggerBackgroundColor,
+  selectTriggerFontColor,
+  selectTriggerIcon,
+  selectTriggerPosition,
+  selectTriggerText,
+  selectTriggerVariant,
+  selectTrriggerImageUrl,
 } from '../actionTimerSlice'
 import { useDialogContext } from './DialogContext'
 
@@ -481,6 +490,24 @@ export const ActionTimerEmbedRuntime = (
     useAppSelector(selectButtonLink)
   const projectId =
     useAppSelector(selectProjectId)
+  const triggerFontColor =
+    useAppSelector(selectTriggerFontColor)
+      || initialState.trigger.triggerFontColor
+  const triggerBackgroundColor =
+    useAppSelector(selectTriggerBackgroundColor)
+      || initialState.trigger.triggerBackgroundColor
+  const triggerText =
+    useAppSelector(selectTriggerText)
+  const triggerVariant =
+    useAppSelector(selectTriggerVariant)
+  const triggerImageUrl =
+    useAppSelector(selectTrriggerImageUrl)
+  const triggerIcon =
+    useAppSelector(selectTriggerIcon)
+  const triggerPosition =
+    useAppSelector(selectTriggerPosition)
+  const fetchStatus =
+    useAppSelector(selectFetchStatus)
   
   const [showRrewardScreen, setShowRewardScreen] = useState(false)
   
@@ -489,6 +516,10 @@ export const ActionTimerEmbedRuntime = (
     // error,
     isLoading,
   } = useUrlImage(contentUrl)
+
+  if (!preview && fetchStatus !== 'succeeded') {
+    return null
+  }
 
   const backgroundImage = contentUrl && !isLoading
     ? contentBase64Image as string
@@ -562,15 +593,16 @@ export const ActionTimerEmbedRuntime = (
 
   return (
     <>
-      <Button
-        className={cn(
-          'bg-black text-white fixed left-3 bottom-3 z-2039283',
-          'rounded-full px-2.5',
-        )}
-        onPressEnd={handleOpen}
-      >
-        Получите скидку
-      </Button>
+      <WidgetTrigger
+        triggerBackgroundColor={triggerBackgroundColor}
+        triggerFontColor={triggerFontColor}
+        triggerPosition={triggerPosition}
+        triggerText={triggerText}
+        triggerIcon={triggerIcon}
+        triggerVariant={triggerVariant}
+        triggerImageUrl={triggerImageUrl}
+        onPress={handleOpen}
+      />
 
       <Root open={open}>
         <DialogPortal container={container}>

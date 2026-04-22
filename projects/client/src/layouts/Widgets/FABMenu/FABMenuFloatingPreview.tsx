@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import FabMenuWidget from './FabMenuWidget'
 
 type FABMenuFloatingPreviewProps = {
-  onClose: () => void
+  onClose?: () => void
 }
 
 const FABMenuFloatingPreview = ({ onClose }: FABMenuFloatingPreviewProps) => {

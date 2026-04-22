@@ -213,8 +213,8 @@ const NotificationEmbedRuntime = (props: NotificationEmbedRuntimeProps) => {
     <div
       ref={containerRef}
       className={cn(
-        'flex flex-col gap-3 z-2039283',
-        props.preview ? 'relative' : 'fixed bottom-3',
+        'flex flex-col gap-3',
+        props.preview ? 'relative' : 'fixed bottom-3 z-2039283',
         triggerPosition === 'bottom-right' ? 'right-3' : 'left-3',
       )}
     >

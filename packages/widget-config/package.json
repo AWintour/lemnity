@@ -68,6 +68,10 @@
     "./features/adsInfo": {
       "types": "./dist/features/adsInfo.d.ts",
       "default": "./dist/features/adsInfo.js"
+    },
+    "./features/trigger": {
+      "types": "./dist/features/trigger.d.ts",
+      "default": "./dist/features/trigger.js"
     }
   },
   "dependencies": {

@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type LazyExoticComponent,
 } from 'react'
 import Header from '@/layouts/Header/Header'
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout'
@@ -46,18 +47,80 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk'
 const NotificationWidgetSettings = lazy(
   () => import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
 )
+const NotificationPreview = lazy(
+  () => import('@/layouts/Widgets/Notification/NotificationFloatingPreview')
+)
+
 const AnnouncementWidgetSettings = lazy(
   () => import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
 )
+const AnnouncementDisplaySettings = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementDisplaySettings')
+)
+const AnnouncementPreview = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementFloatingPreview')
+)
+
 const EventTimerWidgetSettings = lazy(
   () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
 )
+const EventTimerDisplaySettings = lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerDisplaySettings')
+)
+const EventTimerPrreview= lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerFloatingPreview')
+)
+
 const FABMenuWidgetSettings = lazy(
   () => import('@/layouts/Widgets/FABMenu/FABMenuSettings')
 )
+const FABMenuPreview = lazy(
+  () => import('@/layouts/Widgets/FABMenu/FABMenuFloatingPreview')
+)
+
 const ActionTimerWidgetSettings = lazy(
   () => import('@/layouts/Widgets/ActionTimer/ActionTimerWidgetSettings')
 )
+const ActionTimerDisplaySettings = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/ActionTimerDisplaySettings')
+)
+const ActionTimerPreview = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/ActionTimerFloatingPreview')
+)
+
+const getWidgetDisplaySettings = (
+  currentWidget: WidgetTypeEnum
+): LazyExoticComponent<ComponentType> | undefined => {
+  switch (currentWidget) {
+    case 'ANNOUNCEMENT':
+      return AnnouncementDisplaySettings
+    case 'EVENT_TIMER':
+      return EventTimerDisplaySettings
+    // case 'NOTIFICATION':
+    //   return NotificationPreview
+    // case 'FAB_MENU':
+    //   return FABMenuPreview
+    case 'ACTION_TIMER':
+      return ActionTimerDisplaySettings
+  }
+}
+
+const getWidgetPreview = (
+  currentWidget: WidgetTypeEnum
+): LazyExoticComponent<ComponentType<{ onClose?: () => void }>> | undefined => {
+  switch (currentWidget) {
+    case 'ANNOUNCEMENT':
+      return AnnouncementPreview
+    case 'EVENT_TIMER':
+      return EventTimerPrreview
+    case 'NOTIFICATION':
+      return NotificationPreview
+    case 'FAB_MENU':
+      return FABMenuPreview
+    case 'ACTION_TIMER':
+      return ActionTimerPreview
+  }
+}
 
 const getSaveWidgetConfigThunk = async (currentWidget: WidgetTypeEnum) => {
   switch (currentWidget) {
@@ -224,6 +287,7 @@ const EditWidgetPage = () => {
     //   setIsInlinePreviewOpen(true)
     //   return
     // }
+    setIsInlinePreviewOpen(true)
     setIsPreviewModalOpen(true)
     setPreviewScreen('main')
   }
@@ -234,6 +298,7 @@ const EditWidgetPage = () => {
 
   const handleCloseInlinePreview = () => {
     setIsInlinePreviewOpen(false)
+    setIsPreviewModalOpen(false)
   }
 
   const handleSave = async () => {
@@ -396,7 +461,7 @@ const EditWidgetPage = () => {
     }
   }, [tab, visibleTabs])
 
-  // if (!initialized) return null
+  if (!widgetType) return null
 
   const tabsBar = (
     <div className="w-full bg-[#F5F6F8] border border-[#E6E6E6] rounded-[5px] p-1.5 gap-2 flex flex-wrap items-center justify-between">
@@ -435,6 +500,9 @@ const EditWidgetPage = () => {
     </div>
   )
 
+  const Preview = getWidgetPreview(widgetType)
+  const Display = getWidgetDisplaySettings(widgetType)
+
   return (
     <>
       <div className="h-full flex flex-col">
@@ -457,7 +525,7 @@ const EditWidgetPage = () => {
                 // </Suspense>
               )}
               {/* {tab === 'display' && showDisplayTab && <DisplaySettingsTab />} */}
-              {tab === 'display' && showDisplayTab && <div>Display</div>}
+              {tab === 'display' && showDisplayTab && Display && <Display />}
               {/* {tab === 'integration' && showIntegrationTab && <IntegrationTab />} */}
               {tab === 'integration' && showIntegrationTab && <div>Integration</div>}
               <div ref={bottomRef} aria-hidden="true" className="sentinelBot"></div>
@@ -466,6 +534,13 @@ const EditWidgetPage = () => {
         </DashboardLayout>
       </div>
 
+      {isInlinePreviewOpen && Preview && (
+        <InlinePreviewPortal
+          isOpen={isInlinePreviewOpen}
+          onClose={handleCloseInlinePreview}
+          Component={Preview}
+        />
+      )}
       {/* {previewLauncher === 'inline' && InlinePreviewComponent ? (
         <InlinePreviewPortal
           isOpen={isInlinePreviewOpen}
@@ -489,7 +564,7 @@ export default memo(EditWidgetPage)
 type InlinePreviewPortalProps = {
   isOpen: boolean
   onClose: () => void
-  Component: ComponentType<{ onClose: () => void }>
+  Component: LazyExoticComponent<ComponentType<{ onClose?: () => void }>>
 }
 
 const InlinePreviewPortal = ({ isOpen, onClose, Component }: InlinePreviewPortalProps) => {

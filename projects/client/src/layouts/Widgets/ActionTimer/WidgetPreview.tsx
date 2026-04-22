@@ -19,6 +19,7 @@ import {
   selectRewardScreenEnabled,
 } from './actionTimerSlice'
 import useUrlImage from '@/hooks/useUrlImage'
+import { FadeInOut } from '@/components'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
 
@@ -96,7 +97,7 @@ const Content = ({ reward }: ContentProps) => {
     <div
       className={cn(
         'scale-40 origin-top-left pointer-events-none',
-        'ml-6 mt-2.5',
+        'ml-6 mt-2.5 transition-height duration-350',
       )}
       style={{
         height: contentRect
@@ -117,7 +118,7 @@ const Content = ({ reward }: ContentProps) => {
         )}
         style={dialogContentStyles}
       >
-        {rewardScreenEnabled && reward
+        {reward
           ? <ActionTimerRewardScreen />
           : <ActionTimerContent onButtonPress={() => {}} />
         }
@@ -152,14 +153,14 @@ const WidgetPreview = () => {
         </span>
         <Content />
 
-        {rewardScreenEnabled && (
+        <FadeInOut visible={rewardScreenEnabled}>
           <div className='mb-10 flex flex-col'>
             <span className='text-xs self-center mt-3 mb-1.5'>
               Экран выигрыша
             </span>
             <Content reward />
           </div>
-        )}
+        </FadeInOut>
       </div>
     </div>
   )

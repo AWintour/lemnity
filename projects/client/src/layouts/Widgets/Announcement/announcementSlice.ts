@@ -60,6 +60,10 @@ import {
   mobileSettingsReducers,
   mobileSettingsSelectors,
 } from '@/stores/redux/features/mobileTrigger'
+import {
+  triggerPositionReducer,
+  selectTriggerPosition as selectTriggerPositionFeature,
+} from '@/stores/redux/features/triggerSettings'
 
 import {
   WidgetTypeEnum,
@@ -93,6 +97,8 @@ export const saveAnnouncementWidget = saveWidgetThunkFactory(
       state.announcement!.mobileSettings,
     brandingEnabled:
       state.announcement!.brandingEnabled,
+    trigger:
+      state.announcement!.trigger,
   })
 )
 
@@ -176,6 +182,10 @@ export const initialState: AnnouncementWidgetState = {
   },
 
   brandingEnabled: true,
+
+  trigger: {
+    triggerPosition: 'bottom-right',
+  },
 }
 
 // i cannot both import these names and export them form the injected slice's
@@ -254,6 +264,9 @@ export const announcementSlice = createSlice({
     ...infoScreenReducers,
     ...rewardScreenReducers,
     ...mobileSettingsReducers,
+    
+    triggerPositionChanged:
+      triggerPositionReducer,
 
     colorsReset: (state) => {
       state.appearence.backgroundColor =
@@ -290,6 +303,9 @@ export const announcementSlice = createSlice({
     ...infoScreenSelectors,
     ...rewardScreenSelectors,
     ...mobileSettingsSelectors,
+
+    selectTriggerPosition:
+      selectTriggerPositionFeature,
   },
   extraReducers: (builder) => {
     builder
@@ -317,6 +333,7 @@ export const announcementSlice = createSlice({
           rewardMessageSettings,
           mobileSettings,
           brandingEnabled,
+          trigger,
         } = settings as AnnouncementWidgetType
 
         state.appearence = appearence
@@ -324,6 +341,8 @@ export const announcementSlice = createSlice({
         state.rewardMessageSettings = rewardMessageSettings
         state.mobileSettings = mobileSettings
         state.brandingEnabled = brandingEnabled
+        state.trigger = trigger
+          ?? initialState.trigger
       })
       .addCase(fetchAnnouncementWidget.rejected, (state, action) => {
         state.fetchStatus = 'rejected'
@@ -385,6 +404,7 @@ export const {
 
   colorsReset,
   brandingEnabledChanged,
+  triggerPositionChanged,
 } = announcementSlice.actions
 
 declare module '@/stores/redux/reducer' {
@@ -450,6 +470,7 @@ export const {
   selectMobileImageUrl,
 
   selectWidgetType,
+  selectTriggerPosition,
 } = injectedAnnouncementSlice.selectors
 
 export default injectedAnnouncementSlice.reducer

@@ -18,6 +18,7 @@ import {
   colorSchemeChanged,
   selectContentPlacement,
   contentPlacementChanged,
+  colorsReset,
 } from '../actionTimerSlice'
 import type { ColorScheme } from '@lemnity/widget-config/widgets/base'
 import type {
@@ -59,6 +60,7 @@ export const useWidgetAppearenceSettings = () => {
   }
   const onColorSchemeChange = (value: ColorScheme) => {
     dispatch(colorSchemeChanged(value))
+    dispatch(colorsReset())
   }
   const onBackgroundColorChange = (value: string) => {
     dispatch(backgroundColorChanged(value))

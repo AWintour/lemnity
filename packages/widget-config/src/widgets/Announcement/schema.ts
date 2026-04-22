@@ -12,6 +12,7 @@ import {
 import { WidgetAppearenceSchema } from '../../features/widgetAppearence.js'
 import { RewardMessageSettingsSchema } from '../../features/rewardMessage.js'
 import { MobileSchema } from '../../features/mobileTrigger.js'
+import { TriggerSchema } from '../../features/trigger.js'
 
 const WidgetType: WidgetTypeId = 'ANNOUNCEMENT'
 
@@ -53,6 +54,9 @@ const AnnouncementWidgetSchema = z.object({
   infoSettings: InfoSettingsSchema,
   rewardMessageSettings: RewardMessageSettingsSchema,
   mobileSettings: MobileSchema,
+  trigger: TriggerSchema.pick({
+    triggerPosition: true,
+  }),
   brandingEnabled: z.boolean(),
 })
 

@@ -10,19 +10,25 @@ import {
   selectMobileTriggerText,
   selectMobileTriggerFontColor,
   selectMobileTriggerBackgroundColor,
+  selectTriggerPosition,
 } from '../announcementSlice'
 import { useMobileContext } from './MobileContext'
 
 type MobileWidgetTriggerProps = Pick<HTMLProps<HTMLElement>, 'children'>
 
 const MobileWidgetTrigger = (props: MobileWidgetTriggerProps) => {
-  const imageUrl = useAppSelector(selectMobileImageUrl)
-  const triggerType = useAppSelector(selectMobileTriggerType)
-  const triggerText = useAppSelector(selectMobileTriggerText)
-  const triggerFontColor = useAppSelector(selectMobileTriggerFontColor)
-  const triggerBackgroundColor = useAppSelector(
-    selectMobileTriggerBackgroundColor
-  )
+  const imageUrl =
+    useAppSelector(selectMobileImageUrl)
+  const triggerType =
+    useAppSelector(selectMobileTriggerType)
+  const triggerText =
+    useAppSelector(selectMobileTriggerText)
+  const triggerFontColor =
+    useAppSelector(selectMobileTriggerFontColor)
+  const triggerBackgroundColor =
+    useAppSelector(selectMobileTriggerBackgroundColor)
+  const triggerPosition =
+    useAppSelector(selectTriggerPosition)
 
   const {
     base64Image,
@@ -49,7 +55,14 @@ const MobileWidgetTrigger = (props: MobileWidgetTriggerProps) => {
   }
 
   return (
-    <div className='fixed bottom-6 right-6 z-2039283'>
+    <div
+      className={cn(
+        'fixed bottom-6 z-2039283',
+        triggerPosition === 'bottom-right'
+          ? 'right-6'
+          : 'left-6',
+      )}
+    >
       {triggerType === 'image'
         ? (
           !isLoading && imageUrl && (

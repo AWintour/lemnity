@@ -21,6 +21,7 @@ import ButtonAppearenceSettings from './ButtonAppearenceSettings'
 import AgreementAndPolicy from './AgreementAndPolicy'
 import ColorPicker from './ColorPicker'
 import TextSettings from './TextSettings'
+import WidgetTrigger from './WidgetTrigger'
 
 export {
   Input,
@@ -45,4 +46,5 @@ export {
   AgreementAndPolicy,
   ColorPicker,
   TextSettings,
+  WidgetTrigger,
 }

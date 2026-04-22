@@ -15,6 +15,7 @@ import { CountdownSchema } from '../../features/countdown.js'
 import { AgreementSchema } from '../../features/agreement.js'
 import { AdsInfoSchema } from '../../features/adsInfo.js'
 import { ContactAcquisitionSchema } from '../../features/contactAcquisition.js'
+import { TriggerSchema } from '../../features/trigger.js'
 
 const WidgetType: WidgetTypeId = 'EVENT_TIMER'
 
@@ -75,6 +76,9 @@ const EventTimerWidgetSchema = z.object({
   formSettings: FormSettingsSchema,
   rewardMessageSettings: RewardMessageSettingsSchema,
   mobileSettings: MobileSchema,
+  trigger: TriggerSchema.pick({
+    triggerPosition: true,
+  }),
   brandingEnabled: z.boolean(),
 })
 

@@ -50,6 +50,10 @@ import {
   selectTextBeforeCountdown as featSelectTextBeforeCountdown,
   selectTextBeforeCountdownColor as featSelectTextBeforeCountdownColor,
 } from '@/stores/redux/features/countdown'
+import {
+  triggerSettingsReducers,
+  triggerSettingsSelectors,
+} from '@/stores/redux/features/triggerSettings'
 
 import {
   WidgetTypeEnum,
@@ -198,6 +202,16 @@ export const initialState: ActionTimerWidgetState = {
   },
 
   brandingEnabled: true,
+
+  trigger: {
+    triggerText: 'Получите скидку',
+    triggerBackgroundColor: '#5951E5',
+    triggerFontColor: '#FFFFFF',
+    triggerIcon: 'Sparkles',
+    triggerPosition: 'bottom-right',
+    triggerImageUrl: '',
+    triggerVariant: 'button',
+  },
 }
 
 const countdownReducers = {
@@ -241,6 +255,7 @@ export const actionTimerSlice = createSlice({
     ...agreementReducers,
     ...adsInfoReducers,
     ...rewardScreenReducers,
+    ...triggerSettingsReducers,
 
     contentTypeChanged:
       (state, action: PayloadAction<Content>) => {
@@ -335,6 +350,52 @@ export const actionTimerSlice = createSlice({
       (state, action: PayloadAction<string>) => {
         state.formBorderColor = action.payload
       },
+    
+    colorsReset:
+      (state) => {
+        state.appearence.backgroundColor =
+          initialState.appearence.backgroundColor
+        state.countdown.countdownBackgroundColor =
+          initialState.countdown.countdownBackgroundColor
+        state.countdown.countdownFontColor =
+          initialState.countdown.countdownFontColor
+        state.countdown.textBeforeCountdownColor =
+          initialState.countdown.textBeforeCountdownColor
+        state.agreement.color =
+          initialState.agreement.color
+        state.adsInfo.color =
+          initialState.adsInfo.color
+        state.rewardMessageSettings.titleFontColor =
+          initialState.rewardMessageSettings.titleFontColor
+        state.rewardMessageSettings.descriptionFontColor =
+          initialState.rewardMessageSettings.descriptionFontColor
+        state.rewardMessageSettings.discountFontColor =
+          initialState.rewardMessageSettings.discountFontColor
+        state.rewardMessageSettings.promoFontColor =
+          initialState.rewardMessageSettings.promoFontColor
+        state.rewardMessageSettings.customDiscountBackgroundColor =
+          initialState.rewardMessageSettings.customDiscountBackgroundColor
+        state.rewardMessageSettings.customPromoBackgroundColor =
+          initialState.rewardMessageSettings.customPromoBackgroundColor
+        state.trigger.triggerBackgroundColor =
+          initialState.trigger.triggerBackgroundColor
+        state.trigger.triggerFontColor =
+          initialState.trigger.triggerFontColor
+        state.badgeBackgroundColor =
+          initialState.badgeBackgroundColor
+        state.badgeFontColor =
+          initialState.badgeFontColor
+        state.titleColor =
+          initialState.titleColor
+        state.descriptionColor =
+          initialState.descriptionColor
+        state.buttonFontColor =
+          initialState.buttonFontColor
+        state.buttonBackgroundColor =
+          initialState.buttonBackgroundColor
+        state.formBorderColor =
+          initialState.formBorderColor
+      },
   },
   selectors: {
     ...commonSelectors,
@@ -344,6 +405,7 @@ export const actionTimerSlice = createSlice({
     ...agreementSelectors,
     ...adsInfoSelectors,
     ...rewardScreenSelectors,
+    ...triggerSettingsSelectors,
 
     selectContentType:
       (state) => state.contentType,
@@ -627,6 +689,7 @@ export const actionTimerSlice = createSlice({
 
         return {
           ...settings,
+          trigger: settings.trigger || initialState.trigger,
           type: 'ACTION_TIMER',
           widgetId: payload?.id,
           projectId: payload?.projectId,
@@ -711,6 +774,14 @@ export const {
   rewardTitleFontSizeChanged,
   rewardTitleFontWeightChanged,
   rewardScreenEnabledChanged,
+  triggerBackgroundColorChanged,
+  triggerFontColorChanged,
+  triggerIconChanged,
+  triggerImageUrlChanged,
+  triggerPositionChanged,
+  triggerTextChanged,
+  triggerVariantChanged,
+  colorsReset,
 } = actionTimerSlice.actions
 
 declare module '@/stores/redux/reducer' {
@@ -795,4 +866,11 @@ export const {
   selectTitleColor,
   selectTitleFontSize,
   selectTitleFontWeight,
+  selectTriggerBackgroundColor,
+  selectTriggerFontColor,
+  selectTriggerIcon,
+  selectTriggerPosition,
+  selectTriggerText,
+  selectTriggerVariant,
+  selectTrriggerImageUrl,
 } = injectedActionTimerSlice.selectors

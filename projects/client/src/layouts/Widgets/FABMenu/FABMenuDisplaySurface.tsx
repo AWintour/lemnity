@@ -27,12 +27,12 @@ const ALLOWED_POSITIONS: FABMenuPosition[] = ['bottom-left', 'bottom-right']
 const FABMenuDisplaySurface = () => {
   const triggerText =
     useAppSelector(selectTriggerText)
-  const triggerTextColor =
+  const triggerFontColor =
     useAppSelector(selectTriggerTextColor)
-      || initialState.triggerTextColor
+      || initialState.trigger.triggerFontColor
   const triggerBackgroundColor =
     useAppSelector(selectTriggerBackgroundColor)
-      || initialState.triggerBackgroundColor
+      || initialState.trigger.triggerBackgroundColor
   const triggerIcon =
     useAppSelector(selectTriggerIcon)
   const triggerPosition =
@@ -77,7 +77,7 @@ const FABMenuDisplaySurface = () => {
         onFontColorChange={setFABMenuTriggerTextColor}
         onBackgroundColorChange={setFABMenuTriggerBackgroundColor}
         buttonText={triggerText}
-        buttonTextColor={triggerTextColor}
+        buttonTextColor={triggerFontColor}
         buttonBackgroundColor={triggerBackgroundColor}
         buttonIcon={triggerIcon}
       />

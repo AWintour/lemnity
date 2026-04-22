@@ -1,109 +1,124 @@
+import type { TriggerVariant } from '@lemnity/widget-config/features/trigger'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface ITriggerText {
-  triggerText: string
+  trigger: { triggerText: string }
 }
 
 export const triggerTextReducer =
   <TState extends ITriggerText>(
     state: TState,
-    action: PayloadAction<TState['triggerText']>
+    action: PayloadAction<TState['trigger']['triggerText']>
   ) => {
-    state.triggerText = action.payload
+    state.trigger.triggerText = action.payload
   }
 
 export const selectTriggerText =
   <TState extends ITriggerText>(state: TState) =>
-    state.triggerText
+    state.trigger.triggerText
 
 
 export interface ITriggerBackgroundColor {
-  triggerBackgroundColor: string
+  trigger: { triggerBackgroundColor: string }
 }
 
 export const triggerBackgroundColorReducer =
   <TState extends ITriggerBackgroundColor>(
     state: TState,
-    action: PayloadAction<TState['triggerBackgroundColor']>
+    action: PayloadAction<TState['trigger']['triggerBackgroundColor']>
   ) => {
-    state.triggerBackgroundColor = action.payload
+    state.trigger.triggerBackgroundColor = action.payload
   }
 
 export const selectTriggerBackgroundColor =
   <TState extends ITriggerBackgroundColor>(state: TState) =>
-    state.triggerBackgroundColor
+    state.trigger.triggerBackgroundColor
 
 
 export interface ITriggerFontColor {
-  triggerFontColor: string
+  trigger: { triggerFontColor: string }
 }
 
 export const triggerFontColorReducer =
   <TState extends ITriggerFontColor>(
     state: TState,
-    action: PayloadAction<TState['triggerFontColor']>
+    action: PayloadAction<TState['trigger']['triggerFontColor']>
   ) => {
-    state.triggerFontColor = action.payload
+    state.trigger.triggerFontColor = action.payload
   }
 
 export const selectTriggerFontColor =
   <TState extends ITriggerFontColor>(state: TState) =>
-    state.triggerFontColor
-
-
-// becasuse i was an idiot and named a field triggerTextColor instead of
-// triggerFontColor in FABMenu long ago and now i have to keep this reducer
-// and selector for backward compatibility
-export interface ITriggerTextColor {
-  triggerTextColor: string
-}
-
-export const triggerTextColorReducer =
-  <TState extends ITriggerTextColor>(
-    state: TState,
-    action: PayloadAction<TState['triggerTextColor']>
-  ) => {
-    state.triggerTextColor = action.payload
-  }
-
-export const selectTriggerTextColor =
-  <TState extends ITriggerTextColor>(state: TState) =>
-    state.triggerTextColor
+    state.trigger.triggerFontColor
 
 
 export interface ITriggerIcon {
-  triggerIcon: Icon
+  trigger: { triggerIcon: Icon }
 }
 
 export const triggerIconReducer =
   <TState extends ITriggerIcon>(
     state: TState,
-    action: PayloadAction<TState['triggerIcon']>
+    action: PayloadAction<TState['trigger']['triggerIcon']>
   ) => {
-    state.triggerIcon = action.payload
+    state.trigger.triggerIcon = action.payload
   }
 
 export const selectTriggerIcon =
   <TState extends ITriggerIcon>(state: TState) =>
-    state.triggerIcon
+    state.trigger.triggerIcon
 
 
 export interface ITriggerPosition {
-  triggerPosition: 'bottom-left' | 'bottom-right'
+  trigger: { triggerPosition: 'bottom-left' | 'bottom-right' }
 }
 
 export const triggerPositionReducer =
   <TState extends ITriggerPosition>(
     state: TState,
-    action: PayloadAction<TState['triggerPosition']>
+    action: PayloadAction<TState['trigger']['triggerPosition']>
   ) => {
-    state.triggerPosition = action.payload
+    state.trigger.triggerPosition = action.payload
   }
 
 export const selectTriggerPosition =
   <TState extends ITriggerPosition>(state: TState) =>
-    state.triggerPosition
+    state.trigger.triggerPosition
+
+
+export interface ITriggerVariant {
+  trigger: { triggerVariant: TriggerVariant }
+}
+
+export const triggerVariantReducer =
+  <TState extends ITriggerVariant>(
+    state: TState,
+    action: PayloadAction<TState['trigger']['triggerVariant']>
+  ) => {
+    state.trigger.triggerVariant = action.payload
+  }
+
+export const selectTriggerVariant =
+  <TState extends ITriggerVariant>(state: TState) =>
+    state.trigger.triggerVariant
+
+
+export interface ITriggerImageUrl {
+  trigger: { triggerImageUrl: string }
+}
+
+export const triggerImageUrlReducer =
+  <TState extends ITriggerImageUrl>(
+    state: TState,
+    action: PayloadAction<TState['trigger']['triggerImageUrl']>
+  ) => {
+    state.trigger.triggerImageUrl = action.payload
+  }
+
+export const selectTrriggerImageUrl =
+  <TState extends ITriggerImageUrl>(state: TState) =>
+    state.trigger.triggerImageUrl
 
 
 export const triggerSettingsReducers = {
@@ -117,6 +132,10 @@ export const triggerSettingsReducers = {
     triggerIconReducer,
   triggerPositionChanged:
     triggerPositionReducer,
+  triggerVariantChanged:
+    triggerVariantReducer,
+  triggerImageUrlChanged:
+    triggerImageUrlReducer,
 }
 
 export const triggerSettingsSelectors = {
@@ -125,4 +144,6 @@ export const triggerSettingsSelectors = {
   selectTriggerFontColor,
   selectTriggerIcon,
   selectTriggerPosition,
+  selectTriggerVariant,
+  selectTrriggerImageUrl,
 }
