@@ -1,29 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { createPortal } from 'react-dom'
 import { cn } from '@heroui/theme'
 
 import NotificationEmbedRuntime from './embedded/embedRuntime'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 
-import type {
-  NotificationWidgetType,
-} from '@lemnity/widget-config/widgets/notification'
-import { notificationWidgetDefaults as defaults } from './defaults'
+import { useAppSelector } from '@/stores/redux/hooks'
+import { selectTriggerPosition } from './notificationSlice'
+
 type FloatingPreviewProps = {
-  onClose: () => void
+  onClose?: () => void
 }
 
 const NotificationFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   const [mounted, setMounted] = useState(false)
 
-  const triggerPosition = useWidgetSettingsStore(
-    useShallow(s => {
-      const settings = (s.settings?.widget as NotificationWidgetType)
-      return settings.triggerPosition
-          ?? defaults.triggerPosition
-    })
-  )
+  const triggerPosition = useAppSelector(selectTriggerPosition)
 
   useEffect(() => {
     setMounted(true)
@@ -33,7 +24,7 @@ const NotificationFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   if (typeof document === 'undefined' || !mounted) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-1200 bg-black/20 backdrop-blur-sm flex">
+    <div className='fixed inset-0 z-1200 bg-black/20 backdrop-blur-sm flex'>
       <button
         type="button"
         onClick={onClose}

@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+// import { analyzer, adapter } from 'vite-bundle-analyzer'
 
 export default defineConfig({
   plugins: [
@@ -12,7 +13,28 @@ export default defineConfig({
     }),
     tailwindcss(),
     tsconfigPaths(),
+    // analyzer(),
+    // adapter(analyzer()),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: [
+            'react',
+            'react-dom',
+            'react-dom/client',
+            'react-redux',
+            '@reduxjs/toolkit',
+            'axios',
+          ],
+          www: [
+            'react-router-dom',
+          ],
+        },
+      },
+    },
+  },
   server: {
     host: true,
     port: 5173,

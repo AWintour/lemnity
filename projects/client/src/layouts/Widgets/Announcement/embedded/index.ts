@@ -1,3 +1,3 @@
-import CountdownAnnouncementEmbedRuntime from './embedRuntime'
+import AnnouncementEmbedRuntime from './embedRuntime'
 
-export { CountdownAnnouncementEmbedRuntime }
+export { AnnouncementEmbedRuntime }

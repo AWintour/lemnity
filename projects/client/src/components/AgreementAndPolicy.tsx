@@ -5,7 +5,6 @@ import { cn } from '@heroui/theme'
 import SwitchableField from '@/components/SwitchableField'
 import ColorPicker from '@/components/ColorPicker'
 import { useElementSize } from '@/hooks/useElementSize'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 
 const inputStyles = {
   base: 'min-w-76 flex-1',
@@ -32,7 +31,6 @@ type AgreementAndPolicyProps = {
     agreementUrl?: string
     color: string
   }
-  errorPath: string
   onToggle: (nextEnabled: boolean) => void
   onFontColorChange: (value: string) => void
   onAgreementUrlChange?: (value: string) => void
@@ -40,11 +38,7 @@ type AgreementAndPolicyProps = {
 }
 
 const AgreementAndPolicy = (props: AgreementAndPolicyProps) => {
-  const showValidation = useWidgetSettingsStore(s => s.validationVisible)
-  const getErrors = useWidgetSettingsStore(s => s.getErrors)
-  const errors = showValidation
-    ? getErrors(props.errorPath)
-    : []
+  const errors: any[] = []
 
   const containerDivRef = useRef<HTMLDivElement>(null)
   const { width: containerWidth } = useElementSize(containerDivRef)

@@ -17,14 +17,16 @@ import { cn } from '@heroui/theme'
 import { PatternFormat } from 'react-number-format'
 import { useState } from 'react'
 import useDebouncedCallback from '@/hooks/useDebouncedCallback'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
+import { sectorUpdated, selectSectorById } from './FABMenuSlice'
 
 type FABSectorItemProps = {
-  sector: FABMenuSectorItem
-  onLabelChange: (label: string) => void
-  onPayloadTypeChange: (type: FABMenuPayloadType) => void
-  onPayloadValueChange: (value: string) => void
-  onColorChange: (color: string) => void
-  onHelperChange: (helper: string) => void
+  id: string
+  // onLabelChange: (label: string) => void
+  // onPayloadTypeChange: (type: FABMenuPayloadType) => void
+  // onPayloadValueChange: (value: string) => void
+  // onColorChange: (color: string) => void
+  // onHelperChange: (helper: string) => void
   isPendingSelection?: boolean
 }
 
@@ -175,13 +177,27 @@ const PayloadInput = (props: PayloadInputProps) => {
 }
 
 const FABSectorItem = ({
-  sector,
-  onLabelChange,
-  onPayloadTypeChange,
-  onPayloadValueChange,
+  id,
+  // onLabelChange,
+  // onPayloadTypeChange,
+  // onPayloadValueChange,
   isPendingSelection
 }: FABSectorItemProps) => {
+  const sector = useAppSelector(state => selectSectorById(state, id))
+
   const [isInputInvalid, setIsInputInvalid] = useState(false)
+
+  const dispatch = useAppDispatch()
+
+  const onLabelChange = (label: string) => {
+    dispatch(sectorUpdated({ id, label }))
+  }
+  const onPayloadTypeChange = (type: FABMenuPayloadType) => {
+    dispatch(sectorUpdated({ id, payload: { ...sector.payload, type } }))
+  }
+  const onPayloadValueChange = (value: string) => {
+    dispatch(sectorUpdated({ id, payload: { ...sector.payload, value } }))
+  }
 
   const handlePayloadTypeChange = (keys: SharedSelection) => {
     const next = Array.from(keys)[0]

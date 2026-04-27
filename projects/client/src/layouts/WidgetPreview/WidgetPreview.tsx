@@ -1,18 +1,67 @@
-import WidgetPreviewLayout from './WidgetPreviewLayout/WidgetPreviewLayout'
-import useWidgetPreviewStore from '@/stores/widgetPreviewStore'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { getWidgetDefinition } from '../Widgets/registry'
+import { lazy, type ReactNode } from "react"
 
-const WidgetPreview = () => {
-  const mode = useWidgetPreviewStore(s => s.mode)
-  const { widgetType } = useWidgetSettingsStore(s => s?.settings) || {}
-  const definition = widgetType && getWidgetDefinition(widgetType)
-  const PanelComponent = definition?.preview?.panel
+import { WidgetTypeEnum } from '@lemnity/api-sdk/models'
+import { useAppSelector } from '@/stores/redux/hooks'
+import { selectCurrentWidget } from '@/stores/redux/editorSlice'
+
+const NotificationWidget = lazy(
+  () => import('@/layouts/Widgets/Notification/WidgetPreview')
+)
+const AnnouncementWidget = lazy(
+  () => import('@/layouts/Widgets/Announcement/WidgetPreview')
+)
+const EventTimerWidget = lazy(
+  () => import('@/layouts/Widgets/EventTimer/WidgetPreview')
+)
+const FABMenuWidget = lazy(
+  () => import('@/layouts/Widgets/FABMenu/WidgetPreview')
+)
+const ActionTimerWidget = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/WidgetPreview')
+)
+
+type WidgetProps = {
+  widgetType: WidgetTypeEnum | null
+}
+
+const Widget = ({ widgetType }: WidgetProps) => {
+  switch (widgetType) {
+    case WidgetTypeEnum.NOTIFICATION:
+      return <NotificationWidget />
+    case WidgetTypeEnum.ANNOUNCEMENT:
+      return <AnnouncementWidget />
+    case WidgetTypeEnum.EVENT_TIMER:
+      return <EventTimerWidget />
+    case WidgetTypeEnum.FAB_MENU:
+      return <FABMenuWidget />
+    case WidgetTypeEnum.ACTION_TIMER:
+      return <ActionTimerWidget />
+    default:
+      return null
+  }
+}
+
+type WidgetPreviewProps = {
+  children?: ReactNode
+}
+
+const WidgetPreview = ({ children }: WidgetPreviewProps) => {
+  const widgetType = useAppSelector(selectCurrentWidget)
 
   return (
-    <WidgetPreviewLayout>
-      {PanelComponent ? <PanelComponent mode={mode} /> : null}
-    </WidgetPreviewLayout>
+    <div className="flex flex-col gap-3.75 h-full">
+      <span className="text-[22px] leading-6.5 font-normal text-[#060606]">
+        Предпросмотр
+      </span>
+
+      {/* {widgetType === WidgetTypeEnum.ACTION_TIMER
+       || widgetType === WidgetTypeEnum.ANNOUNCEMENT
+       || widgetType === WidgetTypeEnum.NOTIFICATION
+         ? null
+         : tabs()
+      } */}
+      {<Widget widgetType={widgetType} />}
+    </div>
   )
 }
 

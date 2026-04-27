@@ -15,6 +15,13 @@ import CustomRadioGroup, {
 import ImageUploader from './ImageUploader'
 import CountdownTimer from './CountdownTimer'
 import SvgIcon from './SvgIcon'
+import DisableBranding from './DisableBranding'
+import ButtonPositionChooser from './ButtonPositionChooser'
+import ButtonAppearenceSettings from './ButtonAppearenceSettings'
+import AgreementAndPolicy from './AgreementAndPolicy'
+import ColorPicker from './ColorPicker'
+import TextSettings from './TextSettings'
+import WidgetTrigger from './WidgetTrigger'
 
 export {
   Input,
@@ -33,4 +40,11 @@ export {
   ImageUploader,
   CountdownTimer,
   SvgIcon,
+  DisableBranding,
+  ButtonPositionChooser,
+  ButtonAppearenceSettings,
+  AgreementAndPolicy,
+  ColorPicker,
+  TextSettings,
+  WidgetTrigger,
 }

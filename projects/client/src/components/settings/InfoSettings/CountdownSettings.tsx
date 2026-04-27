@@ -4,16 +4,22 @@ import { type ZonedDateTime } from '@internationalized/date'
 
 import SwitchableField from '@/components/SwitchableField'
 import ColorPicker from '@/components/ColorPicker'
+import Input from '@/components/Input'
 
 type CountdownSettingsProps = {
-  enabled: boolean
+  enabled?: boolean
   date: ZonedDateTime
   backgroundColor: string
   fontColor: string
+  textEnabled?: boolean
+  text?: string
+  textColor?: string
   onToggle: (nextEnabled: boolean) => void
   onDateChange: (value: ZonedDateTime | null) => void
   onBackgroundColorChange: (value: string) => void
   onFontColorChange: (value: string) => void
+  onTextChange?: (value: string) => void
+  onTextColorChange?: (value: string) => void
 }
 
 const CountdownSettings = (props: CountdownSettingsProps) => {
@@ -26,10 +32,25 @@ const CountdownSettings = (props: CountdownSettingsProps) => {
         title: 'text-[16px] leading-4.75 font-normal',
       }}
     >
+      {props.textEnabled && (
+        <div className="w-full flex flex-row flex-wrap gap-2.5 mb-2.5">
+          <Input
+            value={props.text}
+            placeholder='До мероприятия осталось:'
+            onValueChange={props.onTextChange}
+          />
+          <ColorPicker
+            initialColor={props.textColor!}
+            onColorChange={props.onTextColorChange!}
+            popoverPlacement='bottom-end'
+          />
+        </div>
+      )}
+
       <div className="w-full flex flex-row flex-wrap gap-2.5">
         <DateInput
           hourCycle={24}
-          defaultValue={props.date}
+          value={props.date}
           onChange={props.onDateChange}
           classNames={{
             base: 'min-w-76 flex-1',

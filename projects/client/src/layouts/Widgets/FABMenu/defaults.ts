@@ -1,19 +1,12 @@
-import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import type {
   FABMenuIconKey,
   FABMenuSectorItem,
-  FABMenuWidgetSettings
 } from '@/layouts/Widgets/FABMenu/types'
-import type {
-  DisplaySettings,
-  FieldsSettings,
-  IntegrationSettings
-} from '@/stores/widgetSettings/types'
-import { FAB_MENU_BUTTON_PRESETS } from '@/layouts/Widgets/FABMenu/buttonLibrary'
-import { uuidv4 } from '@/common/utils/uuidv4'
-import { buildStandardDisplaySettings } from '@/stores/widgetSettings/displayDefaults'
 
-const createSectorId = (): string => uuidv4()
+import { FAB_MENU_BUTTON_PRESETS } from '@/layouts/Widgets/FABMenu/buttonLibrary'
+import { nanoid } from '@reduxjs/toolkit'
+
+const createSectorId = (): string => nanoid()
 
 const createSector = (segment: Omit<FABMenuSectorItem, 'id'>): FABMenuSectorItem => ({
   id: createSectorId(),
@@ -40,17 +33,6 @@ const DEFAULT_PRESET_ICONS: FABMenuIconKey[] = [
   // 'ok'
 ]
 
-const DEFAULT_SECTORS: Omit<FABMenuSectorItem, 'id'>[] = DEFAULT_PRESET_ICONS.map(icon => {
-  const preset = presetByIcon(icon)
-  return {
-    label: preset.label,
-    icon: preset.icon,
-    payload: preset.payload,
-    color: preset.color,
-    description: preset.description
-  }
-})
-
 export const createDefaultFABMenuSector = (): FABMenuSectorItem =>
   createSector({
     label: 'Новая кнопка',
@@ -66,24 +48,3 @@ export const createPlaceholderFABMenuSector = (): FABMenuSectorItem =>
     payload: presetByIcon('custom').payload,
     color: presetByIcon('custom').color
   })
-
-export const buildFABMenuWidgetSettings = (): FABMenuWidgetSettings => ({
-  type: WidgetTypeEnum.FAB_MENU,
-  sectors: {
-    items: DEFAULT_SECTORS.map(createSector)
-  },
-  triggerTextColor: '#FFFFFF',
-  triggerBackgroundColor: '#5951E5',
-  triggerText: 'Супер-кнопка',
-  triggerIcon: 'Sparkles'
-})
-
-export const buildFABMenuFieldsSettings = (): FieldsSettings => ({}) as FieldsSettings
-
-export const buildFABMenuDisplaySettings = (): DisplaySettings => {
-  const defaults = buildStandardDisplaySettings()
-  return { ...defaults, icon: { ...defaults.icon, position: 'bottom-right' } }
-}
-
-export const buildFABMenuIntegrationSettings = (): IntegrationSettings =>
-  ({}) as IntegrationSettings

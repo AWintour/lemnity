@@ -6,6 +6,10 @@ import iconBin from '@/assets/icons/bin.svg'
 import iconAdd from '@/assets/icons/add.svg'
 import iconArrowDown from '@/assets/icons/arrow-down.svg'
 import iconArrowUp from '@/assets/icons/arrow-up.svg'
+import type { RootState } from '@/stores/redux/store'
+import type { EntitySelectors } from '@reduxjs/toolkit'
+
+import { useAppSelector } from '@/stores/redux/hooks'
 
 type MoveUpButtonProps = {
   index: number
@@ -46,13 +50,16 @@ export type EditableListItem<T> = T & {
   id: string
 }
 
+type TypedEntitySelectors<T> =
+  EntitySelectors<EditableListItem<T>, RootState, string>
+
 export type EditableListProps<T> = {
-  items: EditableListItem<T>[]
-  onItemsChange: (items: EditableListItem<T>[]) => void
-  renderItem: (item: EditableListItem<T>, index: number) => ReactNode
-  renderBelow?: (item: EditableListItem<T>, index: number) => ReactNode
+  idsSelector: TypedEntitySelectors<T>['selectIds']
+  onItemsReorder: (ids: string[]) => void
+  renderItem: (id: string) => ReactNode
+  renderBelow?: (id: string) => ReactNode
   onAdd?: () => void
-  onDelete?: (item: EditableListItem<T>, index: number) => void
+  onDelete?: (id: string) => void
   addButtonLabel?: string
   maxItems?: number
   minItems?: number
@@ -70,8 +77,8 @@ export type EditableListProps<T> = {
 }
 
 const EditableList = <T,>({
-  items,
-  onItemsChange,
+  idsSelector,
+  onItemsReorder,
   renderItem,
   renderBelow,
   onDelete,
@@ -91,35 +98,33 @@ const EditableList = <T,>({
   },
   disabledReorderIds = []
 }: EditableListProps<T>) => {
-  const handleDelete = (id: string) => {
-    onItemsChange(items.filter(item => item.id !== id))
-  }
+  const itemIds = useAppSelector(idsSelector)
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return
-    if (disabledReorderIds?.includes(items[index].id)) return
-    const newItems = [...items]
+    if (disabledReorderIds?.includes(itemIds[index])) return
+    const newItems = [...itemIds]
     ;[newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]]
-    onItemsChange(newItems)
+    onItemsReorder(newItems)
   }
 
   const handleMoveDown = (index: number) => {
-    if (index === items.length - 1) return
-    if (disabledReorderIds?.includes(items[index].id)) return
-    const newItems = [...items]
+    if (index === itemIds.length - 1) return
+    if (disabledReorderIds?.includes(itemIds[index])) return
+    const newItems = [...itemIds]
     ;[newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]]
-    onItemsChange(newItems)
+    onItemsReorder(newItems)
   }
 
-  const canAddMore = !maxItems || items.length < maxItems
+  const canAddMore = !maxItems || itemIds.length < maxItems
 
   return (
     <div className="flex flex-col gap-2.5 h-full w-full">
-      {items.map((item, index) => {
-        const below = renderBelow?.(item, index)
+      {itemIds.map((itemId, index) => {
+        const below = renderBelow?.(itemId)
         return (
           <motion.div
-            key={item.id}
+            key={itemId}
             layout
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="flex flex-col gap-2"
@@ -138,25 +143,25 @@ const EditableList = <T,>({
                     ariaLabel='Переместить вверх'
                     handleMove={handleMoveUp}
                     iconSrc={iconArrowUp}
-                    disabled={index === 0 || disabledReorderIds?.includes(item.id)}
+                    disabled={index === 0 || disabledReorderIds?.includes(itemId)}
                     index={index}
                   />
                   <ItemMoveButton
                     ariaLabel='Переместить вниз'
                     handleMove={handleMoveDown}
                     iconSrc={iconArrowDown}
-                    disabled={index === items.length - 1 || disabledReorderIds?.includes(item.id)}
+                    disabled={index === itemIds.length - 1 || disabledReorderIds?.includes(itemId)}
                     index={index}
                   />
                 </div>
               )}
-              <div className="flex-1 h-full">{renderItem(item, index)}</div>
-              {canDelete && (
+              <div className="flex-1 h-full">{renderItem(itemId)}</div>
+              {canDelete && onDelete && (
                 <Button
                   type="button"
-                  onPress={onDelete ? () => onDelete(item, index) : () => handleDelete(item.id)}
+                  onPress={() => onDelete(itemId)}
                   isIconOnly
-                  isDisabled={items.length <= (minItems ?? 0)}
+                  isDisabled={itemIds.length <= (minItems ?? 0)}
                   variant="ghost"
                   // Необходимо переопределить дефолтное значение
                   // min-w-10
@@ -172,7 +177,7 @@ const EditableList = <T,>({
             <AnimatePresence initial={false}>
               {below ? (
                 <motion.div
-                  key={`${item.id}-below`}
+                  key={`${itemId}-below`}
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}

@@ -1,22 +1,16 @@
-import { useShallow } from 'zustand/react/shallow'
-
 import WidgetBackgroundColor from './WidgetBackgroundColor'
 import WidgetBorderRadius from './WidgetBorderRadius'
 import CompanyLogo from './CompanyLogo'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-
-import type {
-  AnnouncementWidgetType,
-  Content,
-} from '@lemnity/widget-config/widgets/announcement'
-import type {
-  EventTimertWidgetType,
-} from '@lemnity/widget-config/widgets/event-timer'
+import type { Content } from '@lemnity/widget-config/widgets/announcement'
 import type { ColorScheme } from '@lemnity/widget-config/widgets/base'
 
 type WidgetAppearenceSettingsProps = {
-  defaults: AnnouncementWidgetType | EventTimertWidgetType
+  companyLogoEnabled: boolean
+  companyLogoUrl?: string
+  colorScheme: ColorScheme
+  backgroundColor: string
+  borderRadius: number
   setCompanyLogoEnabled: (enabled: boolean) => void
   setCompanyLogoUrl: (url: string | undefined) => void
   setWidgetColorScheme: (colorScheme: ColorScheme) => void
@@ -33,30 +27,7 @@ const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
     colorScheme,
     backgroundColor,
     borderRadius,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const settings =
-        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
-          .appearence
-      const defaults = props.defaults.appearence
-
-      return  {
-        companyLogoEnabled: settings.companyLogoEnabled
-          ?? defaults.companyLogoEnabled,
-        companyLogoUrl: settings.companyLogoUrl
-          ?? defaults.companyLogoUrl,
-        colorScheme: settings.colorScheme
-          ?? defaults.colorScheme,
-        backgroundColor:
-          settings.backgroundColor && settings.backgroundColor.length > 0
-            ? settings.backgroundColor
-            : defaults.backgroundColor!,
-        borderRadius: settings.borderRadius
-          ?? defaults.borderRadius,
-      }
-    })
-  )
+  } = props
 
   const handleColorSchemeChange = (colorScheme: ColorScheme) => {
     props.setWidgetColorScheme(colorScheme)
@@ -89,7 +60,7 @@ const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
       />
       <WidgetBorderRadius
         widgetBorderRadius={borderRadius}
-        onBorderRadiuschange={props.setBorderRadius}
+        onBorderRadiusChange={props.setBorderRadius}
       />
     </div>
   )

@@ -32,21 +32,23 @@ export type FABMenuButtonDefinition = {
   messengerBaseUrl?: string
 }
 
-export const FAB_MENU_BUTTON_GROUPS: { id: FABMenuButtonGroupId; label: string }[] = [
-  { id: 'universal', label: 'Универсальные' },
-  { id: 'messenger', label: 'Общение' },
-  { id: 'social', label: 'Соцсети' },
-  { id: 'misc', label: 'Разное' }
-]
+export const FAB_MENU_BUTTON_GROUPS:
+  { id: FABMenuButtonGroupId; label: string }[] = [
+    { id: 'universal', label: 'Универсальные' },
+    { id: 'messenger', label: 'Общение' },
+    { id: 'social', label: 'Соцсети' },
+    { id: 'misc', label: 'Разное' }
+  ]
 
-export const FAB_MENU_PAYLOAD_PLACEHOLDERS: Record<FABMenuPayloadType, string> = {
-  email: 'hello@lemnity.ru',
-  phone: '+7 (000) 000-00-00',
-  link: 'lemnity',
-  nickname: 'lemnity',
-  script: "<script id='pixel-script-poptin' src='https://'></script>",
-  anchor: '#form'
-}
+export const FAB_MENU_PAYLOAD_PLACEHOLDERS:
+  Record<FABMenuPayloadType, string> = {
+    email: 'hello@lemnity.ru',
+    phone: '+7 (000) 000-00-00',
+    link: 'lemnity',
+    nickname: 'lemnity',
+    script: "<script id='pixel-script-poptin' src='https://'></script>",
+    anchor: '#form'
+  }
 
 export const FAB_MENU_BUTTON_PRESETS: FABMenuButtonDefinition[] = [
   {
@@ -199,8 +201,15 @@ export const FAB_MENU_ICON_OPTIONS: Record<
     const iconSrc = FAB_MENU_ICON_MAP[preset.icon]
     if (!iconSrc) return acc
 
-    acc[preset.icon] = { label: preset.label, icon: iconSrc, showIcon: preset.showIcon ?? true }
+    acc[preset.icon] = {
+      label: preset.label,
+      icon: iconSrc,
+      showIcon: preset.showIcon ?? true,
+    }
     return acc
   },
-  {} as Record<FABMenuIconKey, { label: string; icon: string; showIcon: boolean }>
+  {} as Record<
+          FABMenuIconKey,
+          { label: string; icon: string; showIcon: boolean }
+        >
 )

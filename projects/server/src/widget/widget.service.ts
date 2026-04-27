@@ -237,8 +237,11 @@ export class WidgetService {
       project: { connect: { id: createWidgetDto.projectId } }
     }
 
-    if (createWidgetDto.config !== undefined) {
+    if (createWidgetDto.config !== undefined && createWidgetDto.type) {
+      const widgetType = createWidgetDto.type
+
       const { data: canonical, version } = this.configService.validateAndCanonicalize(
+        widgetType,
         createWidgetDto.config as unknown
       )
 
@@ -352,14 +355,17 @@ export class WidgetService {
   async update(id: string, updateWidgetDto: UpdateWidgetDto, userId: string) {
     // First verify access
     await this.findOne(id, userId)
-
+    
     const data: Prisma.WidgetUpdateInput = {}
     if (updateWidgetDto.name !== undefined) data.name = updateWidgetDto.name
     if (updateWidgetDto.type !== undefined) data.type = updateWidgetDto.type
     if (updateWidgetDto.enabled !== undefined) data.enabled = updateWidgetDto.enabled
-    if (updateWidgetDto.config !== undefined) {
+    if (updateWidgetDto.config !== undefined && updateWidgetDto.type) {
+      const widgetType = updateWidgetDto.type
+      
       // validate + migrate, persist config + version in the same update
       const { data: canonicalConfig, version } = this.configService.validateAndCanonicalize(
+        widgetType,
         updateWidgetDto.config as unknown
       )
       data.config = canonicalConfig as Prisma.InputJsonValue

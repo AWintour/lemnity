@@ -7,7 +7,9 @@ import {
   FAB_MENU_BUTTON_PRESETS,
   FAB_MENU_ICON_OPTIONS
 } from '@/layouts/Widgets/FABMenu/buttonLibrary'
-import type { FABMenuButtonDefinition } from '@/layouts/Widgets/FABMenu/buttonLibrary'
+import type {
+  FABMenuButtonDefinition,
+} from '@/layouts/Widgets/FABMenu/buttonLibrary'
 
 type FABMenuButtonPickerProps = {
   onClose: () => void
@@ -26,37 +28,38 @@ const getButtonStylesNamesByType = (button: FABMenuButtonDefinition) => {
   }
 }
 
-const getButtonInlineStyle = (button: FABMenuButtonDefinition): CSSProperties | undefined => {
-  if (button.group === 'messenger' || button.group === 'social') {
-    const style: CSSProperties = {}
-    const gradientStops = button.gradientColors?.join(', ')
-    const firstGradientColor = button.gradientColors?.[0]
-    const hasGradient = Boolean(gradientStops)
-    // const isMaxButton = button.icon === 'max-message'
+const getButtonInlineStyle =
+  (button: FABMenuButtonDefinition): CSSProperties | undefined => {
+    if (button.group === 'messenger' || button.group === 'social') {
+      const style: CSSProperties = {}
+      const gradientStops = button.gradientColors?.join(', ')
+      const firstGradientColor = button.gradientColors?.[0]
+      const hasGradient = Boolean(gradientStops)
+      // const isMaxButton = button.icon === 'max-message'
 
-    // if (isMaxButton && hasGradient) {
-    //   style.backgroundImage = `linear-gradient(#ffffff, #ffffff), linear-gradient(90deg, ${gradientStops})`
-    //   style.backgroundOrigin = 'padding-box, border-box'
-    //   style.backgroundClip = 'padding-box, border-box'
-    //   style.border = '1px solid transparent'
-    //   style.borderRadius = '4px'
-    // } else
-    if (hasGradient) {
-      style.backgroundImage = `linear-gradient(90deg, ${gradientStops})`
-      style.backgroundColor = firstGradientColor ?? button.color
-    } else {
-      style.backgroundColor = button.color
+      // if (isMaxButton && hasGradient) {
+      //   style.backgroundImage = `linear-gradient(#ffffff, #ffffff), linear-gradient(90deg, ${gradientStops})`
+      //   style.backgroundOrigin = 'padding-box, border-box'
+      //   style.backgroundClip = 'padding-box, border-box'
+      //   style.border = '1px solid transparent'
+      //   style.borderRadius = '4px'
+      // } else
+      if (hasGradient) {
+        style.backgroundImage = `linear-gradient(90deg, ${gradientStops})`
+        style.backgroundColor = firstGradientColor ?? button.color
+      } else {
+        style.backgroundColor = button.color
+      }
+
+      if (button.textColor) {
+        style.color = button.textColor
+      }
+
+      return style
     }
 
-    if (button.textColor) {
-      style.color = button.textColor
-    }
-
-    return style
+    return undefined
   }
-
-  return undefined
-}
 
 const FABMenuButtonPicker = ({ onSelect }: FABMenuButtonPickerProps) => {
   return (

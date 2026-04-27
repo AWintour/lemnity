@@ -1,5 +1,4 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 import { Button } from '@heroui/button'
 import { DateTime } from 'luxon'
@@ -11,13 +10,28 @@ import {
 } from '@/components'
 import * as Icons from '@/components/Icons'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { getFontWeightClass } from './utils/getFontWeightClass'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  selectTitle,
+  selectTitleFontWeight,
+  selectTitleColor,
+  selectDescription,
+  selectDescriptionFontWeight,
+  selectDescriptionColor,
+  selectCountdownDate,
+  selectCountdownEnabled,
+  selectCountdownBackgroundColor,
+  selectCountdownFontColor,
+  selectButtonText,
+  selectButtonFontColor,
+  selectButtonBackgroundColor,
+  selectIcon,
+  selectLink,
+  selectRewardScreenEnabled,
+  initialState,
+} from './eventTimerSlice'
 
-import type {
-  EventTimertWidgetType,
-} from '@lemnity/widget-config/widgets/event-timer'
-import { eventTimerWidgetDefaults } from './defaults'
+import { getFontWeightClass } from './utils/getFontWeightClass'
 
 type CountdownScreenProps = {
   companyLogoEnabled: boolean
@@ -26,87 +40,44 @@ type CountdownScreenProps = {
 }
 
 const CountdownScreen = (props: CountdownScreenProps) => {
-  const {
-    title,
-    titleFontWeight,
-    titleColor,
-    description,
-    descriptionFontWeight,
-    descriptionColor,
-
-    countdownDate,
-    countdownEnabled,
-    countdownBackgroundColor,
-    countdownFontColor,
-
-    buttonText,
-    buttonFontColor,
-    buttonBackgroundColor,
-    icon,
-    link,
-
-    rewardScreenEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const widget = s.settings?.widget as EventTimertWidgetType
-      const infoSettings = widget.infoSettings
-      const rewardSettings = widget.rewardMessageSettings
-
-      return {
-        title: infoSettings.title
-          ?? eventTimerWidgetDefaults.infoSettings.title,
-        titleFontWeight: infoSettings.titleFontWeight
-          ?? eventTimerWidgetDefaults.infoSettings.titleFontWeight,
-        titleColor:
-          infoSettings.titleColor && infoSettings.titleColor.length > 0
-            ? infoSettings.titleColor
-            : eventTimerWidgetDefaults.infoSettings.titleColor,
-        description: infoSettings.description
-          ?? eventTimerWidgetDefaults.infoSettings.description,
-        descriptionFontWeight: infoSettings.descriptionFontWeight
-          ?? eventTimerWidgetDefaults.infoSettings.descriptionFontWeight,
-        descriptionColor:
-          infoSettings.descriptionColor && infoSettings.descriptionColor
-            ? infoSettings.descriptionColor
-            : eventTimerWidgetDefaults.infoSettings.descriptionColor,
-        
-        countdownEnabled: infoSettings.countdownEnabled
-          ?? eventTimerWidgetDefaults.infoSettings.countdownEnabled,
-        countdownDate: infoSettings.countdownDate
-          ?? eventTimerWidgetDefaults.infoSettings.countdownDate,
-        countdownBackgroundColor:
-          infoSettings.countdownBackgroundColor
-          && infoSettings.countdownBackgroundColor.length > 0
-            ? infoSettings.countdownBackgroundColor
-            : eventTimerWidgetDefaults.infoSettings.countdownBackgroundColor,
-        countdownFontColor:
-          infoSettings.countdownFontColor
-          && infoSettings.countdownFontColor.length > 0
-            ? infoSettings.countdownFontColor
-            : eventTimerWidgetDefaults.infoSettings.countdownFontColor,
-
-        buttonText: infoSettings.buttonText
-          ?? eventTimerWidgetDefaults.infoSettings.buttonText,
-        buttonFontColor:
-          infoSettings.buttonFontColor && infoSettings.buttonFontColor.length > 0
-            ? infoSettings.buttonFontColor
-            : eventTimerWidgetDefaults.infoSettings.buttonFontColor,
-        buttonBackgroundColor:
-          infoSettings.buttonBackgroundColor
-          && infoSettings.buttonBackgroundColor.length > 0
-            ? infoSettings.buttonBackgroundColor
-            : eventTimerWidgetDefaults.infoSettings.buttonBackgroundColor,
-        icon: infoSettings.icon
-          ?? eventTimerWidgetDefaults.infoSettings.icon,
-        link: infoSettings.link
-          ?? eventTimerWidgetDefaults.infoSettings.link,
-
-        rewardScreenEnabled: rewardSettings.rewardScreenEnabled
-          ?? eventTimerWidgetDefaults.rewardMessageSettings.rewardScreenEnabled,
-      }
-    })
-  )
+  const title =
+    useAppSelector(selectTitle)
+  const titleFontWeight =
+    useAppSelector(selectTitleFontWeight)
+  const titleColor =
+    useAppSelector(selectTitleColor)
+      || initialState.infoSettings.titleColor
+  const description =
+    useAppSelector(selectDescription)
+  const descriptionFontWeight =
+    useAppSelector(selectDescriptionFontWeight)
+  const descriptionColor =
+    useAppSelector(selectDescriptionColor)
+      || initialState.infoSettings.descriptionColor
+  const countdownDate =
+    useAppSelector(selectCountdownDate)
+  const countdownEnabled =
+    useAppSelector(selectCountdownEnabled)
+  const countdownBackgroundColor =
+    useAppSelector(selectCountdownBackgroundColor) ??
+      initialState.infoSettings.countdownBackgroundColor
+  const countdownFontColor =
+    useAppSelector(selectCountdownFontColor)
+      || initialState.infoSettings.countdownFontColor
+  const buttonText =
+    useAppSelector(selectButtonText)
+  const buttonFontColor =
+    useAppSelector(selectButtonFontColor)
+      || initialState.infoSettings.buttonFontColor
+  const buttonBackgroundColor =
+    useAppSelector(selectButtonBackgroundColor)
+      || initialState.infoSettings.buttonBackgroundColor
+  const icon =
+    useAppSelector(selectIcon)
+  const link =
+    useAppSelector(selectLink)
+  const rewardScreenEnabled =
+    useAppSelector(selectRewardScreenEnabled)
 
   const [initialTime, setInitialTime] = useState<number>(0)
 
@@ -194,7 +165,7 @@ const CountdownScreen = (props: CountdownScreenProps) => {
             'transition-colors duration-250',
           )}
           style={buttonStyle}
-          onPress={handleButtonPress}
+          onPressEnd={handleButtonPress}
         >
           {/* Хочу скидку! */}
           {icon !== 'HeartDislike' && (

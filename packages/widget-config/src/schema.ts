@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { widgetSchemas } from './widgets/index.js'
+import { widgetSchemas, schemas } from './widgets/index.js'
 
 const combineSchemas = (schemas: z.ZodTypeAny[]) =>
   schemas.reduce<z.ZodTypeAny | null>((acc, schema) => {
@@ -10,23 +10,38 @@ const combineSchemas = (schemas: z.ZodTypeAny[]) =>
 export const WidgetSettingsSchema = combineSchemas(widgetSchemas)
 
 export type CanonicalWidgetSettings = z.infer<typeof WidgetSettingsSchema>
-export type Issue = { path: string; message: string }
+export type Issue = { path: string; message: any }
 
-export function validate(settings: unknown): { ok: boolean; issues: Issue[] } {
-  const parsed = WidgetSettingsSchema.safeParse(settings)
+export type WidgetType =
+  | 'WHEEL_OF_FORTUNE'
+  | 'CONVEYOR_OF_GIFTS'
+  | 'ACTION_TIMER'
+  | 'POSTCARD'
+  | 'CHEST_WITH_ACTION'
+  | 'ADVENT_CALENDAR'
+  | 'TEASER'
+  | 'FAB_MENU'
+  | 'ANNOUNCEMENT'
+  | 'EVENT_TIMER'
+  | 'NOTIFICATION'
+
+export function validate(
+  widgetType: WidgetType,
+  settings: unknown
+): { ok: boolean; issues: any } {
+  const schema = schemas[widgetType]
+  const parsed = schema.safeParse(settings)
+
   if (parsed.success) return { ok: true, issues: [] }
 
   console.error(
     'Zod schema validation failed with following issues:',
-    parsed.error.issues
+    JSON.stringify(parsed.error.issues)
   )
 
   return {
     ok: false,
-    issues: parsed.error.issues.map(i => ({
-      path: i.path.join('.'),
-      message: i.message
-    }))
+    issues: parsed.error.issues
   }
 }
 

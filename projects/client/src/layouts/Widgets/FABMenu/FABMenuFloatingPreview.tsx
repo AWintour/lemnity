@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import FabMenuWidget from './FabMenuWidget'
+import { useAppSelector } from '@/stores/redux/hooks'
+import { selectTriggerPosition } from './FABMenuSlice'
 
 type FABMenuFloatingPreviewProps = {
-  onClose: () => void
+  onClose?: () => void
 }
 
 const FABMenuFloatingPreview = ({ onClose }: FABMenuFloatingPreviewProps) => {
@@ -13,6 +15,8 @@ const FABMenuFloatingPreview = ({ onClose }: FABMenuFloatingPreviewProps) => {
     setMounted(true)
     return () => setMounted(false)
   }, [])
+
+  const triggerPosition = useAppSelector(selectTriggerPosition)
 
   if (typeof document === 'undefined' || !mounted) return null
 
@@ -30,6 +34,7 @@ const FABMenuFloatingPreview = ({ onClose }: FABMenuFloatingPreviewProps) => {
         anchorOffsetClassName={{ left: 'left-6', right: 'right-6' }}
         listClassName="w-full max-w-[320px]"
         triggerClassName="h-20 min-w-20 flex flex-row"
+        triggerPosition={triggerPosition}
         // signatureClassName="bg-gray-200/90"
       />
     </div>,

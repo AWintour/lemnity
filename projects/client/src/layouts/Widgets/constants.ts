@@ -2,7 +2,7 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 // ... ?
 export const WidgetTypes = {
-  WHEEL_OF_FORTUNE: WidgetTypeEnum.WHEEL_OF_FORTUNE,
+  // WHEEL_OF_FORTUNE: WidgetTypeEnum.WHEEL_OF_FORTUNE,
   CONVEYOR_OF_GIFTS: WidgetTypeEnum.CONVEYOR_OF_GIFTS,
   ACTION_TIMER: WidgetTypeEnum.ACTION_TIMER,
   FAB_MENU: WidgetTypeEnum.FAB_MENU,
@@ -26,13 +26,13 @@ export interface AvailableWidget {
 }
 
 export const AVAILABLE_WIDGETS: AvailableWidget[] = [
-  {
-    type: WidgetTypes.WHEEL_OF_FORTUNE,
-    title: 'Колесо фортуны',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new'
-  },
+  // {
+  //   type: WidgetTypes.WHEEL_OF_FORTUNE,
+  //   title: 'Колесо фортуны',
+  //   description: 'Лиды, вовлечение, вознаграждение',
+  //   isAvailable: true,
+  //   badge: 'new'
+  // },
   {
     type: WidgetTypes.ACTION_TIMER,
     title: 'Лид-форма',

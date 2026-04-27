@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { useForm, Controller, type SubmitHandler } from 'react-hook-form'
 import { PatternFormat } from 'react-number-format'
 import { Button } from '@heroui/button'
@@ -13,12 +12,30 @@ import {
 } from '@/components'
 import * as Icons from '@/components/Icons'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  selectButtonText,
+  selectButtonFontColor,
+  selectButtonBackgroundColor,
+  selectIcon,
+  selectFormTitle,
+  selectFormTitleFontWeight,
+  selectFormTitleFontColor,
+  selectFormDescription,
+  selectFormDescriptionFontWeight,
+  selectFormDescriptionFontColor,
+  selectFormContactAcquisitionEnabled,
+  selectFormNameFieldEnabled,
+  selectFormNameFieldRequired,
+  selectFormEmailFieldEnabled,
+  selectFormEmailFieldRequired,
+  selectFormPhoneFieldEnabled,
+  selectFormPhoneFieldRequired,
+  selectFormAgreement,
+  selectFormAdsInfo,
+  initialState,
+} from './eventTimerSlice'
 import { getFontWeightClass } from './utils/getFontWeightClass'
-
-import type {
-  EventTimertWidgetType,
-} from '@lemnity/widget-config/widgets/event-timer'
 
 export type CountdownForm = {
   name: string
@@ -40,62 +57,48 @@ type CountdownFormScreenProps = {
 }
 
 const EventTimerFormScreen = (props: CountdownFormScreenProps) => {
-  const {
-    buttonText,
-    buttonFontColor,
-    buttonBackgroundColor,
-    icon,
-
-    title,
-    titleFontWeight,
-    titleFontColor,
-    description,
-    descriptionFontWeight,
-    descriptionFontColor,
-
-    contactAcquisitionEnabled,
-    nameFieldEnabled,
-    nameFieldRequired,
-    emailFieldEnabled,
-    emailFieldRequired,
-    phoneFieldEnabled,
-    phoneFieldRequired,
-
-    agreement,
-    adsInfo,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const widget = s.settings?.widget as EventTimertWidgetType
-      const infoSettings = widget.infoSettings
-      const formSettings = widget.formSettings
-
-      return {
-        buttonText: infoSettings.buttonText,
-        buttonFontColor: infoSettings.buttonFontColor,
-        buttonBackgroundColor: infoSettings.buttonBackgroundColor,
-        icon: infoSettings.icon,
-
-        title: formSettings.title,
-        titleFontWeight: formSettings.titleFontWeight,
-        titleFontColor: formSettings.titleFontColor,
-        description: formSettings.description,
-        descriptionFontWeight: formSettings.descriptionFontWeight,
-        descriptionFontColor: formSettings.descriptionFontColor,
-
-        contactAcquisitionEnabled: formSettings.contactAcquisitionEnabled,
-        nameFieldEnabled: formSettings.nameFieldEnabled,
-        nameFieldRequired: formSettings.nameFieldRequired,
-        emailFieldEnabled: formSettings.emailFieldEnabled,
-        emailFieldRequired: formSettings.emailFieldRequired,
-        phoneFieldEnabled: formSettings.phoneFieldEnabled,
-        phoneFieldRequired: formSettings.phoneFieldRequired,
-
-        agreement: formSettings.agreement,
-        adsInfo: formSettings.adsInfo,
-      }
-    })
-  )
+  const buttonText =
+    useAppSelector(selectButtonText)
+  const buttonFontColor =
+    useAppSelector(selectButtonFontColor)
+      || initialState.infoSettings.buttonFontColor
+  const buttonBackgroundColor =
+    useAppSelector(selectButtonBackgroundColor)
+      || initialState.infoSettings.buttonBackgroundColor
+  const icon =
+    useAppSelector(selectIcon)
+  const title =
+    useAppSelector(selectFormTitle)
+  const titleFontWeight =
+    useAppSelector(selectFormTitleFontWeight)
+  const titleFontColor =
+    useAppSelector(selectFormTitleFontColor)
+      || initialState.formSettings.titleFontColor
+  const description =
+    useAppSelector(selectFormDescription)
+  const descriptionFontWeight =
+    useAppSelector(selectFormDescriptionFontWeight)
+  const descriptionFontColor =
+    useAppSelector(selectFormDescriptionFontColor)
+      || initialState.formSettings.descriptionFontColor
+  const contactAcquisitionEnabled =
+    useAppSelector(selectFormContactAcquisitionEnabled)
+  const nameFieldEnabled =
+    useAppSelector(selectFormNameFieldEnabled)
+  const nameFieldRequired =
+    useAppSelector(selectFormNameFieldRequired)
+  const emailFieldEnabled =
+    useAppSelector(selectFormEmailFieldEnabled)
+  const emailFieldRequired =
+    useAppSelector(selectFormEmailFieldRequired)
+  const phoneFieldEnabled =
+    useAppSelector(selectFormPhoneFieldEnabled)
+  const phoneFieldRequired =
+    useAppSelector(selectFormPhoneFieldRequired)
+  const agreement =
+    useAppSelector(selectFormAgreement)
+  const adsInfo =
+    useAppSelector(selectFormAdsInfo)
 
   const buttonStyle: CSSProperties = {
     color: buttonFontColor,

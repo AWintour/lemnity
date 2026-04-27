@@ -1,30 +1,156 @@
+/* eslint-disable */
+import {
+  lazy,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type LazyExoticComponent,
+} from 'react'
 import Header from '@/layouts/Header/Header'
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout'
 import { useParams } from 'react-router-dom'
 import { Breadcrumbs, BreadcrumbItem } from '@heroui/breadcrumbs'
 import { Button } from '@heroui/button'
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
 import { createPortal } from 'react-dom'
 import { useProjectsStore } from '@/stores/projectsStore'
 import SvgIcon from '@/components/SvgIcon'
 import iconEye from '@/assets/icons/eye.svg'
-import FieldsSettingsTab from '@/layouts/WidgetSettings/FieldsSettingsTab/FieldsSettingsTab'
+// import FieldsSettingsTab from '@/layouts/WidgetSettings/FieldsSettingsTab/FieldsSettingsTab'
 import './EditWidgetPage.css'
-import DisplaySettingsTab from '@/layouts/WidgetSettings/DisplaySettingsTab/DisplaySettingsTab'
-import IntegrationTab from '@/layouts/WidgetSettings/IntegrationTab/IntegrationTab'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { buildDefaults } from '@/stores/widgetSettings/defaults'
+// import DisplaySettingsTab from '@/layouts/WidgetSettings/DisplaySettingsTab/DisplaySettingsTab'
+// import IntegrationTab from '@/layouts/WidgetSettings/IntegrationTab/IntegrationTab'
+// import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+// import { buildDefaults } from '@/stores/widgetSettings/defaults'
 import WidgetPreview from '@/layouts/WidgetPreview/WidgetPreview'
-import PreviewModal from '@/layouts/Widgets/Common/PreviewModal'
-import usePreviewRuntimeStore from '@/stores/previewRuntimeStore'
-import { usesStandardSurface } from '@/stores/widgetSettings/widgetDefinitions'
-import { getWidgetDefinition } from '@/layouts/Widgets/registry'
-import { WidgetTypeEnum, type Widget } from '@lemnity/api-sdk'
-import { simulateWheelSpinResultFromSectors } from '@/layouts/Widgets/WheelOfFortune/actionHandlers'
-import type { WheelOfFortuneWidgetSettings } from '@/stores/widgetSettings/types'
+// import PreviewModal from '@/layouts/Widgets/Common/PreviewModal'
+// import usePreviewRuntimeStore from '@/stores/previewRuntimeStore'
+// import { usesStandardSurface } from '@/stores/widgetSettings/widgetDefinitions'
+// import { getWidgetDefinition } from '@/layouts/Widgets/registry'
+// import { WidgetTypeEnum, type Widget } from '@lemnity/api-sdk'
+// import { simulateWheelSpinResultFromSectors } from '@/layouts/Widgets/WheelOfFortune/actionHandlers'
+// import type { WheelOfFortuneWidgetSettings } from '@/stores/widgetSettings/types'
+
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
+import {
+  currentWidgetChanged,
+  selectCurrentWidget,
+} from '@/stores/redux/editorSlice'
 
 import breadcrumbSeparator from '@/assets/icons/breadcrumb-separator.svg'
 import floppyIcon from '@/assets/icons/floppy-icon.svg'
+import { WidgetTypeEnum } from '@lemnity/api-sdk'
+
+const NotificationWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
+)
+const NotificationPreview = lazy(
+  () => import('@/layouts/Widgets/Notification/NotificationFloatingPreview')
+)
+
+const AnnouncementWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
+)
+const AnnouncementDisplaySettings = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementDisplaySettings')
+)
+const AnnouncementPreview = lazy(
+  () => import('@/layouts/Widgets/Announcement/AnnouncementFloatingPreview')
+)
+
+const EventTimerWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
+)
+const EventTimerDisplaySettings = lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerDisplaySettings')
+)
+const EventTimerPrreview= lazy(
+  () => import('@/layouts/Widgets/EventTimer/EventTimerFloatingPreview')
+)
+
+const FABMenuWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/FABMenu/FABMenuSettings')
+)
+const FABMenuPreview = lazy(
+  () => import('@/layouts/Widgets/FABMenu/FABMenuFloatingPreview')
+)
+
+const ActionTimerWidgetSettings = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/ActionTimerWidgetSettings')
+)
+const ActionTimerDisplaySettings = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/ActionTimerDisplaySettings')
+)
+const ActionTimerPreview = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/ActionTimerFloatingPreview')
+)
+
+const getWidgetDisplaySettings = (
+  currentWidget: WidgetTypeEnum
+): LazyExoticComponent<ComponentType> | undefined => {
+  switch (currentWidget) {
+    case 'ANNOUNCEMENT':
+      return AnnouncementDisplaySettings
+    case 'EVENT_TIMER':
+      return EventTimerDisplaySettings
+    // case 'NOTIFICATION':
+    //   return NotificationPreview
+    // case 'FAB_MENU':
+    //   return FABMenuPreview
+    case 'ACTION_TIMER':
+      return ActionTimerDisplaySettings
+  }
+}
+
+const getWidgetPreview = (
+  currentWidget: WidgetTypeEnum
+): LazyExoticComponent<ComponentType<{ onClose?: () => void }>> | undefined => {
+  switch (currentWidget) {
+    case 'ANNOUNCEMENT':
+      return AnnouncementPreview
+    case 'EVENT_TIMER':
+      return EventTimerPrreview
+    case 'NOTIFICATION':
+      return NotificationPreview
+    case 'FAB_MENU':
+      return FABMenuPreview
+    case 'ACTION_TIMER':
+      return ActionTimerPreview
+  }
+}
+
+const getSaveWidgetConfigThunk = async (currentWidget: WidgetTypeEnum) => {
+  switch (currentWidget) {
+    case 'ANNOUNCEMENT':
+      const { saveAnnouncementWidget } = await import(
+        '@/layouts/Widgets/Announcement/announcementSlice'
+      )
+      return saveAnnouncementWidget
+    case 'EVENT_TIMER':
+      const { saveEventTimerWidget } = await import(
+        '@/layouts/Widgets/EventTimer/eventTimerSlice'
+      )
+      return saveEventTimerWidget
+    case 'NOTIFICATION':
+      const { saveNotificationWidget } = await import(
+        '@/layouts/Widgets/Notification/notificationSlice'
+      )
+      return saveNotificationWidget
+    case 'FAB_MENU':
+      const { saveFabMenuWidget } = await import(
+        '@/layouts/Widgets/FABMenu/FABMenuSlice'
+      )
+      return saveFabMenuWidget
+    case 'ACTION_TIMER':
+      const { saveActionTimerWidget } = await import(
+        '@/layouts/Widgets/ActionTimer/actionTimerSlice'
+      )
+      return saveActionTimerWidget
+  }
+}
 
 const BreadcrumbSeparator = () => (
   <div className="w-2.5 h-2.5">
@@ -42,7 +168,32 @@ type TabKey = 'fields' | 'display' | 'integration'
 type TabDescriptor = { key: TabKey; label: string; visible: boolean }
 // use store action to keep state in sync after update
 
+type WidgetSettingsProps = {
+  currentWidget: WidgetTypeEnum
+}
+
+const WidgetSettings = ({ currentWidget }: WidgetSettingsProps) => {
+  switch (currentWidget) {
+    case 'NOTIFICATION':
+      return <NotificationWidgetSettings />
+    case 'ANNOUNCEMENT':
+      return <AnnouncementWidgetSettings />
+    case 'EVENT_TIMER':
+      return <EventTimerWidgetSettings />
+    case 'FAB_MENU':
+      return <FABMenuWidgetSettings />
+    case 'ACTION_TIMER':
+      return <ActionTimerWidgetSettings />
+    default:
+      return null
+  }
+}
+
 const EditWidgetPage = () => {
+  const dispatch = useAppDispatch()
+  const currentWidget = useAppSelector(selectCurrentWidget)
+  const initRef = useRef(false)
+
   const [previewScreen, setPreviewScreen] = useState<'main' | 'prize' | 'panel'>('main')
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const topRef = useRef<HTMLDivElement | null>(null)
@@ -58,30 +209,48 @@ const EditWidgetPage = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
   const [isInlinePreviewOpen, setIsInlinePreviewOpen] = useState(false)
   // legacy local spin state removed; use preview store instead
-  const initialized = useWidgetSettingsStore(s => s.initialized)
+  // const initialized = useWidgetSettingsStore(s => s.initialized)
   const widgetType = widget?.type
-  const widgetConfig = widget?.config
-  const widgetDefinition = widgetType ? getWidgetDefinition(widgetType) : null
+  // const widgetConfig = widget?.config
+  // const widgetDefinition = widgetType ? getWidgetDefinition(widgetType) : null
 
-  // Initialize widget settings store once per widgetId
+  // let WidgetSettings: ReactNode = null
+  // console.log(Com)
+
   useEffect(() => {
-    if (!widgetId || !widgetType) return
-    const store = useWidgetSettingsStore.getState()
-    const shouldReinit =
-      !store.settings || store.settings.id !== widgetId || store.settings.widgetType !== widgetType
-    if (shouldReinit) {
-      const base = store.settings ?? buildDefaults(widgetId, widgetType)
-      const initialSettings = widgetConfig
-        ? ({ ...base, ...widgetConfig } as typeof base)
-        : undefined
-      store.init(widgetId, widgetType, projectId, initialSettings)
+    if (!currentWidget && widgetType && !initRef.current) {
+      dispatch(currentWidgetChanged(widgetType))
+      // strict mode shenanigans
+      initRef.current = true
     }
 
     return () => {
-      // cleanup draft state in memory when leaving page
-      useWidgetSettingsStore.getState().reset()
+      if (initRef.current) {
+        dispatch(currentWidgetChanged(null))
+        initRef.current = false
+      }
     }
-  }, [projectId, widgetId, widgetType, widgetConfig])
+  }, [widgetType, dispatch])
+
+  // // Initialize widget settings store once per widgetId
+  // useEffect(() => {
+  //   if (!widgetId || !widgetType) return
+  //   const store = useWidgetSettingsStore.getState()
+  //   const shouldReinit =
+  //     !store.settings || store.settings.id !== widgetId || store.settings.widgetType !== widgetType
+  //   if (shouldReinit) {
+  //     const base = store.settings ?? buildDefaults(widgetId, widgetType)
+  //     const initialSettings = widgetConfig
+  //       ? ({ ...base, ...widgetConfig } as typeof base)
+  //       : undefined
+  //     store.init(widgetId, widgetType, projectId, initialSettings)
+  //   }
+
+  //   return () => {
+  //     // cleanup draft state in memory when leaving page
+  //     useWidgetSettingsStore.getState().reset()
+  //   }
+  // }, [projectId, widgetId, widgetType, widgetConfig])
 
   useEffect(() => {
     const root = scrollRef.current
@@ -110,14 +279,15 @@ const EditWidgetPage = () => {
     return () => io.disconnect()
   }, [])
 
-  const previewLauncher = widgetDefinition?.preview?.launcher ?? 'modal'
-  const InlinePreviewComponent = widgetDefinition?.preview?.inline
+  // const previewLauncher = widgetDefinition?.preview?.launcher ?? 'modal'
+  // const InlinePreviewComponent = widgetDefinition?.preview?.inline
 
   const handlePreview = () => {
-    if (previewLauncher === 'inline' && InlinePreviewComponent) {
-      setIsInlinePreviewOpen(true)
-      return
-    }
+    // if (previewLauncher === 'inline' && InlinePreviewComponent) {
+    //   setIsInlinePreviewOpen(true)
+    //   return
+    // }
+    setIsInlinePreviewOpen(true)
     setIsPreviewModalOpen(true)
     setPreviewScreen('main')
   }
@@ -128,48 +298,62 @@ const EditWidgetPage = () => {
 
   const handleCloseInlinePreview = () => {
     setIsInlinePreviewOpen(false)
+    setIsPreviewModalOpen(false)
   }
 
   const handleSave = async () => {
-    useWidgetSettingsStore.getState().setValidationVisible(true)
-    const res = useWidgetSettingsStore.getState().prepareForSave()
-
-    if (!res.ok) {
-      alert('Исправьте ошибки перед сохранением')
-      return
-    }
-
-    if (!widgetId) {
-      alert('Нет widgetId')
-      return
-    }
-
     if (!widgetType) {
-      alert('Нет widgetType')
+      alert('no widget types! >~<')
       return
     }
 
-    if (!projectId) {
-      alert('Нет projectId')
+    const saveWidgetThunk = await getSaveWidgetConfigThunk(widgetType)
+
+    if (!saveWidgetThunk) {
+      alert('failed to load saveWidgetThunk! >~<')
       return
     }
 
-    let updated: Widget | undefined = undefined
-    try {
-      setSaving(true)
-      updated = await useProjectsStore
-        .getState()
-        .saveWidgetConfig(projectId, widgetId, res.data)
-    } catch (e) {
-      console.error(e)
-      alert('Ошибка сохранения')
-    }
+    dispatch(saveWidgetThunk())
+    // useWidgetSettingsStore.getState().setValidationVisible(true)
+    // const res = useWidgetSettingsStore.getState().prepareForSave()
 
-    if (!updated) {
-      alert('Ошибка сохранения')
-      setSaving(false)
-      return
-    }
+    // if (!res.ok) {
+    //   alert('Исправьте ошибки перед сохранением')
+    //   return
+    // }
+
+    // if (!widgetId) {
+    //   alert('Нет widgetId')
+    //   return
+    // }
+
+    // if (!widgetType) {
+    //   alert('Нет widgetType')
+    //   return
+    // }
+
+    // if (!projectId) {
+    //   alert('Нет projectId')
+    //   return
+    // }
+
+    // let updated: Widget | undefined = undefined
+    // try {
+    //   setSaving(true)
+    //   updated = await useProjectsStore
+    //     .getState()
+    //     .saveWidgetConfig(projectId, widgetId, res.data)
+    // } catch (e) {
+    //   console.error(e)
+    //   alert('Ошибка сохранения')
+    // }
+
+    // if (!updated) {
+    //   alert('Ошибка сохранения')
+    //   setSaving(false)
+    //   return
+    // }
 
     // Re-init settings with server config
     // 
@@ -177,59 +361,59 @@ const EditWidgetPage = () => {
     // desire to
     // would be great to obliterate it altogether since it is very much
     // redundant
-    const base =
-      useWidgetSettingsStore.getState().settings
-      ?? buildDefaults(widgetId, widgetType)
-    const next = updated.config
-      ? ({ ...base, ...updated.config } as typeof base)
-      : undefined
+    // const base =
+    //   useWidgetSettingsStore.getState().settings
+    //   ?? buildDefaults(widgetId, widgetType)
+    // const next = updated.config
+    //   ? ({ ...base, ...updated.config } as typeof base)
+    //   : undefined
 
-    useWidgetSettingsStore
-      .getState()
-      .init(widgetId, widgetType, projectId, next)
+    // useWidgetSettingsStore
+    //   .getState()
+    //   .init(widgetId, widgetType, projectId, next)
 
-    alert('Сохранено')
-    useWidgetSettingsStore
-      .getState()
-      .setValidationVisible(false)
+    // alert('Сохранено')
+    // useWidgetSettingsStore
+    //   .getState()
+    //   .setValidationVisible(false)
 
     setSaving(false)
   }
 
   const handleSubmit = useCallback(() => {
-    const runtime = usePreviewRuntimeStore.getState()
-    const settings = useWidgetSettingsStore.getState().settings
+    // const runtime = usePreviewRuntimeStore.getState()
+    // const settings = useWidgetSettingsStore.getState().settings
 
-    if (widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE) {
-      const wheelSettings: WheelOfFortuneWidgetSettings | null =
-        settings?.widget?.type === WidgetTypeEnum.WHEEL_OF_FORTUNE
-          ? (settings.widget as WheelOfFortuneWidgetSettings)
-          : null
+    // if (widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE) {
+    //   const wheelSettings: WheelOfFortuneWidgetSettings | null =
+    //     settings?.widget?.type === WidgetTypeEnum.WHEEL_OF_FORTUNE
+    //       ? (settings.widget as WheelOfFortuneWidgetSettings)
+    //       : null
 
-      const previewResult = wheelSettings?.sectors?.items?.length
-        ? simulateWheelSpinResultFromSectors(wheelSettings.sectors.items)
-        : null
-      // Что за ересь
-      const isWin = Boolean(previewResult?.isWin ?? true)
+    //   const previewResult = wheelSettings?.sectors?.items?.length
+    //     ? simulateWheelSpinResultFromSectors(wheelSettings.sectors.items)
+    //     : null
+    //   // Что за ересь
+    //   const isWin = Boolean(previewResult?.isWin ?? true)
 
-      if (previewResult) {
-        runtime.setValue('wheel.winningSectorId', previewResult.sectorId)
-        runtime.setValue('wheel.result', previewResult)
-        runtime.setValue('wheel.status', 'spinning')
-      }
+    //   if (previewResult) {
+    //     runtime.setValue('wheel.winningSectorId', previewResult.sectorId)
+    //     runtime.setValue('wheel.result', previewResult)
+    //     runtime.setValue('wheel.status', 'spinning')
+    //   }
 
-      runtime.emit('wheel.spin')
+    //   runtime.emit('wheel.spin')
 
-      setTimeout(() => {
-        setPreviewScreen(isWin ? 'prize' : 'main')
-        runtime.setValue('wheel.status', 'idle')
-      }, 5000)
-    }
+    //   setTimeout(() => {
+    //     setPreviewScreen(isWin ? 'prize' : 'main')
+    //     runtime.setValue('wheel.status', 'idle')
+    //   }, 5000)
+    // }
 
-    if (widgetType === 'ACTION_TIMER') {
-      runtime.emit('actionTimer.submit')
-      setPreviewScreen('prize')
-    }
+    // if (widgetType === 'ACTION_TIMER') {
+    //   runtime.emit('actionTimer.submit')
+    //   setPreviewScreen('prize')
+    // }
   }, [setPreviewScreen, widgetType])
 
   const breadcrumbs = (
@@ -252,14 +436,14 @@ const EditWidgetPage = () => {
     </div>
   )
 
-  const showDisplayTab =
-    !widgetType ||
-    usesStandardSurface(widgetType, 'display') ||
-    Boolean(widgetDefinition?.settings.surfaces?.display)
-  const showIntegrationTab =
-    !widgetType ||
-    usesStandardSurface(widgetType, 'integration') ||
-    Boolean(widgetDefinition?.settings.surfaces?.integration)
+  const showDisplayTab = true
+    // !widgetType ||
+    // usesStandardSurface(widgetType, 'display') ||
+    // Boolean(widgetDefinition?.settings.surfaces?.display)
+  const showIntegrationTab = true
+    // !widgetType ||
+    // usesStandardSurface(widgetType, 'integration') ||
+    // Boolean(widgetDefinition?.settings.surfaces?.integration)
 
   const visibleTabs = useMemo<TabDescriptor[]>(() => {
     const tabs: TabDescriptor[] = [
@@ -277,7 +461,7 @@ const EditWidgetPage = () => {
     }
   }, [tab, visibleTabs])
 
-  if (!initialized) return null
+  if (!widgetType) return null
 
   const tabsBar = (
     <div className="w-full bg-[#F5F6F8] border border-[#E6E6E6] rounded-[5px] p-1.5 gap-2 flex flex-wrap items-center justify-between">
@@ -316,6 +500,9 @@ const EditWidgetPage = () => {
     </div>
   )
 
+  const Preview = getWidgetPreview(widgetType)
+  const Display = getWidgetDisplaySettings(widgetType)
+
   return (
     <>
       <div className="h-full flex flex-col">
@@ -330,16 +517,31 @@ const EditWidgetPage = () => {
               className="flex flex-col py-2.5 gap-2.5 flex-1 min-h-0 overflow-auto rounded-md"
             >
               <div ref={topRef} aria-hidden="true" className="sentinelTop"></div>
-              {tab === 'fields' && <FieldsSettingsTab />}
-              {tab === 'display' && showDisplayTab && <DisplaySettingsTab />}
-              {tab === 'integration' && showIntegrationTab && <IntegrationTab />}
+              {/* {tab === 'fields' && <FieldsSettingsTab />} */}
+              {/* {tab === 'fields' && <div>Fields</div>} */}
+              {tab === 'fields' && currentWidget && (
+                // <Suspense>
+                  <WidgetSettings currentWidget={currentWidget} />
+                // </Suspense>
+              )}
+              {/* {tab === 'display' && showDisplayTab && <DisplaySettingsTab />} */}
+              {tab === 'display' && showDisplayTab && Display && <Display />}
+              {/* {tab === 'integration' && showIntegrationTab && <IntegrationTab />} */}
+              {tab === 'integration' && showIntegrationTab && <div>Integration</div>}
               <div ref={bottomRef} aria-hidden="true" className="sentinelBot"></div>
             </div>
           </div>
         </DashboardLayout>
       </div>
 
-      {previewLauncher === 'inline' && InlinePreviewComponent ? (
+      {isInlinePreviewOpen && Preview && (
+        <InlinePreviewPortal
+          isOpen={isInlinePreviewOpen}
+          onClose={handleCloseInlinePreview}
+          Component={Preview}
+        />
+      )}
+      {/* {previewLauncher === 'inline' && InlinePreviewComponent ? (
         <InlinePreviewPortal
           isOpen={isInlinePreviewOpen}
           onClose={handleCloseInlinePreview}
@@ -352,7 +554,7 @@ const EditWidgetPage = () => {
           screen={previewScreen}
           onSubmit={handleSubmit}
         />
-      )}
+      )} */}
     </>
   )
 }
@@ -362,7 +564,7 @@ export default memo(EditWidgetPage)
 type InlinePreviewPortalProps = {
   isOpen: boolean
   onClose: () => void
-  Component: ComponentType<{ onClose: () => void }>
+  Component: LazyExoticComponent<ComponentType<{ onClose?: () => void }>>
 }
 
 const InlinePreviewPortal = ({ isOpen, onClose, Component }: InlinePreviewPortalProps) => {

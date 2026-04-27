@@ -3,8 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 type FadeInOutProps = {
   visible: boolean
-  children: HTMLProps<HTMLElement>['children']
-  animationDuration?: number
+  children: React.ReactNode[] | React.ReactNode
 }
 
 const FadeInOut = (props: FadeInOutProps) => {

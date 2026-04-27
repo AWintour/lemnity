@@ -1,59 +1,28 @@
 import { type CSSProperties } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
-
 import AnnouncementPreview from './AnnouncementPreview'
-
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import useUrlImage from '@/hooks/useUrlImage'
-
-import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
-import { announcementWidgetDefaults } from './defaults'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  selectColorScheme,
+  selectBackgroundColor,
+  selectBorderRadius,
+  selectContentType,
+  selectContentAlignment,
+  selectContentUrl,
+  selectRewardScreenEnabled,
+} from './announcementSlice'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
 
 const WidgetPreview = () => {
-  const {
-    colorScheme,
-    backgroundColor,
-    borderRadius,
-    contentType,
-    contentAlignment,
-    contentUrl,
-    rewardScreenEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      const widget = s.settings?.widget as AnnouncementWidgetType
-      const appearence = widget.appearence
-      const rewardMessageSettings = widget.rewardMessageSettings
-      const infoSettings = widget.infoSettings
-
-      return {
-        colorScheme: appearence.colorScheme
-          ?? announcementWidgetDefaults.appearence.colorScheme,
-        backgroundColor:
-          appearence.backgroundColor && appearence.backgroundColor.length > 0
-            ? appearence.backgroundColor
-            : announcementWidgetDefaults.appearence.backgroundColor,
-        borderRadius: appearence.borderRadius
-          ?? announcementWidgetDefaults.appearence.borderRadius,
-
-        contentType: infoSettings.contentType
-          ?? announcementWidgetDefaults.infoSettings.contentType,
-        contentAlignment: infoSettings.contentAlignment
-          ?? announcementWidgetDefaults.infoSettings.contentAlignment,
-        contentUrl: infoSettings.contentUrl
-          ?? announcementWidgetDefaults.infoSettings.contentUrl,
-
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
-          ?? announcementWidgetDefaults
-               .rewardMessageSettings
-               .rewardScreenEnabled,
-      }
-    })
-  )
+  const colorScheme = useAppSelector(selectColorScheme)
+  const backgroundColor = useAppSelector(selectBackgroundColor)
+  const borderRadius = useAppSelector(selectBorderRadius)
+  const contentType = useAppSelector(selectContentType)
+  const contentAlignment = useAppSelector(selectContentAlignment)
+  const contentUrl = useAppSelector(selectContentUrl)
+  const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
 
   const {
     base64Image: contentBase64Image,

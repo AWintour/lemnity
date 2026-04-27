@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type HTMLProps } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type HTMLProps,
+} from 'react'
 
 import AnnouncementWidget from './AnnouncementWidget'
 import { FadeInOut } from '@/components'
@@ -44,6 +50,17 @@ const AnnouncementPreview = (props: AnnouncementPreviewProps) => {
     }
   }, [])
 
+  const infoScreenStyle: CSSProperties = {
+    height: annInfoScreenRect
+      ? `${annInfoScreenRect.height}px`
+      : '228px'
+  }
+  const rewardScreenStyle: CSSProperties = {
+    height: annRewardScreenRect
+      ? `${annRewardScreenRect.height}px`
+      : '228px'
+  }
+
   return (
     // don't look at the vertical margins =w=
     // i was fed the fuck up with how much gaps were bitching at me
@@ -54,11 +71,7 @@ const AnnouncementPreview = (props: AnnouncementPreviewProps) => {
         </span>
         <div
           className={props.className}
-          style={{
-            height: annInfoScreenRect
-              ? `${annInfoScreenRect.height}px`
-              : '228px'
-          }}
+          style={infoScreenStyle}
         >
           <AnnouncementWidget
             ref={annInfoScreenRef}
@@ -73,11 +86,7 @@ const AnnouncementPreview = (props: AnnouncementPreviewProps) => {
           </span>
           <div
             className={props.className}
-            style={{
-              height: annRewardScreenRect
-                ? `${annRewardScreenRect.height}px`
-                : '228px'
-            }}
+            style={rewardScreenStyle}
           >
             <AnnouncementWidget
               ref={annRewardScreenRef}

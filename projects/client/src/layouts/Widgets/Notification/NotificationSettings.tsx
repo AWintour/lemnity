@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useShallow } from 'zustand/react/shallow'
+import { nanoid } from '@reduxjs/toolkit'
 import { cn } from '@heroui/theme'
 import { PopoverContent, PopoverTrigger } from '@heroui/popover'
 
-import EditableList, { type EditableListItem } from '@/components/EditableList'
+import EditableList from '@/components/EditableList'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import SvgIcon from '@/components/SvgIcon'
 import {
@@ -14,39 +14,50 @@ import {
   FontSizeSettings,
 } from '@/components'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { uuidv4 } from '@/common/utils/uuidv4'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
+import {
+  selectDelay,
+  selectNotificationIds,
+  delayChanged,
+  notificationAdded,
+  notificationDeleted,
+  notificationUpdated,
+  notificationsReordered,
+  defaultNotifications,
+  selectNotificationById,
+} from './notificationSlice'
 
 import type {
-  NotificationWidgetType,
-  Notification,
   Expiration,
 } from '@lemnity/widget-config/widgets/notification'
 import gearIcon from '@/assets/icons/gear.svg'
-import { notificationWidgetDefaults as defaults } from './defaults'
+import type { RootState } from '@/stores/redux/store'
 
 type NotificationItemProps = {
-  notification: Notification
-  index: number
+  id: string
   pendingItemId: string | null
   setPendingItemId: (id: string | null) => void
   onTextChange: (text: string) => void
 }
 
 const NotificationItem = (props: NotificationItemProps) => {
-  const isActive = props.notification.id === props.pendingItemId
+  const isActive = props.id === props.pendingItemId
+  const notification = useAppSelector(
+    (state: RootState) => selectNotificationById(state, props.id)
+  )
 
   const handleButtonPress = () => {
     if (
       typeof props.pendingItemId === 'string'
-      && props.pendingItemId !== props.notification.id
+      && props.pendingItemId !== props.id
     ) {
       props.setPendingItemId(null)
       // костыль. я пока не знаю, как сделать правильно
+      // аналог vue nextTick()
       // https://stackoverflow.com/a/75403839/21210000
       // https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout#late_timeouts
       setTimeout(() => {
-        props.setPendingItemId(props.notification.id)
+        props.setPendingItemId(props.id)
       })
       return
     }
@@ -54,7 +65,7 @@ const NotificationItem = (props: NotificationItemProps) => {
     props.setPendingItemId(
       isActive
         ? null
-        : props.notification.id
+        : props.id
       )
   }
 
@@ -66,7 +77,7 @@ const NotificationItem = (props: NotificationItemProps) => {
     <div className='flex flex-row gap-2.5'>
       <Input
         classNames={inputClassNames}
-        value={props.notification.text}
+        value={notification.text}
         onValueChange={props.onTextChange}
       />
       <Button
@@ -131,7 +142,7 @@ const ExpirationPopover = (props: ExpirationPopoverProps) => {
 
         {expirationVariants.map(variant => (
           <Button
-            key={uuidv4()}
+            key={nanoid()}
             className={cn(
               'w-full h-[unset] px-4 py-2.5',
               props.expiration === variant
@@ -154,7 +165,7 @@ const ExpirationPopover = (props: ExpirationPopoverProps) => {
 }
 
 type NotificationItemSettingsProps = {
-  notification: Notification
+  id: string
   pendingItemId: string | null
   onUrlTextChange: (urlText: string) => void
   onUrlChange: (urlText: string) => void
@@ -163,6 +174,10 @@ type NotificationItemSettingsProps = {
 }
 
 const NotificationItemSettings = (props: NotificationItemSettingsProps) => {
+  const notification = useAppSelector(
+    (state: RootState) => selectNotificationById(state, props.id)
+  )
+
   const inputClassNames = {
     inputWrapper: 'min-h-10',
     base: 'min-w-60',
@@ -179,12 +194,12 @@ const NotificationItemSettings = (props: NotificationItemSettingsProps) => {
       <div className='w-full flex flex-row flex-wrap gap-2.5 @container'>
         <Input
           classNames={inputClassNames}
-          value={props.notification.urlText}
+          value={notification.urlText}
           onValueChange={props.onUrlTextChange}
         />
         <Input
           classNames={inputClassNames}
-          value={props.notification.url}
+          value={notification.url}
           onValueChange={props.onUrlChange}
         />
         <div
@@ -195,11 +210,11 @@ const NotificationItemSettings = (props: NotificationItemSettingsProps) => {
         >
           <FontSizeSettings
             xs
-            value={props.notification.urlFontSize}
+            value={notification.urlFontSize}
             onChange={props.onUrlFontSizeChange}
           />
           <ExpirationPopover
-            expiration={props.notification.expiration}
+            expiration={notification.expiration}
             pendingItemId={props.pendingItemId}
             onExpirationChange={props.onExpirationChange}
           />
@@ -210,85 +225,11 @@ const NotificationItemSettings = (props: NotificationItemSettingsProps) => {
 }
 
 const NotificationSettings = () => {
-  const { delay, notifications } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const settings = (s.settings?.widget as NotificationWidgetType)
-
-      return {
-        delay: settings.delay
-          ?? defaults.delay,
-        notifications: settings.notifications
-          ?? defaults.notifications,
-      }
-    })
-  )
+  const dispatch = useAppDispatch()
+  const delay = useAppSelector(selectDelay)
+  const notificationsExist = !!useAppSelector(selectNotificationIds)
 
   const [pendingItemId, setPendingItemId] = useState<string | null>(null)
-
-  const setNotificationDelay = useWidgetSettingsStore(
-    s => s.setNotificationDelay
-  )
-  const setNotifications = useWidgetSettingsStore(
-    s => s.setNotifications
-  )
-  const addNotification = useWidgetSettingsStore(
-    s => s.addNotification
-  )
-  const deleteNotification = useWidgetSettingsStore(
-    s => s.deleteNotification
-  )
-  const updateNotification = useWidgetSettingsStore(
-    s => s.updateNotification
-  )
-
-  const handleAdd = () => {
-    addNotification({
-      ...defaults.notifications[0],
-      id: uuidv4()
-    })
-  }
-  const handleDelete = (item: EditableListItem<Notification>) => {
-    deleteNotification(item.id)
-  }
-
-  const handleTextChange = (index: number, text: string) => {
-    updateNotification(index, { text })
-  }
-  const handleUrlTextChange = (index: number, urlText: string) => {
-    updateNotification(index, { urlText })
-  }
-  const handleUrlChange = (index: number, url: string) => {
-    updateNotification(index, { url })
-  }
-  const handleExpirationChange = (index: number, expiration: Expiration) => {
-    updateNotification(index, { expiration })
-  }
-  const handleUrlFontSizeChange = (index: number, urlFontSize: number) => {
-    updateNotification(index, { urlFontSize })
-  }
-
-  const renderItem = (item: Notification, index: number) => (
-    <NotificationItem
-      notification={item}
-      index={index}
-      pendingItemId={pendingItemId}
-      setPendingItemId={setPendingItemId}
-      onTextChange={value => handleTextChange(index, value)}
-    />
-  )
-  const renderBelow = (item: Notification, index: number) => (
-    item.id === pendingItemId && (
-      <NotificationItemSettings
-        notification={item}
-        pendingItemId={pendingItemId}
-        onUrlTextChange={value => handleUrlTextChange(index, value)}
-        onUrlChange={value => handleUrlChange(index, value)}
-        onExpirationChange={value => handleExpirationChange(index, value)}
-        onUrlFontSizeChange={value => handleUrlFontSizeChange(index, value)}
-      />
-    )
-  )
 
   const listClassNames = {
     index: 'min-w-[40px]',
@@ -305,8 +246,53 @@ const NotificationSettings = () => {
   }
 
   const handleDelayChange = (value: string) => {
-    setNotificationDelay(+value)
+    dispatch(delayChanged(+value))
   }
+  const handleItemsReorder = (ids: string[]) => {
+    dispatch(notificationsReordered(ids))
+  }
+  const handleAdd = () => {
+    dispatch(notificationAdded({ ...defaultNotifications[0], id: nanoid() }))
+  }
+  const handleDelete = (id: string) => {
+    dispatch(notificationDeleted(id))
+  }
+  const handleTextChange = (id: string, text: string) => {
+    dispatch(notificationUpdated({ id, text }))
+  }
+  const handleUrlTextChange = (id: string, urlText: string) => {
+    dispatch(notificationUpdated({ id, urlText }))
+  }
+  const handleUrlChange = (id: string, url: string) => {
+    dispatch(notificationUpdated({ id, url }))
+  }
+  const handleExpirationChange = (id: string, expiration: Expiration) => {
+    dispatch(notificationUpdated({ id, expiration }))
+  }
+  const handleUrlFontSizeChange = (id: string, urlFontSize: number) => {
+    dispatch(notificationUpdated({ id, urlFontSize }))
+  }
+
+  const renderItem = (id: string) => (
+    <NotificationItem
+      id={id}
+      pendingItemId={pendingItemId}
+      setPendingItemId={setPendingItemId}
+      onTextChange={value => handleTextChange(id, value)}
+    />
+  )
+  const renderBelow = (id: string) => (
+    id === pendingItemId && (
+      <NotificationItemSettings
+        id={id}
+        pendingItemId={pendingItemId}
+        onUrlTextChange={value => handleUrlTextChange(id, value)}
+        onUrlChange={value => handleUrlChange(id, value)}
+        onExpirationChange={value => handleExpirationChange(id, value)}
+        onUrlFontSizeChange={value => handleUrlFontSizeChange(id, value)}
+      />
+    )
+  )
 
   return (
     <BorderedContainer>
@@ -337,12 +323,12 @@ const NotificationSettings = () => {
         <hr className='border-[#E1E1E1] my-2.5' />
 
         <div className='w-full flex flex-col gap-2.5'>
-          {notifications && (
+          {notificationsExist && (
             <EditableList
               showIndex={false}
-              items={notifications}
+              idsSelector={selectNotificationIds}
               maxItems={5}
-              onItemsChange={setNotifications}
+              onItemsReorder={handleItemsReorder}
               canReorder
               classNames={listClassNames}
               renderItem={renderItem}

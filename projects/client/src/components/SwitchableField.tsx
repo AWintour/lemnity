@@ -5,7 +5,7 @@ import CustomSwitch from './CustomSwitch'
 export type SwitchableFieldProps = {
   title: string
   switchLabel?: string
-  enabled: boolean
+  enabled?: boolean
   onToggle: (nextEnabled: boolean) => void
   disabled?: boolean
   children?: React.ReactNode
@@ -46,7 +46,7 @@ const SwitchableField = ({
         <div className="flex items-center justify-between grow gap-2.5">
           <span
             className={cn(
-              'text-black text-base font-medium',
+              'text-black text-base',
               classNames.title
             )}
           >
@@ -73,7 +73,7 @@ const SwitchableField = ({
           size="sm"
         />
       </div>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {children && enabled ? (
           <motion.div
             // layout

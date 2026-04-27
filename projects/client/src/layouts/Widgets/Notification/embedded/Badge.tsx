@@ -1,4 +1,4 @@
-import { cn } from "@heroui/theme"
+import { cn } from '@heroui/theme'
 
 type BadgeProps = {
   badgeContent: number

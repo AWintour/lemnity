@@ -1,33 +1,50 @@
 import { cn } from '@heroui/theme'
 import { Input } from '@heroui/input'
-import { useShallow } from 'zustand/react/shallow'
 import {
   parseAbsoluteToLocal,
   ZonedDateTime,
 } from '@internationalized/date'
 
 import { ContentSettings } from '../'
+import type {
+  ContentSettingsProps,
+} from '../WidgetAppearanceSettings/ContentSettings'
 import CountdownSettings from './CountdownSettings'
 import TextSettings from '@/components/TextSettings'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
-import ButtonAppearenceSettings from '@/layouts/WidgetSettings/DisplaySettingsTab/ButtonAppearenceSettings/ButtonAppearenceSettings'
-
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import { ButtonAppearenceSettings } from '@/components'
 
 import type {
-  AnnouncementWidgetType,
   Content,
   ContentAlignment,
   FontWeight,
   Icon,
 } from '@lemnity/widget-config/widgets/announcement'
-import type {
-  EventTimertWidgetType,
-} from '@lemnity/widget-config/widgets/event-timer'
 
 type InfoSettingsProps = {
   variant: 'countdown' | 'announcement'
-  defaults: AnnouncementWidgetType | EventTimertWidgetType
+  contentEnabled?: boolean
+  contentType?: Content
+  contentAlignment?: ContentAlignment
+  contentUrl: string | undefined
+
+  title: string
+  titleColor: string
+  description: string
+  descriptionColor: string
+
+  countdownEnabled?: boolean
+  countdownDate?: string
+  countdownFontColor?: string
+  countdownBackgroundColor?: string
+  
+  buttonText: string
+  buttonFontColor: string
+  buttonBackgroundColor: string
+  icon: Icon
+  link: string
+
+  rewardScreenEnabled?: boolean
   setContentType?: (contentType: Content) => void
   setContentAlignment?: (alignment: ContentAlignment) => void
   setContentEnabled?: (contentEnabled: boolean) => void
@@ -41,9 +58,7 @@ type InfoSettingsProps = {
   setCountdownEnabled?: (countdownEnabled: boolean) => void
   setCountdownDate?: (countdownDate: string) => void
   setCountdownFontColor?: (countdownFontColor: string) => void
-  setCountdownBackgroundColor?: (
-    countdownBackgroundColor: string
-  ) => void
+  setCountdownBackgroundColor?: (countdownBackgroundColor: string) => void
   setButtonText: (buttonText: string) => void
   setButtonFontColor: (buttonFontColor: string) => void
   setButtonBackgroundColor: (buttonBackgroundColor: string) => void
@@ -53,6 +68,7 @@ type InfoSettingsProps = {
 
 const InfoSettings = (props: InfoSettingsProps) => {
   const {
+    contentEnabled,
     contentType,
     contentAlignment,
     contentUrl,
@@ -64,8 +80,6 @@ const InfoSettings = (props: InfoSettingsProps) => {
 
     countdownEnabled,
     countdownDate,
-    countdownFontColor,
-    countdownBackgroundColor,
     
     buttonText,
     buttonFontColor,
@@ -74,83 +88,14 @@ const InfoSettings = (props: InfoSettingsProps) => {
     link,
 
     rewardScreenEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const widget =
-        (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
-      const settings = widget.infoSettings
-      const defaults = props.defaults.infoSettings
-      const isAnnouncement = s.settings?.widgetType === 'ANNOUNCEMENT'
-      
-      let contentType: Content = 'imageOnTop'
-      let contentAlignment: ContentAlignment = 'center'
-      if (isAnnouncement) {
-        contentType =
-          (s.settings?.widget as AnnouncementWidgetType)
-            .infoSettings
-            .contentType
-          ?? (props.defaults as AnnouncementWidgetType)
-            .infoSettings
-            .contentType
-        contentAlignment =
-          (s.settings?.widget as AnnouncementWidgetType)
-            .infoSettings
-            .contentAlignment
-          ?? (props.defaults as AnnouncementWidgetType)
-            .infoSettings
-            .contentAlignment!
-      }
+  } = props
 
-      return {
-        contentType: contentType,
-        contentAlignment: contentAlignment,
-
-        contentUrl: settings.contentUrl
-          ?? defaults.contentUrl,
-
-        title: settings?.title
-          ?? defaults.title,
-        titleColor: settings?.titleColor
-          ?? defaults.titleColor,
-        description: settings?.description
-          ?? defaults.description,
-        descriptionColor: settings?.descriptionColor
-          ?? defaults.descriptionColor,
-
-        countdownEnabled: isAnnouncement
-          ? undefined
-          // @ts-expect-error this code will get nuked soon anyways
-          : settings?.countdownEnabled ?? defaults.countdownEnabled,
-        countdownDate: isAnnouncement
-          ? undefined
-          // @ts-expect-error this code will get nuked soon anyways
-          : settings?.countdownDate ?? defaults.countdownDate,
-        countdownFontColor: isAnnouncement
-          ? undefined
-          // @ts-expect-error this code will get nuked soon anyways
-          : settings?.countdownFontColor ?? defaults.countdownFontColor,
-        countdownBackgroundColor: isAnnouncement
-          ? undefined
-          // @ts-expect-error this code will get nuked soon anyways
-          : settings?.countdownBackgroundColor ?? defaults.countdownBackgroundColor,
-        
-        buttonText: settings?.buttonText
-          ?? defaults.buttonText,
-        buttonFontColor: settings?.buttonFontColor
-          ?? defaults.buttonFontColor,
-        buttonBackgroundColor: settings?.buttonBackgroundColor
-          ?? defaults.buttonBackgroundColor,
-        icon: settings?.icon
-          ?? defaults.icon,
-        link: settings?.link
-          ?? defaults.link,
-        
-        rewardScreenEnabled: widget.rewardMessageSettings.rewardScreenEnabled
-          ?? props.defaults.rewardMessageSettings.rewardScreenEnabled,
-      }
-    })
-  )
+  const countdownFontColor = countdownEnabled
+    ? props.countdownFontColor
+    : '#000000'
+  const countdownBackgroundColor = countdownEnabled
+    ? props.countdownBackgroundColor
+    : '#FFFFFF'
 
   const showCountdownSettings =
     props.variant === 'countdown'
@@ -165,6 +110,21 @@ const InfoSettings = (props: InfoSettingsProps) => {
     props?.setCountdownDate?.(value.toAbsoluteString())
   }
 
+  const contentSettingsProps: ContentSettingsProps<
+    ContentAlignment,
+    Content
+  > = {
+    format: props.variant,
+    contentEnabled: contentEnabled,
+    contentType: contentType,
+    contentAlignment: contentAlignment,
+    contentUrl: contentUrl,
+    onContentTypeChange: props.setContentType,
+    onContentToggle: props.setContentEnabled,
+    onContentAlignmentChange: props.setContentAlignment,
+    onContentUrlChange: props.setContentUrl,
+  }
+
   return (
     <div className='w-full min-w-85.5 flex flex-col gap-2.5'>
       <h1 className='text-[25px] leading-7.5 font-normal text-[#060606]'>
@@ -172,14 +132,7 @@ const InfoSettings = (props: InfoSettingsProps) => {
       </h1>
       
       <ContentSettings
-        format={props.variant}
-        contentType={contentType}
-        contentAlignment={contentAlignment}
-        contentUrl={contentUrl}
-        onContentTypeChange={props.setContentType}
-        onContentToggle={props.setContentEnabled}
-        onContentAlignmentChange={props.setContentAlignment}
-        onContentUrlChange={props.setContentUrl}
+        {...contentSettingsProps}
       />
 
       <BorderedContainer>
@@ -223,9 +176,9 @@ const InfoSettings = (props: InfoSettingsProps) => {
                 : parseAbsoluteToLocal(new Date().toISOString())
             }
             onDateChange={handleCountdownDateChange}
-            backgroundColor={countdownBackgroundColor}
+            backgroundColor={countdownBackgroundColor!}
             onBackgroundColorChange={props.setCountdownBackgroundColor!}
-            fontColor={countdownFontColor}
+            fontColor={countdownFontColor!}
             onFontColorChange={props.setCountdownFontColor!}
           />}
 
