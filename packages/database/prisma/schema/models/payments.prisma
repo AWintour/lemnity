@@ -1,0 +1,18 @@
+enum PaymentType {
+  CARD
+  INVOICE
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  amount     Decimal  @db.Money @default(0)
+  type       PaymentType
+  receiptUrl String   @map("receipt_url")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+
+  @@map("payments")
+}

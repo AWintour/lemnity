@@ -4,16 +4,23 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  email     String   @unique
-  phone     String   @unique
-  name      String?
-  password  String
-  role      Role     @default(USER)
+  email               String               @unique
+  phone               String               @unique
+  name                String?
+  password            String
+  role                Role                 @default(USER)
   passwordResetTokens PasswordResetToken[]
-  projects  Project[]
-  
+  projects            Project[]
+
+  balance Decimal @db.Money @default(0)
+
+  paymentPlan   PaymentPlan? @relation(fields: [paymentPlanId], references: [id])
+  paymentPlanId String?
+
+  payments Payment[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

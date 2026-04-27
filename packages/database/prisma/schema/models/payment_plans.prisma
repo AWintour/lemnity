@@ -1,0 +1,19 @@
+model PaymentPlan {
+  id String @id @default(cuid())
+
+  name             String
+  enabled          Boolean
+  numberOfProjects Int     @map("number_of_projects")
+  numberOfWidgets  Int     @map("number_of_widgets")
+  monthlyPrice     Decimal @db.Money @default(0) @map("monthly_price")
+  quarterlyPrice   Decimal @db.Money @default(0) @map("quarterly_price")
+  yearlyPrice      Decimal @db.Money @default(0) @map("yearly_price")
+  brandingPrice    Decimal @db.Money @default(0) @map("branding_price")
+  options          Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("payment_plans")
+}

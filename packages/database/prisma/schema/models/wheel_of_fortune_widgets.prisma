@@ -1,7 +1,7 @@
 model WheelOfFortuneWidget {
-  widgetId  String   @id @map("widget_id")
+  widgetId String @id @map("widget_id")
 
-  spins     WheelOfFortuneSpin[]
+  spins WheelOfFortuneSpin[]
 
   createdAt DateTime @default(now()) @map("created_at")
 
