@@ -207,6 +207,7 @@ services:
       NODE_ENV: ${NODE_ENV}
       VITE_API_URL: ${VITE_API_URL}
       DATABASE_URL: ${DATABASE_URL}
+      VITE_CLOUDPAYMENTS_PUBLIC_ID: ${VITE_CLOUDPAYMENTS_PUBLIC_ID}
     volumes:
       - ./projects/client:/client/projects/client
       - ./packages:/client/packages

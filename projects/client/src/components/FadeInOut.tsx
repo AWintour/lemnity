@@ -1,3 +1,4 @@
+import type { HTMLProps } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 type FadeInOutProps = {
@@ -6,6 +7,8 @@ type FadeInOutProps = {
 }
 
 const FadeInOut = (props: FadeInOutProps) => {
+  const animationDuration = props.animationDuration ?? 0.16
+
   return (
     <AnimatePresence initial={false}>
       {props.visible && (
@@ -13,7 +16,7 @@ const FadeInOut = (props: FadeInOutProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.16 }}
+          transition={{ duration: animationDuration }}
           className='flex flex-col gap-1'
         >
           {props.children}
