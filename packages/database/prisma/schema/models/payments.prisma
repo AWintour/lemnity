@@ -6,7 +6,7 @@ enum PaymentType {
 model Payment {
   id String @id @default(cuid())
 
-  amount     Decimal  @db.Money @default(0)
+  amount     Decimal  @db.Decimal(10, 2) @default(0)
   type       PaymentType
   receiptUrl String   @map("receipt_url")
   createdAt  DateTime @default(now()) @map("created_at")

@@ -6,7 +6,9 @@ apis/auth-api.ts
 apis/collector-api.ts
 apis/files-api.ts
 apis/password-reset-api.ts
+apis/payment-api.ts
 apis/project-api.ts
+apis/public-projects-api.ts
 apis/public-requests-api.ts
 apis/public-widgets-api.ts
 apis/requests-api.ts
@@ -30,9 +32,13 @@ docs/ForgotPasswordDto.md
 docs/GetProjectResponse.md
 docs/LoginResponse.md
 docs/PasswordResetApi.md
+docs/PaymentApi.md
+docs/PaymentInfoResponse.md
+docs/PaymentPlanDto.md
 docs/Project.md
 docs/ProjectApi.md
 docs/ProjectsResponse.md
+docs/PublicProjectsApi.md
 docs/PublicRequestsApi.md
 docs/PublicWidget.md
 docs/PublicWidgetsApi.md
@@ -64,6 +70,8 @@ models/forgot-password-dto.ts
 models/get-project-response.ts
 models/index.ts
 models/login-response.ts
+models/payment-info-response.ts
+models/payment-plan-dto.ts
 models/project.ts
 models/projects-response.ts
 models/public-widget.ts

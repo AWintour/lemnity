@@ -5,20 +5,38 @@ import HomePageBanner from '@/layouts/HomePageBanner/HomePageBanner'
 import AddProjectsBlock from '@/layouts/AddProjectsBlock/AddProjectsBlock'
 import ProjectList from '@/layouts/ProjectList/ProjectList'
 import AddProjectModal from '@/layouts/AddProjectsBlock/AddProjectModal'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useProjectsStore } from '@/stores/projectsStore'
 import useUserStore from '@/stores/userStore'
 import { Button } from '@heroui/button'
 import chatboxIcon from '@/assets/icons/chatbox.svg'
+import { http } from '@/common/api/http'
 
 // import MaintenancePage from './MaintenancePage'
 // import CenteredLayout from '@/layouts/CenteredLayout'
+
+const fetchPaymentInfo = async () => {
+  const result = await http.get('/payment/info')
+  console.log(result.data)
+}
+
+const updatePaymentInfo = async () => {
+  const result = await http.patch('/payment/info', {
+    balance: 500,
+    paymentPlanId: 'cmoh372ud00003b6tvccqee8x',
+  })
+  console.log(result.data)
+}
 
 const HomePage = () => {
   const projects = useProjectsStore(s => s.projects)
   const createProject = useProjectsStore(s => s.createProject)
   const user = useUserStore(s => s.user)
   const userName = user?.name || ''
+
+  useEffect(() => {
+    void fetchPaymentInfo()
+  }, [])
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const handleOpen = useCallback(() => setIsModalOpen(true), [])

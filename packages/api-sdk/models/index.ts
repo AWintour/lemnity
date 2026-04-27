@@ -8,6 +8,8 @@ export * from './delete-request-response';
 export * from './forgot-password-dto';
 export * from './get-project-response';
 export * from './login-response';
+export * from './payment-info-response';
+export * from './payment-plan-dto';
 export * from './project';
 export * from './projects-response';
 export * from './public-widget';

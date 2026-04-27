@@ -2,7 +2,7 @@
 CREATE TYPE "PaymentType" AS ENUM ('CARD', 'INVOICE');
 
 -- AlterTable
-ALTER TABLE "users" ADD COLUMN     "balance" MONEY NOT NULL DEFAULT 0,
+ALTER TABLE "users" ADD COLUMN     "balance" DECIMAL(10,2) NOT NULL DEFAULT 0,
 ADD COLUMN     "paymentPlanId" TEXT;
 
 -- CreateTable
@@ -12,10 +12,10 @@ CREATE TABLE "payment_plans" (
     "enabled" BOOLEAN NOT NULL,
     "number_of_projects" INTEGER NOT NULL,
     "number_of_widgets" INTEGER NOT NULL,
-    "monthly_price" MONEY NOT NULL DEFAULT 0,
-    "quarterly_price" MONEY NOT NULL DEFAULT 0,
-    "yearly_price" MONEY NOT NULL DEFAULT 0,
-    "branding_price" MONEY NOT NULL DEFAULT 0,
+    "monthly_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "quarterly_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "yearly_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
+    "branding_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "options" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE "payment_plans" (
 -- CreateTable
 CREATE TABLE "payments" (
     "id" TEXT NOT NULL,
-    "amount" MONEY NOT NULL DEFAULT 0,
+    "amount" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "type" "PaymentType" NOT NULL,
     "receipt_url" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

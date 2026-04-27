@@ -14,7 +14,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   projects            Project[]
 
-  balance Decimal @db.Money @default(0)
+  balance Decimal @db.Decimal(10, 2) @default(0)
 
   paymentPlan   PaymentPlan? @relation(fields: [paymentPlanId], references: [id])
   paymentPlanId String?
