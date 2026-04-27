@@ -130,6 +130,7 @@ const ColorPicker = (props: ColorPickerProps) => {
   })
 
   const isValidHex = (hex: string) => {
+    if (!hex) return false
     const cleanHex = hex.replace('#', '')
     return cleanHex.length === 6 || cleanHex.length === 0
   }

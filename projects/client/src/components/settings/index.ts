@@ -7,7 +7,9 @@ import ContactAcquisitionSettings from './FormSettings/ContactAcquisitionSetting
 import FormSettings from './FormSettings'
 import InfoSettings from './InfoSettings'
 import RewardMessageSettings from './RewardMessageSettings'
-import MobileVersionSettings from './MobileVersionSettings'
+import MobileTriggerSettings from './MobileTriggerSettings'
+import ContentPlacement from './ContentPlacement'
+import DisplayTriggerSettings from './DisplayTriggerSettings'
 
 export {
   CompanyLogo,
@@ -19,5 +21,7 @@ export {
   FormSettings,
   InfoSettings,
   RewardMessageSettings,
-  MobileVersionSettings,
+  MobileTriggerSettings,
+  ContentPlacement,
+  DisplayTriggerSettings,
 }

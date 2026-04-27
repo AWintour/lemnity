@@ -1,5 +1,5 @@
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
-import type { WidgetSettings } from '@/stores/widgetSettings/types'
+// import type { WidgetSettings } from '@/stores/widgetSettings/types'
 
 export type InitOptions = {
   widgetId: string
@@ -11,5 +11,5 @@ export type PublicWidgetResponse = {
   projectId: string
   type: WidgetTypeEnum
   enabled: boolean
-  config: WidgetSettings | null
+  config: object | null
 }

@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@heroui/theme'
 
-import { CountdownAnnouncementEmbedRuntime } from './embedded/embedRuntime'
+import AnnouncementEmbedRuntime from './embedded/embedRuntime'
 
 type FloatingPreviewProps = {
-  onClose: () => void
+  onClose?: () => void
 }
 
 const AnnouncementFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
@@ -31,7 +31,7 @@ const AnnouncementFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
       >
         Закрыть
       </button>
-      <CountdownAnnouncementEmbedRuntime isPreview />
+      <AnnouncementEmbedRuntime isPreview />
     </div>,
     document.body
   )

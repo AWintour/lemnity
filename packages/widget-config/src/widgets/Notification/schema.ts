@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import {
   buildWidgetSettingsSchema,
-  IconEnum,
   LooseSurfaceSchema,
   type WidgetTypeId
 } from '../base.js'
+import { TriggerSchema } from '../../features/trigger.js'
 
 const WidgetType: WidgetTypeId = 'NOTIFICATION'
 
@@ -33,30 +33,14 @@ export type Notification = z.infer<typeof NotificationSchema>
 
 const NotificationWidgetSchema = z.object({
   type: z.literal(WidgetType),
-  triggerText: z
-    .string()
-    .max(25, 'Текст должен быть не длиннее 25 символов'),
-  triggerFontColor: z
-    .string()
-    .regex(
-      /^#[0-9A-F]{6}$/i,
-      'Цвет должен быть в HEX формате'
-    ),
-  triggerIcon: IconEnum,
-  triggerBackgroundColor: z
-    .string()
-    .regex(
-      /^#[0-9A-F]{6}$/i,
-      'Цвет должен быть в HEX формате'
-    ),
-  triggerPosition: PositionEnum,
-
+  trigger: TriggerSchema.omit({
+    triggerVariant: true,
+    triggerImageUrl: true,
+  }),
   delay: z
     .number()
     .min(0, 'Временной промежуток не может быть отприцательным'),
-
   notifications: z.array(NotificationSchema),
-
   brandingEnabled: z.boolean(),
 })
 

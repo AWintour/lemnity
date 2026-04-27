@@ -23,8 +23,8 @@ type DesktopWidgetTriggerProps =
       triggerText: string
       triggerPosition: Position
       numberOfNotifications: number
-      onMouseEnter: () => void
-      onMouseLeave: () => void
+      onMouseEnter?: () => void
+      onMouseLeave?: () => void
       toggleOpen: () => void
     }
 

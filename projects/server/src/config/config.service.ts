@@ -4,6 +4,7 @@ import {
   CURRENT_VERSION,
   canonicalizeWidgetConfig,
   validate,
+  type WidgetType,
   type CanonicalWidgetSettings
 } from '@lemnity/widget-config'
 
@@ -11,9 +12,12 @@ import {
 export class ConfigService {
   constructor(private readonly prisma: PrismaService) {}
 
-  validateAndCanonicalize(raw: unknown): { data: CanonicalWidgetSettings; version: number } {
+  validateAndCanonicalize(
+    widgetType: WidgetType,
+    raw: unknown
+  ): { data: CanonicalWidgetSettings; version: number } {
     const canonical = canonicalizeWidgetConfig(raw)
-    const validation = validate(canonical)
+    const validation = validate(widgetType, canonical)
     if (!validation.ok) {
       throw new BadRequestException({ message: 'Invalid widget config', issues: validation.issues })
     }

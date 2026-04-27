@@ -3,29 +3,29 @@ import {
   type CSSProperties,
   type Ref,
 } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@heroui/button'
 import { cn } from '@heroui/theme'
 
 import SvgIcon from '@/components/SvgIcon'
 import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
 import CountdownScreen from './CountdownScreen'
-import { RewardScreen } from '@/components'
 import EventTimerFormScreen, {
   type CountdownForm,
 } from './EventTimerFormScreen'
+import EventTimerRewardScreen from './EventTimerRewardScreen'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import useUrlImageOrDefault from '../../../hooks/useUrlImage'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  selectCompanyLogoEnabled,
+  selectCompanyLogoUrl,
+  selectBrandingEnabled,
+} from './eventTimerSlice'
 import { useMobileContext } from './embedded/MobileContext'
+import useUrlImageOrDefault from '../../../hooks/useUrlImage'
 
 import crossIcon from '@/assets/icons/cross.svg'
-import type {
-  EventTimertWidgetType,
-} from '@lemnity/widget-config/widgets/event-timer'
-import { eventTimerWidgetDefaults } from './defaults'
 
 export type EventTimerWidgetVariant = 'countdown' | 'form' | 'reward'
 
@@ -41,23 +41,9 @@ type EventTimerWidgetProps = {
 const EventTimerWidget = (
   { ref, ...props }: EventTimerWidgetProps
 ) => {
-  const {
-    companyLogoEnabled,
-    companyLogoUrl,
-    brandingEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const widget = s.settings?.widget as EventTimertWidgetType
-      const appearence = widget.appearence
-
-      return {
-        companyLogoEnabled: appearence.companyLogoEnabled,
-        companyLogoUrl: appearence.companyLogoUrl,
-        brandingEnabled: widget.brandingEnabled,
-      }
-    })
-  )
+  const companyLogoEnabled = useAppSelector(selectCompanyLogoEnabled)
+  const companyLogoUrl = useAppSelector(selectCompanyLogoUrl)
+  const brandingEnabled = useAppSelector(selectBrandingEnabled)
 
   const {
     base64Image: companyBase64Logo,
@@ -113,7 +99,7 @@ const EventTimerWidget = (
           'pointer-events-auto',
           props.focused || mobile ? 'flex' : 'hidden group-hover:flex',
         )}
-        onPress={handleCloseButtonPress}
+        onPressEnd={handleCloseButtonPress}
       >
         <div className='w-4 h-4 fill-black'>
           <SvgIcon src={crossIcon} alt='Close' />
@@ -135,11 +121,7 @@ const EventTimerWidget = (
         />
       )}
       {props.variant === 'reward' && (
-        <RewardScreen
-          defaults={eventTimerWidgetDefaults.rewardMessageSettings} 
-          companyLogoEnabled={companyLogoEnabled}
-          companyLogo={companyLogo}
-        />
+        <EventTimerRewardScreen />
       )}
 
       {brandingEnabled

@@ -1,37 +1,37 @@
+// this schema will need to be refactored
+// it was made before the /features folder was introduced
+// features were integrated in a way that does not break existing code
 import { z } from 'zod'
 import {
   IconEnum,
-  ColorSchemeEnum,
   LooseSurfaceSchema,
   type WidgetTypeId,
   buildWidgetSettingsSchema
 } from '../base.js'
+import { WidgetAppearenceSchema } from '../../features/widgetAppearence.js'
+import { RewardMessageSettingsSchema } from '../../features/rewardMessage.js'
+import { MobileSchema } from '../../features/mobileTrigger.js'
+import { CountdownSchema } from '../../features/countdown.js'
+import { AgreementSchema } from '../../features/agreement.js'
+import { AdsInfoSchema } from '../../features/adsInfo.js'
+import { ContactAcquisitionSchema } from '../../features/contactAcquisition.js'
+import { TriggerSchema } from '../../features/trigger.js'
 
 const WidgetType: WidgetTypeId = 'EVENT_TIMER'
 
-const ContentAlignmentEnum = z.enum(['top', 'center', 'bottom'])
 const FontWeightEnum = z.enum(['regular', 'medium', 'bold'])
-const MobileTriggerEnum = z.enum(['image', 'button'])
 
-export type ContentAlignment = z.infer<typeof ContentAlignmentEnum>
 export type Icon = z.infer<typeof IconEnum>
 export type FontWeight = z.infer<typeof FontWeightEnum>
-export type MobileTrigger = z.infer<typeof MobileTriggerEnum>
-
-const WidgetAppearenceSchema = z.object({
-  companyLogoEnabled: z.boolean(),
-  companyLogoUrl: z.string().optional(),
-
-  colorScheme: ColorSchemeEnum,
-  backgroundColor: z
-    .string()
-    .optional(),
-  borderRadius: z.number(),
-})
-
-export type WidgetAppearence = z.infer<typeof WidgetAppearenceSchema>
 
 const InfoSettingsSchema = z.object({
+  ...CountdownSchema
+    .omit({
+      textBeforeCountdown: true,
+      textBeforeCountdownColor: true,
+    })
+    .shape,
+
   contentEnabled: z.boolean(),
   contentUrl: z
     .string()
@@ -43,11 +43,6 @@ const InfoSettingsSchema = z.object({
   description: z.string(),
   descriptionColor: z.string(),
   descriptionFontWeight: FontWeightEnum,
-
-  countdownEnabled: z.boolean(),
-  countdownDate: z.string(),
-  countdownBackgroundColor: z.string(),
-  countdownFontColor: z.string(),
 
   buttonText: z.string(),
   buttonFontColor: z.string(),
@@ -66,75 +61,13 @@ const FormSettingsSchema = z.object({
   descriptionFontWeight: FontWeightEnum,
   descriptionFontColor: z.string(),
 
-  contactAcquisitionEnabled: z.boolean(),
-  nameFieldEnabled: z.boolean(),
-  nameFieldRequired: z.boolean(),
-  emailFieldEnabled: z.boolean(),
-  emailFieldRequired: z.boolean(),
-  phoneFieldEnabled: z.boolean(),
-  phoneFieldRequired: z.boolean(),
+  ...ContactAcquisitionSchema.shape,
 
-  agreement: z.object({
-    enabled: z.boolean(),
-    policyUrl: z.string(),
-    agreementUrl: z.string(),
-    color: z.string()
-  }),
-  adsInfo: z.object({
-    enabled: z.boolean(),
-    policyUrl: z.string(),
-    color: z.string()
-  }),
+  agreement: AgreementSchema,
+  adsInfo: AdsInfoSchema,
 })
 
 export type FormSettings = z.infer<typeof FormSettingsSchema>
-
-const RewardMessageSettingsSchema = z.object({
-  rewardScreenEnabled: z.boolean(),
-
-  title: z.string(),
-  titleFontSize: z
-    .number()
-    .nonnegative(),
-  titleFontWeight: FontWeightEnum,
-  titleFontColor: z.string(),
-
-  description: z.string(),
-  descriptionFontSize: z
-    .number()
-    .nonnegative(),
-  descriptionFontWeight: FontWeightEnum,
-  descriptionFontColor: z.string(),
-
-  discount: z.string(),
-  discountFontSize: z
-    .number()
-    .nonnegative(),
-  discountFontWeight: FontWeightEnum,
-  discountFontColor: z.string(),
-
-  promo: z.string(),
-  promoFontSize: z
-    .number()
-    .nonnegative(),
-  promoFontWeight: FontWeightEnum,
-  promoFontColor: z.string(),
-
-  customColorSchemeEnabled: z.boolean(),
-  customDiscountBackgroundColor: z.string(),
-  customPromoBackgroundColor: z.string(),
-})
-
-export type RewardMessageSettings = z.infer<typeof RewardMessageSettingsSchema>
-
-const MobileSchema = z.object({
-  mobileEnabled: z.boolean(),
-  triggerType: MobileTriggerEnum,
-  imageUrl: z.string().optional(),
-  triggerText: z.string(),
-  triggerFontColor: z.string(),
-  triggerBackgroundColor: z.string(),
-})
 
 const EventTimerWidgetSchema = z.object({
   type: z.literal(WidgetType),
@@ -143,10 +76,13 @@ const EventTimerWidgetSchema = z.object({
   formSettings: FormSettingsSchema,
   rewardMessageSettings: RewardMessageSettingsSchema,
   mobileSettings: MobileSchema,
+  trigger: TriggerSchema.pick({
+    triggerPosition: true,
+  }),
   brandingEnabled: z.boolean(),
 })
 
-export type EventTimertWidgetType =
+export type EventTimerWidgetType =
   z.infer<typeof EventTimerWidgetSchema>
 
 const customSurfaces = {

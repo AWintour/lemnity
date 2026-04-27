@@ -1,7 +1,7 @@
 import SwitchableField from '@/components/SwitchableField'
 import CheckboxField from '@/components/CheckboxField'
 
-type ContactAcquisitionSettings = {
+type ContactAcquisitionSettingsProps = {
   contactAcquisitionEnabled: boolean
   nameFieldEnabled: boolean
   nameFieldRequired: boolean
@@ -18,7 +18,9 @@ type ContactAcquisitionSettings = {
   onPhoneFieldRequiredChange: (value: boolean) => void
 }
 
-const ContactAcquisitionSettings = (props: ContactAcquisitionSettings) => {
+const ContactAcquisitionSettings = (
+  props: ContactAcquisitionSettingsProps
+) => {
   return (
     <SwitchableField
       title="Контакты"

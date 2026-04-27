@@ -1,16 +1,13 @@
-import { useMemo, useState, useCallback, type CSSProperties } from 'react'
-import type { ButtonPosition } from '@/stores/widgetSettingsStore'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { useFABMenuSettings } from './hooks'
+import { useState, useCallback, type CSSProperties } from 'react'
 import type { FABMenuSectorItem } from './types'
 import { FAB_MENU_BUTTON_PRESETS } from './buttonLibrary'
 import { sendEvent } from '@/common/api/publicApi'
+import type { FABMenuPosition } from '@lemnity/widget-config/widgets/fab-menu'
+import { useAppSelector } from '@/stores/redux/hooks'
+import { initialState, selectAllSectors, selectProjectId, selectTriggerBackgroundColor, selectTriggerIcon, selectTriggerPosition, selectTriggerText, selectTriggerTextColor, selectWidgetId } from './FABMenuSlice'
 
-const normalizePosition = (position: ButtonPosition): ButtonPosition =>
+const normalizePosition = (position: FABMenuPosition): FABMenuPosition =>
   position === 'bottom-left' ? 'bottom-left' : 'bottom-right'
-
-const useMenuItems = (items: FABMenuSectorItem[]) =>
-  useMemo(() => (items.length ? items : []), [items])
 
 const sanitizeNickname = (value: string) => value.replace(/^@/, '').trim()
 const sanitizePhone = (value: string) => value.replace(/[^\d+]/g, '')
@@ -67,22 +64,29 @@ const buildActionHref = (item: FABMenuSectorItem): string | null => {
   }
 }
 
-export const useFabMenuPreviewModel = () => {
-  const { settings } = useFABMenuSettings()
-  // TODO: const defaults = useWidgetStaticDefaults() ????
-  const triggerTextColor = settings?.triggerTextColor ?? '#FFFFFF'
-  const triggerBackgroundColor = settings?.triggerBackgroundColor ?? '#5951E5'
-  const triggerText = settings?.triggerText ?? 'Супер-кнопка'
-  const triggerIcon = settings?.triggerIcon ?? 'Sparkles'
-  const buttonPosition = useWidgetSettingsStore(
-    s => (s.settings?.display?.icon?.position as ButtonPosition | undefined) ?? 'bottom-right'
-  )
-  const widgetId = useWidgetSettingsStore(s => s.settings?.id)
-  const projectId = useWidgetSettingsStore(s => s.projectId)
+export const useFabMenuPreviewModel = (widgetIdParam?: string) => {
+  const triggerTextColor =
+    useAppSelector(selectTriggerTextColor)
+      || initialState.trigger.triggerFontColor
+  const triggerBackgroundColor =
+    useAppSelector(selectTriggerBackgroundColor)
+      || initialState.trigger.triggerBackgroundColor
+  const triggerText =
+    useAppSelector(selectTriggerText)
+  const triggerIcon =
+    useAppSelector(selectTriggerIcon)
+  const buttonPosition =
+    useAppSelector(selectTriggerPosition)
+  const widgetId =
+    useAppSelector(selectWidgetId)
+  const projectId =
+    useAppSelector(selectProjectId)
+  const menuItems =
+    useAppSelector(selectAllSectors)
+
   const [expanded, setExpanded] = useState(false)
 
   const safePosition = normalizePosition(buttonPosition)
-  const menuItems = useMenuItems(settings?.sectors.items ?? [])
   const alignClassName =
     safePosition === 'bottom-left' ? 'items-start text-left' : 'items-end text-right'
 
@@ -125,58 +129,57 @@ export const useFabMenuPreviewModel = () => {
     [triggerBackgroundColor, triggerTextColor]
   )
 
-  const toggleExpanded = useCallback(() => {
+  const toggleExpanded = () => {
     setExpanded(prev => {
       const next = !prev
-      if (widgetId) {
+      const id = widgetIdParam ?? widgetId
+      if (id) {
         void sendEvent({
           event_name: next ? 'fab_menu.open' : 'fab_menu.close',
-          widget_id: widgetId,
+          widget_id: id,
           project_id: projectId ?? undefined
         })
       }
       return next
     })
-  }, [projectId, widgetId])
+  }
 
-  const handleItemAction = useCallback(
-    (item: FABMenuSectorItem) => {
-      if (widgetId) {
-        void sendEvent({
-          event_name: 'fab_menu.item_click',
-          widget_id: widgetId,
-          project_id: projectId ?? undefined,
-          payload: {
-            item_id: item.id,
-            label: item.label,
-            action_type: item.payload.type
-          }
-        })
-      }
-
-      const href = buildActionHref(item)
-      if (href && typeof window !== 'undefined') {
-        if (href.startsWith('#')) {
-          window.location.hash = href
-        } else {
-          window.open(href, '_blank', 'noopener,noreferrer')
+  const handleItemAction = (item: FABMenuSectorItem) => {
+    const id = widgetIdParam ?? widgetId
+    if (id) {
+      void sendEvent({
+        event_name: 'fab_menu.item_click',
+        widget_id: id,
+        project_id: projectId ?? undefined,
+        payload: {
+          item_id: item.id,
+          label: item.label,
+          action_type: item.payload.type
         }
-        return
-      }
+      })
+    }
 
-      const { type, value } = item.payload
-      if (type === 'script' && value && typeof navigator !== 'undefined') {
-        navigator.clipboard?.writeText(value)
-        alert('Скрипт скопирован в буфер обмена')
-        return
+    const href = buildActionHref(item)
+    if (href && typeof window !== 'undefined') {
+      if (href.startsWith('#')) {
+        window.location.hash = href
+      } else {
+        window.open(href, '_blank', 'noopener,noreferrer')
       }
-      if (value && typeof navigator !== 'undefined') {
-        navigator.clipboard?.writeText(value)
-        alert('Данные скопированы в буфер обмена')
-      }
-    },
-    [projectId, widgetId]
-  )
+      return
+    }
+
+    const { type, value } = item.payload
+    if (type === 'script' && value && typeof navigator !== 'undefined') {
+      navigator.clipboard?.writeText(value)
+      alert('Скрипт скопирован в буфер обмена')
+      return
+    }
+    if (value && typeof navigator !== 'undefined') {
+      navigator.clipboard?.writeText(value)
+      alert('Данные скопированы в буфер обмена')
+    }
+  }
 
   return {
     triggerTextColor,

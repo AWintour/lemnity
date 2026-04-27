@@ -1,49 +1,219 @@
-import type { InitOptions } from './types'
-import EmbedManager from './embedManager'
-import { findEmbedScript } from './utils'
+import styles from './embed.css?inline'
 
-const manager = new EmbedManager()
+import { lazy } from 'react'
+import { createRoot } from 'react-dom/client'
+import { HeroUIProvider } from '@heroui/system'
+import { Provider } from 'react-redux'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const api = {
-  init: (options: InitOptions) => manager.init(options),
-  destroy: (widgetId?: string) => manager.destroy(widgetId),
-  postMessage: (message: unknown) => manager.postMessage(message)
+import { store } from '@/stores/redux/store'
+import { megaButtonEnabledChanged } from '@/stores/redux/editorSlice'
+
+import type { WidgetTypeId } from '@lemnity/widget-config/widgets/base'
+
+
+const NotificationWidget = lazy(
+  () => import('@/layouts/Widgets/Notification/embedded/EmbeddedWidget')
+)
+const AnnouncementWidget = lazy(
+  () => import('@/layouts/Widgets/Announcement/embedded/EmbeddedWidget')
+)
+const EventTimerWidget = lazy(
+  () => import('@/layouts/Widgets/EventTimer/embedded/EmbeddedWidget')
+)
+const FABMenuWidget = lazy(
+  () => import('@/layouts/Widgets/FABMenu/embedded/EmbeddedWidget')
+)
+const ActionTimerWidget = lazy(
+  () => import('@/layouts/Widgets/ActionTimer/embedded/EmbeddedWidget')
+)
+
+
+type WidgetProps = {
+  widgetId: string
+  type: WidgetTypeId
+  container: ShadowRoot
 }
 
-const autoInitFromQuery = () => {
-  const currentScript = findEmbedScript()
-  console.debug('[LemnityWidgets] autoInitFromQuery start', currentScript?.src ?? null)
-  if (!currentScript?.src) return
-  try {
-    const url = new URL(currentScript.src)
-    const widgetId = url.searchParams.get('widgetId')
-    if (!widgetId) return
-
-    console.debug('[LemnityWidgets] init from query', { widgetId })
-    api.init({ widgetId }).catch(err => console.error('[LemnityWidgets]', err))
-  } catch {
-    // ignore parse errors
+const Widget = ({ widgetId, type, container }: WidgetProps) => {
+  switch (type) {
+    case 'ANNOUNCEMENT':
+      return <AnnouncementWidget widgetId={widgetId} />
+    case 'NOTIFICATION':
+      return <NotificationWidget widgetId={widgetId} />
+    case 'EVENT_TIMER':
+      return <EventTimerWidget widgetId={widgetId} />
+    case 'FAB_MENU':
+      return <FABMenuWidget widgetId={widgetId} />
+    case 'ACTION_TIMER':
+      return <ActionTimerWidget widgetId={widgetId} container={container} />
+    default:
+      return null
   }
 }
 
-const bootstrap = () => {
-  const w = window as unknown as typeof window & {
-    LemnityWidgets?: {
-      init?: (options: InitOptions) => Promise<void>
-      destroy?: (widgetId?: string) => Promise<void>
-      postMessage?: (message: unknown) => void
-      queue?: { type: 'init'; payload: InitOptions }[]
+
+const displayScriptInstallationGuide = () => {
+  console.log('[lemnity] Проверьте, что Вы правильно установили скрипт')
+  console.log('[lemnity] Скрипт должен быть следующего вида:')
+
+  const exampleScript = document.createElement('script')
+
+  exampleScript.setAttribute('data-id', 'lemnnity-widgets')
+  exampleScript.setAttribute('data-project-id', '<ID ВАШЕГО ПРОЕКТА>')
+  exampleScript.src = 'http://app.lemnity.ru/embed.js'
+  exampleScript.type = 'module'
+  exampleScript.defer = true
+
+  console.log(exampleScript)
+}
+
+
+const getProjectId = () => {
+  const self: HTMLScriptElement | null = document.querySelector(
+    'script[data-id="lemnnity-widgets"]'
+  )
+  console.log('[lemnity] script:', self)
+
+  if (!self) {
+    displayScriptInstallationGuide()
+    return
+  }
+
+  const projectId = self.attributes.getNamedItem('data-project-id')?.value
+
+  if (!projectId) {
+    console.log('[lemnity] Не найден projectId в атрибутах скрипта')
+    displayScriptInstallationGuide()
+    return
+  }
+
+  console.log('[lemnity] projectId', projectId)
+
+  return projectId
+}
+
+
+type WidgetIdsAndTypes = {
+  widgets: { id: string, type: WidgetTypeId }[]
+}
+
+const fetchActiveWidgetsForAProject = async (projectId: string) => {
+  const fetchWidgetsUrl =
+    `http://localhost/api/public/projects/${projectId}`
+  const data = await fetch(fetchWidgetsUrl)
+  const json: WidgetIdsAndTypes | undefined = await data.json()
+
+  if (!json) {
+    console.log('[lemnity] Не удалось загруить идентификаторы виджетов')
+    return
+  }
+
+  return json.widgets
+}
+
+
+const fetchActiveProjectWidgets = async () => {
+  const projectId = getProjectId()
+  
+  if (!projectId) {
+    return
+  }
+  
+  const widgets = await fetchActiveWidgetsForAProject(projectId)
+  
+  if (!widgets || widgets.length === 0) {
+    console.log(
+      '[lemnity] Убедитесь, что Вы создали и активировали хотя бы один виджет' +
+      'в проекте'
+    )
+    return
+  }
+  
+  console.log('[lemnity] widgets', widgets)
+  return widgets
+}
+
+
+const queryClient = new QueryClient()
+
+const bootstrap = async () => {
+  console.log('[OwO] we are in.')
+
+  if ((window as any).LEMNNITY_INITIALIZATION_GUARD) {
+    console.log(
+      '[lemnity] Скрипт уже был инициализирован, пропускаю повторную' +
+      'инициализацию...'
+    )
+    console.log(
+      '[lemnity] Проверьте, что скрипт не установлен дважды на одной странице'
+    )
+    return
+  }
+
+  (window as any).LEMNNITY_INITIALIZATION_GUARD = true
+
+  const widgets = await fetchActiveProjectWidgets()
+
+  if (!widgets || widgets.length === 0) {
+    return
+  }
+
+  let FABMenuEnabled: boolean = false
+  let NotificationsEnabled: boolean = false
+
+  for (let widget of widgets) {
+    if (FABMenuEnabled && NotificationsEnabled) {
+      break
+    }
+
+    switch (widget.type) {
+      case 'FAB_MENU':
+        FABMenuEnabled = true
+        break
+      case 'NOTIFICATION':
+        NotificationsEnabled = true
+        break
     }
   }
 
-  const queued = w.LemnityWidgets?.queue ?? []
-  w.LemnityWidgets = { ...w.LemnityWidgets, ...api, queue: [] }
-  queued.forEach(job => {
-    if (job?.type === 'init' && job.payload) {
-      api.init(job.payload).catch((err: unknown) => console.error('[LemnityWidgets]', err))
-    }
-  })  
-  autoInitFromQuery()
+  if (FABMenuEnabled && NotificationsEnabled) {
+    store.dispatch(megaButtonEnabledChanged(true))
+  }
+
+  const rubikFontLink = document.createElement('link')
+  rubikFontLink.href = 'https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap'
+  rubikFontLink.rel = 'stylesheet'
+  document.head.appendChild(rubikFontLink)
+
+  const host = document.createElement('div')
+  host.style.zIndex = '9999999'
+  host.id = 'lemnity-shadow-host'
+  const shadowRoot = host.attachShadow({ mode: 'closed' })
+  const reactRoot = createRoot(shadowRoot)
+  
+  const shadowStyle = document.createElement('style')
+  shadowStyle.textContent = styles
+  shadowRoot.appendChild(shadowStyle)
+
+  reactRoot.render(
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <HeroUIProvider>
+          {widgets.map((widget) => (
+            <Widget
+              key={widget.type}
+              widgetId={widget.id}
+              type={widget.type}
+              container={shadowRoot}
+            />
+          ))}
+        </HeroUIProvider>
+      </QueryClientProvider>
+    </Provider>
+  )
+  
+  document.body.appendChild(host)
 }
 
 if (document.readyState === 'complete') {

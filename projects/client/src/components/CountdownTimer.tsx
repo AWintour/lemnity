@@ -52,12 +52,27 @@ const CountdownSection = (props: CountdownSectionProps) => {
 }
 
 
-const CountdownDelimiter = () => (
-  <div className='w-7.25 h-18.5 flex items-center justify-center pb-1'>
-    <span className={cn(
-      'font-roboto font-bold text-[30px] leading-8.75 text-white',
-      'animate-clock',
-    )}>
+const CountdownDelimiter = (
+  { mini, color }: { mini?: boolean, color?: string }
+) => (
+  <div
+    className={cn(
+      mini
+        ? 'w-5.5 h-15'
+        : 'w-7.25 h-18.5',
+      'flex items-center justify-center pb-1',
+    )}
+  >
+    <span
+      className={cn(
+        'font-bold text-[30px] leading-8.75 text-white',
+        'animate-clock',
+      )}
+      style={{
+        fontFamily: 'Arial Rounded MT Bold, sans-serif',
+        color: color,
+      }}
+    >
       :
     </span>
   </div>
@@ -69,6 +84,7 @@ type CountdownTimerProps = {
   isPaused?: boolean
   backgroundColor?: string
   fontColor?: string
+  mini?: boolean
   onComplete?: () => void
   onTick?: (currentTime: number) => void
 }
@@ -80,6 +96,7 @@ const CountdownTimer = ({
   isPaused = false,
   backgroundColor,
   fontColor,
+  mini,
 }: CountdownTimerProps) => {
   const [timeRemaining, setTimeRemaining] = useState(initialTime)
   const intervalRef = useRef<null | ReturnType<typeof setInterval>>(null)
@@ -135,28 +152,110 @@ const CountdownTimer = ({
     previousTime.current = Date.now()
   }, [initialTime])
 
+  const miniCountdownSectionStyles: CSSProperties = {
+    backgroundColor: backgroundColor,
+    color: fontColor,
+    fontSize: 35,
+    fontWeight: '500',
+    width: '70px',
+    height: '60px',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+  const miniCountdownLabelStyles: CSSProperties = {
+    backgroundColor: backgroundColor,
+    color: fontColor,
+    fontSize: 13.25,
+    width: '70px',
+    height: '26px',
+    borderRadius: 'calc(infinity * 1px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+
   return (
     <div className="w-full flex flex-row justify-center">
-      <CountdownSection
-        value={[days.charAt(0), days.charAt(1)]}
-        label="дней"
-        backgroundColor={backgroundColor}
-        fontColor={fontColor}
-      />
-      <CountdownDelimiter />
-      <CountdownSection
-        value={[hours.charAt(0), hours.charAt(1)]}
-        label="часов"
-        backgroundColor={backgroundColor}
-        fontColor={fontColor}
-      />
-      <CountdownDelimiter />
-      <CountdownSection
-        value={[minutes.charAt(0), minutes.charAt(1)]}
-        label="минут"
-        backgroundColor={backgroundColor}
-        fontColor={fontColor}
-      />
+      {mini
+        ? (
+          <>
+            <div className='flex flex-col gap-2.5'>
+              <div
+                className='transition-colors duration-250'
+                style={miniCountdownSectionStyles}
+              >
+                {days}
+              </div>
+              <div
+                className='transition-colors duration-250'
+                style={miniCountdownLabelStyles}
+              >
+                дней
+              </div>
+            </div>
+
+            <CountdownDelimiter mini color={backgroundColor} />
+
+            <div className='flex flex-col gap-2.5'>
+              <div
+                className='transition-colors duration-250'
+                style={miniCountdownSectionStyles}
+              >
+                {hours}
+              </div>
+              <div
+                className='transition-colors duration-250'
+                style={miniCountdownLabelStyles}
+              >
+                часов
+              </div>
+            </div>
+
+            <CountdownDelimiter mini color={backgroundColor} />
+            
+            <div className='flex flex-col gap-2.5'>
+              <div
+                className='transition-colors duration-250'
+                style={miniCountdownSectionStyles}
+              >
+                {minutes}
+              </div>
+              <div
+                className='transition-colors duration-250'
+                style={miniCountdownLabelStyles}
+              >
+                минут
+              </div>
+            </div>
+          </>
+        )
+        : (
+          <>
+            <CountdownSection
+              value={[days.charAt(0), days.charAt(1)]}
+              label="дней"
+              backgroundColor={backgroundColor}
+              fontColor={fontColor}
+            />
+            <CountdownDelimiter color={backgroundColor} />
+            <CountdownSection
+              value={[hours.charAt(0), hours.charAt(1)]}
+              label="часов"
+              backgroundColor={backgroundColor}
+              fontColor={fontColor}
+            />
+            <CountdownDelimiter color={backgroundColor} />
+            <CountdownSection
+              value={[minutes.charAt(0), minutes.charAt(1)]}
+              label="минут"
+              backgroundColor={backgroundColor}
+              fontColor={fontColor}
+            />
+          </>
+        )
+      }
     </div>
   )
 }

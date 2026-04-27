@@ -7,8 +7,7 @@ import {
 
 type MobileProviderProps = { children: React.ReactNode }
 
-// @ts-expect-error: i don't really need to use state for now
-const mobileReducer = (state: State, action: Action): State => {
+const mobileReducer = (_state: State, action: Action): State => {
   switch (action.type) {
     case 'open':
       return { open: true }

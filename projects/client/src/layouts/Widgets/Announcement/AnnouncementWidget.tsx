@@ -1,30 +1,45 @@
 import { useState, type CSSProperties, type Ref } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@heroui/button'
 import { cn } from '@heroui/theme'
 
 import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
-import {
-  BrTagsOnNewlines,
-  SvgIcon,
-  RewardScreen,
-} from '@/components'
+import { BrTagsOnNewlines, SvgIcon } from '@/components'
 import * as Icons from '@/components/Icons'
+import AnnouncementRewardScreen from './AnnouncementRewardScreen'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import useUrlImage from '@/hooks/useUrlImage'
-import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
-import { useMobileContext } from './embedded/MobileContext'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
+import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  selectTitle,
+  selectTitleFontWeight,
+  selectTitleColor,
+  selectDescription,
+  selectDescriptionFontWeight,
+  selectDescriptionColor,
+  selectButtonText,
+  selectButtonFontColor,
+  selectButtonBackgroundColor,
+  selectIcon,
+  selectLink,
+  selectRewardScreenEnabled,
+  selectBrandingEnabled,
+  selectColorScheme,
+  selectBackgroundColor,
+  selectBorderRadius,
+  selectContentType,
+  selectContentAlignment,
+  selectContentUrl,
+} from './announcementSlice'
+import { useMobileContext } from './embedded/MobileContext'
 import { getFontWeightClass } from './utils/getFontWeightClass'
 
 import type {
-  AnnouncementWidgetType,
   Content,
   ContentAlignment,
 } from '@lemnity/widget-config/widgets/announcement'
 import type { Icon } from '@lemnity/widget-config/widgets/base'
-import { announcementWidgetDefaults } from './defaults'
 import crossIcon from '@/assets/icons/cross.svg'
 
 const noBackgroundImageUrl = 'https://app.lemnity.ru/uploads/images/2026/01/2f539d8a-e1a6-4ced-a863-8e4aa37242d9-lemnity-pic.webp'
@@ -46,7 +61,15 @@ const AnnouncementWidgetButton = (props: AnnouncementWidgetButtonProps) => {
         'text-black text-[20px] transition-colors duration-250',
       )}
       style={props.buttonStyle}
-      onPress={props.onButtonPress}
+      // react-aria does not fully support Shadow DOM in main branch
+      // we are relying on a soon to be deprecated version of Hero UI
+      // which makes this even worse
+      // my suggestion would be to migrate all components to react-aria
+      // since neither Hero UI's functionality nor styles are used
+      // and react-aria actually intends to roll out Shadow DOM support
+      // eventually
+      // onPress={handleClick}
+      onPressEnd={props.onButtonPress}
     >
       {/* Билеты */}
       {props.icon !== 'HeartDislike' && (
@@ -69,72 +92,19 @@ type AnnouncementWidgetContentProps = {
 const AnnouncementWidgetContent = (
   props: AnnouncementWidgetContentProps
 ) => {
-  const {
-    title,
-    titleColor,
-    titleFontWeight,
-    description,
-    descriptionFontWeight,
-    descriptionColor,
-
-    buttonText,
-    buttonFontColor,
-    buttonBackgroundColor,
-    icon,
-    link,
-
-    rewardScreenEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const widget = (s.settings?.widget as AnnouncementWidgetType)
-      const infoSettings = widget.infoSettings
-      const rewardMessageSettings = widget.rewardMessageSettings
-
-      return  {
-        title: infoSettings.title
-          ?? announcementWidgetDefaults.infoSettings.title,
-        titleFontWeight: infoSettings.titleFontWeight
-          ?? announcementWidgetDefaults.infoSettings.titleFontWeight,
-        titleColor:
-          infoSettings.titleColor && infoSettings.titleColor.length > 0
-            ? infoSettings.titleColor
-            : announcementWidgetDefaults.infoSettings.titleColor,
-        description: infoSettings.description
-          ?? announcementWidgetDefaults.infoSettings.description,
-        descriptionFontWeight: infoSettings.descriptionFontWeight
-          ?? announcementWidgetDefaults.infoSettings.descriptionFontWeight,
-        descriptionColor:
-          infoSettings.descriptionColor
-          && infoSettings.descriptionColor.length > 0
-            ? infoSettings.descriptionColor
-            : announcementWidgetDefaults.infoSettings.descriptionColor,
-
-        buttonText: infoSettings.buttonText
-          ?? announcementWidgetDefaults.infoSettings.buttonText,
-        buttonFontColor:
-          infoSettings.buttonFontColor
-          && infoSettings.buttonFontColor.length > 0
-            ? infoSettings.buttonFontColor
-            : announcementWidgetDefaults.infoSettings.buttonFontColor,
-        buttonBackgroundColor:
-          infoSettings.buttonBackgroundColor
-          && infoSettings.buttonBackgroundColor.length > 0
-            ? infoSettings.buttonBackgroundColor
-            : announcementWidgetDefaults.infoSettings.buttonBackgroundColor,
-        icon: infoSettings.icon
-          ?? announcementWidgetDefaults.infoSettings.icon,
-        link: infoSettings.link
-          ?? announcementWidgetDefaults.infoSettings.link,
-
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
-          ?? announcementWidgetDefaults
-               .rewardMessageSettings
-               .rewardScreenEnabled,
-        }
-    })
-  )
-
+  const title = useAppSelector(selectTitle)
+  const titleFontWeight = useAppSelector(selectTitleFontWeight)
+  const titleColor = useAppSelector(selectTitleColor)
+  const description = useAppSelector(selectDescription)
+  const descriptionFontWeight = useAppSelector(selectDescriptionFontWeight)
+  const descriptionColor = useAppSelector(selectDescriptionColor)
+  const buttonText = useAppSelector(selectButtonText)
+  const buttonFontColor = useAppSelector(selectButtonFontColor)
+  const buttonBackgroundColor = useAppSelector(selectButtonBackgroundColor)
+  const icon = useAppSelector(selectIcon)
+  const link = useAppSelector(selectLink)
+  const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
+  
   const buttonStyle: CSSProperties = {
     color: buttonFontColor,
     backgroundColor: buttonBackgroundColor,
@@ -207,60 +177,14 @@ type AnnouncementWidgetProps = {
 }
 
 const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
-  const {
-    colorScheme,
-    backgroundColor,
-    borderRadius,
-    companyLogoEnabled,
-    companyLogoUrl,
-
-    contentType,
-    contentAlignment,
-    contentUrl,
-
-    rewardScreenEnabled,
-    
-    brandingEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      // a crutch because the store just works this way apparently
-      const widget = s.settings?.widget as AnnouncementWidgetType
-      const appearence = widget.appearence
-      const infoSettings = widget.infoSettings
-      const rewardMessageSettings = widget.rewardMessageSettings
-
-      return  {
-        colorScheme: appearence.colorScheme
-          ?? announcementWidgetDefaults.appearence.colorScheme,
-        backgroundColor:
-          appearence.backgroundColor && appearence.backgroundColor.length > 0
-            ? appearence.backgroundColor
-            : announcementWidgetDefaults.appearence.backgroundColor,
-        borderRadius: appearence.borderRadius
-          ?? announcementWidgetDefaults.appearence.borderRadius,
-
-        companyLogoEnabled: appearence.companyLogoEnabled
-          ?? announcementWidgetDefaults.appearence.companyLogoEnabled,
-        companyLogoUrl: appearence.companyLogoUrl
-          ?? announcementWidgetDefaults.appearence.companyLogoUrl,
-
-        contentType: infoSettings.contentType
-          ?? announcementWidgetDefaults.infoSettings.contentType,
-        contentAlignment: infoSettings.contentAlignment
-          ?? announcementWidgetDefaults.infoSettings.contentAlignment!,
-        contentUrl: infoSettings.contentUrl
-          ?? announcementWidgetDefaults.infoSettings.contentUrl,
-
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled
-          ?? announcementWidgetDefaults
-              .rewardMessageSettings
-              .rewardScreenEnabled,
-        
-        brandingEnabled: widget.brandingEnabled
-          ?? announcementWidgetDefaults.brandingEnabled,
-      }
-    })
-  )
+  const colorScheme = useAppSelector(selectColorScheme)
+  const backgroundColor = useAppSelector(selectBackgroundColor)
+  const borderRadius = useAppSelector(selectBorderRadius)
+  const contentType = useAppSelector(selectContentType)
+  const contentAlignment = useAppSelector(selectContentAlignment)
+  const contentUrl = useAppSelector(selectContentUrl)
+  const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
+  const brandingEnabled = useAppSelector(selectBrandingEnabled)
 
   const {
     base64Image: contentBase64Image,
@@ -299,16 +223,6 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
     containerStyle.backgroundPosition = contentAlignment
   }
 
-  const {
-    base64Image: companyBase64Logo,
-    // error,
-    isLoading: isCompanyLogoLoading,
-  } = useUrlImage(companyLogoUrl)
-
-  const companyLogo = companyLogoUrl && !isCompanyLogoLoading
-    ? companyBase64Logo as string
-    : undefined
-
   const [hidden, setHidden] = useState(false)
 
   const closeButtonStyle: CSSProperties = {
@@ -342,7 +256,7 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
           props.focused || mobile ? 'flex' : 'hidden group-hover:flex',
         )}
         style={closeButtonStyle}
-        onPress={handleCloseButtonPress}
+        onPressEnd={handleCloseButtonPress}
       >
         <div className='w-4 h-4 fill-black'>
           <SvgIcon src={crossIcon} alt='Close' />
@@ -359,12 +273,7 @@ const AnnouncementWidget = ({ ref, ...props }: AnnouncementWidgetProps) => {
       )}
 
       {props.variant === 'reward' && rewardScreenEnabled && (
-        <RewardScreen
-          isAnnouncement
-          companyLogoEnabled={companyLogoEnabled}
-          companyLogo={companyLogo}
-          defaults={announcementWidgetDefaults.rewardMessageSettings}
-        />
+        <AnnouncementRewardScreen />
       )}
       
       {brandingEnabled

@@ -1,53 +1,57 @@
-import { useRef, useState } from 'react'
-import { useShallow } from 'zustand/react/shallow'
+import { useEffect, useRef, useState } from 'react'
 
 import Widget from './Widget'
-import {
-  MobileWidgetTrigger,
-  DesktopWidgetTrigger,
-} from '@/components/announcement'
+import MobileWidgetTrigger from './MobileWidgetTrigger'
+import DesktopWidgetTrigger from './DesktopWidgetTrigger'
 
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { sendEvent } from '@/common/api/publicApi'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
+import {
+  selectWidgetId,
+  selectProjectId,
+  selectRewardScreenEnabled,
+  selectFetchStatus,
+  fetchAnnouncementWidget,
+} from '../announcementSlice'
 
-import type {
-  AnnouncementWidgetType,
-} from '@lemnity/widget-config/widgets/announcement'
 import { type AnnouncementWidgetVariant } from '../AnnouncementWidget'
 import { MobileProvider } from './MobileContext'
 
-export type Rect = {
-  width: number
-  height: number
-}
-
 type EmbedRuntimeProps = {
   isPreview?: boolean
+  widgetId?: string
 }
 
-export const CountdownAnnouncementEmbedRuntime = (
-  props: EmbedRuntimeProps
-) => {
-  const {
-    widgetId,
-    projectId,
-    rewardScreenEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      const widget = s.settings?.widget as AnnouncementWidgetType
-      const rewardMessageSettings = widget.rewardMessageSettings
+const AnnouncementEmbedRuntime = (props: EmbedRuntimeProps) => {
+  const fetchStatus = useAppSelector(selectFetchStatus)
+  const readyToRender = props.isPreview || fetchStatus === 'succeeded'
 
-      return {
-        widgetId: s.settings?.id,
-        projectId: s.projectId,
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
-      }
-    })
-  )
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!props.isPreview && props.widgetId) {
+      dispatch(fetchAnnouncementWidget({
+        widgetId: props.widgetId,
+        embedded: true,
+      }))
+    }
+  }, [dispatch, props.isPreview, props.widgetId])
+
+  const widgetId = useAppSelector(selectWidgetId)
+  const projectId = useAppSelector(selectProjectId)
+  const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
 
   const [focused, setFocused] = useState(false)
+  const [announementVariant, setAnnouncementVariant] =
+    useState<AnnouncementWidgetVariant>('announcement')
+
   const isMobile = useIsMobileViewport()
+  const widgetRef = useRef<HTMLDivElement | null>(null)
+
+  if (!readyToRender) {
+    return null
+  }
 
   const handleClickOutside = () => {
     setFocused(false)
@@ -77,9 +81,6 @@ export const CountdownAnnouncementEmbedRuntime = (
     })
   }
 
-  const [announementVariant, setAnnouncementVariant] =
-    useState<AnnouncementWidgetVariant>('announcement')
-
   const handleAnnouncementButtonPress = () => {
     if (rewardScreenEnabled) {
       setAnnouncementVariant('reward')
@@ -102,22 +103,6 @@ export const CountdownAnnouncementEmbedRuntime = (
     })
   }
 
-  const sendBoundingRectToIframe = (rect: Rect, offset: number) => {
-    window.parent.postMessage({
-      scope: 'lemnity-embed',
-      type: 'interactive-region',
-      lock: false,
-      rect: {
-        left: window.innerWidth - rect.width - offset,
-        top: window.innerHeight - rect.height - offset,
-        width: rect.width,
-        height: rect.height,
-      },
-    })
-  }
-
-  const widgetRef = useRef<HTMLDivElement | null>(null)
-
   return (
     <>
       {isMobile
@@ -136,7 +121,6 @@ export const CountdownAnnouncementEmbedRuntime = (
             focused={focused}
             onClickOutside={handleClickOutside}
             onFocusClick={handleFocusClick}
-            sendBoundingRectToIframe={sendBoundingRectToIframe}
           >
             <Widget
               ref={widgetRef}
@@ -150,4 +134,4 @@ export const CountdownAnnouncementEmbedRuntime = (
   )
 }
 
-export default CountdownAnnouncementEmbedRuntime
+export default AnnouncementEmbedRuntime

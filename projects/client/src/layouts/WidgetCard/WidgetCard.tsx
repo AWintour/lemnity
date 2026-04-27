@@ -14,6 +14,35 @@ export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
 export type WidgetBadge = 'new' | 'popular' | 'soon' | null
 import type { WidgetTypeEnum } from '@lemnity/api-sdk'
 
+import { useAppDispatch } from '@/stores/redux/hooks'
+import { currentWidgetChanged } from '@/stores/redux/editorSlice'
+
+const preloadWidgetOnHover = async (type: WidgetTypeEnum) => {
+  switch (type) {
+    case 'NOTIFICATION':
+      import('@/layouts/Widgets/Notification/NotificationWidgetSettings')
+      import('@/layouts/Widgets/Notification/WidgetPreview')
+      break
+    case 'ANNOUNCEMENT':
+      import('@/layouts/Widgets/Announcement/AnnouncementWidgetSettings')
+      import('@/layouts/Widgets/Announcement/WidgetPreview')
+      break
+    case 'EVENT_TIMER':
+      import('@/layouts/Widgets/EventTimer/EventTimerWidgetSettings')
+      import('@/layouts/Widgets/EventTimer/WidgetPreview')
+      break
+    case 'FAB_MENU':
+      import('@/layouts/Widgets/FABMenu/FABMenuSettings')
+      import('@/layouts/Widgets/FABMenu/WidgetPreview')
+      break
+    case 'ACTION_TIMER':
+      import('@/layouts/Widgets/ActionTimer/ActionTimerWidgetSettings')
+      import('@/layouts/Widgets/ActionTimer/WidgetPreview')
+      import('@/layouts/Widgets/ActionTimer/ActionTimerDisplaySettings')
+      break
+  }
+}
+
 interface WidgetProps {
   title?: string
   subtitle?: string
@@ -31,6 +60,7 @@ interface WidgetProps {
 
 const Widget = ({
   title,
+  type,
   subtitle,
   badge,
   enabled,
@@ -43,6 +73,16 @@ const Widget = ({
   onPreview
 }: WidgetProps): ReactElement => {
   const [isEnabled, setIsEnabled] = useState<boolean>(enabled)
+  
+  const dispatch = useAppDispatch()
+
+  const handleEdit = () => {
+    dispatch(currentWidgetChanged(type))
+
+    if (widgetId && onEdit) {
+      onEdit(widgetId)
+    }
+  }
 
   const handleToggle = useCallback(
     (value: boolean) => {
@@ -63,8 +103,16 @@ const Widget = ({
     return <span className={className}>{label}</span>
   }, [badge])
 
+  const handleHover = () => {
+    preloadWidgetOnHover(type)
+  }
+
   return (
-    <div className={`widget-card ${!isAvailable ? 'widget-not-available select-none' : ''}`}>
+    <div
+      className={`widget-card ${!isAvailable ? 'widget-not-available select-none' : ''}`}
+      onMouseOver={handleHover}
+      onTouchStart={handleHover}
+    >
       <div className="flex justify-between items-start">
         <div>
           <SvgIcon className="text-[#9747FF]" size={'36px'} src={iconProjectEmblem} />
@@ -99,7 +147,7 @@ const Widget = ({
             isCreated && 'w-32 shrink-0'
           )}
           isDisabled={!isAvailable || (isCreated && !widgetId)}
-          onPress={isCreated && widgetId ? () => onEdit?.(widgetId) : onCreate}
+          onPress={isCreated && widgetId ? handleEdit : onCreate}
           startContent={
             !isCreated ? (
               <SvgIcon src={iconAdd} size={'16px'} />

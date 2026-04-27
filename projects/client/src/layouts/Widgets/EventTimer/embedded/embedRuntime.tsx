@@ -1,55 +1,60 @@
-import {
-  useRef,
-  useState,
-} from 'react'
-import { useShallow } from 'zustand/react/shallow'
+import { useEffect, useRef, useState } from 'react'
 
 import Widget from './Widget'
-import {
-  MobileWidgetTrigger,
-  DesktopWidgetTrigger,
-} from '@/components/announcement'
-
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { sendEvent, sendPublicRequest } from '@/common/api/publicApi'
-import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
-
-import type {
-  EventTimertWidgetType,
-} from '@lemnity/widget-config/widgets/event-timer'
-import type { CountdownForm } from '../EventTimerFormScreen'
-import { type EventTimerWidgetVariant } from '../EventTimerWidget'
+import MobileWidgetTrigger from './MobileWidgetTrigger'
+import DesktopWidgetTrigger from './DesktopWidgetTrigger'
 import { MobileProvider } from './MobileContext'
 
-export type Rect = {
-  width: number
-  height: number
-}
+import { sendEvent, sendPublicRequest } from '@/common/api/publicApi'
+import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
+import { useAppSelector, useAppDispatch } from '@/stores/redux/hooks'
+import {
+  selectWidgetId,
+  selectProjectId,
+  selectRewardScreenEnabled,
+  selectFetchStatus,
+  fetchEventTimerWidget,
+} from '../eventTimerSlice'
+
+import type { CountdownForm } from '../EventTimerFormScreen'
+import { type EventTimerWidgetVariant } from '../EventTimerWidget'
 
 type EmbedRuntimeProps = {
   isPreview?: boolean
+  widgetId?: string
 }
 
 const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
-  const {
-    widgetId,
-    projectId,
-    rewardScreenEnabled,
-  } = useWidgetSettingsStore(
-    useShallow(s => {
-      const widget = s.settings?.widget as EventTimertWidgetType
-      const rewardMessageSettings = widget.rewardMessageSettings
+  const fetchStatus = useAppSelector(selectFetchStatus)
+  const readyToRender = props.isPreview || fetchStatus === 'succeeded'
 
-      return {
-        widgetId: s.settings?.id,
-        projectId: s.projectId,
-        rewardScreenEnabled: rewardMessageSettings.rewardScreenEnabled,
-      }
-    })
-  )
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (!props.isPreview && props.widgetId) {
+      dispatch(fetchEventTimerWidget({
+        widgetId: props.widgetId,
+        embedded: true,
+      }))
+    }
+  }, [dispatch, props.isPreview, props.widgetId])
+
+  const widgetId = useAppSelector(selectWidgetId)
+  const projectId = useAppSelector(selectProjectId)
+  const rewardScreenEnabled = useAppSelector(selectRewardScreenEnabled)
 
   const [focused, setFocused] = useState(false)
+
   const isMobile = useIsMobileViewport()
+
+  const [countdownVariant, setCountdownVariant] =
+    useState<EventTimerWidgetVariant>('countdown')
+
+  const widgetRef = useRef<HTMLDivElement | null>(null)
+
+  if (!readyToRender) {
+    return null
+  }
 
   const handleClickOutside = () => {
     setFocused(false)
@@ -78,9 +83,6 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
       project_id: projectId,
     })
   }
-
-  const [countdownVariant, setCountdownVariant] =
-    useState<EventTimerWidgetVariant>('countdown')
 
   const handleCountdownScreenButtonPress = () => {
     if (rewardScreenEnabled) {
@@ -125,22 +127,6 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
     })
   }
 
-  const sendBoundingRectToIframe = (rect: Rect, offset: number) => {
-    window.parent.postMessage({
-      scope: 'lemnity-embed',
-      type: 'interactive-region',
-      lock: false,
-      rect: {
-        left: window.innerWidth - rect.width - offset,
-        top: window.innerHeight - rect.height - offset,
-        width: rect.width,
-        height: rect.height,
-      },
-    })
-  }
-
-  const widgetRef = useRef<HTMLDivElement | null>(null)
-
   return (
     <>
       {isMobile
@@ -160,7 +146,6 @@ const EventTimerEmbedRuntime = (props: EmbedRuntimeProps) => {
             focused={focused}
             onClickOutside={handleClickOutside}
             onFocusClick={handleFocusClick}
-            sendBoundingRectToIframe={sendBoundingRectToIframe}
           >
             <Widget
               ref={widgetRef}
