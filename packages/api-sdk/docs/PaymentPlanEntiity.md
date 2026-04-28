@@ -1,4 +1,4 @@
-# PaymentPlanDto
+# PaymentPlanEntiity
 
 
 ## Properties
@@ -13,17 +13,15 @@ Name | Type | Description | Notes
 **monthlyPrice** | **number** |  | [default to undefined]
 **quarterlyPrice** | **number** |  | [default to undefined]
 **yearlyPrice** | **number** |  | [default to undefined]
-**paymentPlanOptions** | [**Array&lt;PaymentPlanOptionDto&gt;**](PaymentPlanOptionDto.md) |  | [default to undefined]
-**includedPlanOptions** | [**Array&lt;IncludedPlanOptionDto&gt;**](IncludedPlanOptionDto.md) |  | [default to undefined]
-**createdAt** | **string** |  | [default to undefined]
-**updatedAt** | **string** |  | [default to undefined]
+**brandingPrice** | **number** |  | [default to undefined]
+**_options** | **object** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { PaymentPlanDto } from './api';
+import { PaymentPlanEntiity } from './api';
 
-const instance: PaymentPlanDto = {
+const instance: PaymentPlanEntiity = {
     id,
     name,
     enabled,
@@ -32,10 +30,8 @@ const instance: PaymentPlanDto = {
     monthlyPrice,
     quarterlyPrice,
     yearlyPrice,
-    paymentPlanOptions,
-    includedPlanOptions,
-    createdAt,
-    updatedAt,
+    brandingPrice,
+    _options,
 };
 ```
 

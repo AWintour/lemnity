@@ -35,5 +35,29 @@ export interface PaymentInfoResponse {
      * @memberof PaymentInfoResponse
      */
     'paymentPlan'?: Array<PaymentPlanDto>;
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentInfoResponse
+     */
+    'paymentPlanStartDate': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentInfoResponse
+     */
+    'paymentPlanEndDate': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentInfoResponse
+     */
+    'purchasedPaymentPlanOptions': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PaymentInfoResponse
+     */
+    'usedTrialPeriod': boolean;
 }
 

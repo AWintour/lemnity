@@ -10,23 +10,11 @@ import { useProjectsStore } from '@/stores/projectsStore'
 import useUserStore from '@/stores/userStore'
 import { Button } from '@heroui/button'
 import chatboxIcon from '@/assets/icons/chatbox.svg'
-import { http } from '@/common/api/http'
-
 // import MaintenancePage from './MaintenancePage'
 // import CenteredLayout from '@/layouts/CenteredLayout'
 
-const fetchPaymentInfo = async () => {
-  const result = await http.get('/payment/info')
-  console.log(result.data)
-}
 
-const updatePaymentInfo = async () => {
-  const result = await http.patch('/payment/info', {
-    balance: 500,
-    paymentPlanId: 'cmoh372ud00003b6tvccqee8x',
-  })
-  console.log(result.data)
-}
+import { fetchPaymentPlans } from '@/services/payment'
 
 const HomePage = () => {
   const projects = useProjectsStore(s => s.projects)
@@ -35,7 +23,7 @@ const HomePage = () => {
   const userName = user?.name || ''
 
   useEffect(() => {
-    void fetchPaymentInfo()
+    fetchPaymentPlans()
   }, [])
 
   const [isModalOpen, setIsModalOpen] = useState(false)

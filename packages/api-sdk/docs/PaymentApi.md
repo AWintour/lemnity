@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost:3000/api*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**paymentControllerGetUserBalanceAndPaymentPlan**](#paymentcontrollergetuserbalanceandpaymentplan) | **GET** /api/payment/info | |
-|[**paymentControllerUpdateUserPaymentPlanAndBalance**](#paymentcontrollerupdateuserpaymentplanandbalance) | **PATCH** /api/payment/info | |
+|[**paymentControllerGetUserPaymentInfo**](#paymentcontrollergetuserpaymentinfo) | **GET** /api/payment/info | |
+|[**paymentControllerSelectAllEnabledPaymentPlans**](#paymentcontrollerselectallenabledpaymentplans) | **GET** /api/payment/plans | |
 
-# **paymentControllerGetUserBalanceAndPaymentPlan**
-> PaymentInfoResponse paymentControllerGetUserBalanceAndPaymentPlan()
+# **paymentControllerGetUserPaymentInfo**
+> PaymentInfoResponse paymentControllerGetUserPaymentInfo()
 
 
 ### Example
@@ -22,7 +22,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PaymentApi(configuration);
 
-const { status, data } = await apiInstance.paymentControllerGetUserBalanceAndPaymentPlan();
+const { status, data } = await apiInstance.paymentControllerGetUserPaymentInfo();
 ```
 
 ### Parameters
@@ -50,8 +50,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **paymentControllerUpdateUserPaymentPlanAndBalance**
-> paymentControllerUpdateUserPaymentPlanAndBalance(body)
+# **paymentControllerSelectAllEnabledPaymentPlans**
+> PaymentPlanDto paymentControllerSelectAllEnabledPaymentPlans()
 
 
 ### Example
@@ -65,23 +65,16 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PaymentApi(configuration);
 
-let body: object; //
-
-const { status, data } = await apiInstance.paymentControllerUpdateUserPaymentPlanAndBalance(
-    body
-);
+const { status, data } = await apiInstance.paymentControllerSelectAllEnabledPaymentPlans();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-void (empty response body)
+**PaymentPlanDto**
 
 ### Authorization
 
@@ -89,8 +82,8 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
- - **Accept**: Not defined
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details

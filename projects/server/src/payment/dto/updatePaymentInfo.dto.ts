@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/swagger'
-import { PaymentInfo } from './paymentInf.dto';
+import { PaymentInfo } from './paymentInfo.dto';
 
 export class UpdatePaymentInfo extends PartialType(PaymentInfo) {}

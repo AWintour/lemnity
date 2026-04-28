@@ -30,11 +30,13 @@ docs/DeleteRequestResponse.md
 docs/FilesApi.md
 docs/ForgotPasswordDto.md
 docs/GetProjectResponse.md
+docs/IncludedPlanOptionDto.md
 docs/LoginResponse.md
 docs/PasswordResetApi.md
 docs/PaymentApi.md
 docs/PaymentInfoResponse.md
 docs/PaymentPlanDto.md
+docs/PaymentPlanOptionDto.md
 docs/Project.md
 docs/ProjectApi.md
 docs/ProjectsResponse.md
@@ -68,10 +70,12 @@ models/delete-project-response.ts
 models/delete-request-response.ts
 models/forgot-password-dto.ts
 models/get-project-response.ts
+models/included-plan-option-dto.ts
 models/index.ts
 models/login-response.ts
 models/payment-info-response.ts
 models/payment-plan-dto.ts
+models/payment-plan-option-dto.ts
 models/project.ts
 models/projects-response.ts
 models/public-widget.ts

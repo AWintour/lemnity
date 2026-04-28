@@ -6,10 +6,10 @@ enum PaymentType {
 model Payment {
   id String @id @default(cuid())
 
-  amount     Decimal  @db.Decimal(10, 2) @default(0)
+  amount     Decimal     @default(0) @db.Decimal(10, 2)
   type       PaymentType
-  receiptUrl String   @map("receipt_url")
-  createdAt  DateTime @default(now()) @map("created_at")
+  receiptUrl String      @map("receipt_url")
+  createdAt  DateTime    @default(now()) @map("created_at")
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String?

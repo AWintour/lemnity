@@ -13,6 +13,12 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { IncludedPlanOptionDto } from './included-plan-option-dto';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { PaymentPlanOptionDto } from './payment-plan-option-dto';
 
 /**
  * 
@@ -70,15 +76,27 @@ export interface PaymentPlanDto {
     'yearlyPrice': number;
     /**
      * 
-     * @type {number}
+     * @type {Array<PaymentPlanOptionDto>}
      * @memberof PaymentPlanDto
      */
-    'brandingPrice': number;
+    'paymentPlanOptions': Array<PaymentPlanOptionDto>;
     /**
      * 
-     * @type {object}
+     * @type {Array<IncludedPlanOptionDto>}
      * @memberof PaymentPlanDto
      */
-    'options': object;
+    'includedPlanOptions': Array<IncludedPlanOptionDto>;
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentPlanDto
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentPlanDto
+     */
+    'updatedAt': string;
 }
 

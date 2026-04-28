@@ -23,6 +23,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
 import type { PaymentInfoResponse } from '../models';
+// @ts-ignore
+import type { PaymentPlanDto } from '../models';
 /**
  * PaymentApi - axios parameter creator
  * @export
@@ -34,7 +36,7 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerGetUserBalanceAndPaymentPlan: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        paymentControllerGetUserPaymentInfo: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/payment/info`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -60,14 +62,11 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {object} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerUpdateUserPaymentPlanAndBalance: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('paymentControllerUpdateUserPaymentPlanAndBalance', 'body', body)
-            const localVarPath = `/api/payment/info`;
+        paymentControllerSelectAllEnabledPaymentPlans: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/payment/plans`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -75,18 +74,15 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
     
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -108,22 +104,21 @@ export const PaymentApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async paymentControllerGetUserBalanceAndPaymentPlan(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentInfoResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetUserBalanceAndPaymentPlan(options);
+        async paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentInfoResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetUserPaymentInfo(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGetUserBalanceAndPaymentPlan']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGetUserPaymentInfo']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @param {object} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async paymentControllerUpdateUserPaymentPlanAndBalance(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerUpdateUserPaymentPlanAndBalance(body, options);
+        async paymentControllerSelectAllEnabledPaymentPlans(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentPlanDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerSelectAllEnabledPaymentPlans(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerUpdateUserPaymentPlanAndBalance']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerSelectAllEnabledPaymentPlans']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -141,34 +136,19 @@ export const PaymentApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerGetUserBalanceAndPaymentPlan(options?: RawAxiosRequestConfig): AxiosPromise<PaymentInfoResponse> {
-            return localVarFp.paymentControllerGetUserBalanceAndPaymentPlan(options).then((request) => request(axios, basePath));
+        paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): AxiosPromise<PaymentInfoResponse> {
+            return localVarFp.paymentControllerGetUserPaymentInfo(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalanceRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerUpdateUserPaymentPlanAndBalance(requestParameters: PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalanceRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.paymentControllerUpdateUserPaymentPlanAndBalance(requestParameters.body, options).then((request) => request(axios, basePath));
+        paymentControllerSelectAllEnabledPaymentPlans(options?: RawAxiosRequestConfig): AxiosPromise<PaymentPlanDto> {
+            return localVarFp.paymentControllerSelectAllEnabledPaymentPlans(options).then((request) => request(axios, basePath));
         },
     };
 };
-
-/**
- * Request parameters for paymentControllerUpdateUserPaymentPlanAndBalance operation in PaymentApi.
- * @export
- * @interface PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalanceRequest
- */
-export interface PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalanceRequest {
-    /**
-     * 
-     * @type {object}
-     * @memberof PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalance
-     */
-    readonly body: object
-}
 
 /**
  * PaymentApi - object-oriented interface
@@ -183,19 +163,18 @@ export class PaymentApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof PaymentApi
      */
-    public paymentControllerGetUserBalanceAndPaymentPlan(options?: RawAxiosRequestConfig) {
-        return PaymentApiFp(this.configuration).paymentControllerGetUserBalanceAndPaymentPlan(options).then((request) => request(this.axios, this.basePath));
+    public paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerGetUserPaymentInfo(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalanceRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PaymentApi
      */
-    public paymentControllerUpdateUserPaymentPlanAndBalance(requestParameters: PaymentApiPaymentControllerUpdateUserPaymentPlanAndBalanceRequest, options?: RawAxiosRequestConfig) {
-        return PaymentApiFp(this.configuration).paymentControllerUpdateUserPaymentPlanAndBalance(requestParameters.body, options).then((request) => request(this.axios, this.basePath));
+    public paymentControllerSelectAllEnabledPaymentPlans(options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerSelectAllEnabledPaymentPlans(options).then((request) => request(this.axios, this.basePath));
     }
 }
 
