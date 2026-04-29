@@ -1,8 +1,8 @@
 import { cn } from '@heroui/theme'
 
 import CustomSwitch from '../CustomSwitch'
-import { usePaymentContext } from './usePaymentContext'
-import type { ModificationKey } from './PaymentContext'
+// import { usePaymentContext } from './usePaymentContext'
+// import type { ModificationKey } from './PaymentContext'
 import { AVAILABLE_WIDGETS, type WidgetType } from '@/layouts/Widgets/constants'
 
 type WidgetItem = {title: string, type: WidgetType}
@@ -25,7 +25,7 @@ type ModificationItemProps = {
 }
 
 const ModificationItem = (props: ModificationItemProps) => {
-  const { dispatch } = usePaymentContext()
+  // const { dispatch } = usePaymentContext()
 
   const handleToggle = () => {
     dispatch({ type: 'toggleModification', modification: props.type })

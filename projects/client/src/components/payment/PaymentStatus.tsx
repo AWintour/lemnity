@@ -1,6 +1,6 @@
 import { cn } from '@heroui/theme'
 import { getDaysWord } from './utils'
-import { usePaymentContext } from './usePaymentContext'
+// import { usePaymentContext } from './usePaymentContext'
 
 type PaymentStatusProps = {
   balance: number
@@ -9,7 +9,7 @@ type PaymentStatusProps = {
 
 const PaymentStatus = (props: PaymentStatusProps) => {
   const { balance, daysLeft } = props
-  const { state } = usePaymentContext()
+  // const { state } = usePaymentContext()
   const { isTrialPeriod } = state
 
   const balanceSubtitle = isTrialPeriod

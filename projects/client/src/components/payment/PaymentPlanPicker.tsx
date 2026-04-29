@@ -14,7 +14,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import FadeInOut from '../FadeInOut'
 import SvgIcon from '../SvgIcon'
 
-import { usePaymentContext } from './usePaymentContext'
+// import { usePaymentContext } from './usePaymentContext'
 import { usePrice } from './usePrice'
 
 import type { PaymentPeriodKey, PaymentPlanKey } from './types'
@@ -72,7 +72,7 @@ const CustomRadio = (props: CustomRadioProps) => {
 }
 
 const PaymentPeriodRadioGroup = () => {
-  const { dispatch, state } = usePaymentContext()
+  // const { dispatch, state } = usePaymentContext()
 
   const { paymentPeriods } = state
   const defaultValue = paymentPeriods[0]?.key ?? undefined

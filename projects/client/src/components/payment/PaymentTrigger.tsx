@@ -8,53 +8,32 @@ import SvgIcon from '../SvgIcon'
 import Payment from './Payment'
 import Modifications from './Modifications'
 
-import { usePaymentContext } from './usePaymentContext'
-
-import type { PaymentPeriod, PaymentPlan } from './types'
 import crossIcon from '@/assets/icons/cross.svg'
+import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
+import { paymentWidgetOpenChanged, selectPaymentWidgetOpen } from '@/stores/redux/paymentSlice'
 
 type PaymentTriggerVariant = 'trial' | 'paid' | 'negative'
 
-const paymentPlans: PaymentPlan[] = [
-  {
-    key: 'basic',
-    label: 'Базовый тариф',
-    price: 0,
-  },
-  {
-    key: 'business',
-    label: 'Бизнес тариф',
-    price: 499,
-  }
-]
-
-const paymentPeriods: PaymentPeriod[] = [
-  {
-    key: 'month',
-    label: 'Месяц',
-    discount: 0,
-    months: 1,
-  },
-  {
-    key: '3_months',
-    label: '3 месяца',
-    discount: 15,
-    months: 3,
-  },
-  {
-    key: 'year',
-    label: 'Год',
-    discount: 25,
-    months: 12,
-  },
-]
+// const paymentPlans: PaymentPlan[] = [
+//   {
+//     key: 'basic',
+//     label: 'Базовый тариф',
+//     price: 0,
+//   },
+//   {
+//     key: 'business',
+//     label: 'Бизнес тариф',
+//     price: 499,
+//   }
+// ]
 
 const PaymentTrigger = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [variant, _setVariant] = useState<PaymentTriggerVariant>('trial')
-  const { state, dispatch } = usePaymentContext()
 
-  const { open } = state
+  const dispatch = useAppDispatch()
+  
+  const paymentWidgetOpen = useAppSelector(selectPaymentWidgetOpen)
   
   const primaryLabel = variant === 'trial'
     ? 'Тестовый период'
@@ -67,9 +46,7 @@ const PaymentTrigger = () => {
     : 'Пополнение баланса'
 
   useEffect(() => {
-    dispatch({ type: 'setPaymentPlans', paymentPlans })
-    dispatch({ type: 'setPaymentPeriods', paymentPeriods })
-    dispatch({ type: 'setIsTrialPeriod', isTrialPeriod: variant === 'trial' })
+    // dispatch({ type: 'setIsTrialPeriod', isTrialPeriod: variant === 'trial' })
   }, [dispatch])
 
   const getVariantClasses = (variant: PaymentTriggerVariant) => {
@@ -84,11 +61,11 @@ const PaymentTrigger = () => {
   }
 
   const handlePopoverOpenChange = (isOpen: boolean) => {
-    dispatch({ type: 'setPopupOpen', open: isOpen })
+    dispatch(paymentWidgetOpenChanged(isOpen))
   }
 
   const handlePopoverClose = () => {
-    dispatch({ type: 'setPopupOpen', open: false })
+    dispatch(paymentWidgetOpenChanged(false))
   }
 
   const handlePopoverInteractOutside = (element: Element) => {
@@ -108,7 +85,7 @@ const PaymentTrigger = () => {
     <Popover
       placement='bottom-end'
       classNames={popoverClassNames}
-      isOpen={open}
+      isOpen={paymentWidgetOpen}
       onOpenChange={handlePopoverOpenChange}
       shouldCloseOnBlur={false}
       shouldCloseOnInteractOutside={handlePopoverInteractOutside}

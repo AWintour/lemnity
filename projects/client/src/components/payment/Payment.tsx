@@ -6,12 +6,12 @@ import PaymentStatus from './PaymentStatus'
 import PaymentPlanPicker from './PaymentPlanPicker'
 
 import { usePrice } from './usePrice'
-import { usePaymentContext } from './usePaymentContext'
+// import { usePaymentContext } from './usePaymentContext'
 import { useCloudPayments } from '@/hooks/useCloudPayments'
 
 const Payment = () => {
   const { total } = usePrice()
-  const { dispatch, state } = usePaymentContext()
+  // const { dispatch, state } = usePaymentContext()
   const { status, launchWidget } = useCloudPayments((result) => {
     console.log('callback result:', result)
   })
@@ -24,8 +24,8 @@ const Payment = () => {
     : [100, 10, 1, '.', .1, .01]
 
   const handlePayment = () => {
-    console.table(state, ['paymentPlan', 'paymentPeriod', 'isTrialPeriod'])
-    console.table(state.modifications)
+    // console.table(state, ['paymentPlan', 'paymentPeriod', 'isTrialPeriod'])
+    // console.table(state.modifications)
 
     if (isTrialPeriod && paymentPlan === 'basic') {
       dispatch({ type: 'setPaymentPlan', paymentPlan: 'business'})

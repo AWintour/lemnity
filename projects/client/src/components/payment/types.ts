@@ -6,11 +6,11 @@ export type PaymentPlan = {
   price: number
 }
 
-export type PaymentPeriodKey = 'month' | '3_months' | 'year'
+export type PaymentPeriodKey = 'month' | 'quarter' | 'year'
 
 export type PaymentPeriod = {
   key: string
   label: string
-  discount: number
+  // discount: number
   months: number
 }
