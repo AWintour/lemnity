@@ -1,43 +1,67 @@
 import { Button } from '@heroui/button'
 import { cn } from '@heroui/theme'
+import Decimal from 'decimal.js'
 
 import Counter, { type PlaceValue } from '../Counter'
 import PaymentStatus from './PaymentStatus'
 import PaymentPlanPicker from './PaymentPlanPicker'
 
 import { usePrice } from './usePrice'
-// import { usePaymentContext } from './usePaymentContext'
 import { useCloudPayments } from '@/hooks/useCloudPayments'
+import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
+import {
+  currentPaymentPlanIdChanged,
+  paymentWidgetOpenChanged,
+  // selectCheapestBillingPlanId,
+  // selectIsTrialPeriod,
+} from '@/stores/redux/paymentSlice'
 
 const Payment = () => {
   const { total } = usePrice()
-  // const { dispatch, state } = usePaymentContext()
+
   const { status, launchWidget } = useCloudPayments((result) => {
     console.log('callback result:', result)
   })
   
-  const { isTrialPeriod, paymentPlan } = state
+  const dispatch = useAppDispatch()
+
+  // const isTrialPeriod =
+  //   useAppSelector(selectIsTrialPeriod)
+  // const cheapestBillingPlanId =
+  //   useAppSelector(selectCheapestBillingPlanId)
+
+  const zero = new Decimal(0)
+  const thousand = new Decimal(1000)
+  const tenThousand = new Decimal(10_000)
 
   // visible precision of the total needed for the counter animation
-  const places: PlaceValue[] = total !== 0 && total > 1000
-    ? [1000, 100, 10, 1, ',', .1, .01]
-    : [100, 10, 1, '.', .1, .01]
+  // this needs to be generated on the fly
+  let places: PlaceValue[] = [100, 10, 1, '.', .1, .01]
+
+  if (!total.equals(zero)) {
+    if (total.greaterThan(tenThousand)) {
+      places = [10_000, 1000, 100, 10, 1, ',', .1, .01]
+    }
+    else if (total.greaterThan(thousand)) {
+      places = [1000, 100, 10, 1, ',', .1, .01]
+    }
+  }
+
+  const totalToDisplay = Number(total.toFixed(2))
 
   const handlePayment = () => {
-    // console.table(state, ['paymentPlan', 'paymentPeriod', 'isTrialPeriod'])
-    // console.table(state.modifications)
-
-    if (isTrialPeriod && paymentPlan === 'basic') {
-      dispatch({ type: 'setPaymentPlan', paymentPlan: 'business'})
-      return
-    }
+    // if (isTrialPeriod) {
+    //   dispatch(currentPaymentPlanIdChanged(cheapestBillingPlanId))
+    // }
 
     if (status !== 'ready') {
+      console.log('[PAYMENT] status !== ready')
       return
     }
 
-    dispatch({ type: 'setPopupOpen', open: false })
+    dispatch(paymentWidgetOpenChanged(false))
     launchWidget()
+    console.log('[PAYMENT] widget launched')
   }
 
   return (
@@ -55,12 +79,12 @@ const Payment = () => {
         )}
         onPress={handlePayment}
       >
-        {isTrialPeriod && paymentPlan === 'basic'
-          ? 'Переключиться на бизнес тариф'
-          : <>
+        {/* {isTrialPeriod
+          ? 'Переключиться'
+          : <> */}
               <span className='text-base'>Оплатить</span>
               <Counter
-                value={total}
+                value={totalToDisplay}
                 fontSize={16}
                 padding={0}
                 places={places}
@@ -72,8 +96,8 @@ const Payment = () => {
                 bottomGradientStyle={{}}
               />
               <span className='text-base'>₽</span>
-            </>
-        }
+            {/* </>
+        } */}
       </Button>
 
       <div className='w-full h-11.25 flex items-center justify-center'>

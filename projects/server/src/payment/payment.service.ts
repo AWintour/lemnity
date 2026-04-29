@@ -5,18 +5,37 @@ import { PrismaService } from '../prisma.service'
 export class PaymentService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getUserPaymentInfo(id: string) {
-    return this.prisma.user.findUniqueOrThrow({
+  async getUserPaymentInfo(id: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({
       where: { id },
-      select: {
-        balance: true,
+      // select: {
+      //   balance: true,
+      //   paymentPlan: true,
+      //   paymentPlanStartDate: true,
+      //   paymentPlanEndDate: true,
+      //   purchasedPaymentPlanOptions: true,
+      //   usedTrialPeriod: true,
+      // },
+      include: {
         paymentPlan: true,
-        paymentPlanStartDate: true,
-        paymentPlanEndDate: true,
         purchasedPaymentPlanOptions: true,
-        usedTrialPeriod: true,
-      },
+      }
     })
+
+    return {
+      balance: user.balance,
+      paymentPlan: user.paymentPlan,
+      paymentPlanStartDate: user.paymentPlanStartDate,
+      paymentPlanEndDate: user.paymentPlanEndDate,
+      purchasedPaymentPlanOptions: user.purchasedPaymentPlanOptions.map(
+        (value) => ({
+          id: value.id,
+          name: value.name,
+          type: value.type,
+        })
+      ),
+      usedTrialPeriod: user.usedTrialPeriod,
+    }
   }
 
   // updateUserPaymentPlanAndBalance(

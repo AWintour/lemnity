@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **id** | **string** |  | [default to undefined]
 **name** | **string** |  | [default to undefined]
 **type** | **string** |  | [default to undefined]
-**price** | **number** |  | [default to undefined]
+**price** | **string** |  | [default to undefined]
 **enabled** | **boolean** |  | [default to undefined]
 **isBilledAnnually** | **boolean** |  | [default to undefined]
 **createdAt** | **string** |  | [default to undefined]

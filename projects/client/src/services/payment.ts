@@ -1,5 +1,5 @@
 import { http } from '@/common/api/http'
-import type { PaymentPlanDto } from '@lemnity/api-sdk'
+import type { PaymentInfoDto, PaymentPlanDto } from '@lemnity/api-sdk'
 
 export const fetchPaymentPlans = async () => {
   const result = await http.get<PaymentPlanDto[]>('/payment/plans')
@@ -7,7 +7,7 @@ export const fetchPaymentPlans = async () => {
 }
 
 export const fetchPaymentInfo = async () => {
-  const result = await http.get('/payment/info')
+  const result = await http.get<PaymentInfoDto>('/payment/info')
   return result
 }
 

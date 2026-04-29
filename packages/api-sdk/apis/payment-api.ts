@@ -22,7 +22,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { PaymentInfoResponse } from '../models';
+import type { PaymentInfoDto } from '../models';
 // @ts-ignore
 import type { PaymentPlanDto } from '../models';
 /**
@@ -104,7 +104,7 @@ export const PaymentApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentInfoResponse>> {
+        async paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentInfoDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetUserPaymentInfo(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGetUserPaymentInfo']?.[localVarOperationServerIndex]?.url;
@@ -136,7 +136,7 @@ export const PaymentApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): AxiosPromise<PaymentInfoResponse> {
+        paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): AxiosPromise<PaymentInfoDto> {
             return localVarFp.paymentControllerGetUserPaymentInfo(options).then((request) => request(axios, basePath));
         },
         /**

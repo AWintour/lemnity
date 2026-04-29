@@ -58,22 +58,22 @@ export interface PaymentPlanDto {
     'numberOfWidgets': number;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof PaymentPlanDto
      */
-    'monthlyPrice': number;
+    'monthlyPrice': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof PaymentPlanDto
      */
-    'quarterlyPrice': number;
+    'quarterlyPrice': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof PaymentPlanDto
      */
-    'yearlyPrice': number;
+    'yearlyPrice': string;
     /**
      * 
      * @type {Array<PaymentPlanOptionDto>}

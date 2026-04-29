@@ -8,9 +8,9 @@ export class PaymentPlanDto {
   @ApiProperty() enabled: boolean
   @ApiProperty() numberOfProjects: number
   @ApiProperty() numberOfWidgets: number
-  @ApiProperty() monthlyPrice: number
-  @ApiProperty() quarterlyPrice: number
-  @ApiProperty() yearlyPrice: number
+  @ApiProperty() monthlyPrice: string
+  @ApiProperty() quarterlyPrice: string
+  @ApiProperty() yearlyPrice: string
 
   @ApiProperty({ type: PaymentPlanOptionDto, isArray: true })
   paymentPlanOptions: PaymentPlanOptionDto[]

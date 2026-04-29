@@ -8,7 +8,7 @@ All URIs are relative to *http://localhost:3000/api*
 |[**paymentControllerSelectAllEnabledPaymentPlans**](#paymentcontrollerselectallenabledpaymentplans) | **GET** /api/payment/plans | |
 
 # **paymentControllerGetUserPaymentInfo**
-> PaymentInfoResponse paymentControllerGetUserPaymentInfo()
+> PaymentInfoDto paymentControllerGetUserPaymentInfo()
 
 
 ### Example
@@ -31,7 +31,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**PaymentInfoResponse**
+**PaymentInfoDto**
 
 ### Authorization
 

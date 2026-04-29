@@ -5,7 +5,7 @@ export class PaymentPlanOptionDto {
   @ApiProperty() id: string
   @ApiProperty() name: string
   @ApiProperty() type: PaymentOptionEnum
-  @ApiProperty() price: number
+  @ApiProperty() price: string
   @ApiProperty() enabled: boolean
   @ApiProperty() isBilledAnnually: boolean
   @ApiProperty() createdAt: string

@@ -40,10 +40,10 @@ export interface PaymentPlanOptionDto {
     'type': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof PaymentPlanOptionDto
      */
-    'price': number;
+    'price': string;
     /**
      * 
      * @type {boolean}

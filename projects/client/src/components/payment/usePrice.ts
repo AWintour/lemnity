@@ -1,4 +1,14 @@
-import { usePaymentContext } from './usePaymentContext'
+import Decimal from 'decimal.js'
+import { useAppSelector } from '@/stores/redux/hooks'
+import {
+  selectBillingPeiodById,
+  selectCurrentBillingPeriodId,
+  selectCurrentPaymentPlanId,
+  selectIsTrialPeriod,
+  selectPaymentPlanById,
+} from '@/stores/redux/paymentSlice'
+import type { RootState } from '@/stores/redux/store'
+
 
 const formatter = new Intl
   .NumberFormat('ru-RU', {
@@ -8,45 +18,61 @@ const formatter = new Intl
     useGrouping: false,
   })
 export const usePrice = () => {
-  const { state } = usePaymentContext()
-    ?? {
-      state: {
-        paymentPlans: [],
-        paymentPlan: 'basic',
-        paymentPeriod: 'month',
-        paymentPeriods: [],
-        isTrialPeriod: true,
-      },
-    }
+  const currentPaymentPlanId =
+    useAppSelector(selectCurrentPaymentPlanId)
+  const paymentPlan =
+    useAppSelector(
+      (state: RootState) =>
+        selectPaymentPlanById(state, currentPaymentPlanId)
+    )
+
+  const currentBillingPeriodId =
+    useAppSelector(selectCurrentBillingPeriodId)
+  const billingPeriod =
+    useAppSelector(
+      (state: RootState) =>
+        selectBillingPeiodById(state, currentBillingPeriodId)
+    )
+
+  const isTrialPeriod =
+    useAppSelector(selectIsTrialPeriod)
+
+  // const price = paymentPlans.find(plan => plan.key === paymentPlan)?.price ?? 0
+  // const period = paymentPeriods?.find(period => period.key === paymentPeriod)
+
+  const months = new Decimal(billingPeriod.months)
+    ?? new Decimal(0)
+
+  let price = new Decimal('0')
+
+  switch (billingPeriod.id) {
+    case 'month':
+      const monthlyPrice = new Decimal(paymentPlan.monthlyPrice)
+      price = monthlyPrice
+      break
+    case 'quarter':
+      const quarterlyPrice = new Decimal(paymentPlan.quarterlyPrice)
+      price = quarterlyPrice
+      break
+    case 'year':
+      const yearlyPrice = new Decimal(paymentPlan.yearlyPrice)
+      price = yearlyPrice
+      break
+  }
   
-  const {
-    paymentPlans,
-    paymentPlan,
-    paymentPeriod,
-    paymentPeriods,
-    isTrialPeriod,
-  } = state
+  const total = price
 
-  const price = paymentPlans.find(plan => plan.key === paymentPlan)?.price ?? 0
-  const period = paymentPeriods?.find(period => period.key === paymentPeriod)
-
-  const discount = period?.discount ?? 0
-  const months = period?.months ?? 0
-  const totalWithoutDiscount = price * months
-  const total = totalWithoutDiscount * (1 - discount / 100)
-
-  const formattedTotal = formatter.format(total)
-  const formattedTotalWithoutDiscount = formatter.format(totalWithoutDiscount)
+  const formattedTotal = formatter.format(
+    Number(total.toFixed(2))
+  )
   
   const paymentButtonText = isTrialPeriod
     ? 'Переключиться на бизнес тариф'
     : `Оплатить ${formattedTotal} ₽`
 
   return {
-    totalWithoutDiscount,
     total,
     formattedTotal,
-    formattedTotalWithoutDiscount,
     paymentButtonText,
   }
 }

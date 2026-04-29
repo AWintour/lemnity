@@ -9,7 +9,7 @@ import SvgIcon from '@/components/SvgIcon'
 import iconMenuOpened from '@/assets/icons/menu-opened.svg'
 import iconMenuClosed from '@/assets/icons/menu-closed.svg'
 import { cn } from '@heroui/theme'
-// import { PaymentProvider, PaymentTrigger } from '@/components/payment'
+import { PaymentTrigger } from '@/components/payment'
 
 const Header = () => {
   const { isVisible, toggle } = useSidebarStore()
@@ -51,9 +51,7 @@ const Header = () => {
 
       <div className='flex items-center space-x-4'>
         <div className='text-sm text-gray-500 flex flex-row gap-2.5'>
-          {/* <PaymentProvider>
-            <PaymentTrigger />
-          </PaymentProvider> */}
+          <PaymentTrigger />
 
           <Button isIconOnly radius='full' className='bg-white w-[38px] h-[38px]' color='default'>
             <img src={iconLight} alt='Light' className='h-8 w-auto w-[19px] h-[19px]' />

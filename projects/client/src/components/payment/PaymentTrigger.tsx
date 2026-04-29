@@ -6,11 +6,13 @@ import { cn } from '@heroui/theme'
 import Popover from '../Popover'
 import SvgIcon from '../SvgIcon'
 import Payment from './Payment'
-import Modifications from './Modifications'
+// import Modifications from './Modifications'
 
 import crossIcon from '@/assets/icons/cross.svg'
 import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
-import { paymentWidgetOpenChanged, selectPaymentWidgetOpen } from '@/stores/redux/paymentSlice'
+import { billingPeriodUpdated, currentPaymentPlanIdChanged, paymentWidgetOpenChanged, selectPaymentPlanById, selectPaymentWidgetOpen } from '@/stores/redux/paymentSlice'
+import { addListener } from '@reduxjs/toolkit'
+import type { RootState } from '@/stores/redux/store'
 
 type PaymentTriggerVariant = 'trial' | 'paid' | 'negative'
 
@@ -32,6 +34,39 @@ const PaymentTrigger = () => {
   const [variant, _setVariant] = useState<PaymentTriggerVariant>('trial')
 
   const dispatch = useAppDispatch()
+
+  // useEffect(() => {
+  //   dispatch(addListener({
+  //     type: currentPaymentPlanIdChanged.type,
+  //     // predicate: (action) => {
+  //     //   return action.type === 'payment/currentPaymentPlanIdChanged'
+  //     // },
+  //     effect: async (action: { payload: string; type: string }, listenerApi) => {
+  //       const state = listenerApi.getState() as RootState
+  //       const plan = selectPaymentPlanById(state, action.payload)
+
+  //       const monthlyPrice = Number(plan.monthlyPrice)
+  //       const quarterlyPrice = Number(plan.quarterlyPrice)
+  //       const yearlyPrice = Number(plan.yearlyPrice)
+
+  //       const quarterlyDiscount =
+  //         Math.floor(quarterlyPrice / ((monthlyPrice * 3) / 100))
+  //       const yearlyDiscount =
+  //         Math.floor(yearlyPrice / ((monthlyPrice * 12) / 100))
+        
+  //       // console.log('quarterlyDiscount', quarterlyDiscount)
+        
+  //       listenerApi.dispatch(billingPeriodUpdated({
+  //         id: 'quarter',
+  //         discount: quarterlyDiscount,
+  //       }))
+  //       listenerApi.dispatch(billingPeriodUpdated({
+  //         id: 'year',
+  //         discount: yearlyDiscount,
+  //       }))
+  //     },
+  //   }))
+  // }, [])
   
   const paymentWidgetOpen = useAppSelector(selectPaymentWidgetOpen)
   
@@ -129,7 +164,13 @@ const PaymentTrigger = () => {
 
         <div className='w-full flex flex-row gap-4'>  
           <Payment />
-          <Modifications />
+          {/* <Modifications /> */}
+          <div
+            className={cn(
+              'w-87.5 p-4 flex flex-col gap-2.5 bg-[#F8F8F8]',
+              'border border-[#E8E8E8] rounded-[10px]',
+            )}
+          />
         </div>
       </PopoverContent>
     </Popover>

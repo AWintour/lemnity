@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, type Ref } from 'react'
 import type { SharedSelection } from '@heroui/system'
 import { Select, SelectItem, type SelectProps } from '@heroui/select'
 import { Input } from '@heroui/input'
@@ -10,26 +10,44 @@ import {
 } from '@heroui/radio'
 import { cn } from '@heroui/theme'
 import { AnimatePresence, motion } from 'framer-motion'
+import Decimal from 'decimal.js'
 
 import FadeInOut from '../FadeInOut'
 import SvgIcon from '../SvgIcon'
-
-// import { usePaymentContext } from './usePaymentContext'
-import { usePrice } from './usePrice'
-
-import type { PaymentPeriodKey, PaymentPlanKey } from './types'
-import crossIcon from '@/assets/icons/cross.svg'
 import Counter, { type PlaceValue } from '../Counter'
 
+import { usePrice } from './usePrice'
+import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
+import {
+  billingPeriodUpdated,
+  currentBillingPeriodIdChanged,
+  currentPaymentPlanIdChanged,
+  selectAllPaymentPlans,
+  selectBillingPeiodById,
+  selectBillingPeriodIds,
+  selectCurrentBillingPeriodId,
+  selectCurrentPaymentPlanId,
+  selectPaymentPlanById,
+  selectPaymentPlanIds,
+  type BillingPeriodKey,
+} from '@/stores/redux/paymentSlice'
+
+import type { RootState } from '@/stores/redux/store'
+import crossIcon from '@/assets/icons/cross.svg'
+
 type CustomRadioProps = {
-  children: React.ReactNode
-  value: string
-  discount: number
+  id: BillingPeriodKey
   index: number
 }
 
 const CustomRadio = (props: CustomRadioProps) => {
-  const { children, discount, index, ...rest } = props
+  const { id, index } = props
+
+  const billingPeriod = useAppSelector(
+    (state: RootState) => selectBillingPeiodById(state, id)
+  )
+
+  const { discount, label } = billingPeriod
 
   const classNames: RadioProps['classNames'] = {
     base: cn(
@@ -64,25 +82,55 @@ const CustomRadio = (props: CustomRadioProps) => {
         </div>
       )}
 
-      <Radio {...rest} classNames={classNames}>
-        {children}
+      <Radio value={id} classNames={classNames}>
+        {label}
       </Radio>
     </div>
   )
 }
 
 const PaymentPeriodRadioGroup = () => {
-  // const { dispatch, state } = usePaymentContext()
+  const dispatch = useAppDispatch()
 
-  const { paymentPeriods } = state
-  const defaultValue = paymentPeriods[0]?.key ?? undefined
+  const billingPeriodIds =
+    useAppSelector(selectBillingPeriodIds)
+  const currentPaymentPlanId =
+    useAppSelector(selectCurrentPaymentPlanId)
+  const plan =
+    useAppSelector(
+      (state: RootState) => selectPaymentPlanById(state, currentPaymentPlanId)
+    )
+  
+  const monthlyPrice = Number(plan.monthlyPrice)
+  const quarterlyPrice = Number(plan.quarterlyPrice)
+  const monthQuarterlyPrice = quarterlyPrice / 3
+  // const ogQuarterlyPrice = monthlyPrice * 3
+  const yearlyPrice = Number(plan.yearlyPrice)
+  const monthYearlyPrice = yearlyPrice / 12
+  // const ogYearlyPrice = monthlyPrice * 12
+
+  const quarterlyDiscount =
+    Math.round(((monthlyPrice - monthQuarterlyPrice) / monthlyPrice) * 100)
+  const yearlyDiscount =
+    Math.round(((monthlyPrice - monthYearlyPrice) / monthlyPrice) * 100)
+  
+  console.log('quarterlyDiscount', quarterlyDiscount)
+  
+  dispatch(billingPeriodUpdated({
+    id: 'quarter',
+    discount: quarterlyDiscount,
+  }))
+  dispatch(billingPeriodUpdated({
+    id: 'year',
+    discount: yearlyDiscount,
+  }))
+  
+  const defaultValue: BillingPeriodKey = 'month'
 
   const handlePaymentPeriodChange = (value: string) => {
-    dispatch({
-      type: 'setPaymentPeriod',
-      paymentPeriod: value as PaymentPeriodKey,
-    })
+    dispatch(currentBillingPeriodIdChanged(value as BillingPeriodKey))
   }
+
   const radioGroupClassNames: RadioGroupProps['classNames'] = {
     wrapper: 'justify-between',
     base: 'px-2',
@@ -96,15 +144,12 @@ const PaymentPeriodRadioGroup = () => {
       defaultValue={defaultValue}
       onValueChange={handlePaymentPeriodChange}
     >
-      {paymentPeriods.map((paymentPeriod, index) => (
+      {billingPeriodIds.map((id, index) => (
         <CustomRadio
-          key={paymentPeriod.key}
-          value={paymentPeriod.key}
+          key={id}
+          id={id}
           index={index}
-          discount={paymentPeriod.discount}
-        >
-          {paymentPeriod.label}
-        </CustomRadio>
+        />
       ))}
     </RadioGroup>
   )
@@ -173,23 +218,42 @@ const Promo = () => {
 }
 
 const PaymentPlanPicker = () => {
-  const { dispatch, state } = usePaymentContext()
+  const dispatch = useAppDispatch()
+
+  const currentPaymentPlanId =
+    useAppSelector(selectCurrentPaymentPlanId)
+  // const paymentPlanIds =
+  //   useAppSelector(selectPaymentPlanIds)
+  const paymentPlans =
+    useAppSelector(selectAllPaymentPlans)
+      .sort((a, b) => Number(a.yearlyPrice) - Number(b.yearlyPrice))
+  const currentBillingPeriodId =
+    useAppSelector(selectCurrentBillingPeriodId)
   
-  const { paymentPlans, paymentPlan, paymentPeriod } = state
-  const { totalWithoutDiscount, total } = usePrice()
+  const { total } = usePrice()
 
-  const places: PlaceValue[] = total !== 0 && total > 1000
-    ? [1000, 100, 10, 1, ',', .1, .01]
-    : [100, 10, 1, '.', .1, .01]
+  const zero = new Decimal(0)
+  const thousand = new Decimal(1000)
+  const tenThousand = new Decimal(10_000)
 
-  const totalToDisplay = paymentPeriod === 'month'
-    ? totalWithoutDiscount
-    : total
+  // this needs to be generated on the fly
+  let places: PlaceValue[] = [100, 10, 1, '.', .1, .01]
+
+  if (!total.equals(zero)) {
+    if (total.greaterThan(tenThousand)) {
+      places = [10_000, 1000, 100, 10, 1, ',', .1, .01]
+    }
+    else if (total.greaterThan(thousand)) {
+      places = [1000, 100, 10, 1, ',', .1, .01]
+    }
+  }
+
+  const totalToDisplay = Number(total.toFixed(2))
 
   const handlePaymentPlanChange = (keys: SharedSelection) => {
     const first = Array.from(keys)[0]
     if (first) {
-      dispatch({ type: 'setPaymentPlan', paymentPlan: first as PaymentPlanKey })
+      dispatch(currentPaymentPlanIdChanged(first.toString()))
     }
   }
 
@@ -215,21 +279,22 @@ const PaymentPlanPicker = () => {
       </span>
       <Select
         aria-labelledby='payment-plan-picker-label'
-        defaultSelectedKeys={['basic']}
-        selectedKeys={[paymentPlan]}
+        defaultSelectedKeys={[currentPaymentPlanId]}
+        selectedKeys={[currentPaymentPlanId]}
         classNames={selectClassNames}
         onSelectionChange={handlePaymentPlanChange}
       >
-        {paymentPlans.map(paymentPlan => (
+        {paymentPlans.map((plan) => (
           <SelectItem
-            key={paymentPlan.key}
+            key={plan.id}
             classNames={{
               base: 'h-8.75 rounded-[5px]',
               title: 'text-base',
             }}
           >
-            {paymentPlan.label}
+            {plan.name}
           </SelectItem>
+          // paymentPlanSelectItem()
         ))}
       </Select>
 
@@ -248,7 +313,8 @@ const PaymentPlanPicker = () => {
         <div className='text-base flex flex-row'>
           {/* Сумма оплаты: {total} ₽ */}
           <span>Оплатить</span>
-          <Counter value={totalToDisplay}
+          <Counter
+            value={totalToDisplay}
             fontSize={16}
             padding={0}
             places={places}
@@ -264,7 +330,9 @@ const PaymentPlanPicker = () => {
           <span>₽</span>
 
           <AnimatePresence initial={false}>
-          {paymentPeriod === 'month' && paymentPlan !== 'basic' && (
+          {currentBillingPeriodId === 'month'
+            // && paymentPlan !== 'basic'
+            && (
             <motion.div
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: 'auto' }}

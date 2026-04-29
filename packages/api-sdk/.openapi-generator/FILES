@@ -34,7 +34,8 @@ docs/IncludedPlanOptionDto.md
 docs/LoginResponse.md
 docs/PasswordResetApi.md
 docs/PaymentApi.md
-docs/PaymentInfoResponse.md
+docs/PaymentInfoDto.md
+docs/PaymentInfoPaymentOptionDto.md
 docs/PaymentPlanDto.md
 docs/PaymentPlanOptionDto.md
 docs/Project.md
@@ -73,7 +74,8 @@ models/get-project-response.ts
 models/included-plan-option-dto.ts
 models/index.ts
 models/login-response.ts
-models/payment-info-response.ts
+models/payment-info-dto.ts
+models/payment-info-payment-option-dto.ts
 models/payment-plan-dto.ts
 models/payment-plan-option-dto.ts
 models/project.ts

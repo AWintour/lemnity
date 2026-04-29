@@ -27,8 +27,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.927.0",
     "@aws-sdk/s3-request-presigner": "^3.927.0",
-    "@lemnity/nest-common": "workspace:*",
     "@lemnity/database": "workspace:*",
+    "@lemnity/nest-common": "workspace:*",
     "@lemnity/widget-config": "workspace:*",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "catalog:nest",
@@ -48,6 +48,7 @@
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
     "date-fns": "^4.1.0",
+    "decimal.js": "^10.6.0",
     "dotenv": "^17.2.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
