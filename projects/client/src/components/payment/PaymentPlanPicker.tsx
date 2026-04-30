@@ -1,4 +1,4 @@
-import React, { useState, type Ref } from 'react'
+import { useEffect, useState } from 'react'
 import type { SharedSelection } from '@heroui/system'
 import { Select, SelectItem, type SelectProps } from '@heroui/select'
 import { Input } from '@heroui/input'
@@ -28,15 +28,14 @@ import {
   selectCurrentBillingPeriodId,
   selectCurrentPaymentPlanId,
   selectPaymentPlanById,
-  selectPaymentPlanIds,
-  type BillingPeriodKey,
+  type TBillingPeriodKey,
 } from '@/stores/redux/paymentSlice'
 
 import type { RootState } from '@/stores/redux/store'
 import crossIcon from '@/assets/icons/cross.svg'
 
 type CustomRadioProps = {
-  id: BillingPeriodKey
+  id: TBillingPeriodKey
   index: number
 }
 
@@ -101,34 +100,32 @@ const PaymentPeriodRadioGroup = () => {
       (state: RootState) => selectPaymentPlanById(state, currentPaymentPlanId)
     )
   
-  const monthlyPrice = Number(plan.monthlyPrice)
-  const quarterlyPrice = Number(plan.quarterlyPrice)
-  const monthQuarterlyPrice = quarterlyPrice / 3
-  // const ogQuarterlyPrice = monthlyPrice * 3
-  const yearlyPrice = Number(plan.yearlyPrice)
-  const monthYearlyPrice = yearlyPrice / 12
-  // const ogYearlyPrice = monthlyPrice * 12
-
-  const quarterlyDiscount =
-    Math.round(((monthlyPrice - monthQuarterlyPrice) / monthlyPrice) * 100)
-  const yearlyDiscount =
-    Math.round(((monthlyPrice - monthYearlyPrice) / monthlyPrice) * 100)
+  useEffect(() => {
+    const monthlyPrice = Number(plan.monthlyPrice)
+    const quarterlyPrice = Number(plan.quarterlyPrice)
+    const monthQuarterlyPrice = quarterlyPrice / 3
+    const yearlyPrice = Number(plan.yearlyPrice)
+    const monthYearlyPrice = yearlyPrice / 12
   
-  console.log('quarterlyDiscount', quarterlyDiscount)
+    const quarterlyDiscount =
+      Math.round(((monthlyPrice - monthQuarterlyPrice) / monthlyPrice) * 100)
+    const yearlyDiscount =
+      Math.round(((monthlyPrice - monthYearlyPrice) / monthlyPrice) * 100)
+    
+    dispatch(billingPeriodUpdated({
+      id: 'quarter',
+      discount: quarterlyDiscount,
+    }))
+    dispatch(billingPeriodUpdated({
+      id: 'year',
+      discount: yearlyDiscount,
+    }))
+  }, [plan, dispatch])
   
-  dispatch(billingPeriodUpdated({
-    id: 'quarter',
-    discount: quarterlyDiscount,
-  }))
-  dispatch(billingPeriodUpdated({
-    id: 'year',
-    discount: yearlyDiscount,
-  }))
-  
-  const defaultValue: BillingPeriodKey = 'month'
+  const defaultValue: TBillingPeriodKey = 'month'
 
   const handlePaymentPeriodChange = (value: string) => {
-    dispatch(currentBillingPeriodIdChanged(value as BillingPeriodKey))
+    dispatch(currentBillingPeriodIdChanged(value as TBillingPeriodKey))
   }
 
   const radioGroupClassNames: RadioGroupProps['classNames'] = {

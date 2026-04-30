@@ -1,22 +1,6 @@
 // import { cn } from '@heroui/theme'
 
 // import CustomSwitch from '../CustomSwitch'
-// // import { usePaymentContext } from './usePaymentContext'
-// // import type { ModificationKey } from './PaymentContext'
-// import { AVAILABLE_WIDGETS, type WidgetType } from '@/layouts/Widgets/constants'
-
-// type WidgetItem = {title: string, type: WidgetType}
-
-// // filter widgets by their availability and return the titles
-// const widgets = AVAILABLE_WIDGETS.reduce<Array<WidgetItem>>(
-//   (acc, { isAvailable, title, type }) => {
-//     if (isAvailable) {
-//       acc.push({ title, type })
-//     }
-//     return acc
-//   },
-//   [],
-// )
 
 // type ModificationItemProps = {
 //   title: string

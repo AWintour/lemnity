@@ -1,6 +1,7 @@
 import {
   configureStore,
   createAsyncThunk,
+  createListenerMiddleware,
   type Action,
   type ThunkAction,
 } from '@reduxjs/toolkit'
@@ -9,8 +10,17 @@ import { rootReducer } from './reducer'
 
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
+export const listenerMiddleware = createListenerMiddleware()
+
+export const startAppListening = listenerMiddleware.startListening.withTypes<
+  RootState,
+  AppDispatch
+>()
+
 export const store = configureStore({
   reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().prepend(listenerMiddleware.middleware),
 })
 
 export type AppStore = typeof store
