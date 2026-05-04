@@ -15,6 +15,7 @@ export * from './payment-plan-dto';
 export * from './payment-plan-option-dto';
 export * from './project';
 export * from './projects-response';
+export * from './promo-dto';
 export * from './public-widget';
 export * from './register-dto';
 export * from './register-response';

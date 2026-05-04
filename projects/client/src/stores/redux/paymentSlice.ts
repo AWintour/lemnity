@@ -1,6 +1,7 @@
 import {
   createEntityAdapter,
   createSlice,
+  isAnyOf,
   nanoid,
   type PayloadAction,
   type WithSlice,
@@ -8,75 +9,39 @@ import {
 import { DateTime } from 'luxon'
 
 import {
-  createAppAsyncThunk,
+  // createAppAsyncThunk,
   startAppListening,
   type FetchStatus,
   type RootState,
 } from './store'
 import { rootReducer } from '@/stores/redux/reducer'
 import { fetchPaymentPlans, fetchPaymentInfo } from '@/services/payment'
+import {
+  thunkWithFetchGuardFactory,
+} from './factories/thunkWithFetchGuardFactory'
 
 import type {
   PaymentInfoPaymentOptionDto,
   PaymentPlanDto,
+  PromoDto,
 } from '@lemnity/api-sdk'
 
-export const fetchPaymentPlansThunk = createAppAsyncThunk(
+export const fetchPaymentPlansThunk = thunkWithFetchGuardFactory(
   'payment/fetchPlans',
   async () => {
     const { data } = await fetchPaymentPlans()
     return data
   },
-  {
-    condition(_, thunkApi) {
-      let fetchStatus: FetchStatus = 'idle'
-
-      try {
-        fetchStatus = selectPaymentPlansFetchStatus(thunkApi.getState())
-      }
-      catch {
-        // the payment slice might not be mounted yet
-        // in that case the first fetch should be allowed to proceed
-        // once the fetch has happened it will generate an action
-        // that action will be reduced and the slice will be mounted
-        // then the fetchStatus will be updated
-        fetchStatus = 'idle'
-      }
-
-      if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
-        return false
-      }
-    },
-  }
+  (state) => state.payment!.paymentPlansFetchStatus
 )
 
-export const fetchUserPaymentInfoThunk = createAppAsyncThunk(
+export const fetchUserPaymentInfoThunk = thunkWithFetchGuardFactory(
   'payment/fetchInfo',
   async () => {
     const { data } = await fetchPaymentInfo()
     return data
   },
-  {
-    condition(_, thunkApi) {
-      let fetchStatus: FetchStatus = 'idle'
-
-      try {
-        fetchStatus = selectPaymentInfoFetchStatus(thunkApi.getState())
-      }
-      catch {
-        // the payment slice might not be mounted yet
-        // in that case the first fetch should be allowed to proceed
-        // once the fetch has happened it will generate an action
-        // that action will be reduced and the slice will be mounted
-        // then the fetchStatus will be updated
-        fetchStatus = 'idle'
-      }
-
-      if (fetchStatus === 'pending' || fetchStatus === 'succeeded') {
-        return false
-      }
-    },
-  }
+  (state) => state.payment!.paymentInfoFetchStatus
 )
 
 // i think this particular adapter is not needed
@@ -134,7 +99,7 @@ const defaultBillingPeriods: TBillingPeriod[] = [
 
 type TPaymentPlanOptionType = 'BRANDING'
 
-type TPaymentPlanOption = {
+export type TPaymentPlanOption = {
   type: TPaymentPlanOptionType
   enabled: boolean
   name: string
@@ -142,19 +107,57 @@ type TPaymentPlanOption = {
   isBilledAnnually: boolean
 }
 
-type TIncludedPlanOption = {
+export type TIncludedPlanOption = {
   type: TPaymentPlanOptionType
   name: string
 }
+
+const extractIncludedPlanOptions =
+  (plan: PaymentPlanDto):TIncludedPlanOption[] => {
+    if (!plan.includedPlanOptions) {
+      return []
+    }
+
+    const includedPlanOptions = plan.includedPlanOptions.map((value) => {
+      const result: TIncludedPlanOption = {
+        type: value.type as TPaymentPlanOptionType,
+        name: value.name,
+      }
+      return result
+    })
+    return includedPlanOptions
+  }
+
+const extractPaymentPlanOptions =
+  (plan: PaymentPlanDto):TPaymentPlanOption[] => {
+    if (!plan.paymentPlanOptions) {
+      return []
+    }
+
+    const paymentPlanOptions = plan.paymentPlanOptions.map((value) => {
+      const result: TPaymentPlanOption = {
+        enabled: false,
+        isBilledAnnually: value.isBilledAnnually,
+        name: value.name,
+        price: value.price,
+        type: value.type as TPaymentPlanOptionType,
+      }
+      return result
+    })
+
+    return paymentPlanOptions
+  }
 
 type TPaymentState = {
   // UI state
   paymentWidgetOpen: boolean
   currentBillingPeriodId: TBillingPeriodKey
   currentPaymentPlanId: string
-  // cheapestBillingPlanId: string
   paymentPlanOptions: TPaymentPlanOption[]
   includedPlanOptions: TIncludedPlanOption[]
+  isPlanOptionAddedToCart: Partial<Record<TPaymentPlanOptionType, boolean>>
+  // this one is user input
+  promo: string
 
   // server state
   paymentPlansFetchStatus: FetchStatus
@@ -171,6 +174,7 @@ type TPaymentState = {
   paymentPlanEndDate: string
   purchasedPaymentPlanOptions: PaymentInfoPaymentOptionDto[]
   isTrialPeriod: boolean
+  dbPromo?: PromoDto
 }
 
 const now = DateTime.now()
@@ -181,22 +185,23 @@ const defaultPaymentPlan: PaymentPlanDto = {
   updatedAt: '',
   enabled: true,
   includedPlanOptions: [],
-  monthlyPrice: '0,00',
+  monthlyPrice: '0',
   name: 'Тестовый',
   numberOfProjects: 5,
   numberOfWidgets: 15,
   paymentPlanOptions: [],
-  quarterlyPrice: '0,00',
-  yearlyPrice: '0,00',
+  quarterlyPrice: '0',
+  yearlyPrice: '0',
 }
 
 export const initialState: TPaymentState = {
   paymentWidgetOpen: false,
   currentBillingPeriodId: 'month',
   currentPaymentPlanId: paymentPlanId,
-  // cheapestBillingPlanId: paymentPlanId,
   paymentPlanOptions: [],
   includedPlanOptions: [],
+  isPlanOptionAddedToCart: {},
+  promo: '',
 
   paymentPlansFetchStatus: 'idle',
   paymentPlansFetchError: null,
@@ -246,6 +251,28 @@ export const paymentSlice = createSlice({
       (state, action: PayloadAction<TIncludedPlanOption[]>) => {
         state.includedPlanOptions = action.payload
       },
+    planOptionCartStateChanged:
+      (
+        state,
+        action: PayloadAction<{ type: TPaymentPlanOptionType, value: boolean }>
+      ) => {
+        const payload = action.payload
+        state.isPlanOptionAddedToCart[payload.type] = payload.value
+      },
+    paymentPlanAdded:
+      (state, action: PayloadAction<PaymentPlanDto>) => {
+        paymentPlanAdapter.addOne(state.paymentPlans, action.payload)
+      },
+    // user input
+    promoChanged:
+      (state, action: PayloadAction<string>) => {
+        state.promo = action.payload
+      },
+    // prmo from db
+    dbPromoChanged:
+      (state, action: PayloadAction<PromoDto>) => {
+        state.dbPromo = action.payload
+      },
   },
   selectors: {
     selectPaymentWidgetOpen:
@@ -254,8 +281,14 @@ export const paymentSlice = createSlice({
       (state) => state.currentBillingPeriodId,
     selectCurrentPaymentPlanId:
       (state) => state.currentPaymentPlanId,
-    // selectCheapestBillingPlanId:
-    //   (state) => state.cheapestBillingPlanId,
+    selectPaymentPlanOptions:
+      (state) => state.paymentPlanOptions,
+    selectIncludedPlanOptions:
+      (state) => state.includedPlanOptions,
+    selectIsPlanOptionAddedToCart:
+      (state) => state.isPlanOptionAddedToCart,
+    selectPromo:
+      (state) => state.promo,
 
     selectPaymentPlansFetchStatus:
       (state) => state.paymentPlansFetchStatus,
@@ -277,6 +310,8 @@ export const paymentSlice = createSlice({
       (state) => state.purchasedPaymentPlanOptions,
     selectIsTrialPeriod:
       (state) => state.isTrialPeriod,
+    selectDbPromo:
+      (state) => state.dbPromo,
   },
   extraReducers: (builder) => {
     builder
@@ -304,33 +339,11 @@ export const paymentSlice = createSlice({
         const cheapestPlan = paymentPlans[0]
         state.currentPaymentPlanId = cheapestPlan.id
 
-        console.log('[fetchPaymentPlansThunk.fulfilled] ' + cheapestPlan.name)
-
-        const includedPlanOptions =
-          cheapestPlan.includedPlanOptions.map((value) => {
-            const result: TIncludedPlanOption = {
-              type: value.type as TPaymentPlanOptionType,
-              name: value.name,
-            }
-            return result
-          })
+        const includedPlanOptions = extractIncludedPlanOptions(cheapestPlan)
         state.includedPlanOptions = includedPlanOptions
-        console.log('[fetchPaymentPlansThunk.fulfilled][includedPlanOptions]', includedPlanOptions)
 
-
-        const paymentPlanOptions =
-          cheapestPlan.paymentPlanOptions.map((value) => {
-            const result: TPaymentPlanOption = {
-              enabled: false,
-              isBilledAnnually: value.isBilledAnnually,
-              name: value.name,
-              price: value.price,
-              type: value.type as TPaymentPlanOptionType,
-            }
-            return result
-          })
+        const paymentPlanOptions = extractPaymentPlanOptions(cheapestPlan)
         state.paymentPlanOptions = paymentPlanOptions
-        console.log('[fetchPaymentPlansThunk.fulfilled][paymentPlanOptions]', paymentPlanOptions)
       })
 
       .addCase(fetchPaymentPlansThunk.rejected, (state, action) => {
@@ -344,24 +357,32 @@ export const paymentSlice = createSlice({
       })
 
       .addCase(fetchUserPaymentInfoThunk.fulfilled, (state, action) => {
-        state.paymentInfoFetchStatus = 'succeeded'
-        state.paymentInfoFetchError = null
-
         const payload = action.payload
 
         if (!payload.paymentPlan) {
-          state.paymentInfoFetchStatus = 'rejected'
-          state.paymentInfoFetchError = 'Не удалось загрузить тарифнвй план'
+          // trial period
+          // this logic might actually be broken
+          // i have spent 0 seconds thinking this over
+          state.paymentPlan = defaultPaymentPlan
+          state.paymentPlanStartDate = initialState.paymentPlanStartDate
+          state.paymentPlanEndDate = initialState.paymentPlanEndDate
+          state.purchasedPaymentPlanOptions = []
+          state.isTrialPeriod = !payload.usedTrialPeriod
+
+          state.paymentInfoFetchStatus = 'succeeded'
+          state.paymentInfoFetchError = null
           return
         }
 
         state.balance = payload.balance
         state.paymentPlan = payload.paymentPlan
-        // state.currentPaymentPlanId = payload.paymentPlan.id
         state.paymentPlanStartDate = payload.paymentPlanStartDate
         state.paymentPlanEndDate = payload.paymentPlanEndDate
         state.purchasedPaymentPlanOptions = payload.purchasedPaymentPlanOptions
         state.isTrialPeriod = !payload.usedTrialPeriod
+
+        state.paymentInfoFetchStatus = 'succeeded'
+        state.paymentInfoFetchError = null
       })
 
       .addCase(fetchUserPaymentInfoThunk.rejected, (state, action) => {
@@ -379,7 +400,85 @@ export const {
   currentPaymentPlanIdChanged,
   paymentPlanOptionsChanged,
   includedPlanOptionsChanged,
+  planOptionCartStateChanged,
+  paymentPlanAdded,
+  promoChanged,
+  dbPromoChanged,
 } = paymentSlice.actions
+
+// this middleware runs once both fetchUserPaymentInfoThunk
+// and fetchPaymentPlansThunk have finished their requests and reducers
+// if current user's payment plan is only applied to them
+// this plan is added to the list of available plans
+// otherwise currentPaymentPlanId is set to either the previously paid for plan
+// or - if no purchase history exists - the cheapest one
+startAppListening({
+  matcher: isAnyOf(
+    fetchUserPaymentInfoThunk.fulfilled, fetchUserPaymentInfoThunk.rejected,
+    fetchPaymentPlansThunk.fulfilled, fetchPaymentPlansThunk.rejected
+  ),
+  effect: (_, listenerApi) => {
+    const state = listenerApi.getState()
+    const { paymentInfoFetchStatus, paymentPlansFetchStatus } = state.payment!
+
+    const bothFinished = 
+      (
+        paymentInfoFetchStatus === 'succeeded'
+        || paymentInfoFetchStatus === 'rejected'
+      )
+      &&
+      (
+        paymentPlansFetchStatus === 'succeeded'
+        || paymentPlansFetchStatus === 'rejected'
+      )
+    
+    if (!bothFinished) {
+      console.log(
+        '[startAppListening] both thunks have not finished executing yet'
+      )
+      return
+    }
+
+    const anyRejected =
+     paymentInfoFetchStatus === 'rejected'
+     || paymentPlansFetchStatus === 'rejected'
+    
+    if (anyRejected) {
+      // toast
+      console.log(
+        '[startAppListening] one or both of the requests were rejected'
+      )
+      return
+    }
+
+    const currentPlan = state.payment!.paymentPlan
+    const paymentPlans = selectAllPaymentPlans(state)
+
+    const isUniquePlan = paymentPlans.find(
+      (value) => value.id === currentPlan.id
+    )
+
+    console.log({ isUniquePlan })
+    console.log({ currentPlan })
+
+    if (isUniquePlan !== undefined) {
+      console.log('[startAppListening] the plan isnt unique')
+      console.log('[startAppListening] currentPlan', currentPlan.name)
+      
+      if (!currentPlan.id) {
+        const cheapestPlan = paymentPlans[0]
+        listenerApi.dispatch(currentPaymentPlanIdChanged(cheapestPlan.id))
+        console.log('[startAppListening] set to cheapest plan')
+      }
+
+      listenerApi.dispatch(currentPaymentPlanIdChanged(currentPlan.id))
+      return
+    }
+
+    listenerApi.dispatch(paymentPlanAdded(currentPlan))
+    listenerApi.dispatch(currentPaymentPlanIdChanged(currentPlan.id))
+  },
+})
 
 startAppListening({
   actionCreator: currentPaymentPlanIdChanged,
@@ -387,32 +486,15 @@ startAppListening({
     const state = listenerApi.getState()
     const plan = selectPaymentPlanById(state, action.payload)
 
-    console.log('[startAppListening]', plan.name)
+    console.log('[startAppListening] plan', plan.name)
 
-    const includedPlanOptions = plan.includedPlanOptions.map((value) => {
-      const result: TIncludedPlanOption = {
-        type: value.type as TPaymentPlanOptionType,
-        name: value.name,
-      }
-      return result
-    })
-
+    const includedPlanOptions = extractIncludedPlanOptions(plan)
     listenerApi.dispatch(includedPlanOptionsChanged(includedPlanOptions))
-    console.log('[startAppListening][includedPlanOptions]', includedPlanOptions)
+    console.log('[startAppListening] includedPlanOptions', includedPlanOptions)
 
-    const paymentPlanOptions = plan.paymentPlanOptions.map((value) => {
-      const result: TPaymentPlanOption = {
-        enabled: false,
-        isBilledAnnually: value.isBilledAnnually,
-        name: value.name,
-        price: value.price,
-        type: value.type as TPaymentPlanOptionType,
-      }
-      return result
-    })
-    
+    const paymentPlanOptions = extractPaymentPlanOptions(plan)
     listenerApi.dispatch(paymentPlanOptionsChanged(paymentPlanOptions))
-    console.log('[startAppListening][paymentPlanOptions]', paymentPlanOptions)
+    console.log('[startAppListening] paymentPlanOptions', paymentPlanOptions)
   }
 })
 
@@ -426,7 +508,10 @@ export const {
   selectPaymentWidgetOpen,
   selectCurrentBillingPeriodId,
   selectCurrentPaymentPlanId,
-  // selectCheapestBillingPlanId,
+  selectIncludedPlanOptions,
+  selectPaymentPlanOptions,
+  selectIsPlanOptionAddedToCart,
+  selectPromo,
 
   selectPaymentPlansFetchStatus,
   selectPaymentPlansFetchError,
@@ -438,6 +523,7 @@ export const {
   selectPaymentPlanStartDate,
   selectPaymentPlanEndDate,
   selectPurchasedPaymentPlanOptions,
+  selectDbPromo,
 } = injectedPaymentSlice.selectors
 
 export const {

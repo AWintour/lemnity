@@ -6,94 +6,60 @@ import { cn } from '@heroui/theme'
 import Popover from '../Popover'
 import SvgIcon from '../SvgIcon'
 import Payment from './Payment'
-// import Modifications from './Modifications'
+import Modifications from './Modifications'
 
 import crossIcon from '@/assets/icons/cross.svg'
 import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
-import { billingPeriodUpdated, currentPaymentPlanIdChanged, paymentWidgetOpenChanged, selectPaymentPlanById, selectPaymentWidgetOpen } from '@/stores/redux/paymentSlice'
-import { addListener } from '@reduxjs/toolkit'
-import type { RootState } from '@/stores/redux/store'
+import {
+  paymentWidgetOpenChanged,
+  selectBalance,
+  selectIsTrialPeriod,
+  selectPaymentWidgetOpen,
+} from '@/stores/redux/paymentSlice'
 
 type PaymentTriggerVariant = 'trial' | 'paid' | 'negative'
 
-// const paymentPlans: PaymentPlan[] = [
-//   {
-//     key: 'basic',
-//     label: 'Базовый тариф',
-//     price: 0,
-//   },
-//   {
-//     key: 'business',
-//     label: 'Бизнес тариф',
-//     price: 499,
-//   }
-// ]
+const getVariantClasses = (variant: PaymentTriggerVariant) => {
+  switch (variant) {
+    case 'trial':
+      return 'border-[#553BB2] bg-[#553BB2]/15'
+    case 'paid':
+      return 'border-[#3BB240] bg-[#3BB240]/15'
+    case 'negative':
+      return 'border-[#E65F2B] bg-[#E65F2B]/15'
+  }
+}
 
 const PaymentTrigger = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [variant, _setVariant] = useState<PaymentTriggerVariant>('trial')
+  const [variant, setVariant] = useState<PaymentTriggerVariant>('trial')
 
   const dispatch = useAppDispatch()
 
-  // useEffect(() => {
-  //   dispatch(addListener({
-  //     type: currentPaymentPlanIdChanged.type,
-  //     // predicate: (action) => {
-  //     //   return action.type === 'payment/currentPaymentPlanIdChanged'
-  //     // },
-  //     effect: async (action: { payload: string; type: string }, listenerApi) => {
-  //       const state = listenerApi.getState() as RootState
-  //       const plan = selectPaymentPlanById(state, action.payload)
+  const isTrialPeriod =
+    useAppSelector(selectIsTrialPeriod)
+  const balance =
+    useAppSelector(selectBalance)
 
-  //       const monthlyPrice = Number(plan.monthlyPrice)
-  //       const quarterlyPrice = Number(plan.quarterlyPrice)
-  //       const yearlyPrice = Number(plan.yearlyPrice)
-
-  //       const quarterlyDiscount =
-  //         Math.floor(quarterlyPrice / ((monthlyPrice * 3) / 100))
-  //       const yearlyDiscount =
-  //         Math.floor(yearlyPrice / ((monthlyPrice * 12) / 100))
-        
-  //       // console.log('quarterlyDiscount', quarterlyDiscount)
-        
-  //       listenerApi.dispatch(billingPeriodUpdated({
-  //         id: 'quarter',
-  //         discount: quarterlyDiscount,
-  //       }))
-  //       listenerApi.dispatch(billingPeriodUpdated({
-  //         id: 'year',
-  //         discount: yearlyDiscount,
-  //       }))
-  //     },
-  //   }))
-  // }, [])
+  useEffect(() => {
+    setVariant(
+      isTrialPeriod
+        ? 'trial'
+        : 'paid'
+    )
+  }, [isTrialPeriod])
   
   const paymentWidgetOpen = useAppSelector(selectPaymentWidgetOpen)
   
   const primaryLabel = variant === 'trial'
     ? 'Тестовый период'
-    : 'Баланс: 870 ₽'
+    : `Баланс: ${balance} ₽`
   const secondaryLabel = variant === 'trial'
     ? 'Осталось 14 дней'
     : 'Хватит на 30 дней'
   const title = variant === 'trial'
     ? ''
     : 'Пополнение баланса'
-
-  useEffect(() => {
-    // dispatch({ type: 'setIsTrialPeriod', isTrialPeriod: variant === 'trial' })
-  }, [dispatch])
-
-  const getVariantClasses = (variant: PaymentTriggerVariant) => {
-    switch (variant) {
-      case 'trial':
-        return 'border-[#553BB2] bg-[#553BB2]/15'
-      case 'paid':
-        return 'border-[#3BB240] bg-[#3BB240]/15'
-      case 'negative':
-        return 'border-[#E65F2B] bg-[#E65F2B]/15'
-    }
-  }
 
   const handlePopoverOpenChange = (isOpen: boolean) => {
     dispatch(paymentWidgetOpenChanged(isOpen))
@@ -164,13 +130,13 @@ const PaymentTrigger = () => {
 
         <div className='w-full flex flex-row gap-4'>  
           <Payment />
-          {/* <Modifications /> */}
-          <div
+          <Modifications />
+          {/* <div
             className={cn(
               'w-87.5 p-4 flex flex-col gap-2.5 bg-[#F8F8F8]',
               'border border-[#E8E8E8] rounded-[10px]',
             )}
-          />
+          /> */}
         </div>
       </PopoverContent>
     </Popover>

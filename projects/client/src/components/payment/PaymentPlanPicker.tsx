@@ -22,17 +22,21 @@ import {
   billingPeriodUpdated,
   currentBillingPeriodIdChanged,
   currentPaymentPlanIdChanged,
+  dbPromoChanged,
+  promoChanged,
   selectAllPaymentPlans,
   selectBillingPeiodById,
   selectBillingPeriodIds,
   selectCurrentBillingPeriodId,
   selectCurrentPaymentPlanId,
   selectPaymentPlanById,
+  selectPromo,
   type TBillingPeriodKey,
 } from '@/stores/redux/paymentSlice'
 
 import type { RootState } from '@/stores/redux/store'
 import crossIcon from '@/assets/icons/cross.svg'
+import { getPromo } from '@/services/payment'
 
 type CustomRadioProps = {
   id: TBillingPeriodKey
@@ -155,6 +159,31 @@ const PaymentPeriodRadioGroup = () => {
 const Promo = () => {
   const [open, setOpen] = useState(false)
 
+  const dispatch = useAppDispatch()
+  const promo = useAppSelector(selectPromo)
+
+  const handlePromoChange = (value: string) => {
+    dispatch(promoChanged(value.toUpperCase()))
+  }
+
+  const handleApplyPromo = async () => {
+    try {
+      const { data } = await getPromo(promo)
+      console.log('[Promo]', data)
+
+      if (!data) {
+        // toast
+        console.log('[Promo] not found')
+        return
+      }
+
+      dispatch(dbPromoChanged(data))
+    }
+    catch {
+      console.log('[Promo] network error')
+    }
+  }
+
   const toggleUserHasPromoOpen= () => {
     setOpen(!open)
   }
@@ -195,6 +224,7 @@ const Promo = () => {
             className={`overflow-hidden`}
           >
             <Input
+              value={promo}
               classNames={{
                 inputWrapper:
                   'min-h-8.75 h-8.75 px-4 rounded-[5px] border border-[#5951E5]',
@@ -202,10 +232,14 @@ const Promo = () => {
               }}
               placeholder='Введите промокод'
               endContent={
-                <button className='text-base text-[#5951E5] cursor-pointer'>
+                <button
+                  className='text-base text-[#5951E5] cursor-pointer'
+                  onClick={handleApplyPromo}
+                >
                   Применить
                 </button>
               }
+              onValueChange={handlePromoChange}
             />
           </motion.div>
       )}
@@ -219,8 +253,6 @@ const PaymentPlanPicker = () => {
 
   const currentPaymentPlanId =
     useAppSelector(selectCurrentPaymentPlanId)
-  // const paymentPlanIds =
-  //   useAppSelector(selectPaymentPlanIds)
   const paymentPlans =
     useAppSelector(selectAllPaymentPlans)
       .sort((a, b) => Number(a.yearlyPrice) - Number(b.yearlyPrice))
@@ -291,7 +323,6 @@ const PaymentPlanPicker = () => {
           >
             {plan.name}
           </SelectItem>
-          // paymentPlanSelectItem()
         ))}
       </Select>
 

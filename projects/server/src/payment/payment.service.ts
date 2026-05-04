@@ -8,16 +8,13 @@ export class PaymentService {
   async getUserPaymentInfo(id: string) {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id },
-      // select: {
-      //   balance: true,
-      //   paymentPlan: true,
-      //   paymentPlanStartDate: true,
-      //   paymentPlanEndDate: true,
-      //   purchasedPaymentPlanOptions: true,
-      //   usedTrialPeriod: true,
-      // },
       include: {
-        paymentPlan: true,
+        paymentPlan: {
+          include: {
+            includedPlanOptions: true,
+            paymentPlanOptions: true,
+          }
+        },
         purchasedPaymentPlanOptions: true,
       }
     })
@@ -38,19 +35,6 @@ export class PaymentService {
     }
   }
 
-  // updateUserPaymentPlanAndBalance(
-  //   userId: string,
-  //   balance?: number,
-  //   planId?: string
-  // ) {
-  //   return this.prisma.user.update({
-  //     where: { id: userId },
-  //     data: {
-  //       balance,
-  //       paymentPlanId: planId,
-  //     }
-  //   })
-  // }
 
   selectAllEnabledPaymentPlans() {
     return this.prisma.paymentPlan.findMany({
@@ -68,6 +52,14 @@ export class PaymentService {
           },
         },
       }
+    })
+  }
+
+  getPromo(promo: string) {
+    return this.prisma.promo.findUnique({
+      where: {
+        promo: promo,
+      },
     })
   }
 }

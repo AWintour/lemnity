@@ -4,11 +4,12 @@ import {
   selectBillingPeiodById,
   selectCurrentBillingPeriodId,
   selectCurrentPaymentPlanId,
-  selectIsTrialPeriod,
+  selectDbPromo,
+  selectIsPlanOptionAddedToCart,
   selectPaymentPlanById,
+  selectPaymentPlanOptions,
 } from '@/stores/redux/paymentSlice'
 import type { RootState } from '@/stores/redux/store'
-
 
 const formatter = new Intl
   .NumberFormat('ru-RU', {
@@ -17,6 +18,7 @@ const formatter = new Intl
     maximumFractionDigits: 2,
     useGrouping: false,
   })
+
 export const usePrice = () => {
   const currentPaymentPlanId =
     useAppSelector(selectCurrentPaymentPlanId)
@@ -33,46 +35,63 @@ export const usePrice = () => {
       (state: RootState) =>
         selectBillingPeiodById(state, currentBillingPeriodId)
     )
-
-  const isTrialPeriod =
-    useAppSelector(selectIsTrialPeriod)
-
-  // const price = paymentPlans.find(plan => plan.key === paymentPlan)?.price ?? 0
-  // const period = paymentPeriods?.find(period => period.key === paymentPeriod)
+  const paymentPlanOptions =
+    useAppSelector(selectPaymentPlanOptions)
+  const isPlanOptionAddedToCart =
+    useAppSelector(selectIsPlanOptionAddedToCart)
+  const dbPromo =
+    useAppSelector(selectDbPromo)
+  
+  let indexesOfOptionsInCart: number[] = []
+  paymentPlanOptions.forEach((value, index) => {
+    if (isPlanOptionAddedToCart[value.type]) {
+      indexesOfOptionsInCart.push(index)
+    }
+  })
 
   const months = new Decimal(billingPeriod.months)
     ?? new Decimal(0)
 
-  let price = new Decimal('0')
+  let total = new Decimal('0')
 
   switch (billingPeriod.id) {
     case 'month':
       const monthlyPrice = new Decimal(paymentPlan.monthlyPrice)
-      price = monthlyPrice
+      total = monthlyPrice
       break
     case 'quarter':
       const quarterlyPrice = new Decimal(paymentPlan.quarterlyPrice)
-      price = quarterlyPrice
+      total = quarterlyPrice
       break
     case 'year':
       const yearlyPrice = new Decimal(paymentPlan.yearlyPrice)
-      price = yearlyPrice
+      total = yearlyPrice
       break
   }
-  
-  const total = price
+
+  indexesOfOptionsInCart.forEach((value) => {
+    const option = paymentPlanOptions[value]
+
+    const optionPrice =
+      option.isBilledAnnually
+        ? new Decimal(option.price)
+        : (new Decimal(option.price)).times(months)
+    
+    total = total.add(optionPrice)
+  })
+
+  if (dbPromo) {
+    const discount = new Decimal(dbPromo.discount)
+    const factor = (new Decimal(100)).minus(discount).dividedBy(100)
+    total = total.times(factor)
+  }
 
   const formattedTotal = formatter.format(
     Number(total.toFixed(2))
   )
-  
-  const paymentButtonText = isTrialPeriod
-    ? 'Переключиться на бизнес тариф'
-    : `Оплатить ${formattedTotal} ₽`
 
   return {
     total,
     formattedTotal,
-    paymentButtonText,
   }
 }

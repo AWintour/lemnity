@@ -1,5 +1,5 @@
 import { http } from '@/common/api/http'
-import type { PaymentInfoDto, PaymentPlanDto } from '@lemnity/api-sdk'
+import type { PaymentInfoDto, PaymentPlanDto, PromoDto } from '@lemnity/api-sdk'
 
 export const fetchPaymentPlans = async () => {
   const result = await http.get<PaymentPlanDto[]>('/payment/plans')
@@ -16,5 +16,10 @@ export const updatePaymentInfo = async () => {
     balance: 500,
     paymentPlanId: 'cmoh372ud00003b6tvccqee8x',
   })
+  return result
+}
+
+export const getPromo = async (promo: string) => {
+  const result = await http.get<PromoDto>(`/payment/promo/${promo}`)
   return result
 }

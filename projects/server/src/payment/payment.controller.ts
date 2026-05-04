@@ -6,6 +6,7 @@ import { PaymentService } from './payment.service'
 import { ApiResponse } from '@nestjs/swagger'
 import { PaymentInfoDto } from './dto/userPaymentInfo.dto'
 import { PaymentPlanDto } from './dto/paymentPlan.dto'
+import { PromoDto } from './dto/promo.dto'
 
 @Controller('payment')
 export class PaymentController {
@@ -23,5 +24,12 @@ export class PaymentController {
   @ApiResponse({ status: 200, type: PaymentPlanDto })
   selectAllEnabledPaymentPlans() {
     return this.paymentService.selectAllEnabledPaymentPlans()
+  }
+
+  @Get('/promo/:promo')
+  @Auth()
+  @ApiResponse({ status: 200, type: PromoDto })
+  gettPromo(@Param('promo') promo: string) {
+    return this.paymentService.getPromo(promo)
   }
 }

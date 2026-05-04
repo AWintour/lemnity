@@ -1,0 +1,8 @@
+model Promo {
+  id String @id @default(cuid())
+  
+  promo String @unique
+  discount Decimal @default(0) @db.Decimal(10, 2)
+
+  @@map("promos")
+}

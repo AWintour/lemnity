@@ -41,6 +41,7 @@ docs/PaymentPlanOptionDto.md
 docs/Project.md
 docs/ProjectApi.md
 docs/ProjectsResponse.md
+docs/PromoDto.md
 docs/PublicProjectsApi.md
 docs/PublicRequestsApi.md
 docs/PublicWidget.md
@@ -80,6 +81,7 @@ models/payment-plan-dto.ts
 models/payment-plan-option-dto.ts
 models/project.ts
 models/projects-response.ts
+models/promo-dto.ts
 models/public-widget.ts
 models/register-dto.ts
 models/register-response.ts

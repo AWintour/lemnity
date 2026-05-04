@@ -10,25 +10,34 @@ import { usePrice } from './usePrice'
 import { useCloudPayments } from '@/hooks/useCloudPayments'
 import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
 import {
-  currentPaymentPlanIdChanged,
   paymentWidgetOpenChanged,
-  // selectCheapestBillingPlanId,
-  // selectIsTrialPeriod,
+  selectBalance,
+  selectCurrentPaymentPlanId,
+  selectPaymentPlan,
+  selectPaymentPlanById,
 } from '@/stores/redux/paymentSlice'
 
 const Payment = () => {
   const { total } = usePrice()
 
-  const { status, launchWidget } = useCloudPayments((result) => {
-    console.log('callback result:', result)
-  })
+  // const { status, launchWidget } = useCloudPayments((result) => {
+  //   console.log('callback result:', result)
+  // })
   
   const dispatch = useAppDispatch()
 
-  // const isTrialPeriod =
-  //   useAppSelector(selectIsTrialPeriod)
-  // const cheapestBillingPlanId =
-  //   useAppSelector(selectCheapestBillingPlanId)
+  const balance =
+    useAppSelector(selectBalance)
+  const paymentPlan =
+    useAppSelector(selectPaymentPlan)
+  const currentPaymentPlanId =
+    useAppSelector(selectCurrentPaymentPlanId)
+  const currentPlan =
+    useAppSelector(
+      (state) => selectPaymentPlanById(state, currentPaymentPlanId)
+    )
+  
+  const balanceNumber = Number(balance)
 
   const zero = new Decimal(0)
   const thousand = new Decimal(1000)
@@ -49,25 +58,33 @@ const Payment = () => {
 
   const totalToDisplay = Number(total.toFixed(2))
 
-  const handlePayment = () => {
-    // if (isTrialPeriod) {
-    //   dispatch(currentPaymentPlanIdChanged(cheapestBillingPlanId))
-    // }
+  const displaySwitchToAnotherPlan = paymentPlan.id !== currentPaymentPlanId
+  const buttonText =
+    displaySwitchToAnotherPlan
+    ? `Переключиться на ${currentPlan.name}`
+    : total.equals(zero)
+      ? 'Оплачивать не нужно'
+      : ''
 
-    if (status !== 'ready') {
-      console.log('[PAYMENT] status !== ready')
+  const handlePayment = () => {
+    if (total.equals(zero)) {
       return
     }
 
+    // if (status !== 'ready') {
+    //   console.log('[PAYMENT] status !== ready')
+    //   return
+    // }
+
     dispatch(paymentWidgetOpenChanged(false))
-    launchWidget()
+    // launchWidget()
     console.log('[PAYMENT] widget launched')
   }
 
   return (
     <div className='w-87.5 flex flex-col gap-2.5'>
       <PaymentStatus
-        balance={870}
+        balance={balanceNumber}
         daysLeft={3}
       />
       <PaymentPlanPicker />
@@ -79,9 +96,9 @@ const Payment = () => {
         )}
         onPress={handlePayment}
       >
-        {/* {isTrialPeriod
-          ? 'Переключиться'
-          : <> */}
+        {displaySwitchToAnotherPlan || total.equals(zero)
+          ? buttonText
+          : <>
               <span className='text-base'>Оплатить</span>
               <Counter
                 value={totalToDisplay}
@@ -96,8 +113,8 @@ const Payment = () => {
                 bottomGradientStyle={{}}
               />
               <span className='text-base'>₽</span>
-            {/* </>
-        } */}
+            </>
+        }
       </Button>
 
       <div className='w-full h-11.25 flex items-center justify-center'>

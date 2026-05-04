@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { PaymentPlanDto } from './paymentPlan.dto'
 import { PaymentOptionEnum } from '@lemnity/database'
-import { PaymentPlanOptionDto } from './paymentPlanOption.dto'
+// import { PaymentPlanOptionDto } from './paymentPlanOption.dto'
 
 export class PaymentInfoPaymentOptionDto {
   @ApiProperty()
