@@ -62,7 +62,7 @@ const CustomRadio = (props: CustomRadioProps) => {
     // so we can hide the radio button completely >w<
     wrapper: cn(
       'absolute w-0 h-0 min-w-0 min-h-0 opacity-0 overflow-hidden',
-      'pointer-events-none'
+      'pointer-events-none',
     ),
     control: 'w-0 h-0 min-w-0 min-h-0',
     labelWrapper: 'm-0 p-0',

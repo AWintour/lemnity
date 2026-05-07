@@ -14,8 +14,8 @@ model PaymentPlanOptions {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   
-  paymentPlansPaymentOptions  PaymentPlan[] @relation(name: "paymentPlanOptionsRelation")
-  paymentPlansIncludedOptions PaymentPlan[] @relation(name: "includedPlanOptionsRelation")
+  paymentPlansPaymentOptions  PaymentPlan[] @relation(name: "planToPaymentOptions")
+  paymentPlansIncludedOptions PaymentPlan[] @relation(name: "planToIncludedOptions")
   
   users User[]
 

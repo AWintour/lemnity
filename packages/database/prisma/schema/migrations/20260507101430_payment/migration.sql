@@ -44,13 +44,20 @@ CREATE TABLE "payment_plans" (
 -- CreateTable
 CREATE TABLE "payments" (
     "id" TEXT NOT NULL,
-    "amount" DECIMAL(10,2) NOT NULL DEFAULT 0,
-    "type" "PaymentType" NOT NULL,
-    "receipt_url" TEXT NOT NULL,
+    "data" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT,
 
     CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "promos" (
+    "id" TEXT NOT NULL,
+    "promo" TEXT NOT NULL,
+    "discount" DECIMAL(10,2) NOT NULL DEFAULT 0,
+
+    CONSTRAINT "promos_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -62,29 +69,32 @@ CREATE TABLE "_PaymentPlanOptionsToUser" (
 );
 
 -- CreateTable
-CREATE TABLE "_paymentPlanOptionsRelation" (
+CREATE TABLE "_planToPaymentOptions" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
-    CONSTRAINT "_paymentPlanOptionsRelation_AB_pkey" PRIMARY KEY ("A","B")
+    CONSTRAINT "_planToPaymentOptions_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateTable
-CREATE TABLE "_includedPlanOptionsRelation" (
+CREATE TABLE "_planToIncludedOptions" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
-    CONSTRAINT "_includedPlanOptionsRelation_AB_pkey" PRIMARY KEY ("A","B")
+    CONSTRAINT "_planToIncludedOptions_AB_pkey" PRIMARY KEY ("A","B")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "promos_promo_key" ON "promos"("promo");
 
 -- CreateIndex
 CREATE INDEX "_PaymentPlanOptionsToUser_B_index" ON "_PaymentPlanOptionsToUser"("B");
 
 -- CreateIndex
-CREATE INDEX "_paymentPlanOptionsRelation_B_index" ON "_paymentPlanOptionsRelation"("B");
+CREATE INDEX "_planToPaymentOptions_B_index" ON "_planToPaymentOptions"("B");
 
 -- CreateIndex
-CREATE INDEX "_includedPlanOptionsRelation_B_index" ON "_includedPlanOptionsRelation"("B");
+CREATE INDEX "_planToIncludedOptions_B_index" ON "_planToIncludedOptions"("B");
 
 -- AddForeignKey
 ALTER TABLE "payments" ADD CONSTRAINT "payments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -99,13 +109,13 @@ ALTER TABLE "_PaymentPlanOptionsToUser" ADD CONSTRAINT "_PaymentPlanOptionsToUse
 ALTER TABLE "_PaymentPlanOptionsToUser" ADD CONSTRAINT "_PaymentPlanOptionsToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_paymentPlanOptionsRelation" ADD CONSTRAINT "_paymentPlanOptionsRelation_A_fkey" FOREIGN KEY ("A") REFERENCES "payment_plans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_planToPaymentOptions" ADD CONSTRAINT "_planToPaymentOptions_A_fkey" FOREIGN KEY ("A") REFERENCES "payment_plans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_paymentPlanOptionsRelation" ADD CONSTRAINT "_paymentPlanOptionsRelation_B_fkey" FOREIGN KEY ("B") REFERENCES "payment_plan_options"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_planToPaymentOptions" ADD CONSTRAINT "_planToPaymentOptions_B_fkey" FOREIGN KEY ("B") REFERENCES "payment_plan_options"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_includedPlanOptionsRelation" ADD CONSTRAINT "_includedPlanOptionsRelation_A_fkey" FOREIGN KEY ("A") REFERENCES "payment_plans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_planToIncludedOptions" ADD CONSTRAINT "_planToIncludedOptions_A_fkey" FOREIGN KEY ("A") REFERENCES "payment_plans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_includedPlanOptionsRelation" ADD CONSTRAINT "_includedPlanOptionsRelation_B_fkey" FOREIGN KEY ("B") REFERENCES "payment_plan_options"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_planToIncludedOptions" ADD CONSTRAINT "_planToIncludedOptions_B_fkey" FOREIGN KEY ("B") REFERENCES "payment_plan_options"("id") ON DELETE CASCADE ON UPDATE CASCADE;

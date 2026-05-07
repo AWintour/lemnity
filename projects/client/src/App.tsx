@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import './App.css'
 import { memo, lazy } from 'react'
+import AccountPage from './pages/AccountPage.tsx'
 
 const HomePage = lazy(() => import('./pages/HomePage.tsx'))
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'))
@@ -78,6 +79,16 @@ function App() {
           <ProtectedRoute>
             <FullWidthLayout>
               <RequestsPage />
+            </FullWidthLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/account"
+        element={
+          <ProtectedRoute>
+            <FullWidthLayout>
+              <AccountPage />
             </FullWidthLayout>
           </ProtectedRoute>
         }

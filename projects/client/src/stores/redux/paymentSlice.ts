@@ -97,7 +97,7 @@ const defaultBillingPeriods: TBillingPeriod[] = [
   },
 ]
 
-type TPaymentPlanOptionType = 'BRANDING'
+export type TPaymentPlanOptionType = 'BRANDING'
 
 export type TPaymentPlanOption = {
   type: TPaymentPlanOptionType
@@ -175,6 +175,9 @@ type TPaymentState = {
   purchasedPaymentPlanOptions: PaymentInfoPaymentOptionDto[]
   isTrialPeriod: boolean
   dbPromo?: PromoDto
+
+  // payment process state
+  paymentId?: string
 }
 
 const now = DateTime.now()
@@ -273,6 +276,10 @@ export const paymentSlice = createSlice({
       (state, action: PayloadAction<PromoDto>) => {
         state.dbPromo = action.payload
       },
+    paymentIdChanged:
+      (state, action: PayloadAction<string | undefined>) => {
+        state.paymentId = action.payload
+      },
   },
   selectors: {
     selectPaymentWidgetOpen:
@@ -312,6 +319,9 @@ export const paymentSlice = createSlice({
       (state) => state.isTrialPeriod,
     selectDbPromo:
       (state) => state.dbPromo,
+    
+    selectPaymentId:
+      (state) => state.paymentId,
   },
   extraReducers: (builder) => {
     builder
@@ -404,6 +414,7 @@ export const {
   paymentPlanAdded,
   promoChanged,
   dbPromoChanged,
+  paymentIdChanged,
 } = paymentSlice.actions
 
 // this middleware runs once both fetchUserPaymentInfoThunk
@@ -524,6 +535,7 @@ export const {
   selectPaymentPlanEndDate,
   selectPurchasedPaymentPlanOptions,
   selectDbPromo,
+  selectPaymentId,
 } = injectedPaymentSlice.selectors
 
 export const {

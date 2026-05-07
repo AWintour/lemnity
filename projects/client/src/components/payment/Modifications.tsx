@@ -2,7 +2,14 @@ import { cn } from '@heroui/theme'
 
 import CustomSwitch from '../CustomSwitch'
 import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
-import { planOptionCartStateChanged, selectIncludedPlanOptions, selectIsPlanOptionAddedToCart, selectPaymentPlanOptions, type TIncludedPlanOption, type TPaymentPlanOption } from '@/stores/redux/paymentSlice'
+import {
+  planOptionCartStateChanged,
+  selectIncludedPlanOptions,
+  selectIsPlanOptionAddedToCart,
+  selectPaymentPlanOptions,
+  type TIncludedPlanOption,
+  type TPaymentPlanOption,
+} from '@/stores/redux/paymentSlice'
 
 type ModificationItemProps = {
   value: TPaymentPlanOption | TIncludedPlanOption
@@ -11,7 +18,6 @@ type ModificationItemProps = {
 }
 
 const ModificationItem = (props: ModificationItemProps) => {
-  // const { dispatch } = usePaymentContext()
   const dispatch = useAppDispatch()
 
   const handleToggle = (value: boolean) => {

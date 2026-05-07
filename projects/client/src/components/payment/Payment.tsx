@@ -6,23 +6,25 @@ import Counter, { type PlaceValue } from '../Counter'
 import PaymentStatus from './PaymentStatus'
 import PaymentPlanPicker from './PaymentPlanPicker'
 
+import { useYooMoney } from '@/hooks/useYooMoney'
 import { usePrice } from './usePrice'
-import { useCloudPayments } from '@/hooks/useCloudPayments'
 import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
 import {
   paymentWidgetOpenChanged,
   selectBalance,
+  selectCurrentBillingPeriodId,
   selectCurrentPaymentPlanId,
+  selectDbPromo,
+  selectIsPlanOptionAddedToCart,
   selectPaymentPlan,
   selectPaymentPlanById,
+  selectPaymentPlanOptions,
+  type TPaymentPlanOption,
+  type TPaymentPlanOptionType,
 } from '@/stores/redux/paymentSlice'
 
 const Payment = () => {
   const { total } = usePrice()
-
-  // const { status, launchWidget } = useCloudPayments((result) => {
-  //   console.log('callback result:', result)
-  // })
   
   const dispatch = useAppDispatch()
 
@@ -36,6 +38,12 @@ const Payment = () => {
     useAppSelector(
       (state) => selectPaymentPlanById(state, currentPaymentPlanId)
     )
+  const isPlanOptionAddedToCart =
+    useAppSelector(selectIsPlanOptionAddedToCart)
+  const dbPromo =
+    useAppSelector(selectDbPromo)
+  const currentBillingPeriodId =
+      useAppSelector(selectCurrentBillingPeriodId)
   
   const balanceNumber = Number(balance)
 
@@ -65,19 +73,30 @@ const Payment = () => {
     : total.equals(zero)
       ? 'Оплачивать не нужно'
       : ''
+  
+  const { launchWidget, status } = useYooMoney()
 
   const handlePayment = () => {
     if (total.equals(zero)) {
       return
     }
 
-    // if (status !== 'ready') {
-    //   console.log('[PAYMENT] status !== ready')
-    //   return
-    // }
+    if (status !== 'ready') {
+      console.log('[PAYMENT] status !== ready')
+      return
+    }
 
     dispatch(paymentWidgetOpenChanged(false))
-    // launchWidget()
+    launchWidget({
+      total: total.toString(),
+      description: `Оплата тарифа ${currentPlan.name}`,
+      metadata: {
+        promo: JSON.stringify(dbPromo),
+        optionsInCart: JSON.stringify(isPlanOptionAddedToCart),
+        paymentPlanId: currentPaymentPlanId,
+        billingPeriod: currentBillingPeriodId,
+      },
+    })
     console.log('[PAYMENT] widget launched')
   }
 
