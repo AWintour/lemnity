@@ -21,7 +21,7 @@ model User {
 
   paymentPlanStartDate DateTime @default(now())
   paymentPlanEndDate   DateTime @default(dbgenerated("NOW() + INTERVAL '3 days'"))
-  purchasedPaymentPlanOptions   PaymentPlanOptions[]
+  purchasedPaymentPlanOptions PurchasedPaymentPlanOption[]
   usedTrialPeriod      Boolean  @default(false)
 
   payments Payment[]

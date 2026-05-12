@@ -17,7 +17,7 @@ model PaymentPlanOptions {
   paymentPlansPaymentOptions  PaymentPlan[] @relation(name: "planToPaymentOptions")
   paymentPlansIncludedOptions PaymentPlan[] @relation(name: "planToIncludedOptions")
   
-  users User[]
+  purchasedBy PurchasedPaymentPlanOption[]
 
   @@map("payment_plan_options")
 }

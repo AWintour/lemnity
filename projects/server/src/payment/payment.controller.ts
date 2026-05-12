@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common'
 
 import { Auth } from '../auth/decorators/auth.decorator'
 import { CurrentUser } from 'src/auth/decorators/user.decorator'
@@ -27,10 +27,17 @@ export class PaymentController {
     return this.paymentService.selectAllEnabledPaymentPlans()
   }
 
+  @Get('/plans/:id')
+  @Auth()
+  @ApiResponse({ status: 200, type: PaymentPlanDto })
+  getPaymentPlan(@Param('id') id: string) {
+    return this.paymentService.getPaymentPlanById(id)
+  }
+
   @Get('/promo/:promo')
   @Auth()
   @ApiResponse({ status: 200, type: PromoDto })
-  gettPromo(@Param('promo') promo: string) {
+  getPromo(@Param('promo') promo: string) {
     return this.paymentService.getPromo(promo)
   }
 
@@ -53,5 +60,17 @@ export class PaymentController {
     @CurrentUser('id') userId: string
   ) {
     return this.paymentService.checkForPaymentUpdates(id, userId)
+  }
+
+  @Delete('/:id')
+  @Auth()
+  deletePayment(@Param('id') id: string) {
+    return this.paymentService.deletePayment(id)
+  }
+
+  @Get('/pending')
+  @Auth()
+  getTodaysPendingPayments(@CurrentUser('id') userId: string) {
+    return this.paymentService.getTodaysPendingPayments(userId)
   }
 }

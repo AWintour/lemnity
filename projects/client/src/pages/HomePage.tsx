@@ -13,32 +13,11 @@ import chatboxIcon from '@/assets/icons/chatbox.svg'
 // import MaintenancePage from './MaintenancePage'
 // import CenteredLayout from '@/layouts/CenteredLayout'
 
-
-import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
-import { fetchPaymentPlansThunk, fetchUserPaymentInfoThunk, selectPaymentInfoFetchStatus, selectPaymentPlansFetchStatus } from '@/stores/redux/paymentSlice'
-
 const HomePage = () => {
   const projects = useProjectsStore(s => s.projects)
   const createProject = useProjectsStore(s => s.createProject)
   const user = useUserStore(s => s.user)
   const userName = user?.name || ''
-
-  const dispatch = useAppDispatch()
-
-  const paymentInfoFetchStatus = useAppSelector(selectPaymentInfoFetchStatus)
-  const paymentPlansFetchStatus = useAppSelector(selectPaymentPlansFetchStatus)
-
-  useEffect(() => {
-    if (paymentInfoFetchStatus === 'idle') {
-      dispatch(fetchUserPaymentInfoThunk())
-    }
-  }, [dispatch, paymentInfoFetchStatus])
-  
-  useEffect(() => {
-    if (paymentPlansFetchStatus === 'idle') {
-      dispatch(fetchPaymentPlansThunk())
-    }
-  }, [dispatch, paymentPlansFetchStatus])
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const handleOpen = useCallback(() => setIsModalOpen(true), [])

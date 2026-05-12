@@ -6,16 +6,13 @@ export const fetchPaymentPlans = async () => {
   return result
 }
 
-export const fetchPaymentInfo = async () => {
-  const result = await http.get<PaymentInfoDto>('/payment/info')
+export const fetchPaymentPlanById = async (id: string) => {
+  const result = await http.get<PaymentPlanDto>(`/payment/plans/${id}`)
   return result
 }
 
-export const updatePaymentInfo = async () => {
-  const result = await http.patch('/payment/info', {
-    balance: 500,
-    paymentPlanId: 'cmoh372ud00003b6tvccqee8x',
-  })
+export const fetchPaymentInfo = async () => {
+  const result = await http.get<PaymentInfoDto>('/payment/info')
   return result
 }
 
@@ -39,5 +36,60 @@ export const createYooMoneyPayment = async (
 
 export const checkPaymentStatus = async (id: string) => {
   const result = await http.get<any>(`/payment/check/${id}`, { timeout: 10000 })
+  return result
+}
+
+type TPollForPaymentUpdatesArgs = {
+  paymentId: string
+  onSuccess?: (data: any) => void
+  onCanceled?: (data: any) => void
+}
+
+export const pollForPaymentUpdates = (
+  {
+    paymentId,
+    onSuccess,
+    onCanceled,
+  }: TPollForPaymentUpdatesArgs
+) => {
+  let shouldStopPolling: boolean = false
+  const worker = async () => {
+    try {
+      const { data } = await checkPaymentStatus(paymentId)
+  
+      switch (data.status) {
+        case 'succeeded':
+          console.log(data)
+          shouldStopPolling = true
+          onSuccess?.(data)
+          return data.status
+        case 'canceled':
+          console.log(data)
+          shouldStopPolling = true
+          onCanceled?.(data)
+          return data.status
+      }
+  
+      if (!shouldStopPolling) {
+        setTimeout(() => {
+          worker()
+        }, 60000)
+      }
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
+
+  return worker
+}
+
+export const deletePayment = async (paymentId: string) => {
+  const result = await http.delete(`/payment/${paymentId}`)
+  return result
+}
+
+export const getTodaysPendingPayments = async () => {
+  const result = await http<any>('/payment/pending')
   return result
 }

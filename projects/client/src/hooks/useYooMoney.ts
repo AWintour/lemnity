@@ -5,12 +5,14 @@ import { useRef } from 'react'
 import { useScript } from './useScript'
 // import { nanoid } from '@reduxjs/toolkit'
 import {
-  checkPaymentStatus,
   createYooMoneyPayment,
+  deletePayment,
+  pollForPaymentUpdates,
   type TCreateYooMoneyPaymentArgs,
 } from '@/services/payment'
 import { useAppDispatch } from '@/stores/redux/hooks'
 import { paymentIdChanged } from '@/stores/redux/paymentSlice'
+import { addToast } from '@heroui/toast'
 
 declare global {
   // i could try and implement a .d.ts file from the documentation
@@ -26,34 +28,6 @@ declare global {
 }
 
 const SCRIPT_URL = 'https://yookassa.ru/checkout-widget/v1/checkout-widget.js'
-
-let shouldStopPolling: boolean = false
-
-const pollForPaymentUpdates = async (paymentId: string) => {
-  try {
-    const { data } = await checkPaymentStatus(paymentId)
-
-    switch (data.status) {
-      case 'success':
-        console.log(data)
-        shouldStopPolling = true
-        break
-      case 'canceled':
-        console.log(data)
-        shouldStopPolling = true
-        break
-    }
-
-    if (!shouldStopPolling) {
-      setTimeout(() => {
-        pollForPaymentUpdates(paymentId)
-      }, 10000)
-    }
-  }
-  catch (error) {
-    console.log(error)
-  }
-}
 
 export const useYooMoney = () => {
   const status = useScript(SCRIPT_URL)
@@ -101,11 +75,27 @@ export const useYooMoney = () => {
     })
 
     widget.current.on('success', async () => {
+      // toast
       console.log('[YM] success')
-      await pollForPaymentUpdates(id)
-    })
-    widget.current.on('fail', () => {
-      console.log('[YM] fail')
+      await pollForPaymentUpdates({
+        paymentId: id,
+        onSuccess:
+          (data) => {
+            console.log(`[launchWidget] poll payment id={${id}} success`, data)
+            addToast({
+              title: 'Платёж успешно завершён',
+              color: 'success',
+            })
+          },
+        onCanceled:
+          (data) => {
+            console.log(`[launchWidget] poll payment id={${id}} canceled`, data)
+            addToast({
+              title: 'Платёж был отменён',
+              color: 'warning',
+            })
+          },
+      })()
     })
 
     widget.current.render()
