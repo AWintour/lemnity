@@ -9,7 +9,7 @@ import {
   selectPaymentInfoFetchStatus,
   selectPaymentPlansFetchStatus,
 } from '@/stores/redux/paymentSlice'
-import { getTodaysPendingPayments, pollForPaymentUpdates } from './services/payment'
+import { deletePayment, getTodaysPendingPayments, pollForPaymentUpdates } from './services/payment'
 import useAuthStore from '@/stores/authStore'
 
 const FullWidthLayout =
@@ -98,6 +98,7 @@ function App() {
           onCanceled:
             (data) => {
               console.log(`[APP] poll payment id={${id}} canceled`, data)
+              deletePayment(data.id)
             },
         })()
       })

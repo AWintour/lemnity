@@ -15,7 +15,7 @@ class CreateYooMoneyPaymentServiceArgs extends CreateYooMoneyPaymentDto {
 class UpdateUSerPaymentInfoArgs {
   userId: string
   paymentPlanId: string
-  optionsInCart: object
+  optionsInCart: string
   billingPeriod: 'month' | 'quarter' | 'year'
 }
 
@@ -181,15 +181,15 @@ export class PaymentService {
       }
     )
 
-    if (data.status === 'canceled') {
-      // await this.prisma.payment.deleteMany({
-      //   where: {
-      //     id: paymentId,
-      //   }
-      // })
+    // if (data.status === 'canceled') {
+    //   // await this.prisma.payment.deleteMany({
+    //   //   where: {
+    //   //     id: paymentId,
+    //   //   }
+    //   // })
 
-      return data
-    }
+    //   return data
+    // }
 
     await this.prisma.payment.upsert({
       where: { 
@@ -266,6 +266,9 @@ export class PaymentService {
   ) {
     // this should be a transaction
     const months = this.getMonthsFromABillingPeriod(billingPeriod)
+    optionsInCart = JSON.parse(optionsInCart)
+    console.log({ optionsInCart })
+    console.log({ keys: Object.keys(optionsInCart) })
     const selectedOptionsInCart =
       Object.keys(optionsInCart).reduce((acc: string[], key) => {
         if (optionsInCart[key]) {
@@ -274,12 +277,18 @@ export class PaymentService {
         return acc
       }, [])
     
+    console.log({ selectedOptionsInCart })
+    
     // there's literally 2 of them at the moment
     let options = await this.prisma.paymentPlanOptions.findMany()
+
+    console.log({ options })
 
     options = options.filter((option) => {
       return selectedOptionsInCart.includes(option.type)
     })
+
+    console.log({ options })
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -308,6 +317,8 @@ export class PaymentService {
           purchasedOption.paymentPlanOptionId === option.id
           && DateTime.fromJSDate(purchasedOption.expiresAt) > DateTime.now()
       )
+
+      console.log({ alreadyPurchasedOption })
 
       if (alreadyPurchasedOption) {
         await this.prisma.purchasedPaymentPlanOption.update({

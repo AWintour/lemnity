@@ -25,6 +25,7 @@ docs/CreateProjectDto.md
 docs/CreateProjectResponse.md
 docs/CreatePublicRequestDto.md
 docs/CreateWidgetDto.md
+docs/CreateYooMoneyPaymentDto.md
 docs/DeleteProjectResponse.md
 docs/DeleteRequestResponse.md
 docs/FilesApi.md
@@ -57,6 +58,7 @@ docs/StatsApi.md
 docs/UpdateProjectDto.md
 docs/UpdateProjectResponse.md
 docs/UpdateRequestDto.md
+docs/UpdateUserPaymentInfoDto.md
 docs/UpdateWidgetDto.md
 docs/User.md
 docs/Widget.md
@@ -68,6 +70,7 @@ models/create-project-dto.ts
 models/create-project-response.ts
 models/create-public-request-dto.ts
 models/create-widget-dto.ts
+models/create-yoo-money-payment-dto.ts
 models/delete-project-response.ts
 models/delete-request-response.ts
 models/forgot-password-dto.ts
@@ -92,6 +95,7 @@ models/reset-password-dto.ts
 models/update-project-dto.ts
 models/update-project-response.ts
 models/update-request-dto.ts
+models/update-user-payment-info-dto.ts
 models/update-widget-dto.ts
 models/user.ts
 models/widget.ts

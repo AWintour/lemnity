@@ -61,6 +61,11 @@ export const pollForPaymentUpdates = (
         case 'succeeded':
           console.log(data)
           shouldStopPolling = true
+          await updateUserPaymentInfo({
+            paymentPlanId: data.metadata.paymentPlanId,
+            optionsInCart: data.metadata.optionsInCart,
+            billingPeriod: data.metadata.billingPeriod,
+          })
           onSuccess?.(data)
           return data.status
         case 'canceled':
@@ -69,7 +74,7 @@ export const pollForPaymentUpdates = (
           onCanceled?.(data)
           return data.status
       }
-  
+
       if (!shouldStopPolling) {
         setTimeout(() => {
           worker()
@@ -91,5 +96,20 @@ export const deletePayment = async (paymentId: string) => {
 
 export const getTodaysPendingPayments = async () => {
   const result = await http<any>('/payment/pending')
+  return result
+}
+
+export const updateUserPaymentInfo = async (
+  { paymentPlanId, optionsInCart, billingPeriod }: {
+    paymentPlanId: string
+    optionsInCart: object
+    billingPeriod: 'month' | 'quarter' | 'year'
+  }
+) => {
+  const result = await http.post('/payment/update', {
+    paymentPlanId,
+    optionsInCart,
+    billingPeriod,
+  })
   return result
 }

@@ -22,11 +22,15 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CreateYooMoneyPaymentDto } from '../models';
+// @ts-ignore
 import type { PaymentInfoDto } from '../models';
 // @ts-ignore
 import type { PaymentPlanDto } from '../models';
 // @ts-ignore
 import type { PromoDto } from '../models';
+// @ts-ignore
+import type { UpdateUserPaymentInfoDto } from '../models';
 /**
  * PaymentApi - axios parameter creator
  * @export
@@ -35,11 +39,116 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * 
+         * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerGetUserPaymentInfo: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/payment/info`;
+        paymentControllerCheckForPaymentUpdates: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('paymentControllerCheckForPaymentUpdates', 'id', id)
+            const localVarPath = `/api/payment/check/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {CreateYooMoneyPaymentDto} createYooMoneyPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerCreateYooMoneyPayment: async (createYooMoneyPaymentDto: CreateYooMoneyPaymentDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createYooMoneyPaymentDto' is not null or undefined
+            assertParamExists('paymentControllerCreateYooMoneyPayment', 'createYooMoneyPaymentDto', createYooMoneyPaymentDto)
+            const localVarPath = `/api/payment/create`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createYooMoneyPaymentDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerDeletePayment: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('paymentControllerDeletePayment', 'id', id)
+            const localVarPath = `/api/payment/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPaymentPlan: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('paymentControllerGetPaymentPlan', 'id', id)
+            const localVarPath = `/api/payment/plans/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -68,11 +177,69 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        paymentControllerGettPromo: async (promo: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        paymentControllerGetPromo: async (promo: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'promo' is not null or undefined
-            assertParamExists('paymentControllerGettPromo', 'promo', promo)
+            assertParamExists('paymentControllerGetPromo', 'promo', promo)
             const localVarPath = `/api/payment/promo/{promo}`
                 .replace(`{${"promo"}}`, encodeURIComponent(String(promo)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetTodaysPendingPayments: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/payment/pending`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetUserPaymentInfo: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/payment/info`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -124,6 +291,41 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {UpdateUserPaymentInfoDto} updateUserPaymentInfoDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerUpdateUserPaymentInfo: async (updateUserPaymentInfoDto: UpdateUserPaymentInfoDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'updateUserPaymentInfoDto' is not null or undefined
+            assertParamExists('paymentControllerUpdateUserPaymentInfo', 'updateUserPaymentInfoDto', updateUserPaymentInfoDto)
+            const localVarPath = `/api/payment/update`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateUserPaymentInfoDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -134,6 +336,77 @@ export const PaymentApiAxiosParamCreator = function (configuration?: Configurati
 export const PaymentApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = PaymentApiAxiosParamCreator(configuration)
     return {
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerCheckForPaymentUpdates(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerCheckForPaymentUpdates(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerCheckForPaymentUpdates']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {CreateYooMoneyPaymentDto} createYooMoneyPaymentDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerCreateYooMoneyPayment(createYooMoneyPaymentDto: CreateYooMoneyPaymentDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerCreateYooMoneyPayment(createYooMoneyPaymentDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerCreateYooMoneyPayment']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerDeletePayment(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerDeletePayment(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerDeletePayment']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerGetPaymentPlan(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaymentPlanDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetPaymentPlan(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGetPaymentPlan']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} promo 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerGetPromo(promo: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PromoDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetPromo(promo, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGetPromo']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerGetTodaysPendingPayments(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGetTodaysPendingPayments(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGetTodaysPendingPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
         /**
          * 
          * @param {*} [options] Override http request option.
@@ -147,18 +420,6 @@ export const PaymentApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {string} promo 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async paymentControllerGettPromo(promo: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PromoDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerGettPromo(promo, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerGettPromo']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -166,6 +427,18 @@ export const PaymentApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerSelectAllEnabledPaymentPlans(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerSelectAllEnabledPaymentPlans']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {UpdateUserPaymentInfoDto} updateUserPaymentInfoDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async paymentControllerUpdateUserPaymentInfo(updateUserPaymentInfoDto: UpdateUserPaymentInfoDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.paymentControllerUpdateUserPaymentInfo(updateUserPaymentInfoDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PaymentApi.paymentControllerUpdateUserPaymentInfo']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -180,20 +453,64 @@ export const PaymentApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
+         * @param {PaymentApiPaymentControllerCheckForPaymentUpdatesRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerCheckForPaymentUpdates(requestParameters: PaymentApiPaymentControllerCheckForPaymentUpdatesRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.paymentControllerCheckForPaymentUpdates(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PaymentApiPaymentControllerCreateYooMoneyPaymentRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerCreateYooMoneyPayment(requestParameters: PaymentApiPaymentControllerCreateYooMoneyPaymentRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.paymentControllerCreateYooMoneyPayment(requestParameters.createYooMoneyPaymentDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PaymentApiPaymentControllerDeletePaymentRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerDeletePayment(requestParameters: PaymentApiPaymentControllerDeletePaymentRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.paymentControllerDeletePayment(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PaymentApiPaymentControllerGetPaymentPlanRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPaymentPlan(requestParameters: PaymentApiPaymentControllerGetPaymentPlanRequest, options?: RawAxiosRequestConfig): AxiosPromise<PaymentPlanDto> {
+            return localVarFp.paymentControllerGetPaymentPlan(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {PaymentApiPaymentControllerGetPromoRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetPromo(requestParameters: PaymentApiPaymentControllerGetPromoRequest, options?: RawAxiosRequestConfig): AxiosPromise<PromoDto> {
+            return localVarFp.paymentControllerGetPromo(requestParameters.promo, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerGetTodaysPendingPayments(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.paymentControllerGetTodaysPendingPayments(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         paymentControllerGetUserPaymentInfo(options?: RawAxiosRequestConfig): AxiosPromise<PaymentInfoDto> {
             return localVarFp.paymentControllerGetUserPaymentInfo(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {PaymentApiPaymentControllerGettPromoRequest} requestParameters Request parameters.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        paymentControllerGettPromo(requestParameters: PaymentApiPaymentControllerGettPromoRequest, options?: RawAxiosRequestConfig): AxiosPromise<PromoDto> {
-            return localVarFp.paymentControllerGettPromo(requestParameters.promo, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -203,21 +520,100 @@ export const PaymentApiFactory = function (configuration?: Configuration, basePa
         paymentControllerSelectAllEnabledPaymentPlans(options?: RawAxiosRequestConfig): AxiosPromise<PaymentPlanDto> {
             return localVarFp.paymentControllerSelectAllEnabledPaymentPlans(options).then((request) => request(axios, basePath));
         },
+        /**
+         * 
+         * @param {PaymentApiPaymentControllerUpdateUserPaymentInfoRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        paymentControllerUpdateUserPaymentInfo(requestParameters: PaymentApiPaymentControllerUpdateUserPaymentInfoRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.paymentControllerUpdateUserPaymentInfo(requestParameters.updateUserPaymentInfoDto, options).then((request) => request(axios, basePath));
+        },
     };
 };
 
 /**
- * Request parameters for paymentControllerGettPromo operation in PaymentApi.
+ * Request parameters for paymentControllerCheckForPaymentUpdates operation in PaymentApi.
  * @export
- * @interface PaymentApiPaymentControllerGettPromoRequest
+ * @interface PaymentApiPaymentControllerCheckForPaymentUpdatesRequest
  */
-export interface PaymentApiPaymentControllerGettPromoRequest {
+export interface PaymentApiPaymentControllerCheckForPaymentUpdatesRequest {
     /**
      * 
      * @type {string}
-     * @memberof PaymentApiPaymentControllerGettPromo
+     * @memberof PaymentApiPaymentControllerCheckForPaymentUpdates
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for paymentControllerCreateYooMoneyPayment operation in PaymentApi.
+ * @export
+ * @interface PaymentApiPaymentControllerCreateYooMoneyPaymentRequest
+ */
+export interface PaymentApiPaymentControllerCreateYooMoneyPaymentRequest {
+    /**
+     * 
+     * @type {CreateYooMoneyPaymentDto}
+     * @memberof PaymentApiPaymentControllerCreateYooMoneyPayment
+     */
+    readonly createYooMoneyPaymentDto: CreateYooMoneyPaymentDto
+}
+
+/**
+ * Request parameters for paymentControllerDeletePayment operation in PaymentApi.
+ * @export
+ * @interface PaymentApiPaymentControllerDeletePaymentRequest
+ */
+export interface PaymentApiPaymentControllerDeletePaymentRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentApiPaymentControllerDeletePayment
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for paymentControllerGetPaymentPlan operation in PaymentApi.
+ * @export
+ * @interface PaymentApiPaymentControllerGetPaymentPlanRequest
+ */
+export interface PaymentApiPaymentControllerGetPaymentPlanRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentApiPaymentControllerGetPaymentPlan
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for paymentControllerGetPromo operation in PaymentApi.
+ * @export
+ * @interface PaymentApiPaymentControllerGetPromoRequest
+ */
+export interface PaymentApiPaymentControllerGetPromoRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentApiPaymentControllerGetPromo
      */
     readonly promo: string
+}
+
+/**
+ * Request parameters for paymentControllerUpdateUserPaymentInfo operation in PaymentApi.
+ * @export
+ * @interface PaymentApiPaymentControllerUpdateUserPaymentInfoRequest
+ */
+export interface PaymentApiPaymentControllerUpdateUserPaymentInfoRequest {
+    /**
+     * 
+     * @type {UpdateUserPaymentInfoDto}
+     * @memberof PaymentApiPaymentControllerUpdateUserPaymentInfo
+     */
+    readonly updateUserPaymentInfoDto: UpdateUserPaymentInfoDto
 }
 
 /**
@@ -227,6 +623,71 @@ export interface PaymentApiPaymentControllerGettPromoRequest {
  * @extends {BaseAPI}
  */
 export class PaymentApi extends BaseAPI {
+    /**
+     * 
+     * @param {PaymentApiPaymentControllerCheckForPaymentUpdatesRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerCheckForPaymentUpdates(requestParameters: PaymentApiPaymentControllerCheckForPaymentUpdatesRequest, options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerCheckForPaymentUpdates(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PaymentApiPaymentControllerCreateYooMoneyPaymentRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerCreateYooMoneyPayment(requestParameters: PaymentApiPaymentControllerCreateYooMoneyPaymentRequest, options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerCreateYooMoneyPayment(requestParameters.createYooMoneyPaymentDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PaymentApiPaymentControllerDeletePaymentRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerDeletePayment(requestParameters: PaymentApiPaymentControllerDeletePaymentRequest, options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerDeletePayment(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PaymentApiPaymentControllerGetPaymentPlanRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerGetPaymentPlan(requestParameters: PaymentApiPaymentControllerGetPaymentPlanRequest, options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerGetPaymentPlan(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PaymentApiPaymentControllerGetPromoRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerGetPromo(requestParameters: PaymentApiPaymentControllerGetPromoRequest, options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerGetPromo(requestParameters.promo, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerGetTodaysPendingPayments(options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerGetTodaysPendingPayments(options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {*} [options] Override http request option.
@@ -239,23 +700,23 @@ export class PaymentApi extends BaseAPI {
 
     /**
      * 
-     * @param {PaymentApiPaymentControllerGettPromoRequest} requestParameters Request parameters.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof PaymentApi
-     */
-    public paymentControllerGettPromo(requestParameters: PaymentApiPaymentControllerGettPromoRequest, options?: RawAxiosRequestConfig) {
-        return PaymentApiFp(this.configuration).paymentControllerGettPromo(requestParameters.promo, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PaymentApi
      */
     public paymentControllerSelectAllEnabledPaymentPlans(options?: RawAxiosRequestConfig) {
         return PaymentApiFp(this.configuration).paymentControllerSelectAllEnabledPaymentPlans(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {PaymentApiPaymentControllerUpdateUserPaymentInfoRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PaymentApi
+     */
+    public paymentControllerUpdateUserPaymentInfo(requestParameters: PaymentApiPaymentControllerUpdateUserPaymentInfoRequest, options?: RawAxiosRequestConfig) {
+        return PaymentApiFp(this.configuration).paymentControllerUpdateUserPaymentInfo(requestParameters.updateUserPaymentInfoDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

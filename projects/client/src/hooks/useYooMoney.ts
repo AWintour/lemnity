@@ -8,6 +8,7 @@ import {
   createYooMoneyPayment,
   deletePayment,
   pollForPaymentUpdates,
+  updateUserPaymentInfo,
   type TCreateYooMoneyPaymentArgs,
 } from '@/services/payment'
 import { useAppDispatch } from '@/stores/redux/hooks'
@@ -74,13 +75,13 @@ export const useYooMoney = () => {
       }
     })
 
-    widget.current.on('success', async () => {
+    widget.current.on('modal_close', async () => {
       // toast
-      console.log('[YM] success')
+      console.log('[YM] modal_close')
       await pollForPaymentUpdates({
         paymentId: id,
         onSuccess:
-          (data) => {
+          async (data) => {
             console.log(`[launchWidget] poll payment id={${id}} success`, data)
             addToast({
               title: 'Платёж успешно завершён',

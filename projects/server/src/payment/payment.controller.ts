@@ -8,6 +8,7 @@ import { PaymentInfoDto } from './dto/userPaymentInfo.dto'
 import { PaymentPlanDto } from './dto/paymentPlan.dto'
 import { PromoDto } from './dto/promo.dto'
 import { CreateYooMoneyPaymentDto } from './dto/createYooMoneyPayment.dto'
+import { UpdateUserPaymentInfoDto } from './dto/updateUserPaymentInfo.dto'
 
 @Controller('payment')
 export class PaymentController {
@@ -72,5 +73,17 @@ export class PaymentController {
   @Auth()
   getTodaysPendingPayments(@CurrentUser('id') userId: string) {
     return this.paymentService.getTodaysPendingPayments(userId)
+  }
+
+  @Post('/update')
+  @Auth()
+  updateUserPaymentInfo(
+    @Body() body: UpdateUserPaymentInfoDto,
+    @CurrentUser('id') userId: string
+  ) {
+    return this.paymentService.updateUserPaymentInfo({
+      ...body,
+      userId,
+    })
   }
 }
