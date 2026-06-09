@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import './App.css'
 import HomePage from './pages/HomePage.tsx'
-import LoginPage from './pages/LoginPage.tsx'
 import DashboardPage from './pages/DashboardPage.tsx'
 // import WidgetsPage from './pages/WidgetsPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
@@ -17,7 +16,19 @@ import WidgetPreviewPage from '@/pages/WidgetPreviewPage'
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
 import AnalyticsPage from './pages/AnalyticsPage'
 import RequestsPage from './pages/RequestsPage/RequestsPage.tsx'
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
+
+// Единый вход через общий ЛК lemnity.ru: у app нет своего логина — /login уводит на
+// главную страницу входа. Покрывает и прямой заход на /login, и внутренние редиректы
+// (ProtectedRoute, выход). Домен настраивается через VITE_LK_URL.
+const LK_URL = import.meta.env.VITE_LK_URL || 'https://lemnity.ru'
+
+const ExternalLoginRedirect = () => {
+  useEffect(() => {
+    window.location.replace(`${LK_URL}/login`)
+  }, [])
+  return null
+}
 
 function App() {
   return (
@@ -32,16 +43,8 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <FullWidthLayout>
-              <LoginPage />
-            </FullWidthLayout>
-          </PublicRoute>
-        }
-      />
+      {/* У app нет своего входа — /login уводит на общий ЛК lemnity.ru. */}
+      <Route path="/login" element={<ExternalLoginRedirect />} />
       <Route
         path="/reset-password"
         element={
