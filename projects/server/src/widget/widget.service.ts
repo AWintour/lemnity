@@ -44,8 +44,13 @@ export class WidgetService {
     }
 
     const widget = await this.prisma.widget.findFirst({
-      // Спин доступен только у активного (оплаченного/триального) виджета: paidUntil > now.
-      where: { id: widgetId, enabled: true, paidUntil: { gt: new Date() }, project: { enabled: true } },
+      // Спин — у активного виджета: paidUntil > now ИЛИ null (grandfather до тарификации).
+      where: {
+        id: widgetId,
+        enabled: true,
+        project: { enabled: true },
+        OR: [{ paidUntil: null }, { paidUntil: { gt: new Date() } }]
+      },
       select: {
         id: true,
         enabled: true,
@@ -309,9 +314,15 @@ export class WidgetService {
 
   async findPublic(id: string, originHost: string | null) {
     const widget = await this.prisma.widget.findFirst({
-      // paidUntil > now — оплаченный/триальный виджет. Неоплаченный/просроченный → not found
-      // → embed его не рендерит (см. plans/plan-wid.md «Тарификация виджетов»).
-      where: { id, enabled: true, paidUntil: { gt: new Date() }, project: { enabled: true } },
+      // Активен, если paidUntil > now (оплачен/триал) ИЛИ paidUntil = null (создан ДО
+      // тарификации — grandfather, не ломаем существующие виджеты). Просроченный → not found
+      // → embed не рендерит. См. plans/plan-wid.md «Тарификация виджетов».
+      where: {
+        id,
+        enabled: true,
+        project: { enabled: true },
+        OR: [{ paidUntil: null }, { paidUntil: { gt: new Date() } }]
+      },
       select: {
         id: true,
         projectId: true,
