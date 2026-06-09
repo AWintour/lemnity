@@ -98,19 +98,31 @@ export class LemnityService {
     return { ok: true }
   }
 
-  /** Список виджетов, оплаченных данным lemnity.ru-пользователем (для «Мои виджеты» в ЛК). */
-  async listByLemnityUser(userId: string) {
+  /**
+   * Все виджеты пользователя ЛК для «Мои виджеты» (по email — SSO линкует юзера по email).
+   * isTrial = идёт бесплатный период (активен, но оплат ещё не было: lastPaymentId пуст).
+   */
+  async listByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true }
+    })
+    if (!user) return []
     const widgets = await this.prisma.widget.findMany({
-      where: { lemnityUserId: userId },
-      select: { id: true, type: true, name: true, paidUntil: true },
+      where: { project: { userId: user.id } },
+      select: { id: true, type: true, name: true, paidUntil: true, lastPaymentId: true },
       orderBy: { createdAt: 'desc' }
     })
-    return widgets.map(w => ({
-      id: w.id,
-      type: w.type,
-      name: w.name,
-      paidUntil: w.paidUntil ? w.paidUntil.toISOString() : null,
-      isTrial: false
-    }))
+    const now = Date.now()
+    return widgets.map(w => {
+      const active = w.paidUntil ? w.paidUntil.getTime() > now : false
+      return {
+        id: w.id,
+        type: w.type,
+        name: w.name,
+        paidUntil: w.paidUntil ? w.paidUntil.toISOString() : null,
+        isTrial: active && !w.lastPaymentId
+      }
+    })
   }
 }

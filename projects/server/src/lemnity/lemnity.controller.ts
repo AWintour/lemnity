@@ -65,12 +65,12 @@ export class LemnityController {
     })
   }
 
-  /** Список виджетов пользователя ЛК (подпись = hmac(secret, userId)). */
+  /** Список ВСЕХ виджетов пользователя ЛК по email (подпись = hmac(secret, email)). */
   @Get('widgets')
-  async widgets(@Query('userId') userId: string, @Req() req: Request) {
-    if (!userId || !this.lemnity.verify(userId, sigHeader(req))) {
+  async widgets(@Query('email') email: string, @Req() req: Request) {
+    if (!email || !this.lemnity.verify(email, sigHeader(req))) {
       return { widgets: [] }
     }
-    return { widgets: await this.lemnity.listByLemnityUser(userId) }
+    return { widgets: await this.lemnity.listByEmail(email) }
   }
 }
