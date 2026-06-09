@@ -9,6 +9,11 @@ import chevronDown from '../../assets/icons/chevronDown.svg'
 import useAuthStore from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
 
+// Общий личный кабинет lemnity.ru — единый профиль для всех продуктов (виджеты живут под
+// зонтиком lemnity.ru). «Мой профиль» открывает профиль ЛК в новом окне. Настраивается через
+// VITE_LK_URL, дефолт — прод-домен.
+const LK_URL = import.meta.env.VITE_LK_URL || 'https://lemnity.ru'
+
 const ProfileButton = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
@@ -63,7 +68,9 @@ const ProfileButton = () => {
                 variant="light"
                 className="gap-2.5 py-1 px-2.5 text-black font-rubik font-normal text-base justify-start"
                 startContent={<SvgIcon src={userIcon} size="20px" className="opacity-60 w-min" />}
-                onPress={() => alert('profile')}
+                onPress={() =>
+                  window.open(`${LK_URL}/profile`, '_blank', 'noopener,noreferrer')
+                }
               >
                 Мой профиль
               </Button>
