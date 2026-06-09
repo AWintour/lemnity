@@ -160,7 +160,10 @@ jobs:
           key: ${{ secrets.PROD_SSH_KEY }}
           source: 'artifacts'
           target: '${{ secrets.PROD_APP_DIR }}/dist'
-          rm: true
+          # rm:false — НЕ удаляем папку dist (иначе пересоздаётся inode и ломается
+          # bind-mount nginx ./dist:/usr/share/nginx/html → 403 до пересоздания контейнера).
+          # Файлы перезаписываются на месте, монтирование остаётся валидным.
+          rm: false
           strip_components: 1
 
       - name: Connect and deploy to server
