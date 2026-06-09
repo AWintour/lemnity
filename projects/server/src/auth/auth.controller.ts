@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   UsePipes,
   ValidationPipe,
@@ -61,6 +62,18 @@ export class AuthController {
     this.authService.removeRefreshTokenFromResponse(res)
 
     return true
+  }
+
+  /**
+   * Сквозной выход из ЛК lemnity.ru: кабинет при логауте дёргает этот GET
+   * (`<img>`/`fetch(no-cors, credentials:include)`) → чистим httpOnly refresh-cookie app.
+   * GET без CORS-чтения ответа: refresh-cookie (sameSite:none) уходит кросс-доменно,
+   * Set-Cookie на удаление применяется браузером. 204 → пустой ответ для beacon.
+   */
+  @HttpCode(204)
+  @Get('sso-logout')
+  ssoLogout(@Res({ passthrough: true }) res: Response): void {
+    this.authService.removeRefreshTokenFromResponse(res)
   }
 
   @HttpCode(200)

@@ -33,7 +33,10 @@ export class LemnityController {
     const payload = this.lemnity.verifyTicket(ticket)
     if (!payload) throw new UnauthorizedException('invalid_ticket')
 
-    const { refreshToken, ...rest } = await this.auth.loginViaLemnity({ email: payload.email })
+    const { refreshToken, ...rest } = await this.auth.loginViaLemnity({
+      email: payload.email,
+      name: payload.name ?? null
+    })
     this.auth.addRefreshTokenToResponse(res, refreshToken)
     return rest // { user, accessToken }
   }

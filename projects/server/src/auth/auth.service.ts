@@ -110,6 +110,12 @@ export class AuthService {
         password: `${randomUUID()}${randomUUID()}`
       } as RegisterDto
       user = await this.userService.create(dto)
+    } else if (input.name && input.name.trim() && input.name.trim() !== user.name) {
+      // Подтягиваем актуальное имя из ЛК lemnity.ru при каждом SSO-входе.
+      user = await this.userService.update({
+        where: { id: user.id },
+        data: { name: input.name.trim() }
+      })
     }
     const tokens = this.issueTokenPair(user.id)
     const publicUser = await this.userService.getPublicByIdOrThrow(user.id)

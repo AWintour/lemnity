@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '@/stores/authStore'
+import useUserStore from '@/stores/userStore'
 import { http } from '@/common/api/http'
+import type { User } from '@lemnity/api-sdk'
 
-type ExchangeResponse = { accessToken?: string; user?: unknown }
+type ExchangeResponse = { accessToken?: string; user?: User | null }
 
 // SSO-вход из ЛК lemnity.ru: приходим на /editor?ticket=… → меняем тикет на сессию app
 // (POST /api/lemnity/ticket-exchange) → кладём accessToken в authStore → в редактор.
@@ -12,6 +14,7 @@ type ExchangeResponse = { accessToken?: string; user?: unknown }
 const EditorSsoPage = (): ReactElement => {
   const navigate = useNavigate()
   const setSession = useAuthStore(s => s.setSession)
+  const setUser = useUserStore(s => s.setUser)
   const [failed, setFailed] = useState(false)
   const ran = useRef(false)
 
@@ -28,6 +31,7 @@ const EditorSsoPage = (): ReactElement => {
       .then(({ data }) => {
         if (data?.accessToken) {
           setSession(data.accessToken)
+          if (data.user) setUser(data.user)
           navigate('/', { replace: true })
         } else {
           setFailed(true)
