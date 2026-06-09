@@ -42,7 +42,12 @@ export class LemnityService {
     if (!this.verify(enc, sig)) return null
     let parsed: { userId?: string; email?: string; lemnityProjectId?: string; exp?: number }
     try {
-      parsed = JSON.parse(Buffer.from(enc, 'base64url').toString('utf8'))
+      parsed = JSON.parse(Buffer.from(enc, 'base64url').toString('utf8')) as {
+        userId?: string
+        email?: string
+        lemnityProjectId?: string
+        exp?: number
+      }
     } catch {
       return null
     }

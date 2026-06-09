@@ -157,6 +157,7 @@ services:
       COLLECTOR_API_TOKEN: ${COLLECTOR_API_TOKEN}
       NOTISEND_API_KEY: ${NOTISEND_API_KEY}
       PASSWORD_RESET_URL_PATH: ${PASSWORD_RESET_URL_PATH}
+      WIDGETS_HANDOFF_SECRET: ${WIDGETS_HANDOFF_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
