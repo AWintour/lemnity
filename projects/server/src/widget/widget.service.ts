@@ -44,7 +44,8 @@ export class WidgetService {
     }
 
     const widget = await this.prisma.widget.findFirst({
-      where: { id: widgetId, enabled: true, project: { enabled: true } },
+      // Спин доступен только у активного (оплаченного/триального) виджета: paidUntil > now.
+      where: { id: widgetId, enabled: true, paidUntil: { gt: new Date() }, project: { enabled: true } },
       select: {
         id: true,
         enabled: true,
@@ -234,6 +235,9 @@ export class WidgetService {
       name: createWidgetDto.name,
       type: createWidgetDto.type,
       enabled: createWidgetDto.enabled ?? false,
+      // Бесплатный период 5 дней с момента создания — виджет активен (paidUntil > now)
+      // без оплаты. Дальше продлевается подпиской из ЛК. См. plans/plan-wid.md.
+      paidUntil: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       project: { connect: { id: createWidgetDto.projectId } }
     }
 
@@ -305,7 +309,9 @@ export class WidgetService {
 
   async findPublic(id: string, originHost: string | null) {
     const widget = await this.prisma.widget.findFirst({
-      where: { id, enabled: true, project: { enabled: true } },
+      // paidUntil > now — оплаченный/триальный виджет. Неоплаченный/просроченный → not found
+      // → embed его не рендерит (см. plans/plan-wid.md «Тарификация виджетов»).
+      where: { id, enabled: true, paidUntil: { gt: new Date() }, project: { enabled: true } },
       select: {
         id: true,
         projectId: true,

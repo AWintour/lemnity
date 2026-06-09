@@ -10,6 +10,13 @@ model Widget {
   config     Json?
   configVersion Int?
 
+  // Тарификация (см. plans/plan-wid.md в lmntai). Виджет активен, пока paidUntil > now.
+  // При создании ставится createdAt + 5 дней (бесплатный период). Оплата подписки в ЛК
+  // lemnity.ru продлевает на месяц через вебхук /api/lemnity/widget-subscription.
+  paidUntil     DateTime? @map("paid_until")
+  lemnityUserId String?   @map("lemnity_user_id") // lemnity.ru userId плательщика (для «Мои виджеты» в ЛК)
+  lastPaymentId String?   @map("last_payment_id") // идемпотентность вебхука подписки
+
   requests   Request[]
 
   createdAt  DateTime @default(now()) @map("created_at")

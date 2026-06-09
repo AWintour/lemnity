@@ -60,4 +60,11 @@ export class Widget {
     example: '2024-01-01T00:00:00.000Z'
   })
   updatedAt: Date
+
+  @ApiProperty({
+    description: 'Active until (subscription/trial). Widget renders while paidUntil > now.',
+    required: false,
+    nullable: true
+  })
+  paidUntil: Date | null
 }

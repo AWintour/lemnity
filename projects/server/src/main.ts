@@ -13,7 +13,9 @@ type CorsOptions = {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  // rawBody: true — нужен сырой body для проверки HMAC-подписи вебхука /api/lemnity/widget-subscription
+  // (подпись считается по точным байтам тела, ре-сериализация JSON может не совпасть).
+  const app = await NestFactory.create(AppModule, { rawBody: true })
 
   const config = new DocumentBuilder()
     .setTitle('Lemnity API')
