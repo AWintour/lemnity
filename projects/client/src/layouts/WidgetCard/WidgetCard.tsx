@@ -14,6 +14,9 @@ export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
 export type WidgetBadge = 'new' | 'popular' | 'soon' | null
 import type { WidgetTypeEnum } from '@lemnity/api-sdk'
 
+// Общий ЛК lemnity.ru: оплата/продление подписки виджета. См. plans/plan-wid.md.
+const LK_URL = (import.meta.env.VITE_LK_URL || 'https://lemnity.ru').replace(/\/+$/, '')
+
 interface WidgetProps {
   title?: string
   subtitle?: string
@@ -23,6 +26,8 @@ interface WidgetProps {
   isAvailable?: boolean
   isCreated?: boolean
   widgetId?: string
+  /** ISO/Date: активен пока > now. null/undefined — без оплаты (grandfather) или неизвестно. */
+  paidUntil?: string | Date | null
   onToggle?: (value: boolean) => void
   onCreate?: () => void
   onEdit?: (widgetId: string) => void
@@ -32,17 +37,44 @@ interface WidgetProps {
 const Widget = ({
   title,
   subtitle,
+  type,
   badge,
   enabled,
   isAvailable = true,
   isCreated = false,
   widgetId,
+  paidUntil,
   onToggle,
   onCreate,
   onEdit,
   onPreview
 }: WidgetProps): ReactElement => {
   const [isEnabled, setIsEnabled] = useState<boolean>(enabled)
+
+  // Статус подписки + ссылка на оплату в ЛК. paidUntil null/undefined (grandfather/неизвестно)
+  // — ничего не показываем. Просрочен → «Активировать», скоро истекает → «Продлить».
+  const subscription = useMemo(() => {
+    if (!isCreated || !widgetId || paidUntil == null) return null
+    const until = new Date(paidUntil).getTime()
+    if (!Number.isFinite(until)) return null
+    const now = Date.now()
+    const daysLeft = Math.ceil((until - now) / 86_400_000)
+    const url = `${LK_URL}/api/widgets/checkout?widgetId=${encodeURIComponent(
+      widgetId
+    )}&type=${encodeURIComponent(type)}`
+    if (until <= now) {
+      return { tone: 'off' as const, label: 'Не активен', cta: 'Активировать', url }
+    }
+    if (daysLeft <= 5) {
+      return { tone: 'warn' as const, label: `Осталось ${daysLeft} дн.`, cta: 'Продлить', url }
+    }
+    return {
+      tone: 'ok' as const,
+      label: `Активен до ${new Date(until).toLocaleDateString('ru-RU')}`,
+      cta: 'Продлить',
+      url
+    }
+  }, [isCreated, widgetId, paidUntil, type])
 
   const handleToggle = useCallback(
     (value: boolean) => {
@@ -89,6 +121,34 @@ const Widget = ({
         </div>
         <div className="text-xs text-gray-500 mt-1">{subtitle}</div>
       </div>
+
+      {subscription ? (
+        <div className="flex items-center justify-between gap-2 mt-2">
+          <span
+            className={cn(
+              'text-xs font-medium',
+              subscription.tone === 'ok'
+                ? 'text-green-600'
+                : subscription.tone === 'warn'
+                  ? 'text-amber-600'
+                  : 'text-gray-500'
+            )}
+          >
+            {subscription.label}
+          </span>
+          <Button
+            size="sm"
+            variant={subscription.tone === 'ok' ? 'bordered' : 'solid'}
+            className={cn(
+              'px-4 shrink-0',
+              subscription.tone !== 'ok' && 'bg-[#5951E5] text-white'
+            )}
+            onPress={() => window.open(subscription.url, '_blank', 'noopener,noreferrer')}
+          >
+            {subscription.cta}
+          </Button>
+        </div>
+      ) : null}
 
       <div className="flex items-center gap-3 mt-2">
         <Button

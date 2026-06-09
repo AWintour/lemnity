@@ -118,6 +118,9 @@ const ProjectWidgetsPage = (): ReactElement => {
                 isAvailable={availableWidget.isAvailable}
                 isCreated={isCreated}
                 widgetId={existingWidget?.id}
+                paidUntil={
+                  (existingWidget as { paidUntil?: string | Date | null } | undefined)?.paidUntil
+                }
                 onToggle={
                   existingWidget
                     ? enabled => handleToggleWidget(existingWidget.id, enabled)
