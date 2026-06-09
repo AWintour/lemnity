@@ -17,6 +17,21 @@ import type { WidgetTypeEnum } from '@lemnity/api-sdk'
 // Общий ЛК lemnity.ru: оплата/продление подписки виджета. См. plans/plan-wid.md.
 const LK_URL = (import.meta.env.VITE_LK_URL || 'https://lemnity.ru').replace(/\/+$/, '')
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+// Русское склонение: [одна, две-четыре, пять+] — 1 день, 3 дня, 5 дней.
+const plural = (n: number, forms: [string, string, string]): string => {
+  const mod100 = n % 100
+  const mod10 = n % 10
+  if (mod100 >= 11 && mod100 <= 14) return forms[2]
+  if (mod10 === 1) return forms[0]
+  if (mod10 >= 2 && mod10 <= 4) return forms[1]
+  return forms[2]
+}
+
+// Остаток ровно в днях со склонением: «1 день» / «3 дня» / «90 дней».
+const formatDays = (days: number): string => `${days} ${plural(days, ['день', 'дня', 'дней'])}`
+
 interface WidgetProps {
   title?: string
   subtitle?: string
@@ -26,7 +41,7 @@ interface WidgetProps {
   isAvailable?: boolean
   isCreated?: boolean
   widgetId?: string
-  /** ISO/Date: активен пока > now. null/undefined — без оплаты (grandfather) или неизвестно. */
+  /** ISO/Date: активен пока > now. null/undefined — без срока (grandfather, создан до тарификации) → активен. */
   paidUntil?: string | Date | null
   onToggle?: (value: boolean) => void
   onCreate?: () => void
@@ -51,31 +66,6 @@ const Widget = ({
 }: WidgetProps): ReactElement => {
   const [isEnabled, setIsEnabled] = useState<boolean>(enabled)
 
-  // Статус подписки + ссылка на оплату в ЛК. paidUntil null/undefined (grandfather/неизвестно)
-  // — ничего не показываем. Просрочен → «Активировать», скоро истекает → «Продлить».
-  const subscription = useMemo(() => {
-    if (!isCreated || !widgetId || paidUntil == null) return null
-    const until = new Date(paidUntil).getTime()
-    if (!Number.isFinite(until)) return null
-    const now = Date.now()
-    const daysLeft = Math.ceil((until - now) / 86_400_000)
-    const url = `${LK_URL}/api/widgets/checkout?widgetId=${encodeURIComponent(
-      widgetId
-    )}&type=${encodeURIComponent(type)}`
-    if (until <= now) {
-      return { tone: 'off' as const, label: 'Не активен', cta: 'Активировать', url }
-    }
-    if (daysLeft <= 5) {
-      return { tone: 'warn' as const, label: `Осталось ${daysLeft} дн.`, cta: 'Продлить', url }
-    }
-    return {
-      tone: 'ok' as const,
-      label: `Активен до ${new Date(until).toLocaleDateString('ru-RU')}`,
-      cta: 'Продлить',
-      url
-    }
-  }, [isCreated, widgetId, paidUntil, type])
-
   const handleToggle = useCallback(
     (value: boolean) => {
       setIsEnabled(value)
@@ -83,6 +73,52 @@ const Widget = ({
     },
     [onToggle]
   )
+
+  // Статус подписки определяется ТОЛЬКО оплатой (paidUntil), тумблер enabled на него не влияет:
+  // выключенный, но оплаченный виджет сохраняет остаток дней и доступен к редактированию.
+  // tone — цвет чипа, chip — текст остатка, active — активен ли (влияет на дизейбл «Редактировать»),
+  // cta — нужна ли кнопка оплаты ('activate' просрочен / 'renew' скоро истекает).
+  const status = useMemo(() => {
+    if (!isCreated) return null
+    // grandfather: без срока, но активен (бэкенд рендерит виджеты с paidUntil = null).
+    if (paidUntil == null) {
+      return { active: true, tone: 'active' as const, chip: 'Активен', cta: null as null | 'renew' }
+    }
+    const until = new Date(paidUntil).getTime()
+    if (!Number.isFinite(until)) {
+      return { active: true, tone: 'active' as const, chip: 'Активен', cta: null as null | 'renew' }
+    }
+    const daysLeft = until > Date.now() ? Math.ceil((until - Date.now()) / MS_PER_DAY) : 0
+    if (daysLeft <= 0) {
+      return { active: false, tone: 'off' as const, chip: '0 дней', cta: 'activate' as const }
+    }
+    if (daysLeft <= 5) {
+      return { active: true, tone: 'warn' as const, chip: formatDays(daysLeft), cta: 'renew' as const }
+    }
+    return { active: true, tone: 'active' as const, chip: formatDays(daysLeft), cta: null as null | 'renew' }
+  }, [isCreated, paidUntil])
+
+  const daysToneClass = status
+    ? {
+        active: 'bg-[#e7f7ee] text-[#1f9254]',
+        warn: 'bg-[#fff4e0] text-[#b9770a]',
+        off: 'bg-[#f0f1f4] text-[#9aa0ad]'
+      }[status.tone]
+    : ''
+  const daysDotClass = status
+    ? {
+        active: 'bg-[#28b463]',
+        warn: 'bg-[#f0a30a]',
+        off: 'bg-[#c2c6d0]'
+      }[status.tone]
+    : ''
+
+  const checkoutUrl =
+    isCreated && widgetId
+      ? `${LK_URL}/api/widgets/checkout?widgetId=${encodeURIComponent(
+          widgetId
+        )}&type=${encodeURIComponent(type)}`
+      : null
 
   const badgeView = useMemo(() => {
     if (!badge) return null
@@ -95,14 +131,30 @@ const Widget = ({
     return <span className={className}>{label}</span>
   }, [badge])
 
+  // Заголовок приглушаем у недоступных и у неактивных (неоплаченных) созданных виджетов.
+  const titleMuted = !isAvailable || (isCreated && status?.active === false)
+  // «Редактировать» доступна, только если виджет активен (оплачен/grandfather).
+  const editDisabled = !isAvailable || (isCreated && (!widgetId || status?.active === false))
+
   return (
     <div className={`widget-card ${!isAvailable ? 'widget-not-available select-none' : ''}`}>
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start gap-2">
         <div>
           <SvgIcon className="text-[#9747FF]" size={'36px'} src={iconProjectEmblem} />
         </div>
         <div className="flex items-center gap-2">
           {badgeView}
+          {status ? (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-medium leading-none whitespace-nowrap z-[1]',
+                daysToneClass
+              )}
+            >
+              <span className={cn('w-[7px] h-[7px] rounded-full', daysDotClass)} />
+              {status.chip}
+            </span>
+          ) : null}
           <div className="relative">
             <CustomSwitch
               isDisabled={!isAvailable}
@@ -116,74 +168,59 @@ const Widget = ({
       </div>
 
       <div className="mt-1.5">
-        <div className={`text-md font-semibold ${!isAvailable ? 'text-gray-400' : ''}`}>
-          {title}
-        </div>
-        <div className="text-xs text-gray-500 mt-1">{subtitle}</div>
+        <div className={`text-md font-semibold ${titleMuted ? 'text-gray-400' : ''}`}>{title}</div>
+        <div className="text-xs text-gray-500 mt-1 line-clamp-2">{subtitle}</div>
       </div>
 
-      {subscription ? (
-        <div className="flex items-center justify-between gap-2 mt-2">
-          <span
-            className={cn(
-              'text-xs font-medium',
-              subscription.tone === 'ok'
-                ? 'text-green-600'
-                : subscription.tone === 'warn'
-                  ? 'text-amber-600'
-                  : 'text-gray-500'
-            )}
-          >
-            {subscription.label}
-          </span>
+      <div className="mt-auto flex flex-col gap-2">
+        {status?.cta && checkoutUrl ? (
           <Button
             size="sm"
-            variant={subscription.tone === 'ok' ? 'bordered' : 'solid'}
+            variant={status.cta === 'activate' ? 'solid' : 'bordered'}
             className={cn(
-              'px-4 shrink-0',
-              subscription.tone !== 'ok' && 'bg-[#5951E5] text-white'
+              'w-full z-[1]',
+              status.cta === 'activate'
+                ? 'bg-[#5951E5] text-white'
+                : 'border-[#5951E5] text-[#5951E5]'
             )}
-            onPress={() => window.open(subscription.url, '_blank', 'noopener,noreferrer')}
+            onPress={() => window.open(checkoutUrl, '_blank', 'noopener,noreferrer')}
           >
-            {subscription.cta}
+            {status.cta === 'activate' ? 'Активировать' : 'Продлить'}
+          </Button>
+        ) : null}
+
+        <div className="flex items-center gap-3">
+          <Button
+            size="sm"
+            variant="solid"
+            className="bg-[#5951E5] text-white px-6 [&>svg]:max-w-40 w-32 shrink-0"
+            isDisabled={editDisabled}
+            onPress={isCreated && widgetId ? () => onEdit?.(widgetId) : onCreate}
+            startContent={
+              !isCreated ? (
+                <SvgIcon src={iconAdd} size={'16px'} />
+              ) : (
+                <SvgIcon src={iconPencil} size={'16px'} />
+              )
+            }
+          >
+            {isCreated ? 'Редактировать' : 'Создать'}
+          </Button>
+          <Button
+            size="sm"
+            variant="bordered"
+            className=" w-full bg-[#F7F8FA] mx-auto"
+            isDisabled={!isAvailable}
+            onPress={onPreview}
+            startContent={
+              <div>
+                <SvgIcon src={iconEye} size={'16px'} className="text-[#5951E5]" />
+              </div>
+            }
+          >
+            Демо
           </Button>
         </div>
-      ) : null}
-
-      <div className="flex items-center gap-3 mt-2">
-        <Button
-          size="sm"
-          variant="solid"
-          className={cn(
-            'bg-[#5951E5] text-white px-6 [&>svg]:max-w-40',
-            isCreated && 'w-32 shrink-0'
-          )}
-          isDisabled={!isAvailable || (isCreated && !widgetId)}
-          onPress={isCreated && widgetId ? () => onEdit?.(widgetId) : onCreate}
-          startContent={
-            !isCreated ? (
-              <SvgIcon src={iconAdd} size={'16px'} />
-            ) : (
-              <SvgIcon src={iconPencil} size={'16px'} />
-            )
-          }
-        >
-          {isCreated ? 'Редактировать' : 'Создать'}
-        </Button>
-        <Button
-          size="sm"
-          variant="bordered"
-          className=" w-full bg-[#F7F8FA] mx-auto"
-          isDisabled={!isAvailable}
-          onPress={onPreview}
-          startContent={
-            <div>
-              <SvgIcon src={iconEye} size={'16px'} className="text-[#5951E5]" />
-            </div>
-          }
-        >
-          Посмотреть демо
-        </Button>
       </div>
     </div>
   )

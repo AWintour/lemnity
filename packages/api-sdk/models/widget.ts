@@ -74,6 +74,12 @@ export interface Widget {
      * @memberof Widget
      */
     'updatedAt': string;
+    /**
+     * Active until (subscription/trial). Widget is active while paidUntil > now. Null for widgets created before billing (grandfathered).
+     * @type {string}
+     * @memberof Widget
+     */
+    'paidUntil'?: string | null;
 }
 
 export const WidgetTypeEnum = {
