@@ -18,12 +18,18 @@ import { getNewRequestsCount } from '@/services/requests'
 import { cn } from '@heroui/theme'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
 
+// Общий личный кабинет lemnity.ru. «Оплата и тарифы» уводит в раздел «Тарифы» ЛК.
+// target=_top: app встроен в iframe кабинета — навигируем верхнее окно (весь ЛК);
+// в standalone-режиме это обычный переход. Домен настраивается через VITE_LK_URL.
+const LK_URL = import.meta.env.VITE_LK_URL || 'https://lemnity.ru'
+
 interface MenuItem {
   key: string
   icon: ReactNode
   label: string
   badge?: string | number
   href?: string
+  target?: string
 }
 
 const NavigationSidebar = () => {
@@ -112,7 +118,9 @@ const NavigationSidebar = () => {
             <SvgIcon src={iconWallet} size={'22px'} className={'text-black '} />
           </div>
         ),
-        label: 'Оплата и тарифы'
+        label: 'Оплата и тарифы',
+        href: `${LK_URL}/pricing`,
+        target: '_top'
       }
     ],
     [newRequestsCount]
@@ -180,6 +188,7 @@ const NavigationSidebar = () => {
               key={item.key}
               startContent={item.icon}
               href={item.href || '/'}
+              target={item.target}
               classNames={{
                 title: 'text-base',
                 base: cn(
@@ -217,6 +226,7 @@ const NavigationSidebar = () => {
               <Tooltip key={item.key} content={item.label} placement="right">
                 <a
                   href={item.href || '#'}
+                  target={item.target}
                   className={`flex items-center justify-center w-10 h-10.5 rounded-[5px] hover:bg-default-100 transition-colors relative ${activeKey === item.key ? 'bg-default-200' : ''}`}
                 >
                   {item.icon}
