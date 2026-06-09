@@ -13,6 +13,7 @@ import { Response } from 'express'
 import { PasswordResetService } from '../password-reset/password-reset.service'
 import { RegisterDto } from './dto/register.dto'
 import { NotisendService } from 'src/mailer/notisend.service'
+import { randomUUID } from 'node:crypto'
 
 @Injectable()
 export class AuthService {
@@ -92,6 +93,27 @@ export class AuthService {
 
   async resetPassword(rawToken: string, newPassword: string) {
     await this.passwordResetService.reset(rawToken, newPassword)
+  }
+
+  /**
+   * SSO-вход из ЛК lemnity.ru по тикету (см. lemnity/lemnity.controller.ts): находим юзера
+   * по email, иначе создаём (телефон+пароль обязательны+уникальны → ставим плейсхолдеры;
+   * входа по паролю у такого юзера нет, только SSO). Возвращаем ту же пару токенов, что login.
+   */
+  async loginViaLemnity(input: { email: string; name?: string | null }) {
+    let user = await this.userService.getByEmail(input.email)
+    if (!user) {
+      const dto: RegisterDto = {
+        email: input.email,
+        name: input.name || input.email.split('@')[0] || 'Lemnity',
+        phone: `lemnity:${randomUUID()}`,
+        password: `${randomUUID()}${randomUUID()}`
+      } as RegisterDto
+      user = await this.userService.create(dto)
+    }
+    const tokens = this.issueTokenPair(user.id)
+    const publicUser = await this.userService.getPublicByIdOrThrow(user.id)
+    return { user: publicUser, ...tokens }
   }
 
   private issueTokenPair(userId: string) {

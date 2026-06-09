@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Req, Res, UnauthorizedException } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import type { Request } from 'express'
+import type { Request, Response } from 'express'
 import { LemnityService } from './lemnity.service'
+import { AuthService } from '../auth/auth.service'
 
 type RawRequest = Request & { rawBody?: Buffer }
 
@@ -13,7 +14,29 @@ function sigHeader(req: Request): string | null {
 @ApiTags('lemnity')
 @Controller('lemnity')
 export class LemnityController {
-  constructor(private readonly lemnity: LemnityService) {}
+  constructor(
+    private readonly lemnity: LemnityService,
+    private readonly auth: AuthService
+  ) {}
+
+  /**
+   * SSO-вход из ЛК lemnity.ru: обмен подписанного тикета на сессию app (без логина).
+   * Проверяем HMAC → находим/создаём юзера по email → выдаём пару токенов (как /auth/login):
+   * refresh — в httpOnly-cookie, access — в ответе (клиент кладёт в authStore).
+   */
+  @Post('ticket-exchange')
+  async ticketExchange(
+    @Body() body: { ticket?: string },
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const ticket = typeof body?.ticket === 'string' ? body.ticket : ''
+    const payload = this.lemnity.verifyTicket(ticket)
+    if (!payload) throw new UnauthorizedException('invalid_ticket')
+
+    const { refreshToken, ...rest } = await this.auth.loginViaLemnity({ email: payload.email })
+    this.auth.addRefreshTokenToResponse(res, refreshToken)
+    return rest // { user, accessToken }
+  }
 
   /**
    * Вебхук из ЛК lemnity.ru после оплаты подписки на виджет.

@@ -16,6 +16,7 @@ import WidgetPreviewPage from '@/pages/WidgetPreviewPage'
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
 import AnalyticsPage from './pages/AnalyticsPage'
 import RequestsPage from './pages/RequestsPage/RequestsPage.tsx'
+import EditorSsoPage from './pages/EditorSsoPage.tsx'
 import { memo, useEffect } from 'react'
 
 // Единый вход через общий ЛК lemnity.ru: у app нет своего логина — /login уводит на
@@ -45,6 +46,8 @@ function App() {
       />
       {/* У app нет своего входа — /login уводит на общий ЛК lemnity.ru. */}
       <Route path="/login" element={<ExternalLoginRedirect />} />
+      {/* SSO из ЛК: /editor?ticket=… меняет тикет на сессию app и уводит в редактор. */}
+      <Route path="/editor" element={<EditorSsoPage />} />
       <Route
         path="/reset-password"
         element={

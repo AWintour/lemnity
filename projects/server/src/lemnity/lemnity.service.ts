@@ -27,6 +27,31 @@ export class LemnityService {
     }
   }
 
+  /**
+   * Проверка SSO-тикета из ЛК (формат lmntai signWidgetsTicket: `<base64url(json)>.<hmac-hex>`).
+   * Возвращает payload или null (плохая подпись / истёк / нет email).
+   */
+  verifyTicket(
+    ticket: string
+  ): { userId: string; email: string; lemnityProjectId?: string } | null {
+    if (typeof ticket !== 'string') return null
+    const dot = ticket.indexOf('.')
+    if (dot <= 0) return null
+    const enc = ticket.slice(0, dot)
+    const sig = ticket.slice(dot + 1)
+    if (!this.verify(enc, sig)) return null
+    let parsed: { userId?: string; email?: string; lemnityProjectId?: string; exp?: number }
+    try {
+      parsed = JSON.parse(Buffer.from(enc, 'base64url').toString('utf8'))
+    } catch {
+      return null
+    }
+    const now = Math.floor(Date.now() / 1000)
+    if (typeof parsed.exp !== 'number' || parsed.exp < now) return null
+    if (!parsed.userId || !parsed.email) return null
+    return { userId: parsed.userId, email: parsed.email, lemnityProjectId: parsed.lemnityProjectId }
+  }
+
   /** Проверка подписи: header === hmac-sha256(secret, signedData). */
   verify(signedData: string, header: string | undefined | null): boolean {
     const s = this.secret()

@@ -25,6 +25,7 @@ import { Logger } from '@nestjs/common'
     })
   ],
   controllers: [AuthController, PasswordResetController],
-  providers: [AuthService, JwtStrategy, NotisendService, Logger]
+  providers: [AuthService, JwtStrategy, NotisendService, Logger],
+  exports: [AuthService]
 })
 export class AuthModule {}
