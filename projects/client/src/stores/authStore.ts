@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import * as authService from '@services/auth.ts'
 import { createJSONStorage, devtools, persist } from 'zustand/middleware'
-import { isTokenExpiredOrNearExpiry } from '@common/utils/jwt'
 import useUserStore from './userStore'
 
 type SessionStatus = 'unknown' | 'authenticated' | 'guest'
@@ -74,43 +73,32 @@ const useAuthStore = create<AuthState>()(
           get().clearSession()
         },
         bootstrap: async () => {
-          let token: string | null = null
-          set(s => {
-            token = s.accessToken
-            return s
-          })
-
+          // ВСЕГДА сверяем сессию с сервером по httpOnly refresh-cookie, а НЕ доверяем
+          // закэшированному в sessionStorage accessToken. Иначе сквозной выход из ЛК
+          // (кабинет гасит app refresh-cookie beacon'ом GET /api/auth/sso-logout) не
+          // подхватывался бы, пока access-токен (1ч) не протухнет — пользователь
+          // оставался бы «залогинен» на app после выхода из профиля. См. plans/plan-wid.md.
+          const endAsGuest = (reason: string) => {
+            // Не затираем сессию, если за время await её уже подняли (EditorSsoPage
+            // → setSession после обмена тикета): иначе SSO-вход гонкой сбрасывался бы.
+            const s = get()
+            if (s.sessionStatus === 'authenticated' && s.accessToken) return
+            set({ accessToken: null, sessionStatus: 'guest' }, false, reason)
+            useUserStore.getState().clearUser()
+          }
           try {
-            if (!token) {
-              const refreshed = await authService.refreshToken()
-              if (refreshed) {
-                set(
-                  { accessToken: refreshed, sessionStatus: 'authenticated' },
-                  false,
-                  'auth/bootstrap:refresh-from-cookie'
-                )
-              } else {
-                set({ accessToken: null, sessionStatus: 'guest' }, false, 'auth/bootstrap:no-token')
-              }
+            const refreshed = await authService.refreshToken()
+            if (refreshed) {
+              set(
+                { accessToken: refreshed, sessionStatus: 'authenticated' },
+                false,
+                'auth/bootstrap:refresh-from-cookie'
+              )
               return
             }
-
-            if (isTokenExpiredOrNearExpiry(token)) {
-              const newToken = await authService.refreshToken()
-              if (newToken) {
-                set(
-                  { accessToken: newToken, sessionStatus: 'authenticated' },
-                  false,
-                  'auth/bootstrap:refresh'
-                )
-              } else {
-                set({ accessToken: null, sessionStatus: 'guest' }, false, 'auth/bootstrap:guest')
-              }
-            } else {
-              set({ sessionStatus: 'authenticated' }, false, 'auth/bootstrap:token-valid')
-            }
+            endAsGuest('auth/bootstrap:no-cookie')
           } catch {
-            set({ accessToken: null, sessionStatus: 'guest' }, false, 'auth/bootstrap:error')
+            endAsGuest('auth/bootstrap:error')
           }
         }
       }),
