@@ -51,7 +51,7 @@ wait_healthy clickhouse
 # безопасны; без --accept-data-loss db push падает на разрушающих изменениях, а не теряет данные.
 echo "==> Sync Prisma schema to DB (db push)"
 docker compose -f docker-compose.prod.yml run --rm server \
-  pnpm --filter @lemnity/database exec prisma db push --skip-generate
+  pnpm --filter @lemnity/database exec prisma db push
 
 echo "==> Start / update full stack (server + nginx + infra) with recreate"
 docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
