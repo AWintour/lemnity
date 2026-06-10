@@ -6,6 +6,7 @@ import { fabMenuWidgetMetadata } from './FABMenu/metadata'
 import { announcementWidgetMetadata } from './Announcement/metadata'
 import { eventTimerWidgetMetadata } from './EventTimer/metadata'
 import { notificationWidgetMetadata } from './Notification/metadata'
+import { videoWidgetMetadata } from './VideoWidget/metadata'
 import {
   StubWidgetPanelPreview,
   StubDesktopScreen,
@@ -119,6 +120,7 @@ const widgetMetadata: Partial<
   [WidgetTypeEnum.ANNOUNCEMENT]: announcementWidgetMetadata,
   [WidgetTypeEnum.EVENT_TIMER]: eventTimerWidgetMetadata,
   [WidgetTypeEnum.NOTIFICATION]: notificationWidgetMetadata,
+  [WidgetTypeEnum.VIDEO_WIDGET]: videoWidgetMetadata,
 }
 
 const definitions: Record<WidgetTypeEnum, WidgetDefinition> = Object.fromEntries(

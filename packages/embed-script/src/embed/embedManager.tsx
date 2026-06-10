@@ -9,6 +9,7 @@ import { ActionTimerEmbedRuntime } from '@/layouts/Widgets/CountDown/embedRuntim
 import { CountdownAnnouncementEmbedRuntime } from '@/layouts/Widgets/Announcement/embedded'
 import EventTimerEmbedRuntime from '@/layouts/Widgets/EventTimer/embedded/embedRuntime'
 import NotificationEmbedRuntime from '@/layouts/Widgets/Notification/embedded/embedRuntime'
+import { VideoWidgetEmbedRuntime } from '@/layouts/Widgets/VideoWidget/embedded'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { InitOptions } from './types'
 import { ensureContainer, ensureElement, fetchPublicWidget } from './utils'
@@ -31,6 +32,8 @@ const EmbedRuntime = ({ widgetType }: { widgetType: WidgetTypeEnum }) => {
       return <EventTimerEmbedRuntime />
     case WidgetTypeEnum.NOTIFICATION:
       return <NotificationEmbedRuntime />
+    case WidgetTypeEnum.VIDEO_WIDGET:
+      return <VideoWidgetEmbedRuntime />
     default:
       return <EmbeddedWidget widgetType={widgetType} />
   }

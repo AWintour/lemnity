@@ -14,6 +14,7 @@ import * as path from 'path'
 
 const memoryStorage = multer.memoryStorage()
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024 // 25 MB
+const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
 
 @Controller('files')
 export class FilesController {
@@ -50,6 +51,21 @@ export class FilesController {
     return `images/${yyyy}/${mm}`
   }
 
+  private assertAllowedVideo(file: Express.Multer.File): string {
+    const allowed = new Set(['video/mp4', 'video/webm'])
+    if (!allowed.has(file.mimetype)) {
+      throw new BadRequestException('Unsupported video type')
+    }
+    return file.mimetype
+  }
+
+  private buildVideosPrefix(): string {
+    const now = new Date()
+    const yyyy = String(now.getFullYear())
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    return `videos/${yyyy}/${mm}`
+  }
+
   @Post('images')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -67,6 +83,38 @@ export class FilesController {
     }
     const contentType = this.assertAllowedImage(file)
     const prefix = this.buildImagesPrefix()
+    const sanitized = this.sanitizeFileName(file.originalname)
+    const key = `${randomUUID()}-${sanitized}`
+    await this.s3.putObject({
+      bucket,
+      key,
+      prefix,
+      body: file.buffer,
+      contentType,
+      cacheControl: cache ?? 'public, max-age=31536000, immutable'
+    })
+    const fullKey = `${prefix}/${key}`
+    const url = this.s3.getPublicUrlForKey(fullKey)
+    return { key: fullKey, url }
+  }
+
+  @Post('videos')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage,
+      limits: { fileSize: MAX_VIDEO_SIZE_BYTES }
+    })
+  )
+  async uploadVideo(@UploadedFile() file: Express.Multer.File, @Query('cache') cache?: string) {
+    if (!file) {
+      throw new BadRequestException('File is required')
+    }
+    const bucket = process.env.S3_BUCKET_UPLOADS
+    if (!bucket) {
+      throw new BadRequestException('S3_BUCKET_UPLOADS is not configured on server')
+    }
+    const contentType = this.assertAllowedVideo(file)
+    const prefix = this.buildVideosPrefix()
     const sanitized = this.sanitizeFileName(file.originalname)
     const key = `${randomUUID()}-${sanitized}`
     await this.s3.putObject({

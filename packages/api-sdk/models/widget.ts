@@ -93,7 +93,8 @@ export const WidgetTypeEnum = {
     FAB_MENU: 'FAB_MENU',
     ANNOUNCEMENT: 'ANNOUNCEMENT',
     EVENT_TIMER: 'EVENT_TIMER',
-    NOTIFICATION: 'NOTIFICATION'
+    NOTIFICATION: 'NOTIFICATION',
+    VIDEO_WIDGET: 'VIDEO_WIDGET'
 } as const;
 
 export type WidgetTypeEnum = typeof WidgetTypeEnum[keyof typeof WidgetTypeEnum];

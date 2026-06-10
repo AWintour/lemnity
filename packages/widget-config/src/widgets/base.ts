@@ -7,6 +7,7 @@ export type WidgetTypeId =
   | 'ANNOUNCEMENT'
   | 'EVENT_TIMER'
   | 'NOTIFICATION'
+  | 'VIDEO_WIDGET'
 
 export const IconButtonSchema = z.object({
   text: z.string().min(1, 'Текст обязателен'),

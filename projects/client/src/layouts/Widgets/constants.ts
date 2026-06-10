@@ -13,6 +13,7 @@ export const WidgetTypes = {
   ANNOUNCEMENT: WidgetTypeEnum.ANNOUNCEMENT,
   EVENT_TIMER: WidgetTypeEnum.EVENT_TIMER,
   NOTIFICATION: WidgetTypeEnum.NOTIFICATION,
+  VIDEO_WIDGET: WidgetTypeEnum.VIDEO_WIDGET,
 } as const
 
 export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
@@ -64,6 +65,13 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
   {
     type: WidgetTypes.NOTIFICATION,
     title: 'Уведомления',
+    description: 'Лиды, вовлечение, вознаграждение',
+    isAvailable: true,
+    badge: 'new'
+  },
+  {
+    type: WidgetTypes.VIDEO_WIDGET,
+    title: 'Видео виджет',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
     badge: 'new'

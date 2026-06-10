@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Widget cards mockup</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #f1f3f7;
+    font-family: 'Roboto', 'Rubik', system-ui, -apple-system, sans-serif;
+    color: #1f2330;
+  }
+  h2 { font-size: 16px; font-weight: 600; margin: 0 0 16px; color: #3a3f4b; }
+  .grid { display: flex; flex-wrap: wrap; gap: 16px 16px; max-width: 1024px; }
+
+  /* ---- единая карточка ---- */
+  .widget-card {
+    width: 320px;
+    height: 168px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .emblem {
+    width: 36px; height: 36px; border-radius: 9px;
+    background: #f1ecff; color: #9747FF;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .emblem svg { width: 22px; height: 22px; }
+  .top-right { display: flex; align-items: center; gap: 8px; }
+
+  /* переключатель */
+  .switch { width: 34px; height: 20px; border-radius: 50px; background: #d7d9e0; position: relative; }
+  .switch.on { background: #5951E5; }
+  .switch::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:.2s; }
+  .switch.on::after { left: 16px; }
+
+  /* статус-чип (дни) */
+  .days {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 24px; padding: 0 10px; border-radius: 50px;
+    font-size: 12px; line-height: 1; white-space: nowrap; font-weight: 500;
+  }
+  .days .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .days-active { background: #e7f7ee; color: #1f9254; }
+  .days-active .dot { background: #28b463; }
+  .days-warn { background: #fff4e0; color: #b9770a; }
+  .days-warn .dot { background: #f0a30a; }
+  .days-off { background: #f0f1f4; color: #9aa0ad; }
+  .days-off .dot { background: #c2c6d0; }
+
+  .body { margin-top: 10px; flex: 1; }
+  .title { font-size: 15px; font-weight: 600; }
+  .title.muted { color: #9aa0ad; }
+  .subtitle { font-size: 12px; color: #8b909c; margin-top: 4px; line-height: 1.35; }
+
+  /* строка кнопок — одинаковая во всех состояниях */
+  .actions { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+  .btn {
+    height: 32px; border-radius: 9px; font-size: 13px; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: 1px solid transparent; cursor: pointer; padding: 0 14px;
+  }
+  .btn svg { width: 15px; height: 15px; }
+  .btn-primary { width: 140px; flex: none; background: #5951E5; color: #fff; }
+  .btn-demo { flex: 1; background: #F7F8FA; border-color: #e3e5ea; color: #2b2f3a; }
+  .btn-demo svg { color: #5951E5; }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; filter: grayscale(.4); }
+
+  .caption { font-size: 11px; color: #9aa0ad; margin: 28px 0 8px; }
+</style>
+</head>
+<body>
+  <p class="caption">Все ячейки одного размера (320×168). Чип статуса показывает остаток дней. Когда дней 0 — карточка «неактивна»: основная кнопка задизейблена.</p>
+  <div class="grid">
+
+    <!-- 1. Активный, много дней -->
+    <div class="widget-card">
+      <div class="card-top">
+        <div class="emblem">★</div>
+        <div class="top-right">
+          <span class="days days-active"><span class="dot"></span>5 дней</span>
+          <span class="switch on"></span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title">Колесо фортуны</div>
+        <div class="subtitle">Игровой виджет для сбора лидов и вовлечения</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary">✎ Редактировать</button>
+        <button class="btn btn-demo">👁 Посмотреть демо</button>
+      </div>
+    </div>
+
+    <!-- 2. Активный, мало дней (предупреждение) -->
+    <div class="widget-card">
+      <div class="card-top">
+        <div class="emblem">★</div>
+        <div class="top-right">
+          <span class="days days-warn"><span class="dot"></span>1 день</span>
+          <span class="switch on"></span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title">Таймер акции</div>
+        <div class="subtitle">Обратный отсчёт до конца акции</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary">✎ Редактировать</button>
+        <button class="btn btn-demo">👁 Посмотреть демо</button>
+      </div>
+    </div>
+
+    <!-- 3. НЕактивный: 0 дней, кнопка задизейблена -->
+    <div class="widget-card">
+      <div class="card-top">
+        <div class="emblem">★</div>
+        <div class="top-right">
+          <span class="days days-off"><span class="dot"></span>0 дней</span>
+          <span class="switch"></span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title muted">Анонс</div>
+        <div class="subtitle">Период закончился — продлите подписку в ЛК</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" disabled>✎ Редактировать</button>
+        <button class="btn btn-demo">👁 Посмотреть демо</button>
+      </div>
+    </div>
+
+    <!-- 1b. Оплачен на 1 год -->
+    <div class="widget-card">
+      <div class="card-top">
+        <div class="emblem">★</div>
+        <div class="top-right">
+          <span class="days days-active"><span class="dot"></span>365 дней</span>
+          <span class="switch on"></span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title">Уведомления</div>
+        <div class="subtitle">Всплывающие уведомления о действиях на сайте</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary">✎ Редактировать</button>
+        <button class="btn btn-demo">👁 Посмотреть демо</button>
+      </div>
+    </div>
+
+    <!-- 1c. Оплачен на 3 месяца -->
+    <div class="widget-card">
+      <div class="card-top">
+        <div class="emblem">★</div>
+        <div class="top-right">
+          <span class="days days-active"><span class="dot"></span>90 дней</span>
+          <span class="switch on"></span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title">Таймер события</div>
+        <div class="subtitle">Обратный отсчёт до важной даты</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary">✎ Редактировать</button>
+        <button class="btn btn-demo">👁 Посмотреть демо</button>
+      </div>
+    </div>
+
+    <!-- 4. Ещё не создан -->
+    <div class="widget-card">
+      <div class="card-top">
+        <div class="emblem">★</div>
+        <div class="top-right">
+          <span class="days days-off"><span class="dot"></span>0 дней</span>
+          <span class="switch"></span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title">Видео-виджет</div>
+        <div class="subtitle">Плавающее видео с кнопкой действия</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary">＋ Создать</button>
+        <button class="btn btn-demo">👁 Посмотреть демо</button>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

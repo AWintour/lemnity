@@ -13,10 +13,13 @@ import type {
 import type {
   EventTimertWidgetType,
 } from '@lemnity/widget-config/widgets/event-timer'
+import type {
+  VideoWidgetType,
+} from '@lemnity/widget-config/widgets/video-widget'
 import type { ColorScheme } from '@lemnity/widget-config/widgets/base'
 
 type WidgetAppearenceSettingsProps = {
-  defaults: AnnouncementWidgetType | EventTimertWidgetType
+  defaults: AnnouncementWidgetType | EventTimertWidgetType | VideoWidgetType
   setCompanyLogoEnabled: (enabled: boolean) => void
   setCompanyLogoUrl: (url: string | undefined) => void
   setWidgetColorScheme: (colorScheme: ColorScheme) => void

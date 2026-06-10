@@ -4,6 +4,7 @@ import { canonicalizeFABMenu } from './widgets/FABMenu/canonicalize.js'
 import { canonicalizeAnnouncement } from './widgets/Announcement/canonicalize.js'
 import { canonicalizeEventTimer } from './widgets/EventTimer/canonicalize.js'
 import { canonicalizeNotification } from './widgets/Notification/canonicalize.js'
+import { canonicalizeVideoWidget } from './widgets/VideoWidget/canonicalize.js'
 import { widgetSchemaAdapters } from './widgets/index.js'
 import type {
   CanonicalizerMap,
@@ -41,6 +42,7 @@ const canonicalizers: CanonicalizerMap = {
   ANNOUNCEMENT: canonicalizeAnnouncement,
   EVENT_TIMER: canonicalizeEventTimer,
   NOTIFICATION: canonicalizeNotification,
+  VIDEO_WIDGET: canonicalizeVideoWidget,
 }
 
 const resolveCanonicalizer = (type: WidgetTypeId): WidgetCanonicalizer =>

@@ -63,7 +63,8 @@ export const CreateWidgetDtoTypeEnum = {
     FAB_MENU: 'FAB_MENU',
     ANNOUNCEMENT: 'ANNOUNCEMENT',
     EVENT_TIMER: 'EVENT_TIMER',
-    NOTIFICATION: 'NOTIFICATION'
+    NOTIFICATION: 'NOTIFICATION',
+    VIDEO_WIDGET: 'VIDEO_WIDGET'
 } as const;
 
 export type CreateWidgetDtoTypeEnum = typeof CreateWidgetDtoTypeEnum[keyof typeof CreateWidgetDtoTypeEnum];

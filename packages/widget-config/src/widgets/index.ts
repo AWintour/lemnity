@@ -6,6 +6,7 @@ import { fabMenuSchema } from './FABMenu/schema.js'
 import { announcementSchema } from './Announcement/schema.js'
 import { notificationSchema } from './Notification/schema.js'
 import { eventTimerSchema } from './EventTimer/schema.js'
+import { videoWidgetSchema } from './VideoWidget/schema.js'
 
 export type WidgetSchemaAdapter = {
   type: WidgetTypeId
@@ -19,6 +20,7 @@ const adapters: WidgetSchemaAdapter[] = [
   { type: 'ANNOUNCEMENT', schema: announcementSchema },
   { type: 'EVENT_TIMER', schema: eventTimerSchema },
   { type: 'NOTIFICATION', schema: notificationSchema },
+  { type: 'VIDEO_WIDGET', schema: videoWidgetSchema },
 ]
 
 export const widgetSchemaAdapters: Record<WidgetTypeId, WidgetSchemaAdapter> =

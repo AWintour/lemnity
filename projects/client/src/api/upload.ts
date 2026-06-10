@@ -10,6 +10,15 @@ export async function uploadImage(file: File): Promise<{ key: string; url: strin
   return data
 }
 
+export async function uploadVideo(file: File): Promise<{ key: string; url: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await http.post<{ key: string; url: string }>(API.FILES.VIDEOS, form, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  return data
+}
+
 export function getFileUrlFromKey(key: string): string {
   // http baseURL includes /api, so just append /files
   const base = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api'

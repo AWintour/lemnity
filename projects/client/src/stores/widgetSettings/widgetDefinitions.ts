@@ -40,6 +40,12 @@ import {
   buildNotificationDisplaySettings,
   buildNotificationIntegrationSettings
 } from '@/layouts/Widgets/Notification/defaults'
+import {
+  buildVideoWidgetSettings,
+  buildVideoWidgetFieldsSettings,
+  buildVideoWidgetDisplaySettings,
+  buildVideoWidgetIntegrationSettings
+} from '@/layouts/Widgets/VideoWidget/defaults'
 import { resolveWidgetDefinition } from './resolveWidgetDefinition'
 
 type SettingsSurfaceMode = 'standard' | 'custom'
@@ -130,6 +136,17 @@ const implementedWidgetDefinitions: Partial<Record<WidgetTypeEnum, WidgetDefinit
     buildFieldsSettings: buildNotificationFieldsSettings,
     buildDisplaySettings: buildNotificationDisplaySettings,
     buildIntegrationSettings: buildNotificationIntegrationSettings,
+    settingsSurfaces: {
+      fields: 'custom',
+      display: 'custom',
+    }
+  },
+  [WidgetTypeEnum.VIDEO_WIDGET]: {
+    type: WidgetTypeEnum.VIDEO_WIDGET,
+    buildWidgetSettings: buildVideoWidgetSettings,
+    buildFieldsSettings: buildVideoWidgetFieldsSettings,
+    buildDisplaySettings: buildVideoWidgetDisplaySettings,
+    buildIntegrationSettings: buildVideoWidgetIntegrationSettings,
     settingsSurfaces: {
       fields: 'custom',
       display: 'custom',

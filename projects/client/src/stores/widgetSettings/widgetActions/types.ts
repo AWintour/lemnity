@@ -206,6 +206,48 @@ export type WidgetActions = {
   ) => void
   resetAnnouncementColors: () => void
   // ---------------------------------------------------------------------------
+  // Video Widget actions (вертикальный сторис-видеоплеер)
+  setVideoWidgetCompanyLogoEnabled: (enabled: boolean) => void
+  setVideoWidgetCompanyLogoUrl: (url: string | undefined) => void
+  setVideoWidgetColorScheme: (colorScheme: ColorScheme) => void
+  setVideoWidgetBackgroundColor: (color: string) => void
+  setVideoWidgetBorderRadius: (radius: number) => void
+  setVideoWidgetPosition: (position: 'bottom-left' | 'bottom-right') => void
+  // VideoSettings
+  setVideoWidgetVideos: (videos: string[]) => void
+  addVideoWidgetVideo: (url: string) => void
+  removeVideoWidgetVideo: (index: number) => void
+  setVideoWidgetPosterEnabled: (posterEnabled: boolean) => void
+  setVideoWidgetPosterUrl: (url: string | undefined) => void
+  setVideoWidgetMuted: (muted: boolean) => void
+  setVideoWidgetLoop: (loop: boolean) => void
+  setVideoWidgetShowControls: (showControls: boolean) => void
+  setVideoWidgetShowProgressBar: (showProgressBar: boolean) => void
+  // Overlay (заголовок + CTA)
+  setVideoWidgetInfoScreenTitle: (title: string) => void
+  setVideoWidgetInfoScreenTitleFontWeight: (weight: FontWeight) => void
+  setVideoWidgetInfoScreenTitleColor: (titleColor: string) => void
+  setVideoWidgetInfoScreenButtonText: (buttonText: string) => void
+  setVideoWidgetInfoScreenButtonFontColor: (buttonFontColor: string) => void
+  setVideoWidgetInfoScreenButtonBackgroundColor: (
+    buttonBackgroundColor: string
+  ) => void
+  setVideoWidgetInfoScreenIcon: (icon: Icon) => void
+  setVideoWidgetInfoScreenLink: (link: string) => void
+  // Mobile
+  setVideoWidgetMobileEnabled: (mobileEnabled: boolean) => void
+  setVideoWidgetMobileTriggerType: (triggerType: MobileTrigger) => void
+  setVideoWidgetMobileImageUrl: (imageUrl: string | undefined) => void
+  setVideoWidgetMobileTriggerText: (triggerText: string) => void
+  setVideoWidgetMobileTriggerFontColor: (triggerFontColor: string) => void
+  setVideoWidgetMobileTriggerBackgroundColor: (
+    triggerBackgroundColor: string
+  ) => void
+  setVideoWidgetFormEnabled: (formEnabled: boolean) => void
+  setVideoWidgetFormTitleFontSize: (formTitleFontSize: number) => void
+  setVideoWidgetBrandingEnabled: (brandingEnabled: boolean) => void
+  resetVideoWidgetColors: () => void
+  // ---------------------------------------------------------------------------
   // Event Timer actions
   setEventTimerCompanyLogoEnabled: (
     enabled: boolean

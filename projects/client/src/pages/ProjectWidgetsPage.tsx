@@ -11,7 +11,12 @@ import iconInfo from '@/assets/icons/info.svg'
 import WidgetCard from '@/layouts/WidgetCard/WidgetCard'
 import type { WidgetBadge } from '@/layouts/WidgetCard/WidgetCard'
 import { AVAILABLE_WIDGETS } from '@/layouts/Widgets/constants'
-import type { CreateWidgetDtoTypeEnum } from '@lemnity/api-sdk'
+import { WidgetTypeEnum, UserRoleEnum, type CreateWidgetDtoTypeEnum } from '@lemnity/api-sdk'
+import useUserStore from '@/stores/userStore'
+
+// Виджеты, доступные пока только администратору (тестовый период).
+// После проверки — убрать из набора, чтобы открыть всем.
+const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([WidgetTypeEnum.VIDEO_WIDGET])
 
 import breadcrumbSeparator from '@/assets/icons/breadcrumb-separator.svg'
 
@@ -36,6 +41,13 @@ const ProjectWidgetsPage = (): ReactElement => {
 
   const projectName = project?.name || ''
   const widgets = useMemo(() => project?.widgets || [], [project?.widgets])
+
+  const isAdmin = useUserStore(s => s.user?.role) === UserRoleEnum.ADMIN
+  // Скрываем admin-only виджеты (напр. «Видео виджет») для обычных пользователей
+  const availableWidgets = useMemo(
+    () => AVAILABLE_WIDGETS.filter(w => isAdmin || !ADMIN_ONLY_WIDGETS.has(w.type)),
+    [isAdmin]
+  )
 
   const handleCreateWidget = async (type: CreateWidgetDtoTypeEnum, name: string) => {
     if (!projectId) return
@@ -103,7 +115,7 @@ const ProjectWidgetsPage = (): ReactElement => {
           <span className="text-xl font-roboto">Виджеты</span>
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-5">
-          {AVAILABLE_WIDGETS.map(availableWidget => {
+          {availableWidgets.map(availableWidget => {
             const existingWidget = widgets.find(w => w.type === availableWidget.type)
             const isCreated = !!existingWidget
 
