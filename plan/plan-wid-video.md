@@ -63,14 +63,23 @@
 - Клиент: `uploadVideo` в `projects/client/src/api/upload.ts`; эндпоинт `API.FILES.VIDEOS` в `common/api/endpoints.ts`.
 - Создание виджета: DTO принимает `VIDEO_WIDGET` автоматически (`@IsEnum(WidgetType)`), `paidUntil` (триал) ставится как у всех типов.
 
-### Демо без ЛК
-- `projects/client/preview-video.html` + `src/preview-video.tsx` — рендерит конструктор + превью без авторизации; кнопка «Просмотр» открывает инлайн-превью. **Служебные файлы, удалить перед коммитом.**
+### Доступ: admin-only (тестовый период)
+Виджет виден и создаётся **только администратору** (после теста — открыть всем).
+- **Определение админа** — по роли `ADMIN` ИЛИ по email-allowlist. Allowlist: env `ADMIN_EMAILS` (сервер) / `VITE_ADMIN_EMAILS` (клиент), по умолчанию **`simakov@lemnity.ru`** (несколько — через запятую).
+- **Клиент:** `projects/client/src/pages/ProjectWidgetsPage.tsx` — карточка скрыта не-админам (`ADMIN_ONLY_WIDGETS` + `ADMIN_EMAILS`).
+- **Сервер:** `projects/server/src/common/admin.ts` (`isAdminUser`, `ADMIN_ONLY_WIDGET_TYPES`) + проверка в `widget.controller.ts create` → не-админу `403 Forbidden`.
+- **Плумбинг роли:** добавлен `GET /auth/me` (`auth.controller.ts`); `authStore.bootstrap` после refresh подтягивает пользователя (`authService.getMe → setUser`) — иначе после обычной загрузки `user` был `null` и гейт прятал виджет у всех. Клиент: `API.AUTH.ME`, `services/auth.ts getMe()`.
+- **Чтобы открыть всем:** убрать `VIDEO_WIDGET` из `ADMIN_ONLY_WIDGETS` (клиент) и `ADMIN_ONLY_WIDGET_TYPES` (сервер) — один коммит.
+
+### Деплой
+- CI/CD (`.github/workflows/CI-CD.yml`) по push в `main`: job `build` (образы→GHCR) → job `deploy` (`scp` dist + `ssh` → `./deploy.sh`: `docker compose pull` → `prisma db push` (аддитивно добавляет enum `VIDEO_WIDGET`) → `up --force-recreate`).
+- **Отгружено в прод:** коммиты `5bc4c7d` (виджет), `d0959b8` (admin-only + /me), `af8ffce` (allowlist `simakov@lemnity.ru`). Проверено на проде — работает.
 
 ---
 
 ## Что НЕ доделано / открытые вопросы
 - **Позиция виджета** хранится и переключается, но реальное размещение в углу страницы в embed захардкожено в общем `DesktopWidgetTrigger` (`fixed bottom-6 right-6`, общий с «Анонсом»). Чтобы позиция двигала виджет — прокинуть `position` в триггер (затрагивает общий компонент).
-- Превью использует пустой список видео (чёрный кадр) — реальные видео грузятся через `POST /files/videos`.
+- Демо-страница без ЛК (`preview-video.html` + `src/preview-video.tsx`) была удалена перед деплоем (иначе Vite собрал бы публичную страницу-редактор без авторизации).
 
 ---
 
@@ -78,6 +87,10 @@
 - `pnpm --filter @lemnity/widget-config build` — ✅
 - `pnpm --filter @lemnity/api-sdk build` — ✅ (обязательно после правок моделей — dist потребляется клиентом)
 - `cd projects/client && npx tsc -b` — ✅ (EXIT 0)
+- `cd projects/server && npx tsc -p tsconfig.build.json --noEmit` — ✅ (e2e-тест supertest — прежняя несвязанная ошибка, в build не входит)
 - `pnpm --filter @lemnity/embed-script build` — ✅
-- `cd projects/server && npx tsc --noEmit` — по видео/файлам чисто (есть прежняя несвязанная ошибка supertest в e2e)
-- Визуально: список виджетов показывает «Видео виджет»; конструктор — все секции; превью — экраны «Видео» и «Форма»; «Просмотр» открывает инлайн-оверлей; настройки актуализируются вживую.
+- **Прод:** CI/CD #119/#120 зелёные, деплой на сервер прошёл; под `simakov@lemnity.ru` «Видео виджет» виден в каталоге, у остальных скрыт — **проверено, работает**.
+- Визуально: каталог показывает «Видео виджет» (admin); конструктор — все секции (видео/постер/позиция/оверлей/форма с лого и размером заголовка); превью — экраны «Видео» и «Форма»; «Просмотр» открывает инлайн-оверлей; настройки актуализируются вживую.
+
+## Статус
+✅ Реализовано, подключено к редактору и БД, admin-only (по email/роли), задеплоено на прод и проверено. Осталось: после теста — открыть всем (убрать из admin-only, 1 коммит); опционально — реальное размещение по `position` в embed.
