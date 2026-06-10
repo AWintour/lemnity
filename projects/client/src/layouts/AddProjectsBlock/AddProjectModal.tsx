@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '@heroui/button'
 import { Input } from '@heroui/input'
 import CustomSwitch from '@/components/CustomSwitch'
@@ -7,16 +7,40 @@ import Modal from '@/components/Modal/Modal'
 interface AddProjectModalProps {
   isOpen: boolean
   onClose: () => void
-  onAddProject: (projectName: string, websiteUrl: string, enabled?: boolean) => void
+  onAddProject: (projectName: string, websiteUrl: string, enabled?: boolean) => void | Promise<void>
+  // 'edit' переиспользует ту же форму для редактирования проекта (префилл + другие тексты).
+  mode?: 'create' | 'edit'
+  initialName?: string
+  initialUrl?: string
+  initialEnabled?: boolean
 }
 
-const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClose, onAddProject }) => {
-  const [isEnabled, setIsEnabled] = useState(true)
+const AddProjectModal: React.FC<AddProjectModalProps> = ({
+  isOpen,
+  onClose,
+  onAddProject,
+  mode = 'create',
+  initialName,
+  initialUrl,
+  initialEnabled
+}) => {
+  const isEdit = mode === 'edit'
 
-  const [projectName, setProjectName] = useState('')
-  const [websiteUrl, setWebsiteUrl] = useState('')
+  const [isEnabled, setIsEnabled] = useState(initialEnabled ?? true)
+
+  const [projectName, setProjectName] = useState(initialName ?? '')
+  const [websiteUrl, setWebsiteUrl] = useState(initialUrl ?? '')
 
   const [submitting, setSubmitting] = useState(false)
+
+  // Синхронизируем поля при каждом открытии: create → пустые, edit → текущие данные проекта.
+  useEffect(() => {
+    if (isOpen) {
+      setProjectName(initialName ?? '')
+      setWebsiteUrl(initialUrl ?? '')
+      setIsEnabled(initialEnabled ?? true)
+    }
+  }, [isOpen, initialName, initialUrl, initialEnabled])
 
   // No need for local backdrop handler; handled centrally in Modal
 
@@ -77,7 +101,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClose, onAd
           onPress={handleCreate}
           className="px-6 bg-[#e7f3e5] text-[#3BB240]"
         >
-          {submitting ? 'Создание…' : 'Создать'}
+          {submitting ? (isEdit ? 'Сохранение…' : 'Создание…') : isEdit ? 'Сохранить' : 'Создать'}
         </Button>
         <Button
           color="danger"
@@ -96,13 +120,19 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClose, onAd
       <div className="flex items-center justify-between ">
         <div className="flex flex-col gap-2 ">
           <h2 className="font-roboto font-semibold text-4xl tracking-[0.01em]">
-            Добавление проекта
+            {isEdit ? 'Изменение проекта' : 'Добавление проекта'}
           </h2>
           <span className="text-base text-gray-600">
-            Создайте всплывающее окно в стиле вашего бренда.
-            <br />
-            Показывайте его нужной аудитории в подходящий момент, используя триггеры и правила
-            таргетинга
+            {isEdit ? (
+              'Измените название проекта и домен сайта.'
+            ) : (
+              <>
+                Создайте всплывающее окно в стиле вашего бренда.
+                <br />
+                Показывайте его нужной аудитории в подходящий момент, используя триггеры и правила
+                таргетинга
+              </>
+            )}
           </span>
         </div>
         <button

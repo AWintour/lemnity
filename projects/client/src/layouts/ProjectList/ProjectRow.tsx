@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { Button } from '@heroui/button'
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown'
 import CustomSwitch from '@/components/CustomSwitch'
 import MetricCard from './MetricCard'
 import SvgIcon from '@/components/SvgIcon'
 import iconProjectEmblem from '@/assets/icons/project-emblem.svg'
+import iconPencil from '@/assets/icons/pencil.svg'
+import iconBin from '@/assets/icons/bin.svg'
 import { useProjectsStore } from '@/stores/projectsStore'
+import AddProjectModal from '@/layouts/AddProjectsBlock/AddProjectModal'
+import Modal from '@/components/Modal/Modal'
 import './ProjectRow.css'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@heroui/theme'
@@ -19,6 +24,14 @@ interface ProjectRowProps {
   activityPercent: number
 }
 
+const KebabIcon = () => (
+  <svg width="4" height="18" viewBox="0 0 4 18" fill="currentColor" aria-hidden="true">
+    <circle cx="2" cy="2" r="2" />
+    <circle cx="2" cy="9" r="2" />
+    <circle cx="2" cy="16" r="2" />
+  </svg>
+)
+
 const ProjectRow = ({
   id,
   name,
@@ -29,10 +42,34 @@ const ProjectRow = ({
 }: ProjectRowProps) => {
   const projects = useProjectsStore(s => s.projects)
   const toggleProjectEnabled = useProjectsStore(s => s.toggleProjectEnabled)
+  const updateProject = useProjectsStore(s => s.updateProject)
+  const deleteProject = useProjectsStore(s => s.deleteProject)
   const navigate = useNavigate()
+
+  const project = projects.find(p => p.id === id)
+
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
   const handleSwitchChange = (value: boolean) => {
-    const project = projects.find(p => p.id === id)
     if (project) toggleProjectEnabled(project.id, value)
+  }
+
+  const handleEditSubmit = async (newName: string, newUrl: string, newEnabled?: boolean) => {
+    await updateProject(id, { title: newName, websiteUrl: newUrl, enabled: newEnabled })
+    setIsEditOpen(false)
+  }
+
+  const handleDelete = async () => {
+    if (deleting) return
+    setDeleting(true)
+    try {
+      await deleteProject(id)
+      setIsConfirmOpen(false)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -64,7 +101,7 @@ const ProjectRow = ({
                     Виджеты
                   </Button>
                 </DropdownTrigger>
-                <DropdownMenu aria-label="Действия проекта">
+                <DropdownMenu aria-label="Действия с виджетами">
                   <DropdownItem
                     key="open"
                     onPress={() => {
@@ -88,6 +125,39 @@ const ProjectRow = ({
                     }}
                   >
                     Код для вставки
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+
+              <Dropdown placement="bottom-start">
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    radius="full"
+                    aria-label="Действия проекта"
+                    className="min-w-8 w-8 h-8 text-gray-500"
+                  >
+                    <KebabIcon />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Действия проекта">
+                  <DropdownItem
+                    key="edit"
+                    startContent={<SvgIcon src={iconPencil} size="18px" className="opacity-70" />}
+                    onPress={() => setIsEditOpen(true)}
+                  >
+                    Изменить проект
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    className="text-danger"
+                    color="danger"
+                    startContent={<SvgIcon src={iconBin} size="18px" className="text-danger" />}
+                    onPress={() => setIsConfirmOpen(true)}
+                  >
+                    Удалить проект
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>
@@ -129,6 +199,53 @@ const ProjectRow = ({
           />
         </div>
       </div>
+
+      <AddProjectModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onAddProject={handleEditSubmit}
+        mode="edit"
+        initialName={project?.name ?? name}
+        initialUrl={project?.websiteUrl ?? ''}
+        initialEnabled={project?.enabled ?? enabled}
+      />
+
+      {isConfirmOpen && (
+        <Modal
+          isOpen={isConfirmOpen}
+          onClose={() => !deleting && setIsConfirmOpen(false)}
+          role="alertdialog"
+          closeOnBackdrop={!deleting}
+          closeOnEsc={!deleting}
+          containerClassName="w-full max-w-[440px]"
+        >
+          <div className="flex flex-col gap-4 p-6">
+            <h3 className="font-roboto font-semibold text-2xl">Удалить проект?</h3>
+            <p className="text-sm text-gray-600">
+              Проект «{project?.name ?? name}» и все его виджеты будут удалены без возможности
+              восстановления.
+            </p>
+            <div className="flex items-center justify-start gap-3">
+              <Button
+                variant="solid"
+                onPress={handleDelete}
+                isDisabled={deleting}
+                className="px-6 bg-[#FFD4C4] text-[#FF001C]"
+              >
+                {deleting ? 'Удаление…' : 'Удалить'}
+              </Button>
+              <Button
+                variant="light"
+                onPress={() => setIsConfirmOpen(false)}
+                isDisabled={deleting}
+                className="px-6"
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

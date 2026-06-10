@@ -44,6 +44,11 @@ type ProjectsActions = {
   ensureLoaded: () => Promise<void>
   createProject: (title: string, websiteUrl: string, enabled?: boolean) => Promise<void>
   toggleProjectEnabled: (id: string, enabled: boolean) => Promise<void>
+  updateProject: (
+    id: string,
+    patch: { title?: string; websiteUrl?: string; enabled?: boolean }
+  ) => Promise<void>
+  deleteProject: (id: string) => Promise<void>
   // Widget actions
   createWidget: (
     projectId: string,
@@ -151,6 +156,37 @@ export const useProjectsStore = create<ProjectsStore>()(
             )
           } catch {
             set({ error: 'Failed to update project' }, false, 'projects/toggle:error')
+          }
+        },
+
+        updateProject: async (id, patch) => {
+          set({ error: null }, false, 'projects/update:start')
+          try {
+            const updated = await projectsService.updateProject(id, patch as UpdateProjectDto)
+            const mapped = mapApiToStoreProject(updated)
+            set(
+              state => ({ projects: state.projects.map(p => (p.id === id ? mapped : p)) }),
+              false,
+              'projects/update:success'
+            )
+          } catch (e) {
+            set({ error: 'Failed to update project' }, false, 'projects/update:error')
+            throw e // пробрасываем, чтобы модалка не закрылась при ошибке
+          }
+        },
+
+        deleteProject: async (id: string) => {
+          set({ error: null }, false, 'projects/delete:start')
+          try {
+            await projectsService.deleteProject(id)
+            set(
+              state => ({ projects: state.projects.filter(p => p.id !== id) }),
+              false,
+              'projects/delete:success'
+            )
+          } catch (e) {
+            set({ error: 'Failed to delete project' }, false, 'projects/delete:error')
+            throw e
           }
         },
 
