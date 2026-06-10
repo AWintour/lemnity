@@ -90,7 +90,11 @@ export const wheelActionHandlers: Record<string, ActionHandler> = {
 
     const runtime = usePreviewRuntimeStore.getState()
     const status = runtime.values['wheel.status'] as 'idle' | 'spinning' | 'locked' | undefined
-    if (status === 'spinning' || status === 'locked') return
+    const eventMode =
+      (useWidgetSettingsStore.getState().settings?.widget as { eventMode?: boolean } | undefined)
+        ?.eventMode === true
+    // In event mode the wheel is a kiosk loop, so a previous 'locked' result must not block a new spin.
+    if (status === 'spinning' || (!eventMode && status === 'locked')) return
     runtime.setValue('wheel.status', 'spinning')
 
     const payload = (ctx.payload ?? {}) as Record<string, unknown>
@@ -124,13 +128,15 @@ export const wheelActionHandlers: Record<string, ActionHandler> = {
           runtime.setValue('wheel.winningSectorId', result.sectorId)
           runtime.setValue('wheel.result', result)
 
-          try {
-            window.sessionStorage?.setItem(
-              getSpinResultStorageKey(widgetId),
-              JSON.stringify(result)
-            )
-          } catch {
-            // ignore
+          if (!eventMode) {
+            try {
+              window.sessionStorage?.setItem(
+                getSpinResultStorageKey(widgetId),
+                JSON.stringify(result)
+              )
+            } catch {
+              // ignore
+            }
           }
 
           emit?.('wheel.spin')
@@ -185,19 +191,30 @@ export const wheelActionHandlers: Record<string, ActionHandler> = {
 
         emit?.('wheel.spin')
 
+        const resetForNextParticipant = () => {
+          setScreen?.('main')
+          runtime.setValue('wheel.status', 'idle')
+          runtime.setValue('wheel.winningSectorId', undefined)
+          runtime.setValue('wheel.result', undefined)
+        }
+
         const finish = () => {
-          if (result.isWin) {
-            setScreen?.('prize')
-            runtime.setValue('wheel.status', 'locked')
+          if (result.isWin) setScreen?.('prize')
+          if (eventMode) {
+            // Show the result briefly, then return to the form so the next participant can play.
+            if (setTimer) setTimer(5000, resetForNextParticipant)
+            else resetForNextParticipant()
           } else {
             runtime.setValue('wheel.status', 'locked')
           }
         }
 
-        try {
-          window.sessionStorage?.setItem(getSpinResultStorageKey(widgetId), JSON.stringify(result))
-        } catch {
-          // ignore
+        if (!eventMode) {
+          try {
+            window.sessionStorage?.setItem(getSpinResultStorageKey(widgetId), JSON.stringify(result))
+          } catch {
+            // ignore
+          }
         }
 
         if (setTimer) {

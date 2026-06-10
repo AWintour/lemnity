@@ -53,5 +53,10 @@ export const createWheelActions = (
     updateWidget(widget => ({
       ...widget,
       borderThickness: Math.max(0, Math.min(20, thickness))
+    })),
+  setWheelEventMode: (enabled: boolean) =>
+    updateWidget(widget => ({
+      ...widget,
+      eventMode: enabled
     }))
 })

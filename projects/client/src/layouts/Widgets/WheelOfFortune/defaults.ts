@@ -12,7 +12,8 @@ export const buildWheelWidgetSettings = (): WheelOfFortuneWidgetSettings => ({
     items: Array.from({ length: MIN_SECTORS }).map(createDefaultSector)
   },
   borderColor: '#0F52E6',
-  borderThickness: 12
+  borderThickness: 12,
+  eventMode: false
 })
 
 export const buildWheelFieldsSettings = () =>

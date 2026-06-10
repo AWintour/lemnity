@@ -21,6 +21,8 @@ import type { FieldsSettings as FieldsSettingsType, WidgetSettings } from '@/sto
 import { usesStandardSurface } from '@/stores/widgetSettings/widgetDefinitions'
 import SurfaceNotice from '@/layouts/WidgetSettings/Common/SurfaceNotice'
 import DisableBranding from './DisableBranding/DisableBranding'
+import WheelEventField from './WheelEventField/WheelEventField'
+import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 const templateOptions = [
   { key: 'template1', label: 'Новогодний' },
@@ -162,6 +164,7 @@ const FieldsSettingsTab = () => {
             <AgreementPoliciesField />
             <AdsInfoField />
             <MessagesSettings />
+            {widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE && <WheelEventField />}
             <DisableBranding
               enabled={brandingEnabled}
               onBrandingEnabledToggle={setBrandingEnabled}

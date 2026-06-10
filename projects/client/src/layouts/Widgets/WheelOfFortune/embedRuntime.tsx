@@ -200,32 +200,43 @@ export const WheelEmbedRuntime = () => {
     postInteractivityLock(true)
     if (widgetId) {
       const runtime = usePreviewRuntimeStore.getState()
+      const eventMode =
+        (useWidgetSettingsStore.getState().settings?.widget as { eventMode?: boolean } | undefined)
+          ?.eventMode === true
 
-      try {
-        const raw = window.sessionStorage?.getItem(getSpinResultStorageKey(widgetId))
-        const parsed = raw ? (JSON.parse(raw) as unknown) : null
-        const hasSectorId =
-          typeof (parsed as { sectorId?: unknown } | null)?.sectorId === 'string' &&
-          Boolean((parsed as { sectorId?: unknown } | null)?.sectorId)
-        const isWin = Boolean((parsed as { isWin?: unknown } | null)?.isWin)
+      if (eventMode) {
+        // Kiosk mode always starts fresh — no restoring a previous participant's locked result.
+        setInitialScreen('main')
+        runtime.setValue('wheel.status', 'idle')
+        runtime.setValue('wheel.winningSectorId', undefined)
+        runtime.setValue('wheel.result', undefined)
+      } else {
+        try {
+          const raw = window.sessionStorage?.getItem(getSpinResultStorageKey(widgetId))
+          const parsed = raw ? (JSON.parse(raw) as unknown) : null
+          const hasSectorId =
+            typeof (parsed as { sectorId?: unknown } | null)?.sectorId === 'string' &&
+            Boolean((parsed as { sectorId?: unknown } | null)?.sectorId)
+          const isWin = Boolean((parsed as { isWin?: unknown } | null)?.isWin)
 
-        if (parsed && hasSectorId) {
-          const sectorId = (parsed as { sectorId: string }).sectorId
-          setInitialScreen(isWin ? 'prize' : 'main')
-          runtime.setValue('wheel.status', isWin ? 'locked' : 'idle')
-          runtime.setValue('wheel.winningSectorId', sectorId)
-          runtime.setValue('wheel.result', parsed)
-        } else {
+          if (parsed && hasSectorId) {
+            const sectorId = (parsed as { sectorId: string }).sectorId
+            setInitialScreen(isWin ? 'prize' : 'main')
+            runtime.setValue('wheel.status', isWin ? 'locked' : 'idle')
+            runtime.setValue('wheel.winningSectorId', sectorId)
+            runtime.setValue('wheel.result', parsed)
+          } else {
+            setInitialScreen('main')
+            runtime.setValue('wheel.status', 'idle')
+            runtime.setValue('wheel.winningSectorId', undefined)
+            runtime.setValue('wheel.result', undefined)
+          }
+        } catch {
           setInitialScreen('main')
           runtime.setValue('wheel.status', 'idle')
           runtime.setValue('wheel.winningSectorId', undefined)
           runtime.setValue('wheel.result', undefined)
         }
-      } catch {
-        setInitialScreen('main')
-        runtime.setValue('wheel.status', 'idle')
-        runtime.setValue('wheel.winningSectorId', undefined)
-        runtime.setValue('wheel.result', undefined)
       }
     }
 

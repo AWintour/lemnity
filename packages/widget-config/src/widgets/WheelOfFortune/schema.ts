@@ -65,6 +65,7 @@ const WheelWidgetSchema = z
     }),
     borderColor: z.string().optional(),
     borderThickness: z.number().min(0).max(20).optional(),
+    eventMode: z.boolean().optional(),
     messages: z
       .object({
         onWin: z.object({

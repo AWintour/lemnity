@@ -127,24 +127,30 @@ export class WidgetService {
     const items: WheelSector[] = rawItems.map(parseSector).filter(isWheelSector)
     if (items.length === 0) throw new BadRequestException('Wheel sectors are missing')
 
-    const existing = await this.prisma.wheelOfFortuneSpin.findUnique({
-      where: { widgetId_sessionId: { widgetId, sessionId: normalizedSessionId } }
-    })
-    if (existing) {
-      const sector =
-        items.find(s => s.id === existing.sectorId) ??
-        ({
-          id: existing.sectorId,
-          mode: 'text',
-          isWin: existing.isWin
-        } as WheelSector)
+    // Event (kiosk) mode lifts the one-spin-per-session limit so the wheel can be
+    // spun and filled without bound at an offline event.
+    const eventMode = widgetCfg.eventMode === true
 
-      return {
-        blocked: true as const,
-        reason: 'already_spun' as const,
-        sectorId: existing.sectorId,
-        isWin: existing.isWin,
-        sector
+    if (!eventMode) {
+      const existing = await this.prisma.wheelOfFortuneSpin.findUnique({
+        where: { widgetId_sessionId: { widgetId, sessionId: normalizedSessionId } }
+      })
+      if (existing) {
+        const sector =
+          items.find(s => s.id === existing.sectorId) ??
+          ({
+            id: existing.sectorId,
+            mode: 'text',
+            isWin: existing.isWin
+          } as WheelSector)
+
+        return {
+          blocked: true as const,
+          reason: 'already_spun' as const,
+          sectorId: existing.sectorId,
+          isWin: existing.isWin,
+          sector
+        }
       }
     }
 
@@ -181,42 +187,46 @@ export class WidgetService {
     const sector = items[selectedIndex]
     const isWin = Boolean(sector.isWin)
 
-    try {
-      await this.prisma.wheelOfFortuneSpin.create({
-        data: {
-          wheelWidget: { connect: { widgetId } },
-          sessionId: normalizedSessionId,
-          sectorId: sector.id,
-          isWin
-        }
-      })
-    } catch (err: unknown) {
-      const isErrorWithCode = (value: unknown): value is { code: string } =>
-        isRecord(value) && typeof value.code === 'string'
-
-      if (isErrorWithCode(err) && err.code === 'P2002') {
-        const createdByRace = await this.prisma.wheelOfFortuneSpin.findUnique({
-          where: { widgetId_sessionId: { widgetId, sessionId: normalizedSessionId } }
+    // In event mode we don't persist a spin record — otherwise the unique
+    // (widgetId, sessionId) constraint would reject the next spin with P2002.
+    if (!eventMode) {
+      try {
+        await this.prisma.wheelOfFortuneSpin.create({
+          data: {
+            wheelWidget: { connect: { widgetId } },
+            sessionId: normalizedSessionId,
+            sectorId: sector.id,
+            isWin
+          }
         })
-        if (createdByRace) {
-          const sectorFromRace =
-            items.find(s => s.id === createdByRace.sectorId) ??
-            ({
-              id: createdByRace.sectorId,
-              mode: 'text',
-              isWin: createdByRace.isWin
-            } as WheelSector)
+      } catch (err: unknown) {
+        const isErrorWithCode = (value: unknown): value is { code: string } =>
+          isRecord(value) && typeof value.code === 'string'
 
-          return {
-            blocked: true as const,
-            reason: 'already_spun' as const,
-            sectorId: createdByRace.sectorId,
-            isWin: createdByRace.isWin,
-            sector: sectorFromRace
+        if (isErrorWithCode(err) && err.code === 'P2002') {
+          const createdByRace = await this.prisma.wheelOfFortuneSpin.findUnique({
+            where: { widgetId_sessionId: { widgetId, sessionId: normalizedSessionId } }
+          })
+          if (createdByRace) {
+            const sectorFromRace =
+              items.find(s => s.id === createdByRace.sectorId) ??
+              ({
+                id: createdByRace.sectorId,
+                mode: 'text',
+                isWin: createdByRace.isWin
+              } as WheelSector)
+
+            return {
+              blocked: true as const,
+              reason: 'already_spun' as const,
+              sectorId: createdByRace.sectorId,
+              isWin: createdByRace.isWin,
+              sector: sectorFromRace
+            }
           }
         }
+        throw err
       }
-      throw err
     }
 
     return {

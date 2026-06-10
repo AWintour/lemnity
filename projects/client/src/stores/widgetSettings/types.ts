@@ -104,6 +104,7 @@ export type WheelOfFortuneWidgetSettings = {
   }
   borderColor: string
   borderThickness: number
+  eventMode?: boolean
 }
 
 export type CountdownUnitKey = 'days' | 'hours' | 'minutes' | 'seconds'
