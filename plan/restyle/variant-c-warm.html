@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"/>
+<title>Lemnity — Variant C · Warm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF4E9; --cream-2:#F5EBDA; --card:#FFFCF6;
+    --ink:#2A2018; --muted:#8A7B6B; --line:#EADFCB;
+    --terra:#E2603F; --terra-d:#C84A2C;
+    --teal:#1F8A78; --mustard:#E6A82E;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--cream);color:var(--ink);
+    font-family:'Satoshi',sans-serif;-webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden;
+  }
+  body::before{content:'';position:fixed;top:-180px;right:-120px;width:520px;height:520px;border-radius:50%;
+    background:radial-gradient(circle,rgba(226,96,63,.16),transparent 62%);pointer-events:none}
+  body::after{content:'';position:fixed;bottom:-200px;left:120px;width:480px;height:480px;border-radius:50%;
+    background:radial-gradient(circle,rgba(31,138,120,.14),transparent 62%);pointer-events:none}
+  .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh;position:relative;z-index:1}
+
+  .side{padding:28px 22px;display:flex;flex-direction:column;gap:30px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Bricolage Grotesque';font-weight:800;font-size:25px;letter-spacing:-.02em}
+  .brand .b{width:34px;height:34px;border-radius:11px;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;transform:rotate(-6deg)}
+  .navlbl{font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:500;text-transform:uppercase;margin:0 0 10px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;color:var(--ink);text-decoration:none;font-weight:500;font-size:15px}
+  .nav a .ic{width:9px;height:9px;border-radius:3px;background:var(--line)}
+  .nav a.on{background:var(--ink);color:var(--cream)}
+  .nav a.on .ic{background:var(--mustard)}
+  .side .foot{margin-top:auto;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
+  .ava{width:38px;height:38px;border-radius:12px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque';font-weight:700}
+  .foot small{display:block;color:var(--muted);font-size:12px}
+
+  .main{padding:32px 44px 60px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--terra);text-transform:uppercase}
+  h1{font-family:'Bricolage Grotesque';font-weight:800;font-size:42px;margin:6px 0 0;letter-spacing:-.025em;line-height:1}
+  .chiprow{display:flex;gap:8px}
+  .softpill{background:var(--card);border:1px solid var(--line);border-radius:40px;padding:9px 16px;font-size:13px;font-weight:500;color:var(--muted)}
+  .softpill b{color:var(--ink)}
+
+  .proj{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px 24px;display:grid;grid-template-columns:1fr 2fr;gap:22px;margin-bottom:32px;box-shadow:0 14px 40px -22px rgba(42,32,24,.35)}
+  .who{display:flex;gap:15px}
+  .emblem{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,var(--terra),var(--mustard));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:22px;flex:none}
+  .pname{font-family:'Bricolage Grotesque';font-weight:700;font-size:21px}
+  .pcat{font-size:13px;color:var(--muted);margin-top:2px}
+  .pctrl{display:flex;align-items:center;gap:12px;margin-top:16px}
+  .toggle{width:46px;height:26px;border-radius:40px;background:var(--teal);position:relative}
+  .toggle::after{content:'';position:absolute;top:3px;left:23px;width:20px;height:20px;border-radius:50%;background:#fff}
+  .tag{background:var(--cream-2);border-radius:40px;padding:6px 13px;font-size:12px;font-weight:500;color:var(--muted)}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-self:center}
+  .metric{background:var(--cream);border-radius:16px;padding:14px 16px}
+  .metric .k{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .metric .v{font-family:'Bricolage Grotesque';font-weight:800;font-size:28px;margin-top:6px;line-height:1}
+  .metric .v.acc{color:var(--teal)}
+  .metric .d{font-size:11px;color:var(--muted);margin-top:6px}
+
+  .seclbl{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .seclbl h2{font-family:'Bricolage Grotesque';font-weight:700;font-size:23px;margin:0}
+  .seclbl .n{font-size:12px;color:var(--muted);background:var(--cream-2);border-radius:40px;padding:4px 12px;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .wc{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;min-height:200px;box-shadow:0 12px 34px -24px rgba(42,32,24,.4)}
+  .wc-top{display:flex;justify-content:space-between;align-items:flex-start}
+  .wi{width:38px;height:38px;border-radius:13px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .chip{font-size:12px;font-weight:600;padding:6px 11px;border-radius:40px;display:inline-flex;align-items:center;gap:6px}
+  .chip .pt{width:6px;height:6px;border-radius:50%}
+  .chip.ok{background:rgba(31,138,120,.12);color:var(--teal)}.chip.ok .pt{background:var(--teal)}
+  .chip.warn{background:rgba(230,168,46,.16);color:#A9760E}.chip.warn .pt{background:var(--mustard)}
+  .chip.off{background:var(--cream-2);color:var(--muted)}.chip.off .pt{background:#cdbfa9}
+  .wc h3{font-family:'Bricolage Grotesque';font-weight:700;font-size:19px;margin:14px 0 4px}
+  .wc p{font-size:13px;color:var(--muted);margin:0;line-height:1.45}
+  .acts{margin-top:auto;display:flex;gap:10px;padding-top:14px}
+  .btn{font-family:'Satoshi';font-weight:700;font-size:13px;height:38px;border-radius:13px;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border:none}
+  .btn.solid{background:var(--ink);color:var(--cream);padding:0 18px}
+  .btn.ghost{background:var(--cream-2);color:var(--ink);flex:1}
+  .btn.disabled{opacity:.4}
+  .cta{font-family:'Satoshi';font-weight:700;font-size:13px;height:36px;border-radius:13px;width:100%;margin-top:auto;cursor:pointer;border:none;background:var(--terra);color:#fff}
+  .cta.ghost{background:transparent;border:1.5px solid var(--terra);color:var(--terra)}
+</style></head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="b">L</span> Lemnity</div>
+    <div>
+      <p class="navlbl">Платформа</p>
+      <nav class="nav">
+        <a class="on" href="#"><span class="ic"></span> Проекты</a>
+        <a href="#"><span class="ic"></span> Аналитика</a>
+        <a href="#"><span class="ic"></span> Заявки</a>
+        <a href="#"><span class="ic"></span> Настройки</a>
+      </nav>
+    </div>
+    <div class="foot">
+      <div class="ava">В</div>
+      <div><strong style="font-size:14px">Вкусно</strong><small>lemnity.ru / ЛК</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div>
+        <div class="eyebrow">Каталог проекта</div>
+        <h1>Ресторан «Вкусно»</h1>
+      </div>
+      <div class="chiprow">
+        <span class="softpill"><b>14</b> виджетов</span>
+        <span class="softpill"><b>3</b> активны</span>
+      </div>
+    </div>
+
+    <section class="proj">
+      <div class="who">
+        <div class="emblem">В</div>
+        <div>
+          <div class="pname">Ресторан «Вкусно»</div>
+          <div class="pcat">Виджеты / Геймификация</div>
+          <div class="pctrl"><span class="toggle"></span><span class="tag">vkusno.ru</span></div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">Посетители</div><div class="v">8 412</div><div class="d">↑ 12%</div></div>
+        <div class="metric"><div class="k">Показы</div><div class="v">21k</div><div class="d">desktop 14k</div></div>
+        <div class="metric"><div class="k">Конверсия</div><div class="v acc">6.2%</div><div class="d">↑ 0.8</div></div>
+        <div class="metric"><div class="k">Активность</div><div class="v">73%</div><div class="d">за 7 дней</div></div>
+      </div>
+    </section>
+
+    <div class="seclbl"><h2>Виджеты</h2><span class="n">12 / 14</span></div>
+    <div class="grid">
+      <article class="wc">
+        <div class="wc-top"><div class="wi">✦</div><span class="chip ok"><span class="pt"></span>90 дней</span></div>
+        <h3>Колесо фортуны</h3><p>Игровой виджет для сбора лидов и вовлечения.</p>
+        <div class="acts"><button class="btn solid">Редактировать</button><button class="btn ghost">Демо</button></div>
+      </article>
+      <article class="wc">
+        <div class="wc-top"><div class="wi">◷</div><span class="chip warn"><span class="pt"></span>3 дня</span></div>
+        <h3>Таймер акции</h3><p>Обратный отсчёт до конца акции.</p>
+        <button class="cta ghost">Продлить</button>
+        <div class="acts"><button class="btn solid">Редактировать</button><button class="btn ghost">Демо</button></div>
+      </article>
+      <article class="wc">
+        <div class="wc-top"><div class="wi">◆</div><span class="chip off"><span class="pt"></span>0 дней</span></div>
+        <h3>Анонс</h3><p>Период закончился — активируйте подписку.</p>
+        <button class="cta">Активировать</button>
+        <div class="acts"><button class="btn solid disabled">Редактировать</button><button class="btn ghost">Демо</button></div>
+      </article>
+    </div>
+  </main>
+</div>
+</body></html>

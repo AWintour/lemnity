@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"/>
+<title>Lemnity — Variant B · Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0C0D10; --panel:#141619; --panel-2:#1B1E23; --line:#26292F;
+    --txt:#E8EAED; --muted:#8A9099;
+    --lime:#C8F250; --lime-dim:#9FBF3E;
+    --cyan:#5FD0E0; --amber:#F0B23A; --red:#FF6B5E;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);color:var(--txt);
+    font-family:'General Sans',sans-serif;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0);
+    background-size:22px 22px;
+  }
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+  .side{border-right:1px solid var(--line);padding:26px 20px;display:flex;flex-direction:column;gap:30px;background:linear-gradient(180deg,var(--panel),transparent)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Clash Display';font-weight:700;font-size:24px;letter-spacing:-.01em}
+  .brand .b{width:30px;height:30px;border-radius:8px;background:var(--lime);color:#0C0D10;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 22px rgba(200,242,80,.45)}
+  .navlbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--muted);margin:0 0 10px}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:var(--muted);text-decoration:none;font-weight:500;font-size:14px;border:1px solid transparent}
+  .nav a.on{color:var(--lime);background:var(--panel-2);border-color:var(--line)}
+  .nav a.on .ic{box-shadow:0 0 12px rgba(200,242,80,.5)}
+  .ic{width:7px;height:7px;border-radius:2px;background:currentColor}
+  .side .foot{margin-top:auto;display:flex;align-items:center;gap:11px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .ava{width:34px;height:34px;border-radius:9px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--lime);font-weight:600}
+  .foot small{display:block;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace}
+
+  .main{padding:30px 38px 56px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--lime);text-transform:uppercase}
+  h1{font-family:'Clash Display';font-weight:600;font-size:36px;margin:6px 0 0;letter-spacing:-.01em}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:40px;padding:7px 14px}
+  .live{display:inline-flex;align-items:center;gap:7px;color:var(--lime)}
+  .live .d{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime)}
+
+  .proj{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;grid-template-columns:1fr 2fr;gap:22px;margin-bottom:30px;position:relative;overflow:hidden}
+  .proj::before{content:'';position:absolute;inset:0;background:radial-gradient(600px 120px at 0% 0%, rgba(200,242,80,.07), transparent)}
+  .who{display:flex;gap:14px;position:relative}
+  .emblem{width:46px;height:46px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--lime);flex:none}
+  .pname{font-family:'Clash Display';font-weight:600;font-size:20px}
+  .pcat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
+  .pctrl{display:flex;gap:12px;align-items:center;margin-top:16px}
+  .toggle{width:44px;height:24px;border-radius:40px;background:var(--lime);position:relative;box-shadow:0 0 16px rgba(200,242,80,.4)}
+  .toggle::after{content:'';position:absolute;top:3px;left:23px;width:18px;height:18px;border-radius:50%;background:#0C0D10}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);border:1px solid var(--line);border-radius:7px;padding:4px 9px}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative;align-self:center}
+  .metric{border-left:1px solid var(--line);padding-left:14px}
+  .metric .k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  .metric .v{font-family:'Clash Display';font-weight:600;font-size:30px;margin-top:6px}
+  .metric .v.acc{color:var(--lime)}
+  .metric .d{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:5px}
+
+  .seclbl{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .seclbl h2{font-family:'Clash Display';font-weight:600;font-size:20px;margin:0}
+  .seclbl .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+  .seclbl .rule{flex:1;height:1px;background:var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .wc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;min-height:198px;transition:.2s}
+  .wc.hot{border-color:rgba(200,242,80,.4);box-shadow:0 0 0 1px rgba(200,242,80,.15),0 12px 40px rgba(0,0,0,.4)}
+  .wc-top{display:flex;justify-content:space-between;align-items:flex-start}
+  .wi{width:36px;height:36px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--cyan)}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:40px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line)}
+  .chip .pt{width:6px;height:6px;border-radius:50%}
+  .chip.ok{color:var(--lime)}.chip.ok .pt{background:var(--lime);box-shadow:0 0 8px var(--lime)}
+  .chip.warn{color:var(--amber)}.chip.warn .pt{background:var(--amber)}
+  .chip.off{color:var(--muted)}.chip.off .pt{background:var(--muted)}
+  .wc h3{font-family:'Clash Display';font-weight:600;font-size:18px;margin:14px 0 4px}
+  .wc p{font-size:13px;color:var(--muted);margin:0;line-height:1.45}
+  .acts{margin-top:auto;display:flex;gap:10px;padding-top:14px}
+  .btn{font-family:'General Sans';font-weight:600;font-size:13px;height:36px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border:1px solid var(--line)}
+  .btn.solid{background:var(--lime);color:#0C0D10;border:none;padding:0 16px}
+  .btn.ghost{background:var(--panel-2);color:var(--txt);flex:1}
+  .btn.disabled{opacity:.4}
+  .cta{font-family:'General Sans';font-weight:600;font-size:13px;height:34px;border-radius:9px;width:100%;margin-top:auto;cursor:pointer;border:1px solid var(--lime);background:transparent;color:var(--lime)}
+  .cta.fill{background:var(--lime);color:#0C0D10;border:none}
+</style></head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="b">L</span> Lemnity</div>
+    <div>
+      <p class="navlbl">// ПЛАТФОРМА</p>
+      <nav class="nav">
+        <a class="on" href="#"><span class="ic"></span> Проекты</a>
+        <a href="#"><span class="ic"></span> Аналитика</a>
+        <a href="#"><span class="ic"></span> Заявки</a>
+        <a href="#"><span class="ic"></span> Настройки</a>
+      </nav>
+    </div>
+    <div class="foot">
+      <div class="ava">В</div>
+      <div><strong style="font-size:14px">Вкусно</strong><small>lemnity.ru</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div>
+        <div class="eyebrow">Каталог проекта</div>
+        <h1>Ресторан «Вкусно»</h1>
+      </div>
+      <span class="pill live"><span class="d"></span> LIVE · 3 виджета активны</span>
+    </div>
+
+    <section class="proj">
+      <div class="who">
+        <div class="emblem">✦</div>
+        <div>
+          <div class="pname">Ресторан «Вкусно»</div>
+          <div class="pcat">widgets / gamification</div>
+          <div class="pctrl"><span class="toggle"></span><span class="tag">vkusno.ru</span></div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">Посетители</div><div class="v">8 412</div><div class="d">↑ 12%</div></div>
+        <div class="metric"><div class="k">Показы</div><div class="v">21 089</div><div class="d">D 14k · M 7k</div></div>
+        <div class="metric"><div class="k">Конверсия</div><div class="v acc">6.2%</div><div class="d">↑ 0.8</div></div>
+        <div class="metric"><div class="k">Активность</div><div class="v">73%</div><div class="d">7d window</div></div>
+      </div>
+    </section>
+
+    <div class="seclbl"><h2>Виджеты</h2><span class="rule"></span><span class="n">12/14 created</span></div>
+    <div class="grid">
+      <article class="wc hot">
+        <div class="wc-top"><div class="wi">✦</div><span class="chip ok"><span class="pt"></span>90 дней</span></div>
+        <h3>Колесо фортуны</h3><p>Игровой виджет для сбора лидов и вовлечения.</p>
+        <div class="acts"><button class="btn solid">Редактировать</button><button class="btn ghost">Демо</button></div>
+      </article>
+      <article class="wc">
+        <div class="wc-top"><div class="wi">◷</div><span class="chip warn"><span class="pt"></span>3 дня</span></div>
+        <h3>Таймер акции</h3><p>Обратный отсчёт до конца акции.</p>
+        <button class="cta">Продлить</button>
+        <div class="acts"><button class="btn solid">Редактировать</button><button class="btn ghost">Демо</button></div>
+      </article>
+      <article class="wc">
+        <div class="wc-top"><div class="wi">◆</div><span class="chip off"><span class="pt"></span>0 дней</span></div>
+        <h3>Анонс</h3><p>Период закончился — активируйте подписку.</p>
+        <button class="cta fill">Активировать</button>
+        <div class="acts"><button class="btn solid disabled">Редактировать</button><button class="btn ghost">Демо</button></div>
+      </article>
+    </div>
+  </main>
+</div>
+</body></html>

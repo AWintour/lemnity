@@ -124,16 +124,23 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
 
   const mobileContext = useMobileContext()
 
+  const expanded = props.focused ?? false
+  // Свёрнутый виджет — всегда без звука. Раскрытый — по желаемому состоянию (isMuted):
+  // если в настройках звук включён (muted=false) — авто-звук; если выключен (muted=true) —
+  // без звука, пока пользователь не нажмёт кнопку звука.
+  const elementMuted = !expanded || isMuted
+
   // sync muted flag to element
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = isMuted
-  }, [isMuted])
+    if (videoRef.current) videoRef.current.muted = elementMuted
+  }, [elementMuted])
 
-  // Живая актуализация превью при изменении настроек:
-  // тумблер «Без звука» → мьют
+  // При раскрытии (и при смене настройки «Без звука») применяем настройку:
+  // muted=false → звук включается автоматически (раскрытие = клик пользователя),
+  // muted=true → остаётся без звука до нажатия кнопки звука.
   useEffect(() => {
-    setIsMuted(muted)
-  }, [muted])
+    if (expanded) setIsMuted(muted)
+  }, [muted, expanded])
 
   // тумблер «Превью видео» (autoplay = !posterEnabled) → авто-плей/пауза
   useEffect(() => {
@@ -257,7 +264,7 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
           poster={posterUrl}
           className="absolute inset-0 w-full h-full object-cover"
           autoPlay={autoplay || isPlaying || currentIndex > 0}
-          muted={isMuted}
+          muted={elementMuted}
           playsInline
           onTimeUpdate={handleTimeUpdate}
           onPlay={() => setIsPlaying(true)}
