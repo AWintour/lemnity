@@ -185,13 +185,17 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
     setProgress(el.currentTime / el.duration)
   }
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = videoRef.current
-    if (!el || !el.duration) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const fraction = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width))
-    el.currentTime = fraction * el.duration
-    setProgress(fraction)
+  // Клик по сегменту прогресс-бара → переключиться на это видео
+  const handleSegmentClick = (index: number) => {
+    if (index === currentIndex) {
+      const el = videoRef.current
+      if (el) {
+        el.currentTime = 0
+        void el.play()
+      }
+    }
+    setProgress(0)
+    setCurrentIndex(index)
   }
 
   const handleCtaPress = () => {
@@ -336,14 +340,22 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
         </div>
 
         {showProgressBar && (
-          <div
-            className="h-1.5 w-full rounded-full bg-white/30 cursor-pointer"
-            onClick={handleSeek}
-          >
-            <div
-              className="h-full rounded-full bg-white"
-              style={{ width: `${Math.round(progress * 100)}%` }}
-            />
+          <div className="flex items-center gap-1 w-full">
+            {playlist.map((_, i) => {
+              const fill = i < currentIndex ? 1 : i === currentIndex ? progress : 0
+              return (
+                <div
+                  key={i}
+                  className="h-1.5 flex-1 rounded-full bg-white/30 overflow-hidden cursor-pointer"
+                  onClick={() => handleSegmentClick(i)}
+                >
+                  <div
+                    className="h-full rounded-full bg-white"
+                    style={{ width: `${Math.round(fill * 100)}%` }}
+                  />
+                </div>
+              )
+            })}
           </div>
         )}
 
