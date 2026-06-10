@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { http } from '@common/api/http.ts'
 import { API } from '@common/api/endpoints.ts'
-import type { LoginResponse, RegisterResponse } from '@lemnity/api-sdk'
+import type { LoginResponse, RegisterResponse, User } from '@lemnity/api-sdk'
 
 interface IAuthPayload {
   email: string
@@ -37,6 +37,15 @@ export async function refreshToken(): Promise<string | null> {
       timeout: 1000
     })
     return res.data?.accessToken ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function getMe(): Promise<User | null> {
+  try {
+    const { data } = await http.get<User>(API.AUTH.ME, { withCredentials: true })
+    return data
   } catch {
     return null
   }

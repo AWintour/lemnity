@@ -18,11 +18,21 @@ import { RegisterDto } from './dto/register.dto'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { LoginResponse } from './entities/responses/login.entity'
 import { RegisterResponse } from './entities/responses/register.entity'
+import { Auth } from './decorators/auth.decorator'
+import { CurrentUser } from './decorators/user.decorator'
+import { User } from '../user/entities/user.entity'
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('me')
+  @Auth()
+  @ApiResponse({ status: 200, type: User })
+  me(@CurrentUser() user: User): User {
+    return user
+  }
 
   @UsePipes(new ValidationPipe())
   @HttpCode(200)

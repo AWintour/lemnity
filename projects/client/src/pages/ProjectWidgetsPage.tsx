@@ -18,6 +18,14 @@ import useUserStore from '@/stores/userStore'
 // После проверки — убрать из набора, чтобы открыть всем.
 const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([WidgetTypeEnum.VIDEO_WIDGET])
 
+// Allowlist админов по email (на время теста; синхронно с сервером).
+const ADMIN_EMAILS: string[] = (
+  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? 'lemnitycom@gmail.com'
+)
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(Boolean)
+
 import breadcrumbSeparator from '@/assets/icons/breadcrumb-separator.svg'
 
 const BreadcrumbSeparator = () => (
@@ -42,7 +50,10 @@ const ProjectWidgetsPage = (): ReactElement => {
   const projectName = project?.name || ''
   const widgets = useMemo(() => project?.widgets || [], [project?.widgets])
 
-  const isAdmin = useUserStore(s => s.user?.role) === UserRoleEnum.ADMIN
+  const user = useUserStore(s => s.user)
+  const isAdmin =
+    user?.role === UserRoleEnum.ADMIN ||
+    (!!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase()))
   // Скрываем admin-only виджеты (напр. «Видео виджет») для обычных пользователей
   const availableWidgets = useMemo(
     () => AVAILABLE_WIDGETS.filter(w => isAdmin || !ADMIN_ONLY_WIDGETS.has(w.type)),

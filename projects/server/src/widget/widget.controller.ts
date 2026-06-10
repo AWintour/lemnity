@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common'
+import {
+  Controller, Get, Post, Body, Patch, Param, Delete, Query, ForbiddenException
+} from '@nestjs/common'
 import { WidgetService } from './widget.service'
 import { CreateWidgetDto } from './dto/create-widget.dto'
 import { UpdateWidgetDto } from './dto/update-widget.dto'
@@ -6,6 +8,7 @@ import { Widget } from './entities/widget.entity'
 import { ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger'
 import { Auth } from '../auth/decorators/auth.decorator'
 import { CurrentUser } from '../auth/decorators/user.decorator'
+import { ADMIN_ONLY_WIDGET_TYPES, isAdminUser } from '../common/admin'
 
 @ApiTags('widgets')
 @Controller('widgets')
@@ -17,8 +20,16 @@ export class WidgetController {
   @Auth()
   create(
     @Body() createWidgetDto: CreateWidgetDto,
-    @CurrentUser('id') userId: string
+    @CurrentUser('id') userId: string,
+    @CurrentUser('email') email: string,
+    @CurrentUser('role') role: string
   ): Promise<Widget> {
+    if (
+      ADMIN_ONLY_WIDGET_TYPES.has(createWidgetDto.type) &&
+      !isAdminUser(email, role)
+    ) {
+      throw new ForbiddenException('Этот тип виджета доступен только администратору')
+    }
     return this.widgetService.create(createWidgetDto, userId)
   }
 

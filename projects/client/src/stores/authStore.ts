@@ -94,6 +94,11 @@ const useAuthStore = create<AuthState>()(
                 false,
                 'auth/bootstrap:refresh-from-cookie'
               )
+              // Подтягиваем текущего пользователя (с ролью/email) — нужно для
+              // ролевого/админ-гейтинга UI. Без этого user в сторе остаётся null
+              // после обычной загрузки страницы.
+              const me = await authService.getMe()
+              if (me) useUserStore.getState().setUser(me)
               return
             }
             endAsGuest('auth/bootstrap:no-cookie')
