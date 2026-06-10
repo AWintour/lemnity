@@ -16,7 +16,22 @@ export IMAGE_TAG
 export REPOSITORY_OWNER
 
 echo "==> Pull images defined in docker-compose.prod.yml"
-docker compose -f docker-compose.prod.yml pull
+# Ретрай: после push в GHCR образы могут быть доступны не мгновенно (eventual consistency).
+# Без ретрая один невытянутый образ роняет последующий up («No such image») и кладёт весь стек.
+pull_with_retry() {
+  local attempts="${1:-4}" delay="${2:-10}"
+  for i in $(seq 1 "${attempts}"); do
+    if docker compose -f docker-compose.prod.yml pull; then
+      echo "==> images pulled (attempt ${i})"
+      return 0
+    fi
+    echo "==> pull failed (attempt ${i}/${attempts}), retry in ${delay}s..."
+    sleep "${delay}"
+  done
+  echo "==> pull did not succeed after ${attempts} attempts"
+  return 1
+}
+pull_with_retry
 
 echo "==> Ensure infra is up (postgres, rabbitmq, clickhouse)"
 docker compose -f docker-compose.prod.yml up -d postgres rabbitmq clickhouse
@@ -54,7 +69,9 @@ docker compose -f docker-compose.prod.yml run --rm server \
   pnpm --filter @lemnity/database exec prisma db push
 
 echo "==> Start / update full stack (server + nginx + infra) with recreate"
-docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
+# --pull always: страховка поверх pull_with_retry — up сам тянет образы перед пересозданием,
+# чтобы гонка доступности в реестре не приводила к «No such image» и падению стека.
+docker compose -f docker-compose.prod.yml up -d --pull always --force-recreate --remove-orphans
 
 echo "==> Run MinIO setup profile (creates buckets/users)"
 docker compose -f docker-compose.prod.yml --profile setup run --rm minio_setup
