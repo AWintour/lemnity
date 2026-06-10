@@ -313,7 +313,7 @@ const AnalyticsPage = () => {
                     <Line
                       type="monotone"
                       dataKey="events"
-                      stroke="#5951E5"
+                      stroke="#1A52DB"
                       strokeWidth={2}
                       dot={chartData.length < 2 ? { r: 3 } : false}
                       isAnimationActive={false}

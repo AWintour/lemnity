@@ -80,7 +80,7 @@ const ProjectRow = ({
       <div className="grid grid-cols-12 items-center">
         <div className="col-span-4 flex items-center gap-4">
           <div className="flex self-start">
-            <SvgIcon className="text-[#9747FF]" size={'36px'} src={iconProjectEmblem} />
+            <SvgIcon className="text-[#1A52DB]" size={'36px'} src={iconProjectEmblem} />
           </div>
           <div className="flex flex-col">
             <div className="text-base font-semibold">{name}</div>
@@ -89,7 +89,7 @@ const ProjectRow = ({
               <div className="relative z-10 child">
                 <CustomSwitch
                   size="sm"
-                  selectedColor="group-data-[selected=true]:!bg-[#5951E5]"
+                  selectedColor="group-data-[selected=true]:!bg-[#1A52DB]"
                   isSelected={enabled}
                   onValueChange={handleSwitchChange}
                 />
@@ -220,7 +220,7 @@ const ProjectRow = ({
           containerClassName="w-full max-w-[440px]"
         >
           <div className="flex flex-col gap-4 p-6">
-            <h3 className="font-roboto font-semibold text-2xl">Удалить проект?</h3>
+            <h3 className="font-display font-semibold text-2xl">Удалить проект?</h3>
             <p className="text-sm text-gray-600">
               Проект «{project?.name ?? name}» и все его виджеты будут удалены без возможности
               восстановления.

@@ -15,7 +15,7 @@ const ButtonSettingsField = () => {
   const staticDefaults = useWidgetStaticDefaults()
   const defaultButton = staticDefaults?.display.icon.button ?? {
     text: '',
-    buttonColor: '#5951E5',
+    buttonColor: '#1A52DB',
     textColor: '#FFFFFF'
   }
   const button = useWidgetSettingsStore(

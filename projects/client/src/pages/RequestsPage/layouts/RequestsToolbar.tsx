@@ -31,7 +31,7 @@ const RequestsToolbar = ({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-          <h1 className="text-[20px] leading-6 font-medium text-black font-roboto">Ваши заявки</h1>
+          <h1 className="text-[20px] leading-6 font-medium text-black font-display">Ваши заявки</h1>
           <Dropdown placement="bottom-start">
             <DropdownTrigger>
               <Button

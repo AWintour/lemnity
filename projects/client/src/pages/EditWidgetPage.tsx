@@ -236,7 +236,7 @@ const EditWidgetPage = () => {
     <div className="h-[39px] flex flex-col justify-center">
       <Breadcrumbs
         size="lg"
-        itemClasses={{ item: 'text-[#1E73BE]', separator: 'text-[#5951E5] mx-3.5' }}
+        itemClasses={{ item: 'text-[#1E73BE]', separator: 'text-[#1A52DB] mx-3.5' }}
         separator={<BreadcrumbSeparator />}
       >
         <BreadcrumbItem href="/">Проекты</BreadcrumbItem>

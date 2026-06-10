@@ -140,7 +140,7 @@ const Widget = ({
     <div className={`widget-card ${!isAvailable ? 'widget-not-available select-none' : ''}`}>
       <div className="flex justify-between items-start gap-2">
         <div>
-          <SvgIcon className="text-[#9747FF]" size={'36px'} src={iconProjectEmblem} />
+          <SvgIcon className="text-[#1A52DB]" size={'36px'} src={iconProjectEmblem} />
         </div>
         <div className="flex items-center gap-2">
           {badgeView}
@@ -159,7 +159,7 @@ const Widget = ({
             <CustomSwitch
               isDisabled={!isAvailable}
               size="sm"
-              selectedColor="group-data-[selected=true]:!bg-[#5951E5]"
+              selectedColor="group-data-[selected=true]:!bg-[#1A52DB]"
               isSelected={isEnabled}
               onValueChange={handleToggle}
             />
@@ -180,8 +180,8 @@ const Widget = ({
             className={cn(
               'w-full z-[1]',
               status.cta === 'activate'
-                ? 'bg-[#5951E5] text-white'
-                : 'border-[#5951E5] text-[#5951E5]'
+                ? 'bg-[#1A52DB] text-white'
+                : 'border-[#1A52DB] text-[#1A52DB]'
             )}
             onPress={() => window.open(checkoutUrl, '_blank', 'noopener,noreferrer')}
           >
@@ -193,7 +193,7 @@ const Widget = ({
           <Button
             size="sm"
             variant="solid"
-            className="bg-[#5951E5] text-white px-6 [&>svg]:max-w-40 w-32 shrink-0"
+            className="bg-[#1A52DB] text-white px-6 [&>svg]:max-w-40 w-32 shrink-0"
             isDisabled={editDisabled}
             onPress={isCreated && widgetId ? () => onEdit?.(widgetId) : onCreate}
             startContent={
@@ -214,7 +214,7 @@ const Widget = ({
             onPress={onPreview}
             startContent={
               <div>
-                <SvgIcon src={iconEye} size={'16px'} className="text-[#5951E5]" />
+                <SvgIcon src={iconEye} size={'16px'} className="text-[#1A52DB]" />
               </div>
             }
           >

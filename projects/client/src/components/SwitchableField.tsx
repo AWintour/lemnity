@@ -68,7 +68,7 @@ const SwitchableField = ({
           isSelected={enabled}
           onValueChange={onToggle}
           isDisabled={disabled}
-          selectedColor="group-data-[selected=true]:!bg-[#5951E5]"
+          selectedColor="group-data-[selected=true]:!bg-[#1A52DB]"
           className={cn('ml-auto', classNames.switch)}
           size="sm"
         />

@@ -4,13 +4,49 @@
 @source './**/*.{js,ts,jsx,tsx}';
 @source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 
+/* ── Дизайн-токены бренда, зеркало lmntai (lemnity.ru) · тема Editorial Light ──
+   Источник: github/lmntai app/globals.css (:root). Держим один язык с ЛК. */
+:root {
+  --background: 40 20% 97%; /* #F8F7F5 warm off-white */
+  --foreground: 0 0% 9%; /* #171717 near-black */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 0 0% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+  --primary: 221 83% 43%; /* #1A52DB editorial blue */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 10% 94%; /* #F0EFED warm gray */
+  --secondary-foreground: 0 0% 15%;
+  --muted: 40 10% 94%;
+  --muted-foreground: 0 0% 44%; /* #707070 */
+  --accent: 221 100% 96%; /* #EEF3FF light blue tint */
+  --accent-foreground: 221 83% 35%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 40 8% 88%; /* #E3E1DD warm hairline */
+  --input: 0 0% 100%;
+  --ring: 221 83% 43%;
+  --radius: 6px;
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 0 0% 20%;
+}
+
 body {
-  background-color: rgba(235, 240, 255, 1);
-  font-family: 'Rubik', sans-serif;
+  /* Бренд lmntai: тёплый off-white фон, near-black текст, Manrope как базовый шрифт */
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Manrope', sans-serif;
 }
 
 @theme {
   --font-roboto: 'Roboto', sans-serif;
+  /* Шрифты бренда: Manrope (UI) + Unbounded (заголовки) */
+  --font-manrope: 'Manrope', sans-serif;
+  /* Заголовки — Rubik (по предпочтению), не Unbounded */
+  --font-display: 'Rubik', sans-serif;
+  /* Брендовый акцент lmntai (royal blue) + мягкий фон акцента */
+  --color-brand: #1a52db;
+  --color-brand-soft: #eef3ff;
 }
 
 @theme {

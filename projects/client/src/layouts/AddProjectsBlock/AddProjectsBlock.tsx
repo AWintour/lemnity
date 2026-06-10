@@ -12,7 +12,7 @@ const AddProjectsBlock: React.FC<{ onCreateClick?: () => void }> = ({ onCreateCl
 
         <div className="flex flex-col text-left flex-1 gap-5.5 p-2.5 justify-center items-center  ">
           <h1 className="text-[40px] font-medium leading-[1.24] text-center tracking-[-0.25px] max-w-[850px]">
-            Эффективные <span className="text-[#5951E5]">виджеты</span> для роста продаж и базы
+            Эффективные <span className="text-[#1A52DB]">виджеты</span> для роста продаж и базы
             клиентов
           </h1>
           <p className="text-xl leading-6 tracking-[-0.25px] flex items-center text-center  font-normal max-w-[850px]">

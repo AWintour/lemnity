@@ -236,7 +236,7 @@ const LoginPage = (): ReactElement => {
                 errorMessage={loginErrors.password?.message}
               />
               <Button
-                className="h-12 w-full font-normal bg-[#5951E5] rounded-[6px] text-white"
+                className="h-12 w-full font-normal bg-[#1A52DB] rounded-[6px] text-white"
                 type="submit"
                 isLoading={isLoginSubmitting}
               >
@@ -404,7 +404,7 @@ const LoginPage = (): ReactElement => {
               />
 
               <Button
-                className="h-12 mt-3 w-full font-normal bg-[#5951E5] rounded-[6px] text-white"
+                className="h-12 mt-3 w-full font-normal bg-[#1A52DB] rounded-[6px] text-white"
                 type="submit"
                 isLoading={isSignupSubmitting}
                 isDisabled={!isSignupValid || isSignupSubmitting}
@@ -448,7 +448,7 @@ const LoginPage = (): ReactElement => {
                   Назад
                 </Button>
                 <Button
-                  className="h-12 flex-1 font-normal bg-[#5951E5] rounded-[6px] text-white"
+                  className="h-12 flex-1 font-normal bg-[#1A52DB] rounded-[6px] text-white"
                   type="submit"
                   isLoading={isForgotSubmitting}
                   isDisabled={!isForgotValid || isForgotSubmitting}

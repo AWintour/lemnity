@@ -89,7 +89,7 @@ const ProjectWidgetsPage = (): ReactElement => {
       size="lg"
       itemClasses={{
         item: 'text-[#1E73BE]',
-        separator: 'text-[#5951E5] mx-3.5'
+        separator: 'text-[#1A52DB] mx-3.5'
       }}
       separator={<BreadcrumbSeparator />}
     >
@@ -123,7 +123,7 @@ const ProjectWidgetsPage = (): ReactElement => {
       <div className="flex flex-col gap-[20px] pb-1">
         <div className="flex flex-row items-center gap-[10px]">
           {getWidgetTooltip()}
-          <span className="text-xl font-roboto">Виджеты</span>
+          <span className="text-xl font-display">Виджеты</span>
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-5">
           {availableWidgets.map(availableWidget => {
@@ -168,7 +168,7 @@ const ProjectWidgetsPage = (): ReactElement => {
         <div className="flex flex-col gap-[15px] py-[5px]">
           {getBreadcrumbs()}
           <hr className="border-[#C0C0C0]" />
-          <span className="text-xl font-roboto">{`Каталог проекта "${projectName}"`}</span>
+          <span className="text-xl font-display">{`Каталог проекта "${projectName}"`}</span>
           <hr className="border-[#C0C0C0]" />
           <div className="flex flex-col gap-[15px] h-full overflow-y-auto">
             {getProjectWidgets()}

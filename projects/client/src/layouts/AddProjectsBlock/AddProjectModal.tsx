@@ -119,7 +119,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
     return (
       <div className="flex items-center justify-between ">
         <div className="flex flex-col gap-2 ">
-          <h2 className="font-roboto font-semibold text-4xl tracking-[0.01em]">
+          <h2 className="font-display font-semibold text-4xl tracking-[0.01em]">
             {isEdit ? 'Изменение проекта' : 'Добавление проекта'}
           </h2>
           <span className="text-base text-gray-600">

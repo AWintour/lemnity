@@ -100,7 +100,7 @@ const Stats: FC = () => {
         <p className="text-3xl font-light">Скоро будет доступно!</p>
       </div>
       <div className="flex flex-row justify-between items-center w-full">
-        <h2 className="text-xl font-roboto">Статистика</h2>
+        <h2 className="text-xl font-display">Статистика</h2>
         {getPeriodSelector()}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-1 sm:gap-1 md:gap-2 lg:gap-3 h-full mt-2.5">

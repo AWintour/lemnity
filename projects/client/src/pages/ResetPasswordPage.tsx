@@ -156,7 +156,7 @@ export default function ResetPasswordPage(): ReactElement {
               <div className="flex gap-2">
                 <Button
                   type="submit"
-                  className="h-12 flex-1 font-normal bg-[#5951E5] rounded-[6px] text-white"
+                  className="h-12 flex-1 font-normal bg-[#1A52DB] rounded-[6px] text-white"
                   isDisabled={!isValid || isSubmitting}
                   isLoading={isSubmitting}
                 >

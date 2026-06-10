@@ -46,7 +46,7 @@ const HomePage = () => {
       <Header />
       <DashboardLayout rightPanel={rightPanel}>
         <div className="flex flex-col gap-[1px]">
-          <span className="text-xl font-roboto">Здравствуйте, {userName}</span>
+          <span className="text-xl font-display">Здравствуйте, {userName}</span>
           {/* <span className="text-sm text-gray-500">Маркетолок компании "Вкусняшки"</span> */}
         </div>
         <hr className="border-[#C0C0C0]" />
