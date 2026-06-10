@@ -2,7 +2,7 @@ import { WidgetType } from '@lemnity/database'
 
 // Allowlist администраторов по email (на время теста). Можно переопределить
 // через env ADMIN_EMAILS (через запятую). Используется до полноценной ролевой модели.
-const ADMIN_EMAILS: string[] = (process.env.ADMIN_EMAILS ?? 'lemnitycom@gmail.com')
+const ADMIN_EMAILS: string[] = (process.env.ADMIN_EMAILS ?? 'simakov@lemnity.ru')
   .split(',')
   .map(e => e.trim().toLowerCase())
   .filter(Boolean)

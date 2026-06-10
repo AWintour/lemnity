@@ -20,7 +20,7 @@ const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([WidgetTypeEnum.VIDEO_WI
 
 // Allowlist админов по email (на время теста; синхронно с сервером).
 const ADMIN_EMAILS: string[] = (
-  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? 'lemnitycom@gmail.com'
+  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? 'simakov@lemnity.ru'
 )
   .split(',')
   .map(e => e.trim().toLowerCase())
