@@ -33,7 +33,8 @@ export const CallbackEmbedRuntime = (_props: EmbedRuntimeProps) => {
 
   return (
     <div className={`fixed bottom-6 ${side} z-[2147483000]`}>
-      <CallbackLauncher />
+      {/* persist: «показ один раз» — бабл больше не всплывает после открытия окна (на всю сессию). */}
+      <CallbackLauncher persist />
     </div>
   )
 }

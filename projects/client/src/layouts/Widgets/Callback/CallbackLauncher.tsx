@@ -24,7 +24,13 @@ const CrossIcon = ({ color }: { color: string }) => (
   </svg>
 )
 
-const CallbackLauncher = () => {
+/**
+ * persist — боевой режим: «показ один раз». Факт, что бабл уже показали (или посетитель открыл
+ * окно), запоминаем в sessionStorage, чтобы он пережил перемонтирование лаунчера embedManager-ом
+ * и больше НИКОГДА не всплывал в этой сессии. В редакторе-превью persist выключен, чтобы сценарий
+ * можно было тестировать сколько угодно раз.
+ */
+const CallbackLauncher = ({ persist = false }: { persist?: boolean }) => {
   const l = useWidgetSettingsStore(
     useShallow(
       s => (s.settings?.widget as CallbackWidgetType)?.callback?.launcher ?? callbackExtraDefaults.launcher
@@ -33,11 +39,37 @@ const CallbackLauncher = () => {
   const windowFormat = useWidgetSettingsStore(
     s => (s.settings?.widget as CallbackWidgetType)?.callback?.form?.windowFormat ?? 'modal'
   )
+  const widgetId = useWidgetSettingsStore(s => s.settings?.id ?? 'default')
+  const seenKey = `lemnity:cb-bubble-seen:${widgetId}`
+
+  const readSeen = () => {
+    if (!persist || typeof window === 'undefined') return false
+    try {
+      return window.sessionStorage.getItem(seenKey) === '1'
+    } catch {
+      return false
+    }
+  }
+
   const [open, setOpen] = useState(false)
   const [bubble, setBubble] = useState(false)
-  // Бабл-уведомление показываем один раз; после того как посетитель его закрыл или сам открыл
-  // виджет — больше автоматически не всплываем (иначе «через время снова запускается»).
-  const [dismissed, setDismissed] = useState(false)
+  // Бабл-уведомление показываем ОДИН раз: после того как посетитель его закрыл или сам открыл
+  // окно — больше не всплываем. В боевом режиме факт показа сохраняется в sessionStorage, поэтому
+  // переживает перемонтирование лаунчера (раньше из-за этого бабл «через время снова запускался»).
+  const [dismissed, setDismissed] = useState(readSeen)
+
+  // Запомнить, что бабл уже отыграл — больше не показывать (в боевом режиме — на всю сессию).
+  const markSeen = () => {
+    setBubble(false)
+    setDismissed(true)
+    if (persist && typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.setItem(seenKey, '1')
+      } catch {
+        /* приватный режим / переполнение квоты — просто остаёмся на in-memory флаге */
+      }
+    }
+  }
   const LibIcon = l.icon && l.icon !== 'HeartDislike' ? Icons[l.icon] : null
   const NotifIcon = l.notifIcon && l.notifIcon !== 'HeartDislike' ? Icons[l.notifIcon] : null
 
@@ -94,7 +126,7 @@ const CallbackLauncher = () => {
           l.notifEnabled && bubble ? (
             <motion.div
               key="bubble"
-              onClick={() => { setDismissed(true); setOpen(true) }}
+              onClick={() => { markSeen(); setOpen(true) }}
               initial={{ opacity: 0, y: 24, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -106,7 +138,7 @@ const CallbackLauncher = () => {
               <button
                 type="button"
                 aria-label="Закрыть уведомление"
-                onClick={e => { e.stopPropagation(); setBubble(false); setDismissed(true) }}
+                onClick={e => { e.stopPropagation(); markSeen() }}
                 className="absolute -top-2 -right-2 grid h-6 w-6 place-items-center rounded-full bg-white text-gray-600 shadow-[0_4px_12px_-4px_rgba(0,0,0,.45)] transition hover:scale-110"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -132,7 +164,7 @@ const CallbackLauncher = () => {
         )}
         <button
           type="button"
-          onClick={() => { setDismissed(true); setOpen(o => !o) }}
+          onClick={() => { markSeen(); setOpen(o => !o) }}
           aria-label={open ? 'Закрыть' : (l.text || 'Обратный звонок')}
           title={l.text || undefined}
           style={{ background: l.buttonColor, borderRadius: l.borderRadius, width: l.widgetSize, height: l.widgetSize }}
