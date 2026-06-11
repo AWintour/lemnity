@@ -33,6 +33,11 @@ model Request {
   userAgent String?       @map("user_agent")
   ip        String?
 
+  // Mango callback (Фаза 2): id команды для сопоставления с вебхуками статуса + итог звонка.
+  mangoCommandId   String? @map("mango_command_id")
+  callDurationSec  Int?    @map("call_duration_sec")
+  callRecordingUrl String? @map("call_recording_url")
+
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt      @map("updated_at")
 

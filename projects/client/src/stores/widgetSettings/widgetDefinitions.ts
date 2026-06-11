@@ -46,6 +46,12 @@ import {
   buildVideoWidgetDisplaySettings,
   buildVideoWidgetIntegrationSettings
 } from '@/layouts/Widgets/VideoWidget/defaults'
+import {
+  buildCallbackWidgetSettings,
+  buildCallbackFieldsSettings,
+  buildCallbackDisplaySettings,
+  buildCallbackIntegrationSettings
+} from '@/layouts/Widgets/Callback/defaults'
 import { resolveWidgetDefinition } from './resolveWidgetDefinition'
 
 type SettingsSurfaceMode = 'standard' | 'custom'
@@ -147,6 +153,17 @@ const implementedWidgetDefinitions: Partial<Record<WidgetTypeEnum, WidgetDefinit
     buildFieldsSettings: buildVideoWidgetFieldsSettings,
     buildDisplaySettings: buildVideoWidgetDisplaySettings,
     buildIntegrationSettings: buildVideoWidgetIntegrationSettings,
+    settingsSurfaces: {
+      fields: 'custom',
+      display: 'custom',
+    }
+  },
+  [WidgetTypeEnum.CALLBACK]: {
+    type: WidgetTypeEnum.CALLBACK,
+    buildWidgetSettings: buildCallbackWidgetSettings,
+    buildFieldsSettings: buildCallbackFieldsSettings,
+    buildDisplaySettings: buildCallbackDisplaySettings,
+    buildIntegrationSettings: buildCallbackIntegrationSettings,
     settingsSurfaces: {
       fields: 'custom',
       display: 'custom',

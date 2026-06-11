@@ -22,6 +22,12 @@ import {
 import {
   createVideoWidgetActions,
 } from '@/layouts/Widgets/VideoWidget/actions'
+import {
+  createCallbackActions,
+} from '@/layouts/Widgets/Callback/actions'
+import type {
+  CallbackWidgetType,
+} from '@/layouts/Widgets/Callback/defaults'
 
 import type {
   ActionTimerWidgetSettings,
@@ -107,6 +113,12 @@ export const createWidgetSlice = (updateWidget: WidgetUpdater): WidgetSlice => {
           widget.type === WidgetTypeEnum.VIDEO_WIDGET
     )
 
+  const callbackUpdater: TypedWidgetUpdater<CallbackWidgetType> =
+    createTypedUpdater(
+      (widget): widget is CallbackWidgetType =>
+          (widget as { type?: string }).type === WidgetTypeEnum.CALLBACK
+    )
+
   const specificActions = {
     ...createWheelActions(wheelUpdater),
     ...createActionTimerActions(actionTimerUpdater),
@@ -115,6 +127,7 @@ export const createWidgetSlice = (updateWidget: WidgetUpdater): WidgetSlice => {
     ...createEventTimerActions(eventTimerUpdater),
     ...createNotificationActions(notificationUpdater),
     ...createVideoWidgetActions(videoWidgetUpdater),
+    ...createCallbackActions(callbackUpdater),
   } as Omit<WidgetActions, 'setWidgetType'>
 
   return {

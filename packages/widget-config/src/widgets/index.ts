@@ -7,6 +7,7 @@ import { announcementSchema } from './Announcement/schema.js'
 import { notificationSchema } from './Notification/schema.js'
 import { eventTimerSchema } from './EventTimer/schema.js'
 import { videoWidgetSchema } from './VideoWidget/schema.js'
+import { callbackSchema } from './Callback/schema.js'
 
 export type WidgetSchemaAdapter = {
   type: WidgetTypeId
@@ -21,6 +22,7 @@ const adapters: WidgetSchemaAdapter[] = [
   { type: 'EVENT_TIMER', schema: eventTimerSchema },
   { type: 'NOTIFICATION', schema: notificationSchema },
   { type: 'VIDEO_WIDGET', schema: videoWidgetSchema },
+  { type: 'CALLBACK', schema: callbackSchema },
 ]
 
 export const widgetSchemaAdapters: Record<WidgetTypeId, WidgetSchemaAdapter> =

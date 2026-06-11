@@ -11,6 +11,11 @@ model User {
   name      String?
   password  String
   role      Role     @default(USER)
+
+  // lemnity.ru (lmntai) userId, проставляется при SSO-входе (ticket-exchange).
+  // Мост email↔lemnityUserId для аккаунтной подписки Callback (см. plan-wid-call.md, Фаза B).
+  lemnityUserId String? @unique @map("lemnity_user_id")
+
   passwordResetTokens PasswordResetToken[]
   projects  Project[]
   

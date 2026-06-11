@@ -100,7 +100,7 @@ export class AuthService {
    * по email, иначе создаём (телефон+пароль обязательны+уникальны → ставим плейсхолдеры;
    * входа по паролю у такого юзера нет, только SSO). Возвращаем ту же пару токенов, что login.
    */
-  async loginViaLemnity(input: { email: string; name?: string | null }) {
+  async loginViaLemnity(input: { email: string; name?: string | null; lemnityUserId?: string | null }) {
     let user = await this.userService.getByEmail(input.email)
     if (!user) {
       const dto: RegisterDto = {
@@ -110,12 +110,18 @@ export class AuthService {
         password: `${randomUUID()}${randomUUID()}`
       } as RegisterDto
       user = await this.userService.create(dto)
-    } else if (input.name && input.name.trim() && input.name.trim() !== user.name) {
-      // Подтягиваем актуальное имя из ЛК lemnity.ru при каждом SSO-входе.
-      user = await this.userService.update({
-        where: { id: user.id },
-        data: { name: input.name.trim() }
-      })
+    }
+    // Подтягиваем актуальное имя и lemnityUserId (мост подписки Callback) при каждом SSO-входе.
+    const lemnityUserId = input.lemnityUserId?.trim() || null
+    const data: { name?: string; lemnityUserId?: string } = {}
+    if (input.name && input.name.trim() && input.name.trim() !== user.name) {
+      data.name = input.name.trim()
+    }
+    if (lemnityUserId && lemnityUserId !== user.lemnityUserId) {
+      data.lemnityUserId = lemnityUserId
+    }
+    if (Object.keys(data).length > 0) {
+      user = await this.userService.update({ where: { id: user.id }, data })
     }
     const tokens = this.issueTokenPair(user.id)
     const publicUser = await this.userService.getPublicByIdOrThrow(user.id)

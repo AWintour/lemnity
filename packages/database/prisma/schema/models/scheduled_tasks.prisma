@@ -1,0 +1,21 @@
+/// Отложенные задачи (Фаза 2). MVP-планировщик: polling-воркер (@nestjs/schedule @Interval)
+/// раз в ~5с берёт `status='pending' AND execute_at <= now()`, выполняет и пишет результат.
+/// Переживает рестарт сервера, поддерживает ретраи. Тип `mango_call` — инициация обратного звонка.
+/// См. plan-wid-call.md, «Согласованный план реализации Фазы 2».
+model ScheduledTask {
+  id        String   @id @default(cuid())
+
+  type      String // 'mango_call'
+  payload   Json // { requestId, projectId, widgetId, toNumber, commandId, callConfig... }
+  executeAt DateTime @map("execute_at")
+
+  status    String   @default("pending") // pending | running | success | failed
+  retries   Int      @default(0)
+  lastError String?  @map("last_error")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@index([status, executeAt])
+  @@map("scheduled_tasks")
+}

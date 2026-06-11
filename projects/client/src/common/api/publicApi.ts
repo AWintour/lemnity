@@ -139,6 +139,8 @@ export type PublicWheelSpinResponse = PublicWheelSpinResult | PublicWheelSpinAlr
 
 const getDefaultPublicRequestsEndpoint = () => `${getDefaultApiOrigin()}/api/public/requests`
 
+const getDefaultPublicCallbackEndpoint = () => `${getDefaultApiOrigin()}/api/public/callback`
+
 const getDefaultPublicWheelSpinEndpoint = (widgetId: string) =>
   `${getDefaultApiOrigin()}/api/public/widgets/${widgetId}/spin`
 
@@ -156,6 +158,30 @@ export async function sendPublicRequest(payload: PublicRequestPayload): Promise<
     return res.ok
   } catch {
     return false
+  }
+}
+
+/**
+ * Заявка на обратный звонок (виджет CALLBACK): создаёт лид и планирует звонок через Mango.
+ * Возвращает delaySeconds (через сколько перезвоним) или null при ошибке.
+ */
+export async function sendCallbackRequest(
+  payload: PublicRequestPayload
+): Promise<{ delaySeconds: number } | null> {
+  const endpoint = (import.meta.env.VITE_PUBLIC_CALLBACK_URL ??
+    getDefaultPublicCallbackEndpoint()) as string
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+      credentials: 'omit'
+    })
+    if (!res.ok) return null
+    return (await res.json()) as { delaySeconds: number }
+  } catch {
+    return null
   }
 }
 

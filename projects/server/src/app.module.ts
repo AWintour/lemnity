@@ -11,6 +11,7 @@ import { CollectorModule } from './collector/collector.module'
 import { StatsModule } from './stats/stats.module'
 import { RequestModule } from './request/request.module'
 import { LemnityModule } from './lemnity/lemnity.module'
+import { MangoModule } from './mango/mango.module'
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { LemnityModule } from './lemnity/lemnity.module'
     CollectorModule,
     StatsModule,
     RequestModule,
-    LemnityModule
+    LemnityModule,
+    MangoModule
   ],
   controllers: [AppController],
   providers: [AppService]

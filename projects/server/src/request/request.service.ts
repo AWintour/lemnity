@@ -16,6 +16,7 @@ import {
   isDevOriginHostAllowed,
   isHostAllowedByWebsiteHosts
 } from '../common/origin'
+import { FeatureAccessService } from '../lemnity/feature-access.service'
 
 const buildRequestNumber = (seq: number) => `${String(seq).padStart(4, '0')}`
 
@@ -51,7 +52,10 @@ const toEntity = (r: DbRequest): RequestEntity => ({
 
 @Injectable()
 export class RequestService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly featureAccess: FeatureAccessService
+  ) {}
 
   async createPublic(
     dto: CreatePublicRequestDto,
@@ -62,7 +66,12 @@ export class RequestService {
 
     const widget = await this.prisma.widget.findFirst({
       where: { id: widgetId, enabled: true, project: { enabled: true } },
-      select: { id: true, projectId: true, project: { select: { websiteUrl: true } } }
+      select: {
+        id: true,
+        type: true,
+        projectId: true,
+        project: { select: { websiteUrl: true, userId: true } }
+      }
     })
     if (!widget) throw new NotFoundException('Widget not found')
     if (!meta.originHost) throw new ForbiddenException('Origin is required')
@@ -72,6 +81,12 @@ export class RequestService {
       if (!websiteHosts.length || !isHostAllowedByWebsiteHosts(meta.originHost, websiteHosts)) {
         throw new ForbiddenException('Origin is not allowed')
       }
+    }
+
+    // Месячный лимит callback-заявок по аккаунтной подписке (только для CALLBACK-виджета).
+    // No-op, если у владельца нет активной подписки Callback.
+    if (widget.type === 'CALLBACK') {
+      await this.featureAccess.assertCanAcceptCallback(widget.project.userId)
     }
 
     const userAgent = sanitizeString(dto.userAgent ?? meta.userAgent)

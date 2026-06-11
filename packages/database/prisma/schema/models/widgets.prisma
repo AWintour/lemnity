@@ -40,4 +40,5 @@ enum WidgetType {
   EVENT_TIMER
   NOTIFICATION
   VIDEO_WIDGET
+  CALLBACK
 }

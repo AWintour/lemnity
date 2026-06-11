@@ -499,6 +499,9 @@ export type WidgetActions = {
   setNotificationBrandingEnabled: (
     brandingEnabled: boolean
   ) => void
+  // ---------------------------------------------------------------------------
+  // Callback actions (обратный звонок) — единый patch-апдейтер
+  setCallbackPatch: (patch: Record<string, unknown>) => void
 }
 
 export type WidgetSlice = {

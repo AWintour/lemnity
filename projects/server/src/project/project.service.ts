@@ -4,12 +4,19 @@ import { UpdateProjectDto } from './dto/update-project.dto'
 import { PrismaService } from '../prisma.service'
 import { JsonValue, ProjectCreateInput } from '@lemnity/database'
 import { migrateToCurrent, CURRENT_VERSION } from '@lemnity/widget-config/migrations'
+import { FeatureAccessService } from '../lemnity/feature-access.service'
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly featureAccess: FeatureAccessService
+  ) {}
 
-  create(createProjectDto: CreateProjectDto, userId: string) {
+  async create(createProjectDto: CreateProjectDto, userId: string) {
+    // Лимит сайтов (= проектов) по подписке Callback. No-op, если активной подписки нет.
+    await this.featureAccess.assertCanCreateSite(userId)
+
     const project: ProjectCreateInput = {
       title: createProjectDto.title,
       websiteUrl: createProjectDto.websiteUrl,

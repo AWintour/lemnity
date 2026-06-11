@@ -49,6 +49,13 @@ type InfoSettingsProps = {
   setButtonBackgroundColor: (buttonBackgroundColor: string) => void
   setButtonIcon: (icon: Icon) => void
   setButtonLink: (link: string) => void
+  /** Скрыть блок «Описание» (для виджетов без описания, напр. «Обратный звонок») */
+  hideDescription?: boolean
+  /** Скрыть блок «Контент» (картинка/фон/видео + выравнивание) */
+  hideContent?: boolean
+  /** Размер шрифта заголовка (px) — если задан, в блоке «Заголовок» появляется контрол размера */
+  titleFontSize?: number
+  onTitleFontSizeChange?: (value: number) => void
 }
 
 const InfoSettings = (props: InfoSettingsProps) => {
@@ -81,7 +88,8 @@ const InfoSettings = (props: InfoSettingsProps) => {
         (s.settings?.widget as AnnouncementWidgetType | EventTimertWidgetType)
       const settings = widget.infoSettings
       const defaults = props.defaults.infoSettings
-      const isAnnouncement = s.settings?.widgetType === 'ANNOUNCEMENT'
+      const isAnnouncement =
+        s.settings?.widgetType === 'ANNOUNCEMENT' || s.settings?.widgetType === 'CALLBACK'
       
       let contentType: Content = 'imageOnTop'
       let contentAlignment: ContentAlignment = 'center'
@@ -171,16 +179,18 @@ const InfoSettings = (props: InfoSettingsProps) => {
         Окно информации
       </h1>
       
-      <ContentSettings
-        format={props.variant}
-        contentType={contentType}
-        contentAlignment={contentAlignment}
-        contentUrl={contentUrl}
-        onContentTypeChange={props.setContentType}
-        onContentToggle={props.setContentEnabled}
-        onContentAlignmentChange={props.setContentAlignment}
-        onContentUrlChange={props.setContentUrl}
-      />
+      {!props.hideContent && (
+        <ContentSettings
+          format={props.variant}
+          contentType={contentType}
+          contentAlignment={contentAlignment}
+          contentUrl={contentUrl}
+          onContentTypeChange={props.setContentType}
+          onContentToggle={props.setContentEnabled}
+          onContentAlignmentChange={props.setContentAlignment}
+          onContentUrlChange={props.setContentUrl}
+        />
+      )}
 
       <BorderedContainer>
         <div className='w-full flex flex-col'>
@@ -189,6 +199,8 @@ const InfoSettings = (props: InfoSettingsProps) => {
             textColor={titleColor}
             title='Заголовок'
             placeholder='Укажите заголовок'
+            fontSize={props.titleFontSize}
+            onFontSizeChange={props.onTitleFontSizeChange}
             onTextChange={props.setTitle}
             onFontWeightChange={props.setTitleFontWeight}
             onColorChange={props.setTitleColor}
@@ -196,21 +208,23 @@ const InfoSettings = (props: InfoSettingsProps) => {
         </div>
       </BorderedContainer>
 
-      <BorderedContainer>
-        <div className='w-full flex flex-col'>
-          <TextSettings
-            text={description}
-            textColor={descriptionColor}
-            title='Описание'
-            placeholder={
-              'Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ.'
-            }
-            onTextChange={props.setDescription}
-            onFontWeightChange={props.setDescriptionFontWeight}
-            onColorChange={props.setDescriptionColor}
-          />
-        </div>
-      </BorderedContainer>
+      {!props.hideDescription && (
+        <BorderedContainer>
+          <div className='w-full flex flex-col'>
+            <TextSettings
+              text={description}
+              textColor={descriptionColor}
+              title='Описание'
+              placeholder={
+                'Получите супер скидку до 30 % на покупку билета в АРТ КАФЕ.'
+              }
+              onTextChange={props.setDescription}
+              onFontWeightChange={props.setDescriptionFontWeight}
+              onColorChange={props.setDescriptionColor}
+            />
+          </div>
+        </BorderedContainer>
+      )}
 
       {/* Typescript only looks one level down */}
       {showCountdownSettings

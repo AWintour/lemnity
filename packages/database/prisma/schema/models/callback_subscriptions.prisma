@@ -1,0 +1,26 @@
+/// Аккаунтная подписка Callback Widget (модель «база + модули»).
+/// Зеркало того, что прислал lmntai вебхуком `callback_subscription` (источник истины — lmntai:
+/// конструктор/цены/счёт Точка). Здесь только применяется к функциям и лимитам. Ключ — lemnityUserId
+/// (тот же userId, что в вебхуке и в SSO-тикете). См. plan-wid-call.md, раздел «Монетизация», Фаза B.
+model CallbackSubscription {
+  id            String @id @default(cuid())
+
+  lemnityUserId String @unique @map("lemnity_user_id")
+
+  // Подключённые toggle-модули: telegram/webhooks/ab_testing/white_label/api_access.
+  modules        String[] @default([])
+  extraSite      Int      @default(0) @map("extra_site")
+  extraCallbacks Int      @default(0) @map("extra_callbacks")
+
+  // Лимиты, вычисленные lmntai и присланные в вебхуке (база 1 сайт / 500 заявок + extra).
+  siteLimit     Int @map("site_limit")
+  callbackLimit Int @map("callback_limit")
+
+  paidUntil     DateTime? @map("paid_until")
+  lastPaymentId String?   @map("last_payment_id") // идемпотентность вебхука
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@map("callback_subscriptions")
+}

@@ -46,6 +46,7 @@ const WidgetPreviewLayout = ({ children }: { children: ReactNode }) => {
       {widgetType === WidgetTypeEnum.ACTION_TIMER
        || widgetType === WidgetTypeEnum.ANNOUNCEMENT
        || widgetType === WidgetTypeEnum.NOTIFICATION
+       || widgetType === WidgetTypeEnum.CALLBACK
          ? null
          : tabs()
       }

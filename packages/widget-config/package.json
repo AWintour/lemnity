@@ -52,6 +52,10 @@
     "./widgets/video-widget": {
       "types": "./dist/widgets/VideoWidget/schema.d.ts",
       "default": "./dist/widgets/VideoWidget/schema.js"
+    },
+    "./widgets/callback": {
+      "types": "./dist/widgets/Callback/schema.d.ts",
+      "default": "./dist/widgets/Callback/schema.js"
     }
   },
   "dependencies": {

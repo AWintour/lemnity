@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Query, Req, Res, UnauthorizedException } f
 import { ApiTags } from '@nestjs/swagger'
 import type { Request, Response } from 'express'
 import { LemnityService } from './lemnity.service'
+import { CallbackSubscriptionService, parseCallbackSubscriptionPayload } from './callback-subscription.service'
 import { AuthService } from '../auth/auth.service'
 
 type RawRequest = Request & { rawBody?: Buffer }
@@ -16,6 +17,7 @@ function sigHeader(req: Request): string | null {
 export class LemnityController {
   constructor(
     private readonly lemnity: LemnityService,
+    private readonly callbackSub: CallbackSubscriptionService,
     private readonly auth: AuthService
   ) {}
 
@@ -35,7 +37,8 @@ export class LemnityController {
 
     const { refreshToken, ...rest } = await this.auth.loginViaLemnity({
       email: payload.email,
-      name: payload.name ?? null
+      name: payload.name ?? null,
+      lemnityUserId: payload.userId // мост для аккаунтной подписки Callback
     })
     this.auth.addRefreshTokenToResponse(res, refreshToken)
     return rest // { user, accessToken }
@@ -75,5 +78,35 @@ export class LemnityController {
       return { widgets: [] }
     }
     return { widgets: await this.lemnity.listByEmail(email) }
+  }
+
+  /**
+   * Вебхук подписки Callback Widget (модель «база + модули») из lmntai. Аккаунтная подписка
+   * по userId. Всегда 200 (как widget-subscription): плохая подпись/тело → { skipped }.
+   */
+  @Post('callback-subscription')
+  async callbackSubscription(@Req() req: RawRequest) {
+    const raw = req.rawBody ? req.rawBody.toString('utf8') : JSON.stringify(req.body ?? {})
+    if (!this.lemnity.verify(raw, sigHeader(req))) {
+      return { skipped: 'unverified' }
+    }
+    let payload: unknown
+    try {
+      payload = JSON.parse(raw)
+    } catch {
+      return { skipped: 'invalid_json' }
+    }
+    const input = parseCallbackSubscriptionPayload(payload)
+    if (!input) return { skipped: 'bad_payload' }
+    return this.callbackSub.apply(input)
+  }
+
+  /** Текущая подписка Callback Widget + usage по email (подпись = hmac(secret, email)). */
+  @Get('callback-subscription')
+  async callbackSubscriptionByEmail(@Query('email') email: string, @Req() req: Request) {
+    if (!email || !this.lemnity.verify(email, sigHeader(req))) {
+      return { active: false }
+    }
+    return this.callbackSub.getByEmail(email)
   }
 }
