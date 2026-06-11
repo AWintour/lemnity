@@ -38,6 +38,14 @@ model Request {
   callDurationSec  Int?    @map("call_duration_sec")
   callRecordingUrl String? @map("call_recording_url")
 
+  // Менеджер, которому назначен звонок (round-robin). Денормализация — чтобы список звонков и
+  // сводка не зависели от существования записи Manager (onDelete: SetNull).
+  managerId      String?  @map("manager_id")
+  manager        Manager? @relation(fields: [managerId], references: [id], onDelete: SetNull)
+  managerName    String?  @map("manager_name")
+  managerAddress String?  @map("manager_address")
+  managerType    String?  @map("manager_type")
+
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt      @map("updated_at")
 
@@ -46,5 +54,6 @@ model Request {
   @@index([widgetId])
   @@index([status])
   @@index([createdAt])
+  @@index([managerId])
 }
 

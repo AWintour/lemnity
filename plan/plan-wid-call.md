@@ -582,6 +582,29 @@
 
 ---
 
+## Вкладка «Звонки» + менеджеры — ✅ РЕАЛИЗОВАНО (TDD, e2e)
+
+> При включённом CALLBACK-виджете в сайдбаре появляется вкладка «Звонки» (как «Заявки»): список
+> звонков, прослушивание записи, сводка по менеджерам, управление менеджерами. Звонки = `Request`
+> CALLBACK-виджета (новой таблицы нет). Проверка: server `jest` **105 тест** (17 suite), `tsc` 0,
+> `nest build` ok, client `tsc` 0; e2e на живом сервере+БД (менеджеры authed, round-robin
+> Борис→Алиса, `GET /api/calls` total+summary по менеджерам).
+
+- **Prisma:** модель `Manager` (per-project) + `Request.managerId/managerName/managerAddress/managerType`
+  (денормализация); миграция `20260612000000_add_managers`.
+- **Менеджеры (CRUD):** `server/src/manager/*` — `ManagerService` (owner-check),
+  `GET/POST/PATCH/DELETE /api/projects/:projectId/managers`, `listEnabledForProject` (для round-robin).
+- **Round-robin:** `manager/manager-rotation.ts` (`pickManager`) + `CallbackService` назначает менеджера
+  по счётчику заявок проекта, пишет на `Request` и в payload звонка (адрес оператора). Без менеджеров —
+  поведение из конфига виджета.
+- **Звонки:** `server/src/call/*` — `CallService.list` (фильтр `widget.type=CALLBACK`, owner-scope),
+  чистый `call-summary.ts` (сводка по менеджерам: count/avgDuration/answeredRate), `GET /api/calls`,
+  `GET /api/calls/:id/recording` (прокси: redirect-if-URL, иначе `MangoService.fetchRecording` —
+  ⚠️ TODO боевой Mango). Воркер/события — без изменений.
+- **Клиент:** вкладка «Звонки» в `NavigationSidebar` (гейтинг по включённому CALLBACK), `/calls` роут,
+  `pages/CallsPage/*` (клон «Заявок» + панель сводки + инлайн-панель «Менеджеры»), `services/{calls,
+  managers}.ts`, проигрывание записи через blob (Bearer).
+
 ## Проверка (verification)
 
 1. **БД/SDK:** `pnpm --filter @lemnity/database prisma migrate dev`; `grep CALLBACK

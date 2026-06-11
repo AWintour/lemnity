@@ -6,9 +6,10 @@ import { RequestController } from './request.controller'
 import { RequestService } from './request.service'
 import { CallbackService } from './callback.service'
 import { LemnityModule } from '../lemnity/lemnity.module'
+import { ManagerModule } from '../manager/manager.module'
 
 @Module({
-  imports: [LemnityModule], // FeatureAccessService — месячный лимит callback-заявок
+  imports: [LemnityModule, ManagerModule], // FeatureAccess (лимит) + ManagerService (round-robin)
   controllers: [RequestController, PublicRequestController, PublicCallbackController],
   providers: [RequestService, CallbackService, PrismaService]
 })

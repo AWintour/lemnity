@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { randomUUID } from 'node:crypto'
 import { PrismaService } from '../prisma.service'
 import { RequestService } from './request.service'
+import { ManagerService } from '../manager/manager.service'
+import { pickManager } from '../manager/manager-rotation'
 import type { CreatePublicRequestDto } from './dto/create-public-request.dto'
 
 type CreateMeta = { ip?: string; userAgent?: string; originHost: string | null }
@@ -16,7 +18,8 @@ type CreateMeta = { ip?: string; userAgent?: string; originHost: string | null }
 export class CallbackService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly requests: RequestService
+    private readonly requests: RequestService,
+    private readonly managers: ManagerService
   ) {}
 
   async createCallback(
@@ -55,6 +58,12 @@ export class CallbackService {
     const now = opts?.now ?? new Date()
     const commandId = opts?.commandId ?? randomUUID()
     const call = cb.call ?? {}
+    const projectId = widget?.projectId ?? entity.projectId
+
+    // Round-robin распределение по менеджерам проекта (если заведены). Иначе — конфиг виджета.
+    const enabledManagers = await this.managers.listEnabledForProject(projectId)
+    const rotationKey = await this.prisma.request.count({ where: { projectId } })
+    const picked = pickManager(enabledManagers, rotationKey)
 
     await this.prisma.scheduledTask.create({
       data: {
@@ -62,13 +71,13 @@ export class CallbackService {
         executeAt: new Date(now.getTime() + delaySeconds * 1000),
         payload: {
           requestId: entity.id,
-          projectId: widget?.projectId ?? entity.projectId,
+          projectId,
           commandId,
           toNumber: phone,
           call: {
             callMode: call.callMode,
-            managerType: call.managerType,
-            managerAddress: call.managerAddress,
+            managerType: picked ? picked.type : call.managerType,
+            managerAddress: picked ? picked.address : call.managerAddress,
             clientLineNumber: call.clientLineNumber
           }
         }
@@ -77,7 +86,17 @@ export class CallbackService {
 
     await this.prisma.request.update({
       where: { id: entity.id },
-      data: { mangoCommandId: commandId }
+      data: {
+        mangoCommandId: commandId,
+        ...(picked
+          ? {
+              managerId: picked.id,
+              managerName: picked.name,
+              managerAddress: picked.address,
+              managerType: picked.type
+            }
+          : {})
+      }
     })
 
     return { delaySeconds }

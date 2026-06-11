@@ -16,6 +16,7 @@ import WidgetPreviewPage from '@/pages/WidgetPreviewPage'
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
 import AnalyticsPage from './pages/AnalyticsPage'
 import RequestsPage from './pages/RequestsPage/RequestsPage.tsx'
+import CallsPage from './pages/CallsPage/CallsPage.tsx'
 import EditorSsoPage from './pages/EditorSsoPage.tsx'
 import { memo, useEffect } from 'react'
 
@@ -84,6 +85,16 @@ function App() {
           <ProtectedRoute>
             <FullWidthLayout>
               <RequestsPage />
+            </FullWidthLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/calls"
+        element={
+          <ProtectedRoute>
+            <FullWidthLayout>
+              <CallsPage />
             </FullWidthLayout>
           </ProtectedRoute>
         }

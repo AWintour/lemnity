@@ -34,6 +34,14 @@ export const API = {
   REQUESTS: {
     LIST: '/requests' as const,
     REQUEST: (id: string) => `/requests/${id}` as const
+  },
+  CALLS: {
+    LIST: '/calls' as const,
+    RECORDING: (id: string) => `/calls/${id}/recording` as const
+  },
+  MANAGERS: {
+    LIST: (projectId: string) => `/projects/${projectId}/managers` as const,
+    MANAGER: (projectId: string, id: string) => `/projects/${projectId}/managers/${id}` as const
   }
 } as const
 

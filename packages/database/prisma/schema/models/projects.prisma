@@ -8,6 +8,7 @@ model Project {
   widgets    Widget[]
   requests   Request[]
   integrations ProjectIntegration[]
+  managers   Manager[]
 
   userId     String   @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)

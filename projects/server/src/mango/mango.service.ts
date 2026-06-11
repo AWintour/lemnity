@@ -1,8 +1,17 @@
 import { Injectable } from '@nestjs/common'
-import { buildCallbackCommandJson, buildMangoCallbackForm } from './mango-protocol'
+import { buildCallbackCommandJson, buildMangoCallbackForm, mangoSign } from './mango-protocol'
 import type { MangoCallConfig } from './mango-config'
 
 const DEFAULT_ENDPOINT = 'https://app.mango-office.ru/vpbx/commands/callback'
+const DEFAULT_RECORDING_ENDPOINT = 'https://app.mango-office.ru/vpbx/queries/recording/post/'
+
+export type MangoRecordingResult = {
+  ok: boolean
+  body?: Buffer
+  contentType?: string
+  status?: number
+  error?: string
+}
 
 export type MangoCallResult = {
   /** true только при успешном приёме команды (код 1000). */
@@ -57,6 +66,44 @@ export class MangoService {
       return { ok: res.ok && code === 1000, code, status: res.status }
     } catch (e) {
       return { ok: false, code: null, error: e instanceof Error ? e.message : String(e) }
+    }
+  }
+
+  /**
+   * Выгрузка записи разговора по recording_id (приватна в Mango — нужен подписанный запрос).
+   * ⚠️ TODO: точный endpoint/параметры подтвердить на боевом аккаунте Mango.
+   */
+  async fetchRecording(
+    config: { apiKey: string; apiSalt: string },
+    recordingId: string,
+    opts?: { fetchImpl?: typeof fetch; endpoint?: string }
+  ): Promise<MangoRecordingResult> {
+    const json = JSON.stringify({ recording_id: recordingId, action: 'download' })
+    const form = {
+      vpbx_api_key: config.apiKey,
+      json,
+      sign: mangoSign(config.apiKey, json, config.apiSalt)
+    }
+    const body = new URLSearchParams(form).toString()
+    const endpoint = opts?.endpoint ?? (process.env.MANGO_VPBX_RECORDING_URL || DEFAULT_RECORDING_ENDPOINT).trim()
+    const doFetch = opts?.fetchImpl ?? fetch
+
+    try {
+      const res = await doFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body
+      })
+      if (!res.ok) return { ok: false, status: res.status }
+      const buf = Buffer.from(await res.arrayBuffer())
+      return {
+        ok: true,
+        body: buf,
+        contentType: res.headers.get('content-type') ?? 'audio/mpeg',
+        status: res.status
+      }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
     }
   }
 }

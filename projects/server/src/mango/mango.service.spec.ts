@@ -58,3 +58,43 @@ describe('MangoService.initCall', () => {
     expect(res.error).toContain('boom')
   })
 })
+
+describe('MangoService.fetchRecording', () => {
+  function audioResponse(text: string, status = 200) {
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      arrayBuffer: async () => new TextEncoder().encode(text).buffer,
+      headers: { get: (h: string) => (h.toLowerCase() === 'content-type' ? 'audio/mpeg' : null) }
+    }
+  }
+
+  it('builds a signed recording request and returns the audio bytes', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(audioResponse('AUDIO'))
+    const res = await new MangoService().fetchRecording({ apiKey: 'key', apiSalt: 'salt' }, 'rec123', {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+      endpoint: 'https://mango.test/rec'
+    })
+
+    expect(res.ok).toBe(true)
+    expect(res.body?.toString('utf8')).toBe('AUDIO')
+    expect(res.contentType).toBe('audio/mpeg')
+
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('https://mango.test/rec')
+    const body = new URLSearchParams(init.body)
+    expect(body.get('vpbx_api_key')).toBe('key')
+    const json = body.get('json')!
+    expect(JSON.parse(json)).toEqual({ recording_id: 'rec123', action: 'download' })
+    expect(body.get('sign')).toBe(mangoSign('key', json, 'salt'))
+  })
+
+  it('returns ok:false on a non-2xx response', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(audioResponse('', 404))
+    const res = await new MangoService().fetchRecording({ apiKey: 'k', apiSalt: 's' }, 'r', {
+      fetchImpl: fetchMock as unknown as typeof fetch,
+      endpoint: 'x'
+    })
+    expect(res.ok).toBe(false)
+  })
+})

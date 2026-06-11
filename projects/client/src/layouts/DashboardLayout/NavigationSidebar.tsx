@@ -17,6 +17,8 @@ import { useLocation } from 'react-router-dom'
 import { getNewRequestsCount } from '@/services/requests'
 import { cn } from '@heroui/theme'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
+import { useProjectsStore } from '@/stores/projectsStore'
+import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 // Общий личный кабинет lemnity.ru. «Оплата и тарифы» уводит в раздел «Тарифы» ЛК.
 // target=_top: app встроен в iframe кабинета — навигируем верхнее окно (весь ЛК);
@@ -40,6 +42,17 @@ const NavigationSidebar = () => {
 
   const [newRequestsCount, setNewRequestsCount] = useState<number | null>(null)
 
+  // Вкладка «Звонки» появляется только когда есть включённый виджет «Обратный звонок».
+  const projects = useProjectsStore(s => s.projects)
+  const ensureProjectsLoaded = useProjectsStore(s => s.ensureLoaded)
+  useEffect(() => {
+    void ensureProjectsLoaded()
+  }, [ensureProjectsLoaded])
+  const hasEnabledCallback = useMemo(
+    () => projects.some(p => p.widgets.some(w => w.type === WidgetTypeEnum.CALLBACK && w.enabled)),
+    [projects]
+  )
+
   useEffect(() => {
     if (previousWidthRef.current >= 1350 && viewportWidth < 1350 && isVisible) {
       hide()
@@ -50,6 +63,7 @@ const NavigationSidebar = () => {
   const activeKey = (() => {
     const path = location.pathname
     if (path.startsWith('/analytics')) return 'analytics'
+    if (path.startsWith('/calls')) return 'calls'
     if (path.startsWith('/requests')) return 'requests'
     if (path.startsWith('/projects')) return 'projects'
     if (path === '/' || path.startsWith('/dashboard')) return 'projects'
@@ -111,6 +125,20 @@ const NavigationSidebar = () => {
         badge: newRequestsCount && newRequestsCount > 0 ? newRequestsCount : undefined,
         href: '/requests'
       },
+      ...(hasEnabledCallback
+        ? [
+            {
+              key: 'calls',
+              icon: (
+                <div className="w-5.5 h-5.5">
+                  <SvgIcon src={iconTelephone} size={'22px'} className={'text-black '} />
+                </div>
+              ),
+              label: 'Звонки',
+              href: '/calls'
+            } as MenuItem
+          ]
+        : []),
       {
         key: 'payment',
         icon: (
@@ -123,7 +151,7 @@ const NavigationSidebar = () => {
         target: '_top'
       }
     ],
-    [newRequestsCount]
+    [newRequestsCount, hasEnabledCallback]
   )
 
   const getFooter = () => (
