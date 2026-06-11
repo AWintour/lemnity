@@ -62,11 +62,13 @@ wait_healthy postgres
 wait_healthy rabbitmq
 wait_healthy clickhouse
 
-# db push (не migrate deploy): в репо нет migrations-папки. Аддитивные nullable-поля
-# безопасны; без --accept-data-loss db push падает на разрушающих изменениях, а не теряет данные.
+# db push (не migrate deploy): в репо нет migrations-папки. Аддитивные nullable-поля безопасны.
+# --accept-data-loss обязателен: db push помечает добавление @unique на НОВУЮ nullable-колонку
+# (users.lemnity_user_id) как «возможную потерю данных» и без флага падает, хотя реальной потери
+# нет (колонка новая, все значения NULL; Postgres допускает несколько NULL под unique).
 echo "==> Sync Prisma schema to DB (db push)"
 docker compose -f docker-compose.prod.yml run --rm server \
-  pnpm --filter @lemnity/database exec prisma db push
+  pnpm --filter @lemnity/database exec prisma db push --accept-data-loss
 
 echo "==> Start / update full stack (server + nginx + infra) with recreate"
 # --pull always: страховка поверх pull_with_retry — up сам тянет образы перед пересозданием,
