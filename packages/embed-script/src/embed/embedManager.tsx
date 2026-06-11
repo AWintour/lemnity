@@ -360,6 +360,19 @@ class EmbedManager {
                 requestAnimationFrame(() => {
                   scheduled = false
                   const lock = hasModal()
+
+                  // Callback-лаунчер: используем его собственный footprint + запас на пульс-ореол и
+                  // тень, иначе авто-детект по кнопке режет ореол/бабл/форму (виджет обрезается).
+                  const cbRoot = !lock && document.querySelector('[data-lemnity-callback-root]')
+                  if (cbRoot) {
+                    const r = cbRoot.getBoundingClientRect()
+                    if (r.width && r.height) {
+                      const M = 36
+                      post({ left: r.left - M, top: r.top - M, width: r.width + 2 * M, height: r.height + 2 * M }, false)
+                      return
+                    }
+                  }
+
                   const scope = getScopeRoot()
                   const merged = mergeRects(Array.from(scope.querySelectorAll(selectors)).map(toRect))
 

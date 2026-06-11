@@ -60,7 +60,7 @@ const CallbackLauncher = () => {
   const alignClass = l.position === 'left' ? 'items-start' : l.position === 'center' ? 'items-center' : 'items-end'
 
   return (
-    <div className={`flex flex-col gap-3 ${alignClass}`}>
+    <div data-lemnity-callback-root className={`flex flex-col gap-3 ${alignClass}`}>
       {/* Окно НАД кнопкой: форма (если открыто) или уведомление-приветствие */}
       <AnimatePresence mode="wait" initial={false}>
         {open ? (
