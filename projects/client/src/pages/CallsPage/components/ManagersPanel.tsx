@@ -36,10 +36,15 @@ const ManagersPanel = ({ projectId, onClose }: { projectId: string; onClose: () 
     if (!name.trim() || !address.trim()) return
     setSaving(true)
     try {
-      await managersService.createManager(projectId, { name: name.trim(), type, address: address.trim() })
+      const created = await managersService.createManager(projectId, {
+        name: name.trim(),
+        type,
+        address: address.trim()
+      })
+      // Показываем сразу (без повторного запроса списка).
+      setManagers(prev => [...prev, created])
       setName('')
       setAddress('')
-      await load()
     } finally {
       setSaving(false)
     }

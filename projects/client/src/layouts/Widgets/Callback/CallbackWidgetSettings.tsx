@@ -3,6 +3,7 @@
  * Набор полей — по plan/plan-wid-call.md: оформление, окно информации, таймер до звонка, контакты,
  * согласие, экран звонка, настройка звонка, уведомления менеджера, график работы, брендинг.
  */
+import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Input } from '@heroui/input'
 import { Slider } from '@heroui/slider'
@@ -25,6 +26,8 @@ import ColorPicker from '@/components/ColorPicker'
 import IconPicker from '@/components/IconPicker'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import * as managersService from '@/services/managers'
+import type { ManagerItem } from '@/services/managers'
 import { callbackExtraDefaults, callbackWidgetDefaults, type CallbackWidgetType } from './defaults'
 
 const inputCx = {
@@ -114,6 +117,21 @@ const CallbackWidgetSettings = () => {
   // в типе WidgetActions — берём их стабильные ссылки через getState() с приведением типа.
   const a = useWidgetSettingsStore.getState() as unknown as StoreActions
   const setPatch = (patch: Record<string, unknown>) => a.setCallbackPatch(patch)
+
+  // Менеджеры проекта из вкладки «Звонки» — подтягиваем в редактор, чтобы выбрать оператора.
+  const projectId = useWidgetSettingsStore(s => s.projectId)
+  const [projectManagers, setProjectManagers] = useState<ManagerItem[]>([])
+  useEffect(() => {
+    if (!projectId) return
+    let alive = true
+    managersService
+      .listManagers(projectId)
+      .then(r => alive && setProjectManagers(r.managers))
+      .catch(() => alive && setProjectManagers([]))
+    return () => {
+      alive = false
+    }
+  }, [projectId])
 
   // appearance / info — те же setCallback* (скопированы из Анонса)
   const setCompanyLogoEnabled = a.setCallbackCompanyLogoEnabled
@@ -422,6 +440,24 @@ const CallbackWidgetSettings = () => {
                 кабинета Mango → «Сотрудники» (напр. 101). Это не URL кабинета. Менеджеров можно также
                 вести во вкладке «Звонки» (распределение round-robin).
               </span>
+              {projectManagers.length > 0 && (
+                <div className="flex items-center justify-between gap-2.5">
+                  <span className="text-[14px] text-[#797979]">Менеджер из «Звонки»</span>
+                  <select
+                    value={projectManagers.findIndex(m => m.address === cb.call.managerAddress)}
+                    onChange={e => {
+                      const m = projectManagers[Number(e.target.value)]
+                      if (m) patchCall({ managerType: m.type, managerAddress: m.address, managerName: m.name })
+                    }}
+                    className="h-10 rounded-[5px] border border-[#E8E8E8] bg-white px-2.5 text-[14px] text-[#161616] outline-none"
+                  >
+                    <option value={-1} disabled>Выбрать…</option>
+                    {projectManagers.map((m, i) => (
+                      <option key={m.id} value={i}>{m.name} · {m.address}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="flex gap-2.5">
                 <select
                   value={cb.call.managerType}
