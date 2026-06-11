@@ -35,13 +35,16 @@ const CallbackLauncher = () => {
   )
   const [open, setOpen] = useState(false)
   const [bubble, setBubble] = useState(false)
+  // Бабл-уведомление показываем один раз; после того как посетитель его закрыл или сам открыл
+  // виджет — больше автоматически не всплываем (иначе «через время снова запускается»).
+  const [dismissed, setDismissed] = useState(false)
   const LibIcon = l.icon && l.icon !== 'HeartDislike' ? Icons[l.icon] : null
   const NotifIcon = l.notifIcon && l.notifIcon !== 'HeartDislike' ? Icons[l.notifIcon] : null
 
   // Уведомление всплывает через notifDelaySec секунд (пока закрыто)
   useEffect(() => {
     setBubble(false)
-    if (!l.notifEnabled || open) return
+    if (!l.notifEnabled || open || dismissed) return
     const t = setTimeout(() => {
       setBubble(true)
       if (l.notifSound) {
@@ -55,7 +58,7 @@ const CallbackLauncher = () => {
       }
     }, Math.max(0, l.notifDelaySec) * 1000)
     return () => clearTimeout(t)
-  }, [l.notifEnabled, l.notifDelaySec, l.notifSound, open])
+  }, [l.notifEnabled, l.notifDelaySec, l.notifSound, open, dismissed])
 
   const alignClass = l.position === 'left' ? 'items-start' : l.position === 'center' ? 'items-center' : 'items-end'
 
@@ -91,14 +94,25 @@ const CallbackLauncher = () => {
           l.notifEnabled && bubble ? (
             <motion.div
               key="bubble"
-              onClick={() => setOpen(true)}
+              onClick={() => { setDismissed(true); setOpen(true) }}
               initial={{ opacity: 0, y: 24, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 320, damping: 24 }}
               style={{ background: l.notifColor, color: l.notifTextColor, borderRadius: l.borderRadius, transformOrigin: 'bottom right' }}
-              className="max-w-[320px] px-6 py-4 flex items-center gap-3.5 cursor-pointer shadow-[0_16px_40px_-18px_rgba(91,91,214,.6)]"
+              className="relative max-w-[320px] px-6 py-4 flex items-center gap-3.5 cursor-pointer shadow-[0_16px_40px_-18px_rgba(91,91,214,.6)]"
             >
+              {/* Крестик: закрыть уведомление и больше не показывать автоматически */}
+              <button
+                type="button"
+                aria-label="Закрыть уведомление"
+                onClick={e => { e.stopPropagation(); setBubble(false); setDismissed(true) }}
+                className="absolute -top-2 -right-2 grid h-6 w-6 place-items-center rounded-full bg-white text-gray-600 shadow-[0_4px_12px_-4px_rgba(0,0,0,.45)] transition hover:scale-110"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
               {NotifIcon && <span className="w-7 h-7 shrink-0" style={{ color: l.notifIconColor }}><NotifIcon /></span>}
               <span className="text-[19px] font-medium leading-snug whitespace-pre-line">{l.notifText}</span>
             </motion.div>
@@ -118,7 +132,7 @@ const CallbackLauncher = () => {
         )}
         <button
           type="button"
-          onClick={() => setOpen(o => !o)}
+          onClick={() => { setDismissed(true); setOpen(o => !o) }}
           aria-label={open ? 'Закрыть' : (l.text || 'Обратный звонок')}
           title={l.text || undefined}
           style={{ background: l.buttonColor, borderRadius: l.borderRadius, width: l.widgetSize, height: l.widgetSize }}

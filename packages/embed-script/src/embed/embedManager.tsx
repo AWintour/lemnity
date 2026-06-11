@@ -201,6 +201,17 @@ class EmbedManager {
   async init(options: InitOptions) {
     try {
       const { widgetId, apiBase } = options
+
+      // Защита от дублирования: если этот же виджет уже смонтирован ДРУГИМ экземпляром менеджера
+      // (скрипт embed.js подключён/инициализирован на странице дважды) — не создаём второй виджет.
+      const reg = window as unknown as Window & { __lemnityMounted?: Record<string, unknown> }
+      reg.__lemnityMounted = reg.__lemnityMounted ?? {}
+      const owner = reg.__lemnityMounted[widgetId]
+      if (owner && owner !== this) {
+        console.debug('[LemnityWidgets] widget already mounted elsewhere, skip duplicate', widgetId)
+        return
+      }
+
       await this.destroy()
 
       const payload = await fetchPublicWidget(widgetId, apiBase)
@@ -361,14 +372,27 @@ class EmbedManager {
                   scheduled = false
                   const lock = hasModal()
 
-                  // Callback-лаунчер: используем его собственный footprint + запас на пульс-ореол и
-                  // тень, иначе авто-детект по кнопке режет ореол/бабл/форму (виджет обрезается).
+                  // Callback-лаунчер: берём объединённый footprint самого root И всех его потомков
+                  // (бабл, крестик бабла, пульс-ореол на transform-scale, тень-кнопка), иначе
+                  // getBoundingClientRect самого root не учитывает абсолютно-позиционированные/
+                  // масштабируемые элементы и виджет/бабл обрезаются. Плюс запас на тени.
                   const cbRoot = !lock && document.querySelector('[data-lemnity-callback-root]')
                   if (cbRoot) {
-                    const r = cbRoot.getBoundingClientRect()
-                    if (r.width && r.height) {
-                      const M = 36
-                      post({ left: r.left - M, top: r.top - M, width: r.width + 2 * M, height: r.height + 2 * M }, false)
+                    const cbMerged = mergeRects([
+                      toRect(cbRoot),
+                      ...Array.from(cbRoot.querySelectorAll('*')).map(toRect)
+                    ])
+                    if (cbMerged && cbMerged.width && cbMerged.height) {
+                      const M = 44
+                      post(
+                        {
+                          left: cbMerged.left - M,
+                          top: cbMerged.top - M,
+                          width: cbMerged.width + 2 * M,
+                          height: cbMerged.height + 2 * M
+                        },
+                        false
+                      )
                       return
                     }
                   }
@@ -531,6 +555,7 @@ class EmbedManager {
 
       this.root = root
       this.widgetId = widgetId
+      reg.__lemnityMounted[widgetId] = this
     } catch (error) {
       console.error('Error initializing embed manager', error)
     }
@@ -538,6 +563,12 @@ class EmbedManager {
 
   async destroy(widgetId?: string) {
     if (widgetId && this.widgetId && widgetId !== this.widgetId) return
+    if (this.widgetId) {
+      const reg = window as unknown as Window & { __lemnityMounted?: Record<string, unknown> }
+      if (reg.__lemnityMounted && reg.__lemnityMounted[this.widgetId] === this) {
+        delete reg.__lemnityMounted[this.widgetId]
+      }
+    }
     cancelAnimationFrame(this.resizeRaf)
     if (this.root) {
       this.root.unmount()
