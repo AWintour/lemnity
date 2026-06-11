@@ -2,14 +2,17 @@ import { WidgetType } from '@lemnity/database'
 
 // Allowlist администраторов по email (на время теста). Можно переопределить
 // через env ADMIN_EMAILS (через запятую). Используется до полноценной ролевой модели.
-const ADMIN_EMAILS: string[] = (process.env.ADMIN_EMAILS ?? 'simakov@lemnity.ru')
+const ADMIN_EMAILS: string[] = (
+  process.env.ADMIN_EMAILS ?? 'simakov@lemnity.ru,lemnitycom@gmail.com'
+)
   .split(',')
   .map(e => e.trim().toLowerCase())
   .filter(Boolean)
 
 // Типы виджетов, доступные только администраторам (тестовый период).
+// «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
 export const ADMIN_ONLY_WIDGET_TYPES: ReadonlySet<WidgetType> = new Set([
-  WidgetType.VIDEO_WIDGET,
+  WidgetType.CALLBACK,
 ])
 
 export const isAdminUser = (email?: string | null, role?: string | null): boolean =>

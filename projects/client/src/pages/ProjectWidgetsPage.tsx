@@ -16,11 +16,13 @@ import useUserStore from '@/stores/userStore'
 
 // Виджеты, доступные пока только администратору (тестовый период).
 // После проверки — убрать из набора, чтобы открыть всем.
-const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([WidgetTypeEnum.VIDEO_WIDGET])
+// «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
+const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([WidgetTypeEnum.CALLBACK])
 
 // Allowlist админов по email (на время теста; синхронно с сервером).
 const ADMIN_EMAILS: string[] = (
-  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined) ?? 'simakov@lemnity.ru'
+  (import.meta.env.VITE_ADMIN_EMAILS as string | undefined)
+    ?? 'simakov@lemnity.ru,lemnitycom@gmail.com'
 )
   .split(',')
   .map(e => e.trim().toLowerCase())
