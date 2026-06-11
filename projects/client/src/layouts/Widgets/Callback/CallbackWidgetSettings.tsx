@@ -26,7 +26,6 @@ import IconPicker from '@/components/IconPicker'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { callbackExtraDefaults, callbackWidgetDefaults, type CallbackWidgetType } from './defaults'
-import { MANAGERS } from './managers'
 
 const inputCx = {
   base: 'flex-1 min-w-52',
@@ -418,19 +417,11 @@ const CallbackWidgetSettings = () => {
 
           {cb.call.callMode === 'manager' && (
             <>
-              <div className="flex items-center justify-between">
-                <span className="text-[14px] text-[#797979]">Менеджер (из справочника)</span>
-                <select
-                  value={MANAGERS.findIndex(m => m.address === cb.call.managerAddress)}
-                  onChange={e => {
-                    const m = MANAGERS[Number(e.target.value)]
-                    if (m) patchCall({ managerType: m.type, managerAddress: m.address, managerName: m.name })
-                  }}
-                  className="h-10 rounded-[5px] border border-[#E8E8E8] bg-white px-2.5 text-[14px] text-[#161616] outline-none"
-                >
-                  {MANAGERS.map((m, i) => <option key={m.address} value={i}>{m.name}</option>)}
-                </select>
-              </div>
+              <span className="text-[12px] text-[#9a9a9a]">
+                Оператор — реальный <b>внутренний номер сотрудника (extension)</b> или его SIP-ID из
+                кабинета Mango → «Сотрудники» (напр. 101). Это не URL кабинета. Менеджеров можно также
+                вести во вкладке «Звонки» (распределение round-robin).
+              </span>
               <div className="flex gap-2.5">
                 <select
                   value={cb.call.managerType}
@@ -440,7 +431,7 @@ const CallbackWidgetSettings = () => {
                   <option value="SIP">SIP</option>
                   <option value="Телефон">Телефон</option>
                 </select>
-                <Input value={cb.call.managerAddress} onValueChange={v => patchCall({ managerAddress: v })} placeholder="sip1@pbx123.mangosip.ru" classNames={inputCx} />
+                <Input value={cb.call.managerAddress} onValueChange={v => patchCall({ managerAddress: v })} placeholder="Внутренний номер, напр. 101" classNames={inputCx} />
                 <Input value={cb.call.managerName} onValueChange={v => patchCall({ managerName: v })} placeholder="Имя менеджера" classNames={inputCx} />
               </div>
             </>

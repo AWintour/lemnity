@@ -8,7 +8,6 @@ import type {
 import type { AnnouncementWidgetType } from '@lemnity/widget-config/widgets/announcement'
 import { announcementWidgetDefaults } from '@/layouts/Widgets/Announcement/defaults'
 import type { IconName } from '@/components/IconPicker'
-import { MANAGERS } from './managers'
 
 /**
  * Виджет «Обратный звонок» — дубликат «Анонса» по визуалу (те же компоненты редактора).
@@ -135,9 +134,9 @@ export const callbackExtraDefaults: CallbackExtra = {
   callScreen: { textScheme: 'primary', textColor: '#F2B705', cancelEnabled: true, animation: 'circle', animationColor: '#16A34A' },
   call: {
     callMode: 'manager',
-    managerType: MANAGERS[0].type,
-    managerAddress: MANAGERS[0].address,
-    managerName: MANAGERS[0].name,
+    managerType: 'SIP',
+    managerAddress: '',
+    managerName: '',
     clientLineNumber: '',
     managerIncomingType: 'Номер компании',
     managerIncomingNumber: '',

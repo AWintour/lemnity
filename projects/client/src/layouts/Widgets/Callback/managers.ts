@@ -1,6 +1,7 @@
 /**
- * Список менеджеров (операторов) — «из файла». В боевой версии заменяется на данные оператора
- * из ProjectIntegration / справочника Mango. Тип: SIP-аккаунт или телефонный номер.
+ * Тип оператора Callback. Реальные менеджеры теперь хранятся в БД (вкладка «Звонки» → «Менеджеры»,
+ * per-project, round-robin) и/или вводятся в редакторе виджета как реальный extension/SIP-ID.
+ * Прежний список-заглушка убран (фейковые SIP вызывали Mango error 3330).
  */
 export type ManagerType = 'SIP' | 'Телефон'
 
@@ -9,9 +10,3 @@ export type Manager = {
   address: string
   name: string
 }
-
-export const MANAGERS: Manager[] = [
-  { type: 'SIP', address: 'sip1@pbx123.mangosip.ru', name: 'Симаков Александр' },
-  { type: 'SIP', address: 'sip2@pbx123.mangosip.ru', name: 'Иванова Мария' },
-  { type: 'Телефон', address: '+7 999 111 22 33', name: 'Петров Сергей' },
-]
