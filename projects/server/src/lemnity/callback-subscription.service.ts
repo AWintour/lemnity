@@ -10,9 +10,10 @@ import {
 export type ApplyCallbackSubscriptionInput = {
   lemnityUserId: string
   modules: string[]
-  extraSite: number
+  extraManager: number
   extraCallbacks: number
   siteLimit: number
+  managerLimit: number
   callbackLimit: number
   months: number
   paymentId?: string
@@ -24,9 +25,10 @@ export type CallbackSubscriptionView =
   | {
       active: true
       modules: string[]
-      extraSite: number
+      extraManager: number
       extraCallbacks: number
       siteLimit: number
+      managerLimit: number
       callbackLimit: number
       paidUntil: string | null
       sitesUsed: number
@@ -64,13 +66,17 @@ export function parseCallbackSubscriptionPayload(raw: unknown): ApplyCallbackSub
     ? r.modules.filter((m): m is string => typeof m === 'string')
     : []
   const months = clampNonNegInt(r.months) || 1
+  const extraManager = clampNonNegInt(r.extraManager)
+  // managerLimit обычно приходит из lmntai; фолбэк — база 1 + доп. менеджеры.
+  const managerLimit = finiteNumber(r.managerLimit) ?? 1 + extraManager
 
   return {
     lemnityUserId,
     modules,
-    extraSite: clampNonNegInt(r.extraSite),
+    extraManager,
     extraCallbacks: clampNonNegInt(r.extraCallbacks),
     siteLimit,
+    managerLimit,
     callbackLimit,
     months,
     paymentId: typeof r.paymentId === 'string' ? r.paymentId : undefined
@@ -106,9 +112,10 @@ export class CallbackSubscriptionService {
     const paidUntil = extendPaidUntil(existing?.paidUntil ?? null, input.months, now)
     const data = {
       modules: input.modules,
-      extraSite: input.extraSite,
+      extraManager: input.extraManager,
       extraCallbacks: input.extraCallbacks,
       siteLimit: input.siteLimit,
+      managerLimit: input.managerLimit,
       callbackLimit: input.callbackLimit,
       paidUntil,
       lastPaymentId: input.paymentId ?? existing?.lastPaymentId ?? null
@@ -177,9 +184,10 @@ export class CallbackSubscriptionService {
     return {
       active: true,
       modules: sub.modules,
-      extraSite: sub.extraSite,
+      extraManager: sub.extraManager,
       extraCallbacks: sub.extraCallbacks,
       siteLimit: sub.siteLimit,
+      managerLimit: sub.managerLimit,
       callbackLimit: sub.callbackLimit,
       paidUntil: sub.paidUntil ? sub.paidUntil.toISOString() : null,
       sitesUsed,

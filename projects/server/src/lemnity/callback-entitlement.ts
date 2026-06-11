@@ -14,7 +14,7 @@ const MONTH_MS = 30 * 24 * 60 * 60 * 1000
 export type CallbackEntitlement = {
   /** Подключённые toggle-модули: telegram/webhooks/ab_testing/white_label/api_access. */
   modules: string[]
-  /** Лимит сайтов = база 1 + extraSite. */
+  /** Лимит сайтов = база 1 (доп. сайты не докупаются). */
   siteLimit: number
   /** Лимит callback-заявок в месяц = база 500 + extraCallbacks×1000. */
   callbackLimit: number

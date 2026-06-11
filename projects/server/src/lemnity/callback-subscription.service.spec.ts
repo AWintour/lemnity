@@ -28,9 +28,10 @@ const NOW = new Date('2026-06-11T00:00:00.000Z')
 const input = {
   lemnityUserId: 'lm_1',
   modules: ['telegram'],
-  extraSite: 2,
+  extraManager: 2,
   extraCallbacks: 2,
-  siteLimit: 3,
+  siteLimit: 1,
+  managerLimit: 3,
   callbackLimit: 2500,
   months: 1,
   paymentId: 'pay_1'
@@ -49,10 +50,11 @@ describe('CallbackSubscriptionService.apply', () => {
     expect(prisma.callbackSubscription.upsert).toHaveBeenCalledTimes(1)
     const arg = prisma.callbackSubscription.upsert.mock.calls[0][0]
     expect(arg.where).toEqual({ lemnityUserId: 'lm_1' })
-    expect(arg.create.siteLimit).toBe(3)
+    expect(arg.create.siteLimit).toBe(1)
+    expect(arg.create.managerLimit).toBe(3)
     expect(arg.create.callbackLimit).toBe(2500)
     expect(arg.create.modules).toEqual(['telegram'])
-    expect(arg.create.extraSite).toBe(2)
+    expect(arg.create.extraManager).toBe(2)
     expect(arg.create.paidUntil).toEqual(new Date('2026-07-11T00:00:00.000Z'))
     expect(arg.update.paidUntil).toEqual(new Date('2026-07-11T00:00:00.000Z'))
     expect(arg.update.lastPaymentId).toBe('pay_1')
@@ -103,7 +105,7 @@ describe('CallbackSubscriptionService.getActiveEntitlementByUserId', () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', lemnityUserId: 'lm_1' })
     prisma.callbackSubscription.findUnique.mockResolvedValue({
       modules: ['telegram'],
-      siteLimit: 3,
+      siteLimit: 1,
       callbackLimit: 2500,
       paidUntil: new Date('2026-06-01T00:00:00.000Z')
     })
@@ -116,14 +118,14 @@ describe('CallbackSubscriptionService.getActiveEntitlementByUserId', () => {
     prisma.user.findUnique.mockResolvedValue({ id: 'u1', lemnityUserId: 'lm_1' })
     prisma.callbackSubscription.findUnique.mockResolvedValue({
       modules: ['telegram'],
-      siteLimit: 3,
+      siteLimit: 1,
       callbackLimit: 2500,
       paidUntil: new Date('2026-07-01T00:00:00.000Z')
     })
     const svc = new CallbackSubscriptionService(prisma as unknown as PrismaService)
     expect(await svc.getActiveEntitlementByUserId('u1', NOW)).toEqual({
       modules: ['telegram'],
-      siteLimit: 3,
+      siteLimit: 1,
       callbackLimit: 2500,
       paidUntil: new Date('2026-07-01T00:00:00.000Z')
     })
@@ -135,9 +137,10 @@ describe('parseCallbackSubscriptionPayload', () => {
     type: 'callback_subscription',
     userId: 'lm_1',
     modules: ['telegram', 'webhooks'],
-    extraSite: 2,
+    extraManager: 2,
     extraCallbacks: 2,
-    siteLimit: 3,
+    siteLimit: 1,
+    managerLimit: 3,
     callbackLimit: 2500,
     months: 3,
     paymentId: 'pay_1'
@@ -147,9 +150,10 @@ describe('parseCallbackSubscriptionPayload', () => {
     expect(parseCallbackSubscriptionPayload(valid)).toEqual({
       lemnityUserId: 'lm_1',
       modules: ['telegram', 'webhooks'],
-      extraSite: 2,
+      extraManager: 2,
       extraCallbacks: 2,
-      siteLimit: 3,
+      siteLimit: 1,
+      managerLimit: 3,
       callbackLimit: 2500,
       months: 3,
       paymentId: 'pay_1'
@@ -170,7 +174,7 @@ describe('parseCallbackSubscriptionPayload', () => {
     expect(parseCallbackSubscriptionPayload({ ...valid, callbackLimit: undefined })).toBeNull()
   })
 
-  it('defaults months to 1 and quantities to 0', () => {
+  it('defaults months to 1, quantities to 0, managerLimit to base 1', () => {
     const res = parseCallbackSubscriptionPayload({
       type: 'callback_subscription',
       userId: 'lm_1',
@@ -180,9 +184,10 @@ describe('parseCallbackSubscriptionPayload', () => {
     expect(res).toEqual({
       lemnityUserId: 'lm_1',
       modules: [],
-      extraSite: 0,
+      extraManager: 0,
       extraCallbacks: 0,
       siteLimit: 1,
+      managerLimit: 1,
       callbackLimit: 500,
       months: 1,
       paymentId: undefined
@@ -224,13 +229,14 @@ describe('CallbackSubscriptionService.getByEmail (subscription + usage)', () => 
     prisma.callbackSubscription.findUnique.mockResolvedValue({
       lemnityUserId: 'lm_1',
       modules: ['telegram', 'webhooks'],
-      extraSite: 2,
+      extraManager: 2,
       extraCallbacks: 2,
-      siteLimit: 3,
+      siteLimit: 1,
+      managerLimit: 3,
       callbackLimit: 2500,
       paidUntil: new Date('2026-07-01T00:00:00.000Z')
     })
-    prisma.project.count.mockResolvedValue(3)
+    prisma.project.count.mockResolvedValue(1)
     prisma.request.count.mockResolvedValue(325)
     const svc = new CallbackSubscriptionService(prisma as unknown as PrismaService)
 
@@ -239,12 +245,13 @@ describe('CallbackSubscriptionService.getByEmail (subscription + usage)', () => 
     expect(res).toEqual({
       active: true,
       modules: ['telegram', 'webhooks'],
-      extraSite: 2,
+      extraManager: 2,
       extraCallbacks: 2,
-      siteLimit: 3,
+      siteLimit: 1,
+      managerLimit: 3,
       callbackLimit: 2500,
       paidUntil: '2026-07-01T00:00:00.000Z',
-      sitesUsed: 3,
+      sitesUsed: 1,
       callbacksUsed: 325
     })
     // callbacksUsed counted for the account within the current calendar month

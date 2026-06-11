@@ -9,11 +9,12 @@ model CallbackSubscription {
 
   // Подключённые toggle-модули: telegram/webhooks/ab_testing/white_label/api_access.
   modules        String[] @default([])
-  extraSite      Int      @default(0) @map("extra_site")
+  extraManager   Int      @default(0) @map("extra_manager")
   extraCallbacks Int      @default(0) @map("extra_callbacks")
 
-  // Лимиты, вычисленные lmntai и присланные в вебхуке (база 1 сайт / 500 заявок + extra).
+  // Лимиты, вычисленные lmntai и присланные в вебхуке (база 1 сайт / 1 менеджер / 500 заявок + extra).
   siteLimit     Int @map("site_limit")
+  managerLimit  Int @default(1) @map("manager_limit")
   callbackLimit Int @map("callback_limit")
 
   paidUntil     DateTime? @map("paid_until")
