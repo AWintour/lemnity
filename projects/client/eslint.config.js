@@ -25,7 +25,16 @@ export default tseslint.config([
       }
     },
     rules: {
-      'no-console': ['warn', { allow: ['error', 'warn'] }]
+      'no-console': ['warn', { allow: ['error', 'warn'] }],
+      // Намеренно неиспользуемые аргументы помечаются префиксом `_` (напр. `_props`).
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    }
+  },
+  {
+    // Dev-харнесы превью виджетов: react-refresh-правило про «только компоненты» здесь неактуально.
+    files: ['**/__preview__/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off'
     }
   }
 ])

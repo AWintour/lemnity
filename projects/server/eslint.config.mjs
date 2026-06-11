@@ -32,5 +32,19 @@ export default tseslint.config(
       'prettier/prettier': 0,
       'no-console': ['warn', { allow: ['error', 'warn'] }]
     }
+  },
+  {
+    // Тесты: моки (Prisma, fetch, сервисы) типизированы как any — type-aware unsafe-правила
+    // здесь шум, а не сигнал. Послабляем только для спеков (стандартная практика в NestJS).
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts', 'test/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/unbound-method': 'off'
+    }
   }
 )
