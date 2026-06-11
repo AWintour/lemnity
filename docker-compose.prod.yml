@@ -158,6 +158,12 @@ services:
       NOTISEND_API_KEY: ${NOTISEND_API_KEY}
       PASSWORD_RESET_URL_PATH: ${PASSWORD_RESET_URL_PATH}
       WIDGETS_HANDOFF_SECRET: ${WIDGETS_HANDOFF_SECRET}
+      # Callback Widget: шифрование BYO-секретов Mango + глобальный аккаунт Server API Mango (Фаза 2)
+      INTEGRATION_ENC_KEY: ${INTEGRATION_ENC_KEY}
+      MANGO_VPBX_BASE_URL: ${MANGO_VPBX_BASE_URL}
+      MANGO_VPBX_API_KEY: ${MANGO_VPBX_API_KEY}
+      MANGO_VPBX_API_SALT: ${MANGO_VPBX_API_SALT}
+      MANGO_VPBX_LINE_NUMBER: ${MANGO_VPBX_LINE_NUMBER}
     depends_on:
       postgres:
         condition: service_healthy
