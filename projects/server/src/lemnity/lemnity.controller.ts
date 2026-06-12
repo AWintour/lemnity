@@ -81,6 +81,18 @@ export class LemnityController {
   }
 
   /**
+   * Канонический каталог виджетов для тарифа lmntai (источник набора; цены — на стороне lmntai).
+   * Подпись = hmac(secret, "widget-catalog"). Плохая подпись → пустой каталог (soft-200).
+   */
+  @Get('widget-catalog')
+  widgetCatalog(@Req() req: Request) {
+    if (!this.lemnity.verify('widget-catalog', sigHeader(req))) {
+      return { catalog: [] }
+    }
+    return { catalog: this.lemnity.getWidgetCatalog() }
+  }
+
+  /**
    * Вебхук подписки Callback Widget (модель «база + модули») из lmntai. Аккаунтная подписка
    * по userId. Всегда 200 (как widget-subscription): плохая подпись/тело → { skipped }.
    */

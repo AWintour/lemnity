@@ -137,4 +137,28 @@ export class LemnityService {
       }
     })
   }
+
+  /**
+   * Канонический каталог виджетов для федерации (lmntai тянет его и накладывает цены).
+   * Зеркало клиентского AVAILABLE_WIDGETS (projects/client/src/layouts/Widgets/constants.ts) —
+   * при изменении набора держать в синхроне. Цены здесь НЕ хранятся (billing на стороне lmntai).
+   */
+  getWidgetCatalog(): Array<{ type: string; title: string; isAvailable: boolean; badge?: string }> {
+    return [
+      { type: 'WHEEL_OF_FORTUNE', title: 'Колесо фортуны', isAvailable: true, badge: 'new' },
+      { type: 'CONVEYOR_OF_LUCK', title: 'Конвейер Удачи', isAvailable: true, badge: 'new' },
+      { type: 'VIDEO_WIDGET', title: 'Видео виджет', isAvailable: true, badge: 'new' },
+      { type: 'ACTION_TIMER', title: 'Лид-форма', isAvailable: true, badge: 'new' },
+      { type: 'FAB_MENU', title: 'Мультикнопка', isAvailable: true, badge: 'new' },
+      { type: 'ANNOUNCEMENT', title: 'Анонс', isAvailable: true, badge: 'new' },
+      { type: 'EVENT_TIMER', title: 'Таймер событий', isAvailable: true, badge: 'new' },
+      { type: 'NOTIFICATION', title: 'Уведомления', isAvailable: true, badge: 'new' },
+      { type: 'CALLBACK', title: 'Обратный звонок', isAvailable: true, badge: 'new' },
+      { type: 'CONVEYOR_OF_GIFTS', title: 'Конвейер подарков', isAvailable: false, badge: 'soon' },
+      { type: 'POSTCARD', title: 'Открытка', isAvailable: false, badge: 'soon' },
+      { type: 'CHEST_WITH_ACTION', title: 'Сундук с акцией', isAvailable: false, badge: 'soon' },
+      { type: 'ADVENT_CALENDAR', title: 'Advent календарь', isAvailable: false, badge: 'soon' },
+      { type: 'TEASER', title: 'Дразнилка', isAvailable: false, badge: 'soon' }
+    ]
+  }
 }
