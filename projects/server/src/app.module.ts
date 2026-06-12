@@ -14,6 +14,7 @@ import { LemnityModule } from './lemnity/lemnity.module'
 import { MangoModule } from './mango/mango.module'
 import { ManagerModule } from './manager/manager.module'
 import { CallModule } from './call/call.module'
+import { FeedbackModule } from './feedback/feedback.module'
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { CallModule } from './call/call.module'
     LemnityModule,
     MangoModule,
     ManagerModule,
-    CallModule
+    CallModule,
+    FeedbackModule
   ],
   controllers: [AppController],
   providers: [AppService]
