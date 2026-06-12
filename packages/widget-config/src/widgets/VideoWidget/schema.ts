@@ -21,6 +21,8 @@ export type Position = z.infer<typeof PositionEnum>
 const WidgetAppearenceSchema = z.object({
   companyLogoEnabled: z.boolean(),
   companyLogoUrl: z.string().optional(),
+  // Высота логотипа в px (ползунок равномерно масштабирует логотип)
+  companyLogoSize: z.number().optional(),
 
   colorScheme: ColorSchemeEnum,
   backgroundColor: z.string().optional(),

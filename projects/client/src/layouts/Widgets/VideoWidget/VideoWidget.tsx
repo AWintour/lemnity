@@ -23,6 +23,7 @@ import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widge
 import type { Icon } from '@lemnity/widget-config/widgets/base'
 import { videoWidgetDefaults } from './defaults'
 import crossIcon from '@/assets/icons/cross.svg'
+import lemnityBlackLogo from '@/assets/logos/lemnity-black-logo.svg'
 
 // Kept for compatibility with embedded wrappers (single-screen widget)
 export type VideoWidgetVariant = 'announcement' | 'reward'
@@ -52,6 +53,9 @@ const VolumeOffIcon = () => (
 const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
   const {
     borderRadius,
+    companyLogoEnabled,
+    companyLogoUrl,
+    companyLogoSize,
 
     videos,
     posterUrl,
@@ -82,6 +86,9 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
 
       return {
         borderRadius: a.borderRadius ?? d.appearence.borderRadius,
+        companyLogoEnabled: a.companyLogoEnabled ?? d.appearence.companyLogoEnabled,
+        companyLogoUrl: a.companyLogoUrl ?? d.appearence.companyLogoUrl,
+        companyLogoSize: a.companyLogoSize ?? d.appearence.companyLogoSize,
 
         videos: v.videos ?? d.videoSettings.videos,
         posterUrl: v.posterUrl ?? d.videoSettings.posterUrl,
@@ -271,6 +278,18 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
           onPause={() => setIsPlaying(false)}
           onEnded={handleEnded}
         />
+      )}
+
+      {/* Логотип компании — левый верхний угол */}
+      {!formScreen && companyLogoEnabled && (
+        <div className="absolute top-3 left-4 z-20 pointer-events-none">
+          <img
+            src={companyLogoUrl || lemnityBlackLogo}
+            alt="Logo"
+            className="w-auto object-contain"
+            style={{ height: companyLogoSize ?? 36 }}
+          />
+        </div>
       )}
 
       {/* Форма захвата лида (после нажатия CTA) */}

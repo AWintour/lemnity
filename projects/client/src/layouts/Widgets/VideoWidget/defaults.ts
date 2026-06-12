@@ -12,8 +12,9 @@ import type {
 export const videoWidgetDefaults: VideoWidgetType = {
   type: WidgetTypeEnum.VIDEO_WIDGET,
   appearence: {
-    companyLogoEnabled: false,
+    companyLogoEnabled: true,
     companyLogoUrl: undefined,
+    companyLogoSize: 36,
 
     colorScheme: 'primary',
     backgroundColor: '#000000',

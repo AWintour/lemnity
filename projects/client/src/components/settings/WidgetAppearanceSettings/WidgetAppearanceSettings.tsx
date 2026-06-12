@@ -22,6 +22,7 @@ type WidgetAppearenceSettingsProps = {
   defaults: AnnouncementWidgetType | EventTimertWidgetType | VideoWidgetType
   setCompanyLogoEnabled: (enabled: boolean) => void
   setCompanyLogoUrl: (url: string | undefined) => void
+  setCompanyLogoSize?: (size: number) => void
   setWidgetColorScheme: (colorScheme: ColorScheme) => void
   setContentType?: (contentType: Content) => void
   setWidgetBackgroundColor: (color: string) => void
@@ -33,6 +34,7 @@ const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
   const {
     companyLogoEnabled,
     companyLogoUrl,
+    companyLogoSize,
     colorScheme,
     backgroundColor,
     borderRadius,
@@ -49,6 +51,9 @@ const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
           ?? defaults.companyLogoEnabled,
         companyLogoUrl: settings.companyLogoUrl
           ?? defaults.companyLogoUrl,
+        companyLogoSize:
+          (settings as { companyLogoSize?: number }).companyLogoSize
+          ?? (defaults as { companyLogoSize?: number }).companyLogoSize,
         colorScheme: settings.colorScheme
           ?? defaults.colorScheme,
         backgroundColor:
@@ -81,8 +86,10 @@ const WidgetAppearanceSettings = (props: WidgetAppearenceSettingsProps) => {
       <CompanyLogo
         enabled={companyLogoEnabled}
         logoUrl={companyLogoUrl}
+        size={companyLogoSize}
         onToggle={props.setCompanyLogoEnabled}
         onLogoUrlChange={props.setCompanyLogoUrl}
+        onSizeChange={props.setCompanyLogoSize}
       />
       <WidgetBackgroundColor 
         colorScheme={colorScheme}

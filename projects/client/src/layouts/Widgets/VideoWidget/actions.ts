@@ -24,6 +24,11 @@ export const createVideoWidgetActions = (
       ...widget,
       appearence: { ...widget.appearence, companyLogoUrl: url }
     })),
+  setVideoWidgetCompanyLogoSize: (size: number) =>
+    updateWidget(widget => ({
+      ...widget,
+      appearence: { ...widget.appearence, companyLogoSize: size }
+    })),
   setVideoWidgetColorScheme: (colorScheme: ColorScheme) =>
     updateWidget(widget => ({
       ...widget,

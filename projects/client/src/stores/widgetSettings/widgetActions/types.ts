@@ -210,6 +210,7 @@ export type WidgetActions = {
   // Video Widget actions (вертикальный сторис-видеоплеер)
   setVideoWidgetCompanyLogoEnabled: (enabled: boolean) => void
   setVideoWidgetCompanyLogoUrl: (url: string | undefined) => void
+  setVideoWidgetCompanyLogoSize: (size: number) => void
   setVideoWidgetColorScheme: (colorScheme: ColorScheme) => void
   setVideoWidgetBackgroundColor: (color: string) => void
   setVideoWidgetBorderRadius: (radius: number) => void

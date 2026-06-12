@@ -231,6 +231,7 @@ const VideoWidgetSettings = () => {
 
   const setCompanyLogoEnabled = useWidgetSettingsStore(s => s.setVideoWidgetCompanyLogoEnabled)
   const setCompanyLogoUrl = useWidgetSettingsStore(s => s.setVideoWidgetCompanyLogoUrl)
+  const setCompanyLogoSize = useWidgetSettingsStore(s => s.setVideoWidgetCompanyLogoSize)
   const setWidgetColorScheme = useWidgetSettingsStore(s => s.setVideoWidgetColorScheme)
   const setWidgetBackgroundColor = useWidgetSettingsStore(s => s.setVideoWidgetBackgroundColor)
   const setBorderRadius = useWidgetSettingsStore(s => s.setVideoWidgetBorderRadius)
@@ -302,6 +303,7 @@ const VideoWidgetSettings = () => {
         setBorderRadius={setBorderRadius}
         setCompanyLogoEnabled={setCompanyLogoEnabled}
         setCompanyLogoUrl={setCompanyLogoUrl}
+        setCompanyLogoSize={setCompanyLogoSize}
         setWidgetBackgroundColor={setWidgetBackgroundColor}
         setWidgetColorScheme={setWidgetColorScheme}
       />
