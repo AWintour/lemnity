@@ -10,10 +10,10 @@ const ADMIN_EMAILS: string[] = (
   .filter(Boolean)
 
 // Типы виджетов, доступные только администраторам (тестовый период).
-// «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
+// «Обратный звонок» (CALLBACK) пока в тесте — только админ;
+// «Видео виджет» и «Конвейер Удачи» открыты всем.
 export const ADMIN_ONLY_WIDGET_TYPES: ReadonlySet<WidgetType> = new Set([
   WidgetType.CALLBACK,
-  WidgetType.CONVEYOR_OF_LUCK,
 ])
 
 export const isAdminUser = (email?: string | null, role?: string | null): boolean =>

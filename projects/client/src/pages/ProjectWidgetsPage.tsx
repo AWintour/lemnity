@@ -22,7 +22,6 @@ import useUserStore from '@/stores/userStore'
 // «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
 const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([
   WidgetTypeEnum.CALLBACK,
-  WidgetTypeEnum.CONVEYOR_OF_LUCK,
 ])
 
 // Allowlist админов по email (на время теста; синхронно с сервером).

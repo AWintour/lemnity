@@ -60,6 +60,22 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
     categories: ['engage', 'reward']
   },
   {
+    type: WidgetTypes.CONVEYOR_OF_LUCK,
+    title: 'Конвейер Удачи',
+    description: 'Лиды, вовлечение, вознаграждение',
+    isAvailable: true,
+    badge: 'new',
+    categories: ['engage', 'reward']
+  },
+  {
+    type: WidgetTypes.VIDEO_WIDGET,
+    title: 'Видео виджет',
+    description: 'Лиды, вовлечение, вознаграждение',
+    isAvailable: true,
+    badge: 'new',
+    categories: ['engage', 'leads']
+  },
+  {
     type: WidgetTypes.ACTION_TIMER,
     title: 'Лид-форма',
     description: 'Лиды, вовлечение, вознаграждение',
@@ -100,28 +116,12 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
     categories: ['engage']
   },
   {
-    type: WidgetTypes.VIDEO_WIDGET,
-    title: 'Видео виджет',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new',
-    categories: ['engage', 'leads']
-  },
-  {
     type: WidgetTypes.CALLBACK,
     title: 'Обратный звонок',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
     badge: 'new',
     categories: ['leads']
-  },
-  {
-    type: WidgetTypes.CONVEYOR_OF_LUCK,
-    title: 'Конвейер Удачи',
-    description: 'Лиды, вовлечение, вознаграждение',
-    isAvailable: true,
-    badge: 'new',
-    categories: ['engage', 'reward']
   },
   {
     type: WidgetTypes.CONVEYOR_OF_GIFTS,
