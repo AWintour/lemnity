@@ -42,6 +42,9 @@ export const API = {
   MANAGERS: {
     LIST: (projectId: string) => `/projects/${projectId}/managers` as const,
     MANAGER: (projectId: string, id: string) => `/projects/${projectId}/managers/${id}` as const
+  },
+  FEEDBACK: {
+    SUBMIT: '/feedback' as const // POST — «Есть идея или замечания?»
   }
 } as const
 
