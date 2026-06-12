@@ -1,0 +1,17 @@
+model ConveyorOfLuckSpin {
+  id        String   @id @default(cuid())
+
+  widgetId  String   @map("widget_id")
+  conveyorWidget ConveyorOfLuckWidget @relation(fields: [widgetId], references: [widgetId], onDelete: Cascade)
+
+  sessionId String   @map("session_id")
+  sectorId  String   @map("sector_id")
+  isWin     Boolean  @map("is_win")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([widgetId, sessionId])
+  @@index([sessionId])
+  @@index([widgetId])
+  @@map("conveyor_of_luck_spins")
+}

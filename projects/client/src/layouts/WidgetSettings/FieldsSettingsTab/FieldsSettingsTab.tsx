@@ -22,7 +22,7 @@ import { usesStandardSurface } from '@/stores/widgetSettings/widgetDefinitions'
 import SurfaceNotice from '@/layouts/WidgetSettings/Common/SurfaceNotice'
 import DisableBranding from './DisableBranding/DisableBranding'
 import WheelEventField from './WheelEventField/WheelEventField'
-import { WidgetTypeEnum } from '@lemnity/api-sdk'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 
 const templateOptions = [
   { key: 'template1', label: 'Новогодний' },
@@ -150,13 +150,18 @@ const FieldsSettingsTab = () => {
             <AnimatePresence>
               {!(template?.enabled ?? true) ? <TemplateSettings /> : null}
             </AnimatePresence>
+            {/* Блок «Сектора» (конвейер/колесо) — сразу после «Радиус скругления» (конец TemplateSettings) */}
+            {isWheelLikeWidgetType(widgetType)
+              ? customSections.map(section => <section.Component key={section.id} />)
+              : null}
             <FormSettings />
           </>
         )}
 
-        {customSections.map(section => (
-          <section.Component key={section.id} />
-        ))}
+        {/* Остальные виджеты — секции в прежнем месте (после FormSettings) */}
+        {!isWheelLikeWidgetType(widgetType)
+          ? customSections.map(section => <section.Component key={section.id} />)
+          : null}
 
         {isStandardSurface && (
           <>
@@ -164,7 +169,7 @@ const FieldsSettingsTab = () => {
             <AgreementPoliciesField />
             <AdsInfoField />
             <MessagesSettings />
-            {widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE && <WheelEventField />}
+            {isWheelLikeWidgetType(widgetType) && <WheelEventField />}
             <DisableBranding
               enabled={brandingEnabled}
               onBrandingEnabledToggle={setBrandingEnabled}

@@ -13,6 +13,11 @@ import {
   buildWheelFieldsSettings
 } from '@/layouts/Widgets/WheelOfFortune/defaults'
 import {
+  buildConveyorWidgetSettings,
+  buildConveyorFieldsSettings,
+  buildConveyorDisplaySettings
+} from '@/layouts/Widgets/ConveyorOfLuck/defaults'
+import {
   buildActionTimerWidgetSettings,
   buildActionTimerFieldsSettings
 } from '@/layouts/Widgets/CountDown/defaults'
@@ -97,6 +102,12 @@ const implementedWidgetDefinitions: Partial<Record<WidgetTypeEnum, WidgetDefinit
     type: WidgetTypeEnum.WHEEL_OF_FORTUNE,
     buildWidgetSettings: buildWheelWidgetSettings,
     buildFieldsSettings: buildWheelFieldsSettings,
+  },
+  [WidgetTypeEnum.CONVEYOR_OF_LUCK]: {
+    type: WidgetTypeEnum.CONVEYOR_OF_LUCK,
+    buildWidgetSettings: buildConveyorWidgetSettings,
+    buildFieldsSettings: buildConveyorFieldsSettings,
+    buildDisplaySettings: buildConveyorDisplaySettings,
   },
   [WidgetTypeEnum.ACTION_TIMER]: {
     type: WidgetTypeEnum.ACTION_TIMER,

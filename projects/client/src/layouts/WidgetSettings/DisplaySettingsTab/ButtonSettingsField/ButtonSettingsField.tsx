@@ -1,5 +1,6 @@
 import { Input } from '@heroui/input'
 import ColorAccessory from '@/components/ColorAccessory'
+import IconPicker, { type IconName } from '@/components/IconPicker'
 import useWidgetSettingsStore, {
   useDisplaySettings,
   useWidgetStaticDefaults
@@ -10,7 +11,7 @@ import type { Issue } from '@lemnity/widget-config'
 import { useShallow } from 'zustand/react/shallow'
 
 const ButtonSettingsField = () => {
-  const { setButtonIcon } = useDisplaySettings()
+  const { setButtonIcon, setButtonIconName } = useDisplaySettings()
 
   const staticDefaults = useWidgetStaticDefaults()
   const defaultButton = staticDefaults?.display.icon.button ?? {
@@ -21,7 +22,7 @@ const ButtonSettingsField = () => {
   const button = useWidgetSettingsStore(
     useShallow(s => withDefaultsPath(s.settings?.display?.icon, 'button', defaultButton))
   )
-  const { text, buttonColor, textColor } = button
+  const { text, buttonColor, textColor, icon } = button
 
   const getErrors = useWidgetSettingsStore(s => s.getErrors)
   const showValidation = useWidgetSettingsStore(s => s.validationVisible)
@@ -48,6 +49,11 @@ const ButtonSettingsField = () => {
             inputWrapper: 'h-14',
             input: 'placeholder:text-[#AFAFAF]'
           }}
+        />
+        <IconPicker
+          initialIcon={icon as IconName | undefined}
+          onIconChange={name => setButtonIconName(name)}
+          triggerClassName="h-14"
         />
         <ColorAccessory
           color={buttonColor}

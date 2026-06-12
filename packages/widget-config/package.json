@@ -29,6 +29,10 @@
       "types": "./dist/widgets/WheelOfFortune/schema.d.ts",
       "default": "./dist/widgets/WheelOfFortune/schema.js"
     },
+    "./widgets/conveyor-of-luck": {
+      "types": "./dist/widgets/ConveyorOfLuck/schema.d.ts",
+      "default": "./dist/widgets/ConveyorOfLuck/schema.js"
+    },
     "./widgets/action-timer": {
       "types": "./dist/widgets/ActionTimer/schema.d.ts",
       "default": "./dist/widgets/ActionTimer/schema.js"

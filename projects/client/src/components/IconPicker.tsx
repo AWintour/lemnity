@@ -74,6 +74,7 @@ type IconPickerProps = {
   // popoverPlacement?: Pick<PopoverProps, 'placement'>
   popoverPlacement?: PopoverPlacement
   onIconChange: (icon: IconName) => void
+  triggerClassName?: string
 }
 
 const IconPicker = (props: IconPickerProps) => {
@@ -111,6 +112,7 @@ const IconPicker = (props: IconPickerProps) => {
             'border border-[#E4E4E7] p-3.75',
             'flex items-center justify-center gap-1.25 grow',
             '@min-[270px]:shrink-0 @min-[270px]:grow-0',
+            props.triggerClassName,
           )}
         >
           {SelectedIcon && (

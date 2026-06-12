@@ -1,4 +1,5 @@
 import { canonicalizeWheelOfFortune } from './widgets/WheelOfFortune/canonicalize.js'
+import { canonicalizeConveyorOfLuck } from './widgets/ConveyorOfLuck/canonicalize.js'
 import { canonicalizeActionTimer } from './widgets/ActionTimer/canonicalize.js'
 import { canonicalizeFABMenu } from './widgets/FABMenu/canonicalize.js'
 import { canonicalizeAnnouncement } from './widgets/Announcement/canonicalize.js'
@@ -38,6 +39,7 @@ const identityCanonicalizer: WidgetCanonicalizer = settings => settings
 
 const canonicalizers: CanonicalizerMap = {
   WHEEL_OF_FORTUNE: canonicalizeWheelOfFortune,
+  CONVEYOR_OF_LUCK: canonicalizeConveyorOfLuck,
   ACTION_TIMER: canonicalizeActionTimer,
   FAB_MENU: canonicalizeFABMenu,
   ANNOUNCEMENT: canonicalizeAnnouncement,

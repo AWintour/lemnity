@@ -5,6 +5,7 @@ import styles from './embed.css?inline'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import { FABMenuEmbedRuntime } from '@/layouts/Widgets/FABMenu/embedRuntime'
 import { WheelEmbedRuntime } from '@/layouts/Widgets/WheelOfFortune/embedRuntime'
+import { ConveyorEmbedRuntime } from '@/layouts/Widgets/ConveyorOfLuck/embedRuntime'
 import { ActionTimerEmbedRuntime } from '@/layouts/Widgets/CountDown/embedRuntime'
 import { CountdownAnnouncementEmbedRuntime } from '@/layouts/Widgets/Announcement/embedded'
 import EventTimerEmbedRuntime from '@/layouts/Widgets/EventTimer/embedded/embedRuntime'
@@ -25,6 +26,9 @@ const EmbedRuntime = ({ widgetType }: { widgetType: WidgetTypeEnum }) => {
       return <FABMenuEmbedRuntime />
     case WidgetTypeEnum.WHEEL_OF_FORTUNE:
       return <WheelEmbedRuntime />
+    // «Конвейер Удачи» — клон колеса с барабаном вместо круга, свой embed-раннер.
+    case WidgetTypeEnum.CONVEYOR_OF_LUCK:
+      return <ConveyorEmbedRuntime />
     case WidgetTypeEnum.ACTION_TIMER:
       return <ActionTimerEmbedRuntime />
     case WidgetTypeEnum.ANNOUNCEMENT:

@@ -63,7 +63,8 @@ export const PublicWidgetTypeEnum = {
     FAB_MENU: 'FAB_MENU',
     ANNOUNCEMENT: 'ANNOUNCEMENT',
     EVENT_TIMER: 'EVENT_TIMER',
-    NOTIFICATION: 'NOTIFICATION'
+    NOTIFICATION: 'NOTIFICATION',
+    CONVEYOR_OF_LUCK: 'CONVEYOR_OF_LUCK'
 } as const;
 
 export type PublicWidgetTypeEnum = typeof PublicWidgetTypeEnum[keyof typeof PublicWidgetTypeEnum];

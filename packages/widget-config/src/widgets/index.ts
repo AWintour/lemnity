@@ -1,6 +1,7 @@
 import type { WidgetTypeId } from './base.js'
 import { z } from 'zod'
 import { wheelOfFortuneSchema } from './WheelOfFortune/schema.js'
+import { conveyorOfLuckSchema } from './ConveyorOfLuck/schema.js'
 import { actionTimerSchema } from './ActionTimer/schema.js'
 import { fabMenuSchema } from './FABMenu/schema.js'
 import { announcementSchema } from './Announcement/schema.js'
@@ -16,6 +17,7 @@ export type WidgetSchemaAdapter = {
 
 const adapters: WidgetSchemaAdapter[] = [
   { type: 'WHEEL_OF_FORTUNE', schema: wheelOfFortuneSchema },
+  { type: 'CONVEYOR_OF_LUCK', schema: conveyorOfLuckSchema },
   { type: 'ACTION_TIMER', schema: actionTimerSchema },
   { type: 'FAB_MENU', schema: fabMenuSchema },
   { type: 'ANNOUNCEMENT', schema: announcementSchema },

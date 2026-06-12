@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export type WidgetTypeId =
   | 'WHEEL_OF_FORTUNE'
+  | 'CONVEYOR_OF_LUCK'
   | 'ACTION_TIMER'
   | 'FAB_MENU'
   | 'ANNOUNCEMENT'
@@ -13,7 +14,9 @@ export type WidgetTypeId =
 export const IconButtonSchema = z.object({
   text: z.string().min(1, 'Текст обязателен'),
   buttonColor: z.string(),
-  textColor: z.string()
+  textColor: z.string(),
+  // Имя иконки из библиотеки (`@/components/Icons`) рядом с текстом кнопки-лаунчера.
+  icon: z.string().optional()
 })
 
 export const IconImageSchema = z.object({

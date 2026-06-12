@@ -11,6 +11,8 @@ import { withDefaultsPath } from '@/stores/widgetSettings/utils'
 import { uploadImage } from '@/api/upload'
 import { useFieldsSettings } from '@/stores/widgetSettings/fieldsHooks'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
+import { Slider } from '@heroui/slider'
 
 const TemplateSettings = () => {
   const {
@@ -43,6 +45,11 @@ const TemplateSettings = () => {
   const imageUrlError = imageErrors.find(e => e.path.endsWith('url'))
   const imageFileNameError = imageErrors.find(e => e.path.endsWith('fileName'))
   const widgetType = useWidgetSettingsStore(s => s?.settings?.widgetType)
+  // Радиус скругления карточек ленты (только для «колеса/конвейера»).
+  const cardRadius = useWidgetSettingsStore(
+    s => (s.settings?.widget as { cardRadius?: number } | undefined)?.cardRadius ?? 24
+  )
+  const setCardRadius = useWidgetSettingsStore(s => s.setWheelCardRadius)
 
   const colorOptions: OptionItem[] = [
     { key: 'primary', label: 'Основная' },
@@ -62,7 +69,7 @@ const TemplateSettings = () => {
     {
       key: 'sidePanel',
       label: 'Боковая панель',
-      disabled: widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE
+      disabled: isWheelLikeWidgetType(widgetType)
     },
     { key: 'modalWindow', label: 'Модальное окно' }
   ]
@@ -133,6 +140,24 @@ const TemplateSettings = () => {
           </motion.div>
         ) : null}
       </AnimatePresence>
+      {isWheelLikeWidgetType(widgetType) ? (
+        <div className="flex flex-col gap-2 rounded-lg p-3 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-black text-lg font-medium">Радиус скругления</span>
+            <span className="text-sm text-gray-500">{cardRadius}px</span>
+          </div>
+          <Slider
+            aria-label="Радиус скругления карточек"
+            size="sm"
+            minValue={0}
+            maxValue={40}
+            step={1}
+            value={cardRadius}
+            onChange={v => setCardRadius(Array.isArray(v) ? v[0] : v)}
+            classNames={{ track: 'bg-[#E4E4E7]', filler: 'bg-[#1A52DB]' }}
+          />
+        </div>
+      ) : null}
       {showValidation && customColorError ? (
         <span className="text-sm text-red-500">{customColorError.message}</span>
       ) : null}

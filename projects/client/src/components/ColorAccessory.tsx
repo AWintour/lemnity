@@ -10,6 +10,7 @@ type ColorAccessoryProps = {
     label?: string
     input?: string
     svgIcon?: string
+    swatch?: string
   }
 }
 
@@ -50,9 +51,9 @@ const ColorAccessory = ({
     <label
       className={`inline-flex items-center h-14 px-3 rounded-md border-1 border-[#E4E4E7] bg-white cursor-pointer ${classNames?.label}`}
     >
-      {label ? <span className="mr-2 min-w-max">{label}</span> : null}
+      {label ? <span className="mr-2 min-w-max flex-1">{label}</span> : null}
       <span
-        className="inline-block min-w-6 w-6 h-6 rounded-full border border-black"
+        className={`inline-block min-w-6 w-6 h-6 rounded-full border border-black ${classNames?.swatch ?? ''}`}
         style={{ backgroundColor: tempColor }}
       />
       <input

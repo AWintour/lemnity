@@ -1,6 +1,7 @@
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import type { ComponentType, LazyExoticComponent } from 'react'
 import { wheelWidgetMetadata } from './WheelOfFortune/metadata'
+import { conveyorWidgetMetadata } from './ConveyorOfLuck/metadata'
 import { actionTimerWidgetMetadata } from './CountDown/metadata'
 import { fabMenuWidgetMetadata } from './FABMenu/metadata'
 import { announcementWidgetMetadata } from './Announcement/metadata'
@@ -57,7 +58,14 @@ export type WidgetInlinePreviewProps = {
   onClose: () => void
 }
 
-export type WidgetPreviewLauncher = 'modal' | 'inline'
+// Оверлей-лаунчер: затемнённая «страница» с кнопкой открытия окна; клик по кнопке (onOpen)
+// открывает окно, клик по фону (onClose) закрывает оверлей.
+export type WidgetLauncherOverlayProps = {
+  onOpen: () => void
+  onClose: () => void
+}
+
+export type WidgetPreviewLauncher = 'modal' | 'inline' | 'launcherOverlay'
 
 export type WidgetSettingsSection = {
   id: string
@@ -77,6 +85,7 @@ export type WidgetDefinition = WidgetDefinitionBase & {
     mobile: AnyComponent<MobilePreviewProps> | null
     modal?: AnyComponent<WidgetModalPreviewProps>
     inline?: AnyComponent<WidgetInlinePreviewProps>
+    launcherOverlay?: AnyComponent<WidgetLauncherOverlayProps>
     launcher?: WidgetPreviewLauncher
   }
   settings: {
@@ -116,6 +125,7 @@ const widgetMetadata: Partial<
   Record<WidgetTypeEnum, Pick<WidgetDefinition, 'preview' | 'settings' | 'actions'>>
 > = {
   [WidgetTypeEnum.WHEEL_OF_FORTUNE]: wheelWidgetMetadata,
+  [WidgetTypeEnum.CONVEYOR_OF_LUCK]: conveyorWidgetMetadata,
   [WidgetTypeEnum.ACTION_TIMER]: actionTimerWidgetMetadata,
   [WidgetTypeEnum.FAB_MENU]: fabMenuWidgetMetadata,
   [WidgetTypeEnum.ANNOUNCEMENT]: announcementWidgetMetadata,

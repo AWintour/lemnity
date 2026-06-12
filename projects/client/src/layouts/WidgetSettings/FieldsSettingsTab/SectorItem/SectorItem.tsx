@@ -19,6 +19,7 @@ type SectorItemProps = {
   onSettings: () => void
   validationMessage?: string
   showValidation?: boolean
+  hideIcon?: boolean // скрыть Select иконки в строке (у конвейера иконка выбирается отдельным блоком)
 }
 
 const prizeOptions = [
@@ -34,7 +35,8 @@ const SectorItem = ({
   onIconChange,
   onSettings,
   validationMessage,
-  showValidation
+  showValidation,
+  hideIcon
 }: SectorItemProps) => {
   const invalidText = Boolean(showValidation && sector.mode === 'text' && validationMessage)
   const widgetType = useWidgetSettingsStore(s => s.settings?.widgetType)
@@ -131,7 +133,7 @@ const SectorItem = ({
     <div className="flex flex-col h-full">
       <div className="flex items-center w-full h-full gap-2">
         {radioInput()}
-        {radioIcon()}
+        {hideIcon ? null : radioIcon()}
         <Button
           isIconOnly
           variant="light"

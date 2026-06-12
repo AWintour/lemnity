@@ -1,4 +1,5 @@
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 import ColorAccessory from '@/components/ColorAccessory'
 import { Input, Textarea } from '@heroui/input'
 import useWidgetSettingsStore, { useWidgetStaticDefaults } from '@/stores/widgetSettingsStore'
@@ -78,7 +79,7 @@ const FormSettings = () => {
             />
           ))
         }}
-        isDisabled={widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE}
+        isDisabled={isWheelLikeWidgetType(widgetType)}
       >
         {icons.map(opt => (
           <SelectItem key={opt.key} textValue={opt.key}>
@@ -174,7 +175,7 @@ const FormSettings = () => {
         />
       </div>
 
-      {widgetType !== WidgetTypeEnum.WHEEL_OF_FORTUNE && (
+      {!isWheelLikeWidgetType(widgetType) && (
         <>
           <span className="text-black">Ссылка</span>
           <Input
@@ -202,7 +203,7 @@ const FormSettings = () => {
         />
       </SwitchableField>
 
-      {widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE && <WheelOfFortuneBorderColorField />}
+      {isWheelLikeWidgetType(widgetType) && <WheelOfFortuneBorderColorField />}
     </div>
   )
 }

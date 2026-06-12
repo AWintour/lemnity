@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type { PersistStorage, StorageValue } from 'zustand/middleware'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 import { buildDefaults, getStaticDefaults } from './widgetSettings/defaults'
 import { normalize, trimInactiveBranches } from './widgetSettings/normalize'
 import { validateCanonical as validateWidgetSettings } from '@lemnity/widget-config'
@@ -316,6 +317,7 @@ export const useDisplaySettings = () => {
   const setDontShow = useWidgetSettingsStore(s => s.setDontShow)
   const setLimits = useWidgetSettingsStore(s => s.setLimits)
   const setButtonIcon = useWidgetSettingsStore(s => s.setButtonIcon)
+  const setButtonIconName = useWidgetSettingsStore(s => s.setButtonIconName)
   const setScheduleDate = useWidgetSettingsStore(s => s.setScheduleDate)
   const setScheduleTime = useWidgetSettingsStore(s => s.setScheduleTime)
 
@@ -337,6 +339,7 @@ export const useDisplaySettings = () => {
     setDontShow,
     setLimits,
     setButtonIcon,
+    setButtonIconName,
     setScheduleDate,
     setScheduleTime
   }
@@ -360,8 +363,8 @@ export const useWidgetStaticDefaults = () => {
 // Slice hook for Wheel of Fortune widget-specific settings
 export const useFieldsSettings = () => {
   const settings = useWidgetSettingsStore(s =>
-    s.settings?.widget.type === WidgetTypeEnum.WHEEL_OF_FORTUNE
-      ? (s.settings.widget as WheelOfFortuneWidgetSettings)
+    isWheelLikeWidgetType(s.settings?.widget.type)
+      ? (s.settings?.widget as WheelOfFortuneWidgetSettings)
       : null
   )
   const setRandomize = useWidgetSettingsStore(s => s.setWheelRandomize)
