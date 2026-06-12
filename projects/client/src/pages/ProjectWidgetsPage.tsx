@@ -2,7 +2,7 @@ import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout'
 import Header from '@/layouts/Header/Header'
 import { useProjectsStore } from '@/stores/projectsStore'
 import { Breadcrumbs, BreadcrumbItem } from '@heroui/breadcrumbs'
-import { useEffect, useMemo, type ReactElement } from 'react'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Tooltip } from '@heroui/tooltip'
 import { Button } from '@heroui/button'
@@ -11,6 +11,9 @@ import iconInfo from '@/assets/icons/info.svg'
 import WidgetCard from '@/layouts/WidgetCard/WidgetCard'
 import type { WidgetBadge } from '@/layouts/WidgetCard/WidgetCard'
 import { AVAILABLE_WIDGETS } from '@/layouts/Widgets/constants'
+import WidgetCategoryFilter, {
+  type WidgetCategoryFilterValue
+} from '@/layouts/WidgetCard/WidgetCategoryFilter'
 import { WidgetTypeEnum, UserRoleEnum, type CreateWidgetDtoTypeEnum } from '@lemnity/api-sdk'
 import useUserStore from '@/stores/userStore'
 
@@ -56,10 +59,41 @@ const ProjectWidgetsPage = (): ReactElement => {
   const isAdmin =
     user?.role === UserRoleEnum.ADMIN ||
     (!!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase()))
-  // Скрываем admin-only виджеты (напр. «Видео виджет») для обычных пользователей
-  const availableWidgets = useMemo(
-    () => AVAILABLE_WIDGETS.filter(w => isAdmin || !ADMIN_ONLY_WIDGETS.has(w.type)),
-    [isAdmin]
+  // Скрываем admin-only виджеты (напр. «Видео виджет») для обычных пользователей.
+  // Порядок каталога: «Новинка» → обычные доступные → «Скоро» (недоступные).
+  const availableWidgets = useMemo(() => {
+    const rank = (w: (typeof AVAILABLE_WIDGETS)[number]): number => {
+      if (w.badge === 'new') return 0
+      if (w.badge === 'soon' || !w.isAvailable) return 2
+      return 1
+    }
+    return AVAILABLE_WIDGETS.filter(w => isAdmin || !ADMIN_ONLY_WIDGETS.has(w.type)).sort(
+      (a, b) => rank(a) - rank(b)
+    )
+  }, [isAdmin])
+
+  // Фильтр каталога по направлениям (Все / Лиды / Вовлечение / Вознаграждение).
+  const [category, setCategory] = useState<WidgetCategoryFilterValue>('all')
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<WidgetCategoryFilterValue, number> = {
+      all: availableWidgets.length,
+      leads: 0,
+      engage: 0,
+      reward: 0
+    }
+    for (const w of availableWidgets) {
+      for (const c of w.categories) counts[c] += 1
+    }
+    return counts
+  }, [availableWidgets])
+
+  const visibleWidgets = useMemo(
+    () =>
+      category === 'all'
+        ? availableWidgets
+        : availableWidgets.filter(w => w.categories.includes(category)),
+    [availableWidgets, category]
   )
 
   const handleCreateWidget = async (type: CreateWidgetDtoTypeEnum, name: string) => {
@@ -123,42 +157,55 @@ const ProjectWidgetsPage = (): ReactElement => {
   const getProjectWidgets = () => {
     return (
       <div className="flex flex-col gap-[20px] pb-1">
-        <div className="flex flex-row items-center gap-[10px]">
-          {getWidgetTooltip()}
-          <span className="text-xl font-display">Виджеты</span>
+        <div className="flex flex-row items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-row items-center gap-[10px]">
+            {getWidgetTooltip()}
+            <span className="text-xl font-display">Виджеты</span>
+          </div>
+          <WidgetCategoryFilter
+            value={category}
+            counts={categoryCounts}
+            onChange={setCategory}
+          />
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-5">
-          {availableWidgets.map(availableWidget => {
-            const existingWidget = widgets.find(w => w.type === availableWidget.type)
-            const isCreated = !!existingWidget
+        {visibleWidgets.length === 0 ? (
+          <div className="text-[#707070] text-sm py-10 text-center">
+            В этом направлении пока нет виджетов
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-x-4 gap-y-5">
+            {visibleWidgets.map(availableWidget => {
+              const existingWidget = widgets.find(w => w.type === availableWidget.type)
+              const isCreated = !!existingWidget
 
-            return (
-              <WidgetCard
-                key={availableWidget.type}
-                title={availableWidget.title}
-                subtitle={availableWidget.description}
-                type={availableWidget.type}
-                badge={availableWidget.badge as WidgetBadge}
-                enabled={existingWidget?.enabled || false}
-                isAvailable={availableWidget.isAvailable}
-                isCreated={isCreated}
-                widgetId={existingWidget?.id}
-                paidUntil={existingWidget?.paidUntil}
-                onToggle={
-                  existingWidget
-                    ? enabled => handleToggleWidget(existingWidget.id, enabled)
-                    : undefined
-                }
-                onCreate={
-                  !isCreated && availableWidget.isAvailable
-                    ? () => handleCreateWidget(availableWidget.type, availableWidget.title)
-                    : undefined
-                }
-                onEdit={existingWidget ? handleEditWidget : undefined}
-              />
-            )
-          })}
-        </div>
+              return (
+                <WidgetCard
+                  key={availableWidget.type}
+                  title={availableWidget.title}
+                  subtitle={availableWidget.description}
+                  type={availableWidget.type}
+                  badge={availableWidget.badge as WidgetBadge}
+                  enabled={existingWidget?.enabled || false}
+                  isAvailable={availableWidget.isAvailable}
+                  isCreated={isCreated}
+                  widgetId={existingWidget?.id}
+                  paidUntil={existingWidget?.paidUntil}
+                  onToggle={
+                    existingWidget
+                      ? enabled => handleToggleWidget(existingWidget.id, enabled)
+                      : undefined
+                  }
+                  onCreate={
+                    !isCreated && availableWidget.isAvailable
+                      ? () => handleCreateWidget(availableWidget.type, availableWidget.title)
+                      : undefined
+                  }
+                  onEdit={existingWidget ? handleEditWidget : undefined}
+                />
+              )
+            })}
+          </div>
+        )}
       </div>
     )
   }

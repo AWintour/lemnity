@@ -3,12 +3,12 @@ import { useMemo, useState, useCallback } from 'react'
 import { Button } from '@heroui/button'
 import CustomSwitch from '@/components/CustomSwitch'
 import SvgIcon from '@/components/SvgIcon'
-import iconProjectEmblem from '@/assets/icons/project-emblem.svg'
-import iconEye from '@/assets/icons/eye.svg'
 import iconAdd from '@/assets/icons/add.svg'
+import iconPencil from '@/assets/icons/pencil.svg'
+import iconLock from '@/assets/icons/key.svg'
 import './WidgetCard.css'
 import { WidgetTypes } from '../Widgets/constants'
-import iconPencil from '@/assets/icons/pencil.svg'
+import { getWidgetVisual } from './widgetVisuals'
 import { cn } from '@heroui/theme'
 export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
 export type WidgetBadge = 'new' | 'popular' | 'soon' | null
@@ -46,7 +46,6 @@ interface WidgetProps {
   onToggle?: (value: boolean) => void
   onCreate?: () => void
   onEdit?: (widgetId: string) => void
-  onPreview?: () => void
 }
 
 const Widget = ({
@@ -61,10 +60,11 @@ const Widget = ({
   paidUntil,
   onToggle,
   onCreate,
-  onEdit,
-  onPreview
+  onEdit
 }: WidgetProps): ReactElement => {
   const [isEnabled, setIsEnabled] = useState<boolean>(enabled)
+
+  const visual = getWidgetVisual(type)
 
   const handleToggle = useCallback(
     (value: boolean) => {
@@ -100,16 +100,16 @@ const Widget = ({
 
   const daysToneClass = status
     ? {
-        active: 'bg-[#e7f7ee] text-[#1f9254]',
-        warn: 'bg-[#fff4e0] text-[#b9770a]',
-        off: 'bg-[#f0f1f4] text-[#9aa0ad]'
+        active: 'bg-[#e9f3ec] text-[#1f7a48]',
+        warn: 'bg-[#f7efdd] text-[#9a6b00]',
+        off: 'bg-[#efedea] text-[#8a8784]'
       }[status.tone]
     : ''
   const daysDotClass = status
     ? {
-        active: 'bg-[#28b463]',
-        warn: 'bg-[#f0a30a]',
-        off: 'bg-[#c2c6d0]'
+        active: 'bg-[#1f7a48]',
+        warn: 'bg-[#c89a2b]',
+        off: 'bg-[#bdbab6]'
       }[status.tone]
     : ''
 
@@ -123,31 +123,122 @@ const Widget = ({
   const badgeView = useMemo(() => {
     if (!badge) return null
     const map: Record<Exclude<WidgetBadge, null>, { label: string; className: string }> = {
-      new: { label: 'Новинка', className: 'badge badge-new h-[24px]' },
-      popular: { label: 'Популярно', className: 'badge badge-popular h-5' },
-      soon: { label: 'Скоро', className: 'badge badge-soon h-5' }
+      new: { label: 'Новинка', className: 'badge badge-new' },
+      popular: { label: 'Популярно', className: 'badge badge-popular' },
+      soon: { label: 'Скоро', className: 'badge badge-soon' }
     }
     const { label, className } = map[badge]
     return <span className={className}>{label}</span>
   }, [badge])
 
-  // Заголовок приглушаем у недоступных и у неактивных (неоплаченных) созданных виджетов.
-  const titleMuted = !isAvailable || (isCreated && status?.active === false)
-  // «Редактировать» доступна, только если виджет активен (оплачен/grandfather).
-  const editDisabled = !isAvailable || (isCreated && (!widgetId || status?.active === false))
+  const iconTile = (muted: boolean): ReactElement => (
+    <div
+      className="widget-icon"
+      data-muted={muted ? 'true' : undefined}
+      style={muted ? undefined : { color: visual.accent, backgroundColor: `${visual.accent}1f` }}
+    >
+      {visual.icon}
+    </div>
+  )
+
+  // «Скоро» / недоступные виджеты — отдельное приглушённое состояние с замком, без действий.
+  if (!isAvailable) {
+    return (
+      <div className="widget-card widget-card--locked select-none">
+        <div className="flex items-center justify-between gap-2">
+          {iconTile(true)}
+          {badgeView}
+        </div>
+        <div className="mt-[15px] flex-1">
+          <div className="widget-title text-[#8a8784]">{title}</div>
+          <div className="widget-desc">{subtitle}</div>
+        </div>
+        <div className="widget-lock">
+          <SvgIcon src={iconLock} size={'15px'} />
+          <span>Появится в ближайшем обновлении</span>
+        </div>
+      </div>
+    )
+  }
+
+  const openCheckout = (): void => {
+    if (checkoutUrl) window.open(checkoutUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  // Кнопки — Tailwind arbitrary-классы перекрывают дефолтный фон HeroUI (как в исходном коде).
+  const btnBase = 'flex-1 min-w-0 h-10 rounded-[10px] font-semibold text-[13.5px]'
+  const btnPrimary = cn(btnBase, 'bg-[#1A52DB] text-white data-[hover=true]:!bg-[#1647c0]')
+  const btnPay = cn(
+    btnBase,
+    'bg-white text-[#1A52DB] border border-[#c9d6f4] data-[hover=true]:!bg-[#EEF3FF]'
+  )
+
+  // Ряд действий. Оплата живёт во 2-м слоте: «Продлить» когда срок истекает; когда истёк —
+  // редактирование недоступно, поэтому «Активировать» занимает всю ширину.
+  const renderActions = (): ReactElement => {
+    if (!isCreated) {
+      return (
+        <Button
+          size="sm"
+          className={btnPrimary}
+          onPress={onCreate}
+          startContent={<SvgIcon src={iconAdd} size={'15px'} />}
+        >
+          Создать
+        </Button>
+      )
+    }
+
+    const editButton = (
+      <Button
+        size="sm"
+        className={btnPrimary}
+        isDisabled={!widgetId || status?.active === false}
+        onPress={widgetId ? () => onEdit?.(widgetId) : undefined}
+        startContent={<SvgIcon src={iconPencil} size={'15px'} />}
+      >
+        Редактировать
+      </Button>
+    )
+
+    if (status?.cta === 'activate') {
+      return (
+        <Button size="sm" className={btnPrimary} isDisabled={!checkoutUrl} onPress={openCheckout}>
+          Активировать
+        </Button>
+      )
+    }
+
+    if (status?.cta === 'renew') {
+      return (
+        <>
+          {editButton}
+          <Button
+            size="sm"
+            variant="bordered"
+            className={btnPay}
+            isDisabled={!checkoutUrl}
+            onPress={openCheckout}
+          >
+            Продлить
+          </Button>
+        </>
+      )
+    }
+
+    return editButton
+  }
 
   return (
-    <div className={`widget-card ${!isAvailable ? 'widget-not-available select-none' : ''}`}>
-      <div className="flex justify-between items-start gap-2">
-        <div>
-          <SvgIcon className="text-[#1A52DB]" size={'36px'} src={iconProjectEmblem} />
-        </div>
+    <div className="widget-card">
+      <div className="flex items-center justify-between gap-2">
+        {iconTile(false)}
         <div className="flex items-center gap-2">
           {badgeView}
           {status ? (
             <span
               className={cn(
-                'inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-medium leading-none whitespace-nowrap z-[1]',
+                'inline-flex items-center gap-1.5 h-[22px] px-2.5 rounded-full text-[11.5px] font-semibold leading-none whitespace-nowrap',
                 daysToneClass
               )}
             >
@@ -155,73 +246,21 @@ const Widget = ({
               {status.chip}
             </span>
           ) : null}
-          <div className="relative">
-            <CustomSwitch
-              isDisabled={!isAvailable}
-              size="sm"
-              selectedColor="group-data-[selected=true]:!bg-[#1A52DB]"
-              isSelected={isEnabled}
-              onValueChange={handleToggle}
-            />
-          </div>
+          <CustomSwitch
+            size="sm"
+            selectedColor="group-data-[selected=true]:!bg-[#1A52DB]"
+            isSelected={isEnabled}
+            onValueChange={handleToggle}
+          />
         </div>
       </div>
 
-      <div className="mt-1.5">
-        <div className={`text-md font-semibold ${titleMuted ? 'text-gray-400' : ''}`}>{title}</div>
-        <div className="text-xs text-gray-500 mt-1 line-clamp-2">{subtitle}</div>
+      <div className="mt-[15px] flex-1">
+        <div className="widget-title">{title}</div>
+        <div className="widget-desc">{subtitle}</div>
       </div>
 
-      <div className="mt-auto flex flex-col gap-2">
-        {status?.cta && checkoutUrl ? (
-          <Button
-            size="sm"
-            variant={status.cta === 'activate' ? 'solid' : 'bordered'}
-            className={cn(
-              'w-full z-[1]',
-              status.cta === 'activate'
-                ? 'bg-[#1A52DB] text-white'
-                : 'border-[#1A52DB] text-[#1A52DB]'
-            )}
-            onPress={() => window.open(checkoutUrl, '_blank', 'noopener,noreferrer')}
-          >
-            {status.cta === 'activate' ? 'Активировать' : 'Продлить'}
-          </Button>
-        ) : null}
-
-        <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            variant="solid"
-            className="bg-[#1A52DB] text-white px-6 [&>svg]:max-w-40 w-32 shrink-0"
-            isDisabled={editDisabled}
-            onPress={isCreated && widgetId ? () => onEdit?.(widgetId) : onCreate}
-            startContent={
-              !isCreated ? (
-                <SvgIcon src={iconAdd} size={'16px'} />
-              ) : (
-                <SvgIcon src={iconPencil} size={'16px'} />
-              )
-            }
-          >
-            {isCreated ? 'Редактировать' : 'Создать'}
-          </Button>
-          <Button
-            size="sm"
-            variant="bordered"
-            className=" w-full bg-[#F7F8FA] mx-auto"
-            isDisabled={!isAvailable}
-            onPress={onPreview}
-            startContent={
-              <div>
-                <SvgIcon src={iconEye} size={'16px'} className="text-[#1A52DB]" />
-              </div>
-            }
-          >
-            Демо
-          </Button>
-        </div>
-      </div>
+      <div className="widget-actions">{renderActions()}</div>
     </div>
   )
 }

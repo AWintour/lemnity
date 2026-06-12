@@ -19,12 +19,23 @@ export const WidgetTypes = {
 
 export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
 
+// Направления каталога — фильтр на странице виджетов проекта.
+export type WidgetCategory = 'leads' | 'engage' | 'reward'
+
+export const WIDGET_CATEGORIES: { id: WidgetCategory; label: string }[] = [
+  { id: 'leads', label: 'Лиды' },
+  { id: 'engage', label: 'Вовлечение' },
+  { id: 'reward', label: 'Вознаграждение' }
+]
+
 export interface AvailableWidget {
   type: WidgetType
   title: string
   description: string
   isAvailable: boolean
   badge?: 'new' | 'popular' | 'soon'
+  /** Направления, к которым относится виджет (для фильтра каталога). */
+  categories: WidgetCategory[]
 }
 
 export const AVAILABLE_WIDGETS: AvailableWidget[] = [
@@ -33,90 +44,103 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
     title: 'Колесо фортуны',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['engage', 'reward']
   },
   {
     type: WidgetTypes.ACTION_TIMER,
     title: 'Лид-форма',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['leads']
   },
   {
     type: WidgetTypes.FAB_MENU,
     title: 'Мультикнопка',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['leads', 'engage']
   },
   {
     type: WidgetTypes.ANNOUNCEMENT,
     title: 'Анонс',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['engage']
   },
   {
     type: WidgetTypes.EVENT_TIMER,
     title: 'Таймер событий',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['engage']
   },
   {
     type: WidgetTypes.NOTIFICATION,
     title: 'Уведомления',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['engage']
   },
   {
     type: WidgetTypes.VIDEO_WIDGET,
     title: 'Видео виджет',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['engage', 'leads']
   },
   {
     type: WidgetTypes.CALLBACK,
     title: 'Обратный звонок',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: true,
-    badge: 'new'
+    badge: 'new',
+    categories: ['leads']
   },
   {
     type: WidgetTypes.CONVEYOR_OF_GIFTS,
     title: 'Конвейер подарков',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: false,
-    badge: 'soon'
+    badge: 'soon',
+    categories: ['reward']
   },
   {
     type: WidgetTypes.POSTCARD,
     title: 'Открытка',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: false,
-    badge: 'soon'
+    badge: 'soon',
+    categories: ['reward']
   },
   {
     type: WidgetTypes.CHEST_WITH_ACTION,
     title: 'Сундук с акцией',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: false,
-    badge: 'soon'
+    badge: 'soon',
+    categories: ['reward', 'engage']
   },
   {
     type: WidgetTypes.ADVENT_CALENDAR,
     title: 'Advent календарь',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: false,
-    badge: 'soon'
+    badge: 'soon',
+    categories: ['engage', 'reward']
   },
   {
     type: WidgetTypes.TEASER,
     title: 'Дразнилка',
     description: 'Лиды, вовлечение, вознаграждение',
     isAvailable: false,
-    badge: 'soon'
+    badge: 'soon',
+    categories: ['engage']
   }
 ]
