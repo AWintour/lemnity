@@ -282,7 +282,7 @@ const VideoWidget = ({ ref, ...props }: VideoWidgetProps) => {
 
       {/* Логотип компании — левый верхний угол */}
       {!formScreen && companyLogoEnabled && (
-        <div className="absolute top-3 left-4 z-20 pointer-events-none">
+        <div className="absolute top-3 left-3 z-20 pointer-events-none">
           <img
             src={companyLogoUrl || lemnityBlackLogo}
             alt="Logo"
