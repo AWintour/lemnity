@@ -15,9 +15,21 @@ export const WidgetTypes = {
   NOTIFICATION: WidgetTypeEnum.NOTIFICATION,
   VIDEO_WIDGET: WidgetTypeEnum.VIDEO_WIDGET,
   CALLBACK: WidgetTypeEnum.CALLBACK,
+  CONVEYOR_OF_LUCK: WidgetTypeEnum.CONVEYOR_OF_LUCK,
 } as const
 
 export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
+
+// «Колесо фортуны» и его клон «Конвейер Удачи» используют одни и те же компоненты
+// редактора/превью/раннера. Этот хелпер заменяет точечные проверки `=== WHEEL_OF_FORTUNE`,
+// чтобы конвейер вёл себя как колесо везде, где это нужно.
+export const WHEEL_LIKE_WIDGET_TYPES: readonly WidgetTypeEnum[] = [
+  WidgetTypeEnum.WHEEL_OF_FORTUNE,
+  WidgetTypeEnum.CONVEYOR_OF_LUCK,
+]
+
+export const isWheelLikeWidgetType = (type: string | undefined | null): boolean =>
+  type === WidgetTypeEnum.WHEEL_OF_FORTUNE || type === WidgetTypeEnum.CONVEYOR_OF_LUCK
 
 // Направления каталога — фильтр на странице виджетов проекта.
 export type WidgetCategory = 'leads' | 'engage' | 'reward'
@@ -102,6 +114,14 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
     isAvailable: true,
     badge: 'new',
     categories: ['leads']
+  },
+  {
+    type: WidgetTypes.CONVEYOR_OF_LUCK,
+    title: 'Конвейер Удачи',
+    description: 'Лиды, вовлечение, вознаграждение',
+    isAvailable: true,
+    badge: 'new',
+    categories: ['engage', 'reward']
   },
   {
     type: WidgetTypes.CONVEYOR_OF_GIFTS,

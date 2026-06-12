@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
-import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import type { WheelOfFortuneWidgetSettings } from '@/stores/widgetSettings/types'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 
 export const useWheelOfFortuneSettings = () => {
   const widget = useWidgetSettingsStore(s => s?.settings?.widget)
@@ -14,10 +14,9 @@ export const useWheelOfFortuneSettings = () => {
   const setWheelBorderThickness = useWidgetSettingsStore(s => s.setWheelBorderThickness)
   const setWheelEventMode = useWidgetSettingsStore(s => s.setWheelEventMode)
 
-  const settings =
-    widget?.type === WidgetTypeEnum.WHEEL_OF_FORTUNE
-      ? (widget as WheelOfFortuneWidgetSettings)
-      : null
+  const settings = isWheelLikeWidgetType(widget?.type)
+    ? (widget as WheelOfFortuneWidgetSettings)
+    : null
   return useMemo(
     () => ({
       settings,

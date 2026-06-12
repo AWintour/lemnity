@@ -73,6 +73,7 @@ export type WidgetActions = {
   setImagePosition: (position: ActionTimerImagePosition) => void
   setWheelBorderColor: (color: string) => void
   setWheelBorderThickness: (thickness: number) => void
+  setWheelCardRadius: (radius: number) => void
   setWheelEventMode: (enabled: boolean) => void
   // Announcement actions
   setAnnouncementCompanyLogoEnabled: (enabled: boolean) => void

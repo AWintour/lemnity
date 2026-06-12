@@ -70,6 +70,18 @@ echo "==> Sync Prisma schema to DB (db push)"
 docker compose -f docker-compose.prod.yml run --rm server \
   pnpm --filter @lemnity/database exec prisma db push --accept-data-loss
 
+# db push синхронизирует только модели/enum/индексы/FK, но НЕ создаёт raw-SQL функции и триггеры
+# из миграций (напр. guard/sync для conveyor_of_luck_widgets). Применяем их идемпотентно из
+# server-контейнера (тот же образ). Источник истины — packages/database/prisma/manual/*.sql.
+# Без этого спин «Конвейера Удачи» падает (createSpin → conveyorWidget.connect требует строку-родителя).
+echo "==> Apply manual SQL (триггеры/функции): prisma/manual/*.sql — идемпотентно, после db push"
+if ! docker compose -f docker-compose.prod.yml run --rm server \
+  pnpm --filter @lemnity/database exec prisma db execute \
+    --file prisma/manual/conveyor_of_luck_triggers.sql; then
+  echo "==> WARN: не удалось применить prisma/manual/conveyor_of_luck_triggers.sql;" >&2
+  echo "==> спин «Конвейера Удачи» будет падать — примените SQL вручную." >&2
+fi
+
 echo "==> Start / update full stack (server + nginx + infra) with recreate"
 # --pull always: страховка поверх pull_with_retry — up сам тянет образы перед пересозданием,
 # чтобы гонка доступности в реестре не приводила к «No such image» и падению стека.

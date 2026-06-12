@@ -27,6 +27,7 @@ export type DisplayActions = {
   setDontShow: (afterWin: boolean, afterShows?: number | null) => void
   setLimits: (afterWin: boolean, afterShows?: number | null) => void
   setButtonIcon: (text: string, buttonColor: string, textColor: string) => void
+  setButtonIconName: (icon: string) => void
   setScheduleDate: (enabled: boolean, value?: string) => void
   setScheduleTime: (enabled: boolean, value?: string) => void
   setBrandingEnabled: (enabled: boolean) => void
@@ -86,7 +87,23 @@ export const createDisplaySlice = (updateDisplay: DisplayUpdater): DisplaySlice 
         limits: { afterWin, afterShows: afterShows ?? s.limits.afterShows }
       })),
     setButtonIcon: (text, buttonColor, textColor) =>
-      updateDisplay(s => ({ ...s, icon: { ...s.icon, button: { text, buttonColor, textColor } } })),
+      updateDisplay(s => ({
+        ...s,
+        icon: { ...s.icon, button: { ...s.icon.button, text, buttonColor, textColor } }
+      })),
+    setButtonIconName: icon =>
+      updateDisplay(s => ({
+        ...s,
+        icon: {
+          ...s.icon,
+          button: {
+            text: s.icon.button?.text ?? '',
+            buttonColor: s.icon.button?.buttonColor ?? '#5951E5',
+            textColor: s.icon.button?.textColor ?? '#FFFFFF',
+            icon
+          }
+        }
+      })),
     setScheduleDate: (enabled, value) =>
       updateDisplay(s => ({
         ...s,

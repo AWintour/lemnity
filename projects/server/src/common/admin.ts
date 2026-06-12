@@ -13,6 +13,7 @@ const ADMIN_EMAILS: string[] = (
 // «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
 export const ADMIN_ONLY_WIDGET_TYPES: ReadonlySet<WidgetType> = new Set([
   WidgetType.CALLBACK,
+  WidgetType.CONVEYOR_OF_LUCK,
 ])
 
 export const isAdminUser = (email?: string | null, role?: string | null): boolean =>

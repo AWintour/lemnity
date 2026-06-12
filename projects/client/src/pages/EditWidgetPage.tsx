@@ -3,7 +3,16 @@ import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout'
 import { useParams } from 'react-router-dom'
 import { Breadcrumbs, BreadcrumbItem } from '@heroui/breadcrumbs'
 import { Button } from '@heroui/button'
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
+import {
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType
+} from 'react'
 import { createPortal } from 'react-dom'
 import { useProjectsStore } from '@/stores/projectsStore'
 import SvgIcon from '@/components/SvgIcon'
@@ -19,7 +28,8 @@ import PreviewModal from '@/layouts/Widgets/Common/PreviewModal'
 import usePreviewRuntimeStore from '@/stores/previewRuntimeStore'
 import { usesStandardSurface } from '@/stores/widgetSettings/widgetDefinitions'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
-import { WidgetTypeEnum, type Widget } from '@lemnity/api-sdk'
+import { type Widget } from '@lemnity/api-sdk'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 import { simulateWheelSpinResultFromSectors } from '@/layouts/Widgets/WheelOfFortune/actionHandlers'
 import type { WheelOfFortuneWidgetSettings } from '@/stores/widgetSettings/types'
 
@@ -57,6 +67,8 @@ const EditWidgetPage = () => {
   const [saving, setSaving] = useState(false)
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
   const [isInlinePreviewOpen, setIsInlinePreviewOpen] = useState(false)
+  // Двухшаговый «Просмотр» (launcherOverlay): сперва затемнение с кнопкой открытия окна.
+  const [isLauncherOverlayOpen, setIsLauncherOverlayOpen] = useState(false)
   // legacy local spin state removed; use preview store instead
   const initialized = useWidgetSettingsStore(s => s.initialized)
   const widgetType = widget?.type
@@ -112,12 +124,25 @@ const EditWidgetPage = () => {
 
   const previewLauncher = widgetDefinition?.preview?.launcher ?? 'modal'
   const InlinePreviewComponent = widgetDefinition?.preview?.inline
+  const LauncherOverlayComponent = widgetDefinition?.preview?.launcherOverlay
 
   const handlePreview = () => {
     if (previewLauncher === 'inline' && InlinePreviewComponent) {
       setIsInlinePreviewOpen(true)
       return
     }
+    if (previewLauncher === 'launcherOverlay' && LauncherOverlayComponent) {
+      setPreviewScreen('main')
+      setIsLauncherOverlayOpen(true)
+      return
+    }
+    setIsPreviewModalOpen(true)
+    setPreviewScreen('main')
+  }
+
+  // Клик по кнопке открытия в оверлее → закрыть оверлей и открыть окно виджета.
+  const handleLauncherOpen = () => {
+    setIsLauncherOverlayOpen(false)
     setIsPreviewModalOpen(true)
     setPreviewScreen('main')
   }
@@ -200,10 +225,10 @@ const EditWidgetPage = () => {
     const runtime = usePreviewRuntimeStore.getState()
     const settings = useWidgetSettingsStore.getState().settings
 
-    if (widgetType === WidgetTypeEnum.WHEEL_OF_FORTUNE) {
+    if (isWheelLikeWidgetType(widgetType)) {
       const wheelSettings: WheelOfFortuneWidgetSettings | null =
-        settings?.widget?.type === WidgetTypeEnum.WHEEL_OF_FORTUNE
-          ? (settings.widget as WheelOfFortuneWidgetSettings)
+        isWheelLikeWidgetType(settings?.widget?.type)
+          ? (settings?.widget as WheelOfFortuneWidgetSettings)
           : null
 
       const previewResult = wheelSettings?.sectors?.items?.length
@@ -346,12 +371,24 @@ const EditWidgetPage = () => {
           Component={InlinePreviewComponent}
         />
       ) : (
-        <PreviewModal
-          isOpen={isPreviewModalOpen}
-          onClose={handleClosePreview}
-          screen={previewScreen}
-          onSubmit={handleSubmit}
-        />
+        <>
+          {previewLauncher === 'launcherOverlay' &&
+          LauncherOverlayComponent &&
+          isLauncherOverlayOpen ? (
+            <Suspense fallback={null}>
+              <LauncherOverlayComponent
+                onOpen={handleLauncherOpen}
+                onClose={() => setIsLauncherOverlayOpen(false)}
+              />
+            </Suspense>
+          ) : null}
+          <PreviewModal
+            isOpen={isPreviewModalOpen}
+            onClose={handleClosePreview}
+            screen={previewScreen}
+            onSubmit={handleSubmit}
+          />
+        </>
       )}
     </>
   )

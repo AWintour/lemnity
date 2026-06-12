@@ -11,6 +11,7 @@ type ImageUploaderProps = {
   recommendedResolution: string
   fileSize: string
   formats?: string[]
+  formatsLabel?: string // подпись формата в подсказке (не влияет на accept)
   classNames?: {
     container?: string
     image?: string
@@ -46,6 +47,7 @@ const ImageUploader = ({
   recommendedResolution,
   fileSize,
   formats = ['png', 'jpeg'],
+  formatsLabel,
   classNames = {
     container: '',
     image: '',
@@ -133,7 +135,7 @@ const ImageUploader = ({
           <br />
           Рекомендуемый размер: {recommendedResolution}
           <br />
-          Формат: {formats.join(', ')}
+          Формат: {formatsLabel ?? formats.join(', ')}
         </span>
       </div>
       {checked && isInvalid && <span className="text-sm text-red-500">{errorMessage}</span>}

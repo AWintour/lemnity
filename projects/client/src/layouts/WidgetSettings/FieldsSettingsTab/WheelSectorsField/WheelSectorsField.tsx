@@ -9,6 +9,7 @@ import type {
 } from '@stores/widgetSettings/types'
 import { useWidgetStaticDefaults } from '@/stores/widgetSettingsStore'
 import { useWheelOfFortuneSettings } from '@/layouts/Widgets/WheelOfFortune/hooks'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import NumberField from '@/components/NumberField'
 import ColorAccessory from '@/components/ColorAccessory'
@@ -38,7 +39,7 @@ const WheelSectorsField = () => {
     [updateWheelSector]
   )
 
-  if (!settings && defaults?.widget.type !== 'WHEEL_OF_FORTUNE') return null
+  if (!settings && !isWheelLikeWidgetType(defaults?.widget.type)) return null
   const fallbackSettings = defaults?.widget as WheelOfFortuneWidgetSettings
   const fallbackSectors: WheelOfFortuneWidgetSettings['sectors'] = fallbackSettings.sectors
   const wheelSectors = (settings?.sectors ??

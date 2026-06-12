@@ -107,6 +107,7 @@ const DEFAULT_VISUAL: WidgetVisual = { icon: icons.sparkles, accent: '#1A52DB' }
 
 const VISUALS: Partial<Record<WidgetTypeEnum, WidgetVisual>> = {
   [WidgetTypeEnum.WHEEL_OF_FORTUNE]: { icon: icons.wheel, accent: '#c77d1a' },
+  [WidgetTypeEnum.CONVEYOR_OF_LUCK]: { icon: icons.gift, accent: '#8a5cf0' },
   [WidgetTypeEnum.ACTION_TIMER]: { icon: icons.form, accent: '#1A52DB' },
   [WidgetTypeEnum.FAB_MENU]: { icon: icons.fab, accent: '#6d3fc0' },
   [WidgetTypeEnum.ANNOUNCEMENT]: { icon: icons.announce, accent: '#0e8a7e' },

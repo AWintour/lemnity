@@ -1,0 +1,9 @@
+model ConveyorOfLuckWidget {
+  widgetId  String   @id @map("widget_id")
+
+  spins     ConveyorOfLuckSpin[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("conveyor_of_luck_widgets")
+}

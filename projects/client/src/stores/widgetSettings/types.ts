@@ -71,6 +71,23 @@ export type SectorItem = {
   textSize: number
   iconSize: number
   textColor: string
+  // Доп. поля «Конвейера Удачи» (опциональны, обратносовместимы с колесом):
+  coverType?: 'background' | 'image' // вид обложки карточки
+  image?: { enabled?: boolean; fileName?: string; url?: string } // своя картинка обложки
+  colorScheme?: 'primary' | 'custom' // цветовая гамма карточки
+  bgColor?: string // цвет фона
+  systemTextColor?: string // цвет системного текста
+  counterFieldColor?: string // цвет поля отсчёта
+  counterFontColor?: string // цвет шрифта поля отсчёта
+  winTextEnabled?: boolean // показывать текст при выигрыше
+  winText?: string // текст при выигрыше
+  badgeEnabled?: boolean // плашка-подложка под текстом карточки
+  badgeColor?: string // цвет плашки
+  badgeTextColor?: string // цвет шрифта на плашке
+  darkenEnabled?: boolean // затемнение снизу карточки
+  darkenHeight?: number // высота затемнения, % высоты карточки (0–100)
+  iconColor?: string // цвет иконки (когда «Ваша картинка» выключена)
+  imageAlign?: 'top' | 'center' | 'bottom' // выравнивание картинки-обложки
 }
 
 export type WheelOfFortuneMessages = {
@@ -97,7 +114,9 @@ export type WheelOfFortuneMessages = {
 }
 
 export type WheelOfFortuneWidgetSettings = {
-  type: typeof WidgetTypeEnum.WHEEL_OF_FORTUNE
+  // «Конвейер Удачи» (CONVEYOR_OF_LUCK) — клон колеса: та же форма настроек,
+  // тот же редактор/превью. Разделяем типом виджета и отдельным хранилищем спинов в БД.
+  type: typeof WidgetTypeEnum.WHEEL_OF_FORTUNE | typeof WidgetTypeEnum.CONVEYOR_OF_LUCK
   sectors: {
     randomize: boolean
     items: SectorItem[]
@@ -105,7 +124,11 @@ export type WheelOfFortuneWidgetSettings = {
   borderColor: string
   borderThickness: number
   eventMode?: boolean
+  cardRadius?: number // радиус скругления углов карточек ленты (px)
 }
+
+/** Алиас для ясности: «Конвейер Удачи» использует ту же форму настроек, что и колесо. */
+export type ConveyorOfLuckWidgetSettings = WheelOfFortuneWidgetSettings
 
 export type CountdownUnitKey = 'days' | 'hours' | 'minutes' | 'seconds'
 
@@ -198,6 +221,7 @@ export type DisplaySettings = Extendable<{
       text: string
       buttonColor: string
       textColor: string
+      icon?: string
     }
     position: ButtonPosition
     hide: HideIcon

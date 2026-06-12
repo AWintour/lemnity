@@ -1,6 +1,7 @@
 import {
   WidgetTypeEnum,
 } from '@lemnity/api-sdk'
+import { isWheelLikeWidgetType } from '@/layouts/Widgets/constants'
 import {
   createWheelActions,
 } from '@/layouts/Widgets/WheelOfFortune/actions'
@@ -73,8 +74,9 @@ export const createWidgetSlice = (updateWidget: WidgetUpdater): WidgetSlice => {
 
   const wheelUpdater: TypedWidgetUpdater<WheelOfFortuneWidgetSettings> =
     createTypedUpdater(
+      // Колесо и его клон «Конвейер Удачи» используют один и тот же набор экшенов редактора.
       (widget): widget is WheelOfFortuneWidgetSettings =>
-        widget.type === WidgetTypeEnum.WHEEL_OF_FORTUNE
+        isWheelLikeWidgetType(widget.type)
     )
 
   const actionTimerUpdater: TypedWidgetUpdater<ActionTimerWidgetSettings> =

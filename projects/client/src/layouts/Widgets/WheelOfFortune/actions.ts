@@ -54,6 +54,11 @@ export const createWheelActions = (
       ...widget,
       borderThickness: Math.max(0, Math.min(20, thickness))
     })),
+  setWheelCardRadius: (radius: number) =>
+    updateWidget(widget => ({
+      ...widget,
+      cardRadius: Math.max(0, Math.min(60, radius))
+    })),
   setWheelEventMode: (enabled: boolean) =>
     updateWidget(widget => ({
       ...widget,

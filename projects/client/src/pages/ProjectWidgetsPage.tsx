@@ -20,7 +20,10 @@ import useUserStore from '@/stores/userStore'
 // Виджеты, доступные пока только администратору (тестовый период).
 // После проверки — убрать из набора, чтобы открыть всем.
 // «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
-const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([WidgetTypeEnum.CALLBACK])
+const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([
+  WidgetTypeEnum.CALLBACK,
+  WidgetTypeEnum.CONVEYOR_OF_LUCK,
+])
 
 // Allowlist админов по email (на время теста; синхронно с сервером).
 const ADMIN_EMAILS: string[] = (

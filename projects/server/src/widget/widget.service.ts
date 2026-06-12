@@ -72,12 +72,34 @@ export class WidgetService {
         throw new ForbiddenException('Origin is not allowed')
       }
     }
-    if (widget.type !== 'WHEEL_OF_FORTUNE') {
+    // «Колесо фортуны» и его клон «Конвейер Удачи» используют общую механику спина,
+    // но раздельные таблицы хранения спинов.
+    const isConveyor = widget.type === 'CONVEYOR_OF_LUCK'
+    if (widget.type !== 'WHEEL_OF_FORTUNE' && !isConveyor) {
       throw new BadRequestException('Widget is not a wheel')
     }
     if (!widget.config) {
       throw new BadRequestException('Widget config is empty')
     }
+
+    // Делегаты Prisma для нужной таблицы спинов (по типу виджета).
+    const findSpinBySession = (sid: string) =>
+      isConveyor
+        ? this.prisma.conveyorOfLuckSpin.findUnique({
+            where: { widgetId_sessionId: { widgetId, sessionId: sid } }
+          })
+        : this.prisma.wheelOfFortuneSpin.findUnique({
+            where: { widgetId_sessionId: { widgetId, sessionId: sid } }
+          })
+
+    const createSpin = (data: { sessionId: string; sectorId: string; isWin: boolean }) =>
+      isConveyor
+        ? this.prisma.conveyorOfLuckSpin.create({
+            data: { conveyorWidget: { connect: { widgetId } }, ...data }
+          })
+        : this.prisma.wheelOfFortuneSpin.create({
+            data: { wheelWidget: { connect: { widgetId } }, ...data }
+          })
 
     const isRecord = (value: unknown): value is Record<string, unknown> =>
       typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -132,9 +154,7 @@ export class WidgetService {
     const eventMode = widgetCfg.eventMode === true
 
     if (!eventMode) {
-      const existing = await this.prisma.wheelOfFortuneSpin.findUnique({
-        where: { widgetId_sessionId: { widgetId, sessionId: normalizedSessionId } }
-      })
+      const existing = await findSpinBySession(normalizedSessionId)
       if (existing) {
         const sector =
           items.find(s => s.id === existing.sectorId) ??
@@ -191,22 +211,17 @@ export class WidgetService {
     // (widgetId, sessionId) constraint would reject the next spin with P2002.
     if (!eventMode) {
       try {
-        await this.prisma.wheelOfFortuneSpin.create({
-          data: {
-            wheelWidget: { connect: { widgetId } },
-            sessionId: normalizedSessionId,
-            sectorId: sector.id,
-            isWin
-          }
+        await createSpin({
+          sessionId: normalizedSessionId,
+          sectorId: sector.id,
+          isWin
         })
       } catch (err: unknown) {
         const isErrorWithCode = (value: unknown): value is { code: string } =>
           isRecord(value) && typeof value.code === 'string'
 
         if (isErrorWithCode(err) && err.code === 'P2002') {
-          const createdByRace = await this.prisma.wheelOfFortuneSpin.findUnique({
-            where: { widgetId_sessionId: { widgetId, sessionId: normalizedSessionId } }
-          })
+          const createdByRace = await findSpinBySession(normalizedSessionId)
           if (createdByRace) {
             const sectorFromRace =
               items.find(s => s.id === createdByRace.sectorId) ??

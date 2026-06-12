@@ -64,7 +64,8 @@ export const UpdateWidgetDtoTypeEnum = {
     ANNOUNCEMENT: 'ANNOUNCEMENT',
     EVENT_TIMER: 'EVENT_TIMER',
     NOTIFICATION: 'NOTIFICATION',
-    CALLBACK: 'CALLBACK'
+    CALLBACK: 'CALLBACK',
+    CONVEYOR_OF_LUCK: 'CONVEYOR_OF_LUCK'
 } as const;
 
 export type UpdateWidgetDtoTypeEnum = typeof UpdateWidgetDtoTypeEnum[keyof typeof UpdateWidgetDtoTypeEnum];
