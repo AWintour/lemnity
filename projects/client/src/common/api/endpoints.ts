@@ -39,9 +39,25 @@ export const API = {
     LIST: '/calls' as const,
     RECORDING: (id: string) => `/calls/${id}/recording` as const
   },
+  CHAT: {
+    CONVERSATIONS: '/chat/conversations' as const,
+    CONVERSATION: (id: string) => `/chat/conversations/${id}` as const,
+    MESSAGES: (id: string) => `/chat/conversations/${id}/messages` as const
+  },
   MANAGERS: {
     LIST: (projectId: string) => `/projects/${projectId}/managers` as const,
     MANAGER: (projectId: string, id: string) => `/projects/${projectId}/managers/${id}` as const
+  },
+  // Командные сущности «Модуля Чат» (операторы/отделы/распределение/соцсети/групповой чат).
+  CHAT_OPS: {
+    OPERATORS: (projectId: string) => `/projects/${projectId}/chat/operators` as const,
+    OPERATOR: (projectId: string, id: string) => `/projects/${projectId}/chat/operators/${id}` as const,
+    DEPARTMENTS: (projectId: string) => `/projects/${projectId}/chat/departments` as const,
+    DEPARTMENT: (projectId: string, id: string) => `/projects/${projectId}/chat/departments/${id}` as const,
+    DISTRIBUTION: (projectId: string) => `/projects/${projectId}/chat/distribution` as const,
+    INTEGRATIONS: (projectId: string) => `/projects/${projectId}/chat/integrations` as const,
+    INTEGRATION: (projectId: string, type: string) => `/projects/${projectId}/chat/integrations/${type}` as const,
+    GROUP_MESSAGES: (projectId: string) => `/projects/${projectId}/chat/group-messages` as const
   },
   FEEDBACK: {
     SUBMIT: '/feedback' as const // POST — «Есть идея или замечания?»

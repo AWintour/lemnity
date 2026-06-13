@@ -154,6 +154,7 @@ export class LemnityService {
       { type: 'EVENT_TIMER', title: 'Таймер событий', isAvailable: true, badge: 'new' },
       { type: 'NOTIFICATION', title: 'Уведомления', isAvailable: true, badge: 'new' },
       { type: 'CALLBACK', title: 'Обратный звонок', isAvailable: true, badge: 'new' },
+      { type: 'CHAT', title: 'Чат', isAvailable: true, badge: 'new' },
       { type: 'CONVEYOR_OF_GIFTS', title: 'Конвейер подарков', isAvailable: false, badge: 'soon' },
       { type: 'POSTCARD', title: 'Открытка', isAvailable: false, badge: 'soon' },
       { type: 'CHEST_WITH_ACTION', title: 'Сундук с акцией', isAvailable: false, badge: 'soon' },

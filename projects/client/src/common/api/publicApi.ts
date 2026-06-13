@@ -55,7 +55,7 @@ const isLanHost = (host: string) =>
 
 const isLocalOrLanHost = (host: string) => isLocalHost(host) || isLanHost(host)
 
-const getDefaultApiOrigin = () => {
+export const getDefaultApiOrigin = () => {
   if (typeof window === 'undefined') return 'https://app.lemnity.ru'
 
   const host = window.location.hostname

@@ -15,6 +15,12 @@ import { MangoModule } from './mango/mango.module'
 import { ManagerModule } from './manager/manager.module'
 import { CallModule } from './call/call.module'
 import { FeedbackModule } from './feedback/feedback.module'
+import { ChatModule } from './chat/chat.module'
+import { ChatOperatorModule } from './chat-operator/chat-operator.module'
+import { ChatDepartmentModule } from './chat-department/chat-department.module'
+import { ChatDistributionModule } from './chat-distribution/chat-distribution.module'
+import { ChatSocialModule } from './chat-social/chat-social.module'
+import { ChatGroupModule } from './chat-group/chat-group.module'
 
 @Module({
   imports: [
@@ -31,7 +37,13 @@ import { FeedbackModule } from './feedback/feedback.module'
     MangoModule,
     ManagerModule,
     CallModule,
-    FeedbackModule
+    FeedbackModule,
+    ChatModule,
+    ChatOperatorModule,
+    ChatDepartmentModule,
+    ChatDistributionModule,
+    ChatSocialModule,
+    ChatGroupModule
   ],
   controllers: [AppController],
   providers: [AppService]

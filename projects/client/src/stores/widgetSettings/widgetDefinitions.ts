@@ -57,6 +57,12 @@ import {
   buildCallbackDisplaySettings,
   buildCallbackIntegrationSettings
 } from '@/layouts/Widgets/Callback/defaults'
+import {
+  buildChatWidgetSettings,
+  buildChatFieldsSettings,
+  buildChatDisplaySettings,
+  buildChatIntegrationSettings
+} from '@/layouts/Widgets/Chat/defaults'
 import { resolveWidgetDefinition } from './resolveWidgetDefinition'
 
 type SettingsSurfaceMode = 'standard' | 'custom'
@@ -175,6 +181,17 @@ const implementedWidgetDefinitions: Partial<Record<WidgetTypeEnum, WidgetDefinit
     buildFieldsSettings: buildCallbackFieldsSettings,
     buildDisplaySettings: buildCallbackDisplaySettings,
     buildIntegrationSettings: buildCallbackIntegrationSettings,
+    settingsSurfaces: {
+      fields: 'custom',
+      display: 'custom',
+    }
+  },
+  [WidgetTypeEnum.CHAT]: {
+    type: WidgetTypeEnum.CHAT,
+    buildWidgetSettings: buildChatWidgetSettings,
+    buildFieldsSettings: buildChatFieldsSettings,
+    buildDisplaySettings: buildChatDisplaySettings,
+    buildIntegrationSettings: buildChatIntegrationSettings,
     settingsSurfaces: {
       fields: 'custom',
       display: 'custom',

@@ -60,6 +60,10 @@
     "./widgets/callback": {
       "types": "./dist/widgets/Callback/schema.d.ts",
       "default": "./dist/widgets/Callback/schema.js"
+    },
+    "./widgets/chat": {
+      "types": "./dist/widgets/Chat/schema.d.ts",
+      "default": "./dist/widgets/Chat/schema.js"
     }
   },
   "dependencies": {

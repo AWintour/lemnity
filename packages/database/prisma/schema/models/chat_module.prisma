@@ -1,0 +1,108 @@
+// Командные сущности «Модуля Чат» (рабочее место оператора). См. plan-module-chat.md.
+// Все привязаны к проекту; CRUD доступен владельцу проекта (@Auth + owner-check).
+
+/// Оператор чата проекта (раздел «Операторы»). Управляемая сущность (CRUD в ЛК).
+/// status — рабочий статус (work|lunch|away|rest), online — присутствие в реальном времени.
+model ChatOperator {
+  id        String  @id @default(cuid())
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name      String
+  email     String?
+  role      String  @default("Оператор")
+  avatarUrl String? @map("avatar_url")
+  online    Boolean @default(false)
+  status    String  @default("work") // work|lunch|away|rest
+
+  departmentId String?         @map("department_id")
+  department   ChatDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  assignedConversations ChatConversation[]
+  groupMessages         ChatGroupMessage[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@index([projectId])
+  @@index([departmentId])
+  @@map("chat_operators")
+}
+
+/// Отдел проекта (раздел «Отделы») — группа для распределения диалогов. Состав — операторы с departmentId.
+model ChatDepartment {
+  id        String  @id @default(cuid())
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  operators ChatOperator[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@index([projectId])
+  @@map("chat_departments")
+}
+
+/// Настройки автораспределения диалогов (одна строка на проект).
+/// method: common (уведомить всех) | balanced (авто-назначение). how: queue (по очереди) | load (по нагрузке).
+/// operatorIds — операторы, участвующие в распределении.
+model ChatDistributionSettings {
+  id        String  @id @default(cuid())
+
+  projectId String  @unique @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  enabled     Boolean  @default(false)
+  method      String   @default("common")
+  how         String   @default("queue")
+  operatorIds String[] @map("operator_ids")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("chat_distribution_settings")
+}
+
+/// Интеграция соцсети (раздел «Соцсети»): telegram|max|vk. Одна строка на (проект, тип).
+model ChatSocialIntegration {
+  id        String  @id @default(cuid())
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  type      String  // telegram|max|vk
+  connected Boolean @default(false)
+  config    Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@unique([projectId, type])
+  @@map("chat_social_integrations")
+}
+
+/// Сообщение внутреннего группового чата операторов проекта (клиенты не видят).
+model ChatGroupMessage {
+  id        String  @id @default(cuid())
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  operatorId   String?       @map("operator_id")
+  operator     ChatOperator? @relation(fields: [operatorId], references: [id], onDelete: SetNull)
+  // userId автора-продавца (если пишет пользователь кабинета, а не управляемый оператор).
+  senderUserId String?       @map("sender_user_id")
+  senderName   String?       @map("sender_name")
+
+  body String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([projectId, createdAt])
+  @@map("chat_group_messages")
+}

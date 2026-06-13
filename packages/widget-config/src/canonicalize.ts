@@ -7,6 +7,7 @@ import { canonicalizeEventTimer } from './widgets/EventTimer/canonicalize.js'
 import { canonicalizeNotification } from './widgets/Notification/canonicalize.js'
 import { canonicalizeVideoWidget } from './widgets/VideoWidget/canonicalize.js'
 import { canonicalizeCallback } from './widgets/Callback/canonicalize.js'
+import { canonicalizeChat } from './widgets/Chat/canonicalize.js'
 import { widgetSchemaAdapters } from './widgets/index.js'
 import type {
   CanonicalizerMap,
@@ -47,6 +48,7 @@ const canonicalizers: CanonicalizerMap = {
   NOTIFICATION: canonicalizeNotification,
   VIDEO_WIDGET: canonicalizeVideoWidget,
   CALLBACK: canonicalizeCallback,
+  CHAT: canonicalizeChat,
 }
 
 const resolveCanonicalizer = (type: WidgetTypeId): WidgetCanonicalizer =>

@@ -504,6 +504,9 @@ export type WidgetActions = {
   // ---------------------------------------------------------------------------
   // Callback actions (обратный звонок) — единый patch-апдейтер
   setCallbackPatch: (patch: Record<string, unknown>) => void
+  // ---------------------------------------------------------------------------
+  // Chat actions (онлайн-чат) — единый patch-апдейтер
+  setChatPatch: (patch: Record<string, unknown>) => void
 }
 
 export type WidgetSlice = {

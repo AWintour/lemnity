@@ -15,6 +15,7 @@ import { useSidebarStore } from '@/stores/sidebarStore'
 import { Button } from '@heroui/button'
 import { useLocation } from 'react-router-dom'
 import { getNewRequestsCount } from '@/services/requests'
+import { getUnreadChatsCount } from '@/services/chats'
 import { cn } from '@heroui/theme'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
 import { useProjectsStore } from '@/stores/projectsStore'
@@ -41,8 +42,9 @@ const NavigationSidebar = () => {
   const previousWidthRef = useRef(viewportWidth)
 
   const [newRequestsCount, setNewRequestsCount] = useState<number | null>(null)
+  const [unreadChatsCount, setUnreadChatsCount] = useState<number | null>(null)
 
-  // Вкладка «Звонки» появляется только когда есть включённый виджет «Обратный звонок».
+  // Вкладки «Звонки»/«Чаты» появляются только при включённом соответствующем виджете.
   const projects = useProjectsStore(s => s.projects)
   const ensureProjectsLoaded = useProjectsStore(s => s.ensureLoaded)
   useEffect(() => {
@@ -50,6 +52,10 @@ const NavigationSidebar = () => {
   }, [ensureProjectsLoaded])
   const hasEnabledCallback = useMemo(
     () => projects.some(p => p.widgets.some(w => w.type === WidgetTypeEnum.CALLBACK && w.enabled)),
+    [projects]
+  )
+  const hasEnabledChat = useMemo(
+    () => projects.some(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled)),
     [projects]
   )
 
@@ -64,6 +70,7 @@ const NavigationSidebar = () => {
     const path = location.pathname
     if (path.startsWith('/analytics')) return 'analytics'
     if (path.startsWith('/calls')) return 'calls'
+    if (path.startsWith('/chat-module') || path.startsWith('/chats')) return 'chats'
     if (path.startsWith('/requests')) return 'requests'
     if (path.startsWith('/projects')) return 'projects'
     if (path === '/' || path.startsWith('/dashboard')) return 'projects'
@@ -81,6 +88,14 @@ const NavigationSidebar = () => {
       } catch {
         if (!isMounted) return
         setNewRequestsCount(null)
+      }
+      try {
+        const chats = await getUnreadChatsCount()
+        if (!isMounted) return
+        setUnreadChatsCount(chats)
+      } catch {
+        if (!isMounted) return
+        setUnreadChatsCount(null)
       }
     }
 
@@ -139,6 +154,21 @@ const NavigationSidebar = () => {
             } as MenuItem
           ]
         : []),
+      ...(hasEnabledChat
+        ? [
+            {
+              key: 'chats',
+              icon: (
+                <div className="w-5.5 h-5.5">
+                  <SvgIcon src={iconPaperAirplane} size={'22px'} className={'text-black '} />
+                </div>
+              ),
+              label: 'Модуль Чат',
+              badge: unreadChatsCount && unreadChatsCount > 0 ? unreadChatsCount : undefined,
+              href: '/chat-module'
+            } as MenuItem
+          ]
+        : []),
       {
         key: 'payment',
         icon: (
@@ -151,7 +181,7 @@ const NavigationSidebar = () => {
         target: '_top'
       }
     ],
-    [newRequestsCount, hasEnabledCallback]
+    [newRequestsCount, hasEnabledCallback, hasEnabledChat, unreadChatsCount]
   )
 
   const getFooter = () => (

@@ -29,6 +29,9 @@ import {
 import type {
   CallbackWidgetType,
 } from '@/layouts/Widgets/Callback/defaults'
+import {
+  createChatActions,
+} from '@/layouts/Widgets/Chat/actions'
 
 import type {
   ActionTimerWidgetSettings,
@@ -58,6 +61,9 @@ import type {
 import type {
   VideoWidgetType,
 } from '@lemnity/widget-config/widgets/video-widget'
+import type {
+  ChatWidgetType,
+} from '@lemnity/widget-config/widgets/chat'
 
 export const createWidgetSlice = (updateWidget: WidgetUpdater): WidgetSlice => {
   const createTypedUpdater = <T extends WidgetSpecificSettings>(
@@ -121,6 +127,12 @@ export const createWidgetSlice = (updateWidget: WidgetUpdater): WidgetSlice => {
           (widget as { type?: string }).type === WidgetTypeEnum.CALLBACK
     )
 
+  const chatUpdater: TypedWidgetUpdater<ChatWidgetType> =
+    createTypedUpdater(
+      (widget): widget is ChatWidgetType =>
+          (widget as { type?: string }).type === WidgetTypeEnum.CHAT
+    )
+
   const specificActions = {
     ...createWheelActions(wheelUpdater),
     ...createActionTimerActions(actionTimerUpdater),
@@ -130,6 +142,7 @@ export const createWidgetSlice = (updateWidget: WidgetUpdater): WidgetSlice => {
     ...createNotificationActions(notificationUpdater),
     ...createVideoWidgetActions(videoWidgetUpdater),
     ...createCallbackActions(callbackUpdater),
+    ...createChatActions(chatUpdater),
   } as Omit<WidgetActions, 'setWidgetType'>
 
   return {

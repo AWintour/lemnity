@@ -96,7 +96,8 @@ export const WidgetTypeEnum = {
     NOTIFICATION: 'NOTIFICATION',
     VIDEO_WIDGET: 'VIDEO_WIDGET',
     CALLBACK: 'CALLBACK',
-    CONVEYOR_OF_LUCK: 'CONVEYOR_OF_LUCK'
+    CONVEYOR_OF_LUCK: 'CONVEYOR_OF_LUCK',
+    CHAT: 'CHAT'
 } as const;
 
 export type WidgetTypeEnum = typeof WidgetTypeEnum[keyof typeof WidgetTypeEnum];

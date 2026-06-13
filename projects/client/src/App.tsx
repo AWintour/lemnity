@@ -17,6 +17,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
 import AnalyticsPage from './pages/AnalyticsPage'
 import RequestsPage from './pages/RequestsPage/RequestsPage.tsx'
 import CallsPage from './pages/CallsPage/CallsPage.tsx'
+import ChatsPage from './pages/ChatsPage/ChatsPage.tsx'
+import ChatModulePage from './pages/ChatModulePage/ChatModulePage.tsx'
 import EditorSsoPage from './pages/EditorSsoPage.tsx'
 import { memo, useEffect } from 'react'
 
@@ -96,6 +98,24 @@ function App() {
             <FullWidthLayout>
               <CallsPage />
             </FullWidthLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chats"
+        element={
+          <ProtectedRoute>
+            <FullWidthLayout>
+              <ChatsPage />
+            </FullWidthLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat-module"
+        element={
+          <ProtectedRoute>
+            <ChatModulePage />
           </ProtectedRoute>
         }
       />

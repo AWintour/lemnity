@@ -18,6 +18,28 @@ export const extractRequestOriginHost = (req: Request): string | null => {
   return tryParseHost(rawOrigin) ?? tryParseHost(rawReferer)
 }
 
+// Тот же разбор origin/referer, но из «сырых» заголовков (например, socket.io handshake.headers),
+// где нет express Request. Переиспользуется gateway-ом чата.
+export const extractOriginHostFromHeaders = (
+  headers: Record<string, unknown>
+): string | null => {
+  const pick = (value: unknown): string | undefined =>
+    typeof value === 'string' ? value.trim() : undefined
+  const rawOrigin = pick(headers.origin)
+  const rawReferer = pick(headers.referer)
+
+  const tryParseHost = (value: string | undefined): string | null => {
+    if (!value || value === 'null') return null
+    try {
+      return new URL(value).hostname
+    } catch {
+      return null
+    }
+  }
+
+  return tryParseHost(rawOrigin) ?? tryParseHost(rawReferer)
+}
+
 export const extractWebsiteHosts = (websiteUrl: string | null | undefined): string[] => {
   const raw = (websiteUrl ?? '').trim()
   if (!raw) return []

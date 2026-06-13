@@ -16,6 +16,7 @@ export const WidgetTypes = {
   VIDEO_WIDGET: WidgetTypeEnum.VIDEO_WIDGET,
   CALLBACK: WidgetTypeEnum.CALLBACK,
   CONVEYOR_OF_LUCK: WidgetTypeEnum.CONVEYOR_OF_LUCK,
+  CHAT: WidgetTypeEnum.CHAT,
 } as const
 
 export type WidgetType = (typeof WidgetTypes)[keyof typeof WidgetTypes]
@@ -122,6 +123,14 @@ export const AVAILABLE_WIDGETS: AvailableWidget[] = [
     isAvailable: true,
     badge: 'new',
     categories: ['leads']
+  },
+  {
+    type: WidgetTypes.CHAT,
+    title: 'Чат',
+    description: 'Лиды, вовлечение',
+    isAvailable: true,
+    badge: 'new',
+    categories: ['leads', 'engage']
   },
   {
     type: WidgetTypes.CONVEYOR_OF_GIFTS,

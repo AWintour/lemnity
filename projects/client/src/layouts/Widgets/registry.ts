@@ -9,6 +9,7 @@ import { eventTimerWidgetMetadata } from './EventTimer/metadata'
 import { notificationWidgetMetadata } from './Notification/metadata'
 import { videoWidgetMetadata } from './VideoWidget/metadata'
 import { callbackWidgetMetadata } from './Callback/metadata'
+import { chatWidgetMetadata } from './Chat/metadata'
 import {
   StubWidgetPanelPreview,
   StubDesktopScreen,
@@ -133,6 +134,7 @@ const widgetMetadata: Partial<
   [WidgetTypeEnum.NOTIFICATION]: notificationWidgetMetadata,
   [WidgetTypeEnum.VIDEO_WIDGET]: videoWidgetMetadata,
   [WidgetTypeEnum.CALLBACK]: callbackWidgetMetadata,
+  [WidgetTypeEnum.CHAT]: chatWidgetMetadata,
 }
 
 const definitions: Record<WidgetTypeEnum, WidgetDefinition> = Object.fromEntries(

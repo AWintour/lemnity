@@ -12,6 +12,7 @@ import EventTimerEmbedRuntime from '@/layouts/Widgets/EventTimer/embedded/embedR
 import NotificationEmbedRuntime from '@/layouts/Widgets/Notification/embedded/embedRuntime'
 import { VideoWidgetEmbedRuntime } from '@/layouts/Widgets/VideoWidget/embedded'
 import { CallbackEmbedRuntime } from '@/layouts/Widgets/Callback/embedded'
+import ChatEmbedRuntime from '@/layouts/Widgets/Chat/embedded/embedRuntime'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { InitOptions } from './types'
 import { ensureContainer, ensureElement, fetchPublicWidget } from './utils'
@@ -41,6 +42,8 @@ const EmbedRuntime = ({ widgetType }: { widgetType: WidgetTypeEnum }) => {
       return <VideoWidgetEmbedRuntime />
     case WidgetTypeEnum.CALLBACK:
       return <CallbackEmbedRuntime />
+    case WidgetTypeEnum.CHAT:
+      return <ChatEmbedRuntime />
     default:
       return <EmbeddedWidget widgetType={widgetType} />
   }

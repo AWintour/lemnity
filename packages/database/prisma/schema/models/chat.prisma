@@ -1,0 +1,78 @@
+enum ChatConversationStatus {
+  open
+  closed
+}
+
+enum ChatMessageSender {
+  visitor
+  manager
+  system
+}
+
+// Диалог чата: одна нить «посетитель ↔ продавец» в рамках виджета CHAT.
+// Уникальна по паре (widgetId, sessionId) — возвращающийся посетитель продолжает ту же нить.
+model ChatConversation {
+  id        String   @id @default(cuid())
+  seq       Int      @unique @default(autoincrement())
+
+  projectId String   @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  widgetId  String   @map("widget_id")
+  widget    Widget   @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+
+  // Идентификатор посетителя сайта (lemnity.session_id).
+  sessionId String   @map("session_id")
+
+  status    ChatConversationStatus @default(open)
+
+  // Опциональный контакт посетителя (если включён requireContact).
+  visitorName  String? @map("visitor_name")
+  visitorPhone String? @map("visitor_phone")
+  visitorEmail String? @map("visitor_email")
+
+  // Модуль Чат: назначение оператора, канал, категория-статус беседы, заметка оператора.
+  assignedOperatorId String?       @map("assigned_operator_id")
+  assignedOperator   ChatOperator? @relation(fields: [assignedOperatorId], references: [id], onDelete: SetNull)
+  channel            String?       // web|telegram|vk|max (источник диалога)
+  category           String?       // «Первичный контакт» | «В работе» | «Завершен с успехом» | ...
+  note               String?       // внутренняя заметка оператора
+
+  // Денормализация для быстрого списка диалогов в кабинете.
+  lastMessageAt      DateTime? @map("last_message_at")
+  lastMessagePreview String?   @map("last_message_preview")
+  unreadForManager   Int       @default(0) @map("unread_for_manager")
+  unreadForVisitor   Int       @default(0) @map("unread_for_visitor")
+
+  messages  ChatMessage[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@unique([widgetId, sessionId])
+  @@index([projectId])
+  @@index([widgetId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@index([assignedOperatorId])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+
+  conversationId String   @map("conversation_id")
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  sender         ChatMessageSender
+  body           String
+
+  // userId продавца-автора (денормализация, чтобы список не зависел от Manager).
+  senderUserId   String?  @map("sender_user_id")
+
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([conversationId, createdAt])
+  @@map("chat_messages")
+}

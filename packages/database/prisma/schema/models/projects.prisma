@@ -9,6 +9,12 @@ model Project {
   requests   Request[]
   integrations ProjectIntegration[]
   managers   Manager[]
+  chatConversations ChatConversation[]
+  chatOperators ChatOperator[]
+  chatDepartments ChatDepartment[]
+  chatDistributionSettings ChatDistributionSettings?
+  chatSocialIntegrations ChatSocialIntegration[]
+  chatGroupMessages ChatGroupMessage[]
 
   userId     String   @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
