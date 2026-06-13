@@ -13,7 +13,7 @@
 Решения:
 - **Объём:** фронтенд + бэкенд (эндпоинт spin) + БД (новые Prisma-модели и миграции).
 - **Идентификатор типа:** `CONVEYOR_OF_LUCK`, имя «Конвейер Удачи».
-- **Доступ:** только админ (как `CALLBACK`).
+- **Доступ:** изначально только админ (как `CALLBACK`); после релиза **открыт всем** (см. §14).
 
 Цепочка типа: Prisma enum `WidgetType` → `@lemnity/database` → серверные DTO → OpenAPI →
 `@lemnity/api-sdk` (`WidgetTypeEnum`) → фронтенд.
@@ -115,13 +115,14 @@
 `embedManager.tsx` → `case WidgetTypeEnum.CONVEYOR_OF_LUCK: return <ConveyorEmbedRuntime />`
 (собственный раннер с барабаном, не `WheelEmbedRuntime`).
 
-## 8. Бэкенд: spin + admin-only — ✅
+## 8. Бэкенд: spin + доступ — ✅
 
 - `widget.service.ts::spinWheelPublic` — принимает wheel-like типы; таблица спинов выбирается по
   типу (`wheelOfFortuneSpin` / `conveyorOfLuckSpin`, связь `wheelWidget` / `conveyorWidget`).
   Веса/анти-дубль/event-mode без изменений.
-- `common/admin.ts` — `CONVEYOR_OF_LUCK` в `ADMIN_ONLY_WIDGET_TYPES`.
-- `pages/ProjectWidgetsPage.tsx` — `CONVEYOR_OF_LUCK` в `ADMIN_ONLY_WIDGETS`.
+- **Доступ:** изначально был admin-only (`common/admin.ts ADMIN_ONLY_WIDGET_TYPES` +
+  `ProjectWidgetsPage.ADMIN_ONLY_WIDGETS`) на тестовый период. **Сейчас открыт всем** (PR #123) —
+  убран из обоих сетов. Admin-only остаётся только у `CALLBACK`. См. §14.
 
 ## 9. Dev-харнесс предпросмотра (без авторизации) — ✅
 
@@ -235,24 +236,39 @@
 `@lemnity/embed-script` build (+ `sync:public` копирует `dist/embed.js` в
 `projects/client/public` и `projects/test-platform/public`).
 
-**Прод-деплой (CI-CD.yml + deploy.sh):** схема в БД синхронизируется через
+**Прод-деплой (CI-CD.yml + deploy.sh):** триггерится push в `main`. Схема в БД синхронизируется через
 `prisma db push --accept-data-loss` (НЕ `migrate deploy`). `db push` создаёт enum-значение, таблицы
 `conveyor_of_luck_widgets`/`conveyor_of_luck_spins`, индексы и FK — но **НЕ** raw-SQL функции/триггеры
 из миграции.
 
-**⚠️ Обязательный ручной шаг в проде (один раз на среду, ПОСЛЕ `db push`):**
-применить идемпотентный `packages/database/prisma/manual/conveyor_of_luck_triggers.sql`
-(guard/sync функции + триггеры + бэкафилл родительских строк). Без него спин конвейера упадёт:
-`conveyorOfLuckSpin.create` делает `conveyorWidget.connect`, а строку-родителя создаёт триггер.
-Применяется тем же путём, что и триггеры «Колеса фортуны». Команда:
+**Триггеры применяются автоматически в `deploy.sh`** (шаг сразу после `db push`):
 ```
-psql "$DATABASE_URL" -f packages/database/prisma/manual/conveyor_of_luck_triggers.sql
+docker compose -f docker-compose.prod.yml run --rm server \
+  pnpm --filter @lemnity/database exec prisma db execute \
+    --file prisma/manual/conveyor_of_luck_triggers.sql
 ```
+`prisma/manual/conveyor_of_luck_triggers.sql` идемпотентен (guard/sync функции + триггеры + бэкафилл
+родительских строк через `ON CONFLICT DO NOTHING`). Шаг non-fatal: при ошибке деплой продолжается с
+предупреждением. Без триггеров спин конвейера падает (`conveyorOfLuckSpin.create` →
+`conveyorWidget.connect` требует строку-родителя). Ручной аналог при необходимости:
+`psql "$DATABASE_URL" -f packages/database/prisma/manual/conveyor_of_luck_triggers.sql`.
 
 **Проверено локально (e2e на уровне БД, в откатываемой транзакции):** создание виджета
 CONVEYOR_OF_LUCK → sync-триггер создаёт строку-родителя; вставка спина (FK к родителю) ок;
 анти-дубль по `(widget_id, session_id)` блокирует повтор сессии; guard отклоняет родителя
 не-конвейера; delete виджета каскадно удаляет родителя и спины. Серверный jest — 105/105 passed.
+
+## 14. Релиз в прод — ✅
+
+- **PR #122** (виджет целиком) смержен в `main` → CI/CD run #142 (build+deploy success). В логе деплоя:
+  `db push` синхронизировал схему, затем `prisma db execute` триггеров — `Script executed successfully`.
+- **PR #123** (каталог + доступ) смержен → run #143 (success). Изменения:
+  - **Порядок каталога** (`AVAILABLE_WIDGETS` в `layouts/Widgets/constants.ts`):
+    Колесо фортуны → **Конвейер Удачи (2-й)** → **Видео виджет (3-й)** → остальные. Сортировка
+    в `ProjectWidgetsPage` стабильна по `rank` (badge `new`→0), внутри ранга — порядок массива.
+  - **Открыт всем пользователям:** `CONVEYOR_OF_LUCK` убран из admin-only —
+    `ProjectWidgetsPage.ADMIN_ONLY_WIDGETS` и `common/admin.ts ADMIN_ONLY_WIDGET_TYPES`.
+    (Изначально был admin-only на тестовый период.)
 
 ---
 
