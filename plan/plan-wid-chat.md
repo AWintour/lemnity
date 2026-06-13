@@ -182,6 +182,29 @@
   только администратору (`hooks/useIsAdmin`: роль `ADMIN` или email из `VITE_ADMIN_EMAILS`,
   дефолт включает `lemnitycom@gmail.com`). Снять при открытии всем.
 
+### Багфикс: дубль виджета при двух тегах embed.js (2026-06-14, commit `2abe526`)
+
+**Симптом**: на живой странице (Tilda) виджет чата показывался дважды.
+
+**Root cause**: сниппет встраивается как `<script type="module" defer>`; для модулей
+`document.currentScript` всегда `null`, скрипт отложенный → `findEmbedScript()` в момент `load`
+возвращал ПЕРВЫЙ тег `embed.js` для ОБОИХ исполнений бандла. На странице было два тега embed.js
+(валидный CHAT + старый 404), поэтому первый виджет монтировался дважды, второй — никогда.
+Дедуп-гард `__lemnityMounted` занимал владение widgetId только ПОСЛЕ `await fetch` → оба
+исполнения успевали пройти проверку (гонка).
+
+**Фикс** (`packages/embed-script/src/embed/`): идемпотентный бутстрап —
+- `utils.collectEmbedWidgetIds()` собирает ВСЕ уникальные widgetId со всех тегов embed.js;
+- `index.tsx` монтирует каждый ровно один раз (по `EmbedManager` на widgetId — один менеджер
+  хостит один виджет, т.к. `init` делает `destroy` предыдущего);
+- `embedManager.init()` занимает владение в `__lemnityMounted` СИНХРОННО до любого `await`.
+Loader/format-агностично; incoming `postMessage` фильтруется по `event.source` (мультименеджеры
+не пересекаются). Тест: реальная `collectEmbedWidgetIds` на сценарии страницы — дедуп
+`[AAA,BBB,tilda,AAA]→[AAA,BBB]`; синхронный гард — `AAA` монтируется один раз.
+
+> На стороне сайта остаётся косметика: убрать второй (битый, 404) сниппет — но дубль уходит
+> и без этого. Прод `embed.js` пересобирается в CI (`postinstall → sync:embed-script → client build`).
+
 ### Осталось
 
 - [ ] Полный e2e на реальном CHAT-виджете: создать виджет в проекте (websiteUrl = origin стенда),
