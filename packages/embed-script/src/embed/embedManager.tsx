@@ -218,6 +218,11 @@ class EmbedManager {
         console.debug('[LemnityWidgets] widget already mounted elsewhere, skip duplicate', widgetId)
         return
       }
+      // Захватываем владение СИНХРОННО, до любого await: при двойном подключении embed.js
+      // второе исполнение увидит занятый widgetId и не смонтирует дубль (иначе оба пройдут
+      // проверку, пока первый ждёт fetch). Для свежего менеджера this.widgetId ещё undefined,
+      // поэтому await this.destroy() ниже не снимает только что выставленную метку.
+      reg.__lemnityMounted[widgetId] = this
 
       await this.destroy()
 

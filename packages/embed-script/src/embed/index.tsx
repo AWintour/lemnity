@@ -1,29 +1,43 @@
 import type { InitOptions } from './types'
 import EmbedManager from './embedManager'
-import { findEmbedScript } from './utils'
+import { collectEmbedWidgetIds } from './utils'
 
-const manager = new EmbedManager()
+// По одному менеджеру на widgetId: один EmbedManager хостит ровно один виджет
+// (init вызывает destroy предыдущего). Так одно исполнение может смонтировать несколько
+// разных виджетов, а глобальный гард (__lemnityMounted) не даёт смонтировать один и тот же
+// виджет дважды, когда embed.js подключён на странице несколько раз.
+const managers = new Map<string, EmbedManager>()
+
+const initWidget = (options: InitOptions) => {
+  let manager = managers.get(options.widgetId)
+  if (!manager) {
+    manager = new EmbedManager()
+    managers.set(options.widgetId, manager)
+  }
+  return manager.init(options)
+}
 
 const api = {
-  init: (options: InitOptions) => manager.init(options),
-  destroy: (widgetId?: string) => manager.destroy(widgetId),
-  postMessage: (message: unknown) => manager.postMessage(message)
+  init: (options: InitOptions) => initWidget(options),
+  destroy: (widgetId?: string) => {
+    if (widgetId) {
+      const manager = managers.get(widgetId)
+      managers.delete(widgetId)
+      return manager ? manager.destroy(widgetId) : Promise.resolve()
+    }
+    const all = Array.from(managers.values())
+    managers.clear()
+    return Promise.all(all.map(m => m.destroy())).then(() => undefined)
+  },
+  postMessage: (message: unknown) => managers.forEach(m => m.postMessage(message))
 }
 
 const autoInitFromQuery = () => {
-  const currentScript = findEmbedScript()
-  console.debug('[LemnityWidgets] autoInitFromQuery start', currentScript?.src ?? null)
-  if (!currentScript?.src) return
-  try {
-    const url = new URL(currentScript.src)
-    const widgetId = url.searchParams.get('widgetId')
-    if (!widgetId) return
-
-    console.debug('[LemnityWidgets] init from query', { widgetId })
+  const widgetIds = collectEmbedWidgetIds()
+  console.debug('[LemnityWidgets] autoInit widgetIds', widgetIds)
+  widgetIds.forEach(widgetId => {
     api.init({ widgetId }).catch(err => console.error('[LemnityWidgets]', err))
-  } catch {
-    // ignore parse errors
-  }
+  })
 }
 
 const bootstrap = () => {

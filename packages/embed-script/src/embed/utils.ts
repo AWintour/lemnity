@@ -43,6 +43,33 @@ export const findEmbedScript = () => {
   return null
 }
 
+/**
+ * Собирает ВСЕ уникальные widgetId со всех тегов <script src=".../embed.js?widgetId=...">.
+ *
+ * Почему так: сниппет встраивается как `type="module"`, для модулей `document.currentScript`
+ * всегда `null`, а скрипт грузится отложенно (defer) — поэтому в момент `load` нельзя надёжно
+ * определить «свой» тег. Если на странице два тега embed.js, `findEmbedScript()` для обоих
+ * исполнений возвращал ПЕРВЫЙ тег → первый виджет монтировался дважды. Сбор всех id + монтаж
+ * каждого ровно один раз (см. дедуп в EmbedManager.init) делает бутстрап идемпотентным.
+ */
+export const collectEmbedWidgetIds = (): string[] => {
+  if (typeof document === 'undefined') return []
+  const isProd = !isLocalEnv()
+  const match = isProd ? 'app.lemnity.ru/embed.js' : '/embed.js'
+  const ids: string[] = []
+  for (const script of Array.from(document.querySelectorAll<HTMLScriptElement>('script'))) {
+    const src = script.src || ''
+    if (!src.includes(match)) continue
+    try {
+      const id = new URL(src).searchParams.get('widgetId')
+      if (id && !ids.includes(id)) ids.push(id)
+    } catch {
+      // ignore parse errors
+    }
+  }
+  return ids
+}
+
 const buildPublicWidgetUrl = (widgetId: string, apiBase?: string) => {
   const base = apiBase ?? getApiBase()
   return `${base}/public/widgets/${encodeURIComponent(widgetId)}`
