@@ -264,15 +264,25 @@ const ModuleSidebar = ({
   section,
   onSection,
   inboxCount,
+  onExit,
 }: {
   section: Section
   onSection: (s: Section) => void
   inboxCount: number
+  onExit: () => void
 }) => (
   <aside className="w-60 shrink-0 sidebar-bg flex flex-col p-4 gap-1.5">
-    <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pb-3 mb-1 border-b border-default-200">
+    <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pt-1">
       Модуль "Чат"
     </h1>
+    <button
+      type="button"
+      onClick={onExit}
+      className="flex items-center gap-2 text-[14px] text-[#3D3D3B] hover:text-primary px-2 pb-3 mb-1 border-b border-default-200"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+      Личный кабинет
+    </button>
     <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} />
     <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} />
     <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} />
@@ -333,13 +343,172 @@ const StatusSelect = ({ value, onChange }: { value: string; onChange: (v: string
   </div>
 )
 
+/** Карточка беседы (как в макете): профиль клиента + история диалога + события. Реальные данные. */
+const DialogCard = ({
+  conv,
+  preview,
+  onClose,
+  onOpen,
+}: {
+  conv: ChatConversation
+  preview?: boolean
+  onClose: () => void
+  onOpen: (id: string) => void
+}) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+
+  useEffect(() => {
+    if (preview) {
+      setMessages(MOCK_MESSAGES[conv.id] ?? [])
+      return
+    }
+    let alive = true
+    void (async () => {
+      try {
+        const res = await chatsService.getConversationMessages(conv.id)
+        if (alive) setMessages(res.messages)
+      } catch (e) {
+        console.error('DialogCard messages failed', e)
+        if (alive) setMessages([])
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [conv.id, preview])
+
+  const groups = useMemo(() => {
+    const out: { day: string; items: ChatMessage[] }[] = []
+    for (const m of messages) {
+      const day = dayLabel(m.createdAt)
+      const last = out[out.length - 1]
+      if (last && last.day === day) last.items.push(m)
+      else out.push({ day, items: [m] })
+    }
+    return out
+  }, [messages])
+
+  const Field = ({ label, value }: { label: string; value?: string | null }) => (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[13px] text-default-400">{label}</span>
+      <span className="text-[15px] text-[#1A1A1A] break-words">{value || '—'}</span>
+    </div>
+  )
+  const EventItem = ({ title, time, rows }: { title: string; time?: string | null; rows: [string, string][] }) => (
+    <div className="relative pl-5">
+      <span className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-primary" />
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[15px] font-medium text-[#1A1A1A]">{title}</span>
+        <span className="text-[12px] text-default-400 shrink-0">{time ? fmtFull(time) : ''}</span>
+      </div>
+      <div className="mt-1.5 flex flex-col gap-1">
+        {rows.map(([k, v], i) => (
+          <div key={i} className="flex items-baseline justify-between gap-3 text-[13px]">
+            <span className="text-default-400 shrink-0">{k}</span>
+            <span className="text-[#1A1A1A] text-right break-words min-w-0">{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-[1240px] h-[88vh] bg-white rounded-[16px] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* Шапка */}
+        <div className="h-16 shrink-0 px-5 flex items-center gap-3 border-b border-default-200">
+          <Avatar name={convName(conv)} size={40} />
+          <span className="text-[18px] font-semibold text-[#1A1A1A] truncate flex-1 min-w-0">{convName(conv)}</span>
+          <button type="button" onClick={() => { onOpen(conv.id); onClose() }} className="h-9 px-4 rounded-[10px] bg-primary text-white text-[14px]">Перейти в диалог</button>
+          <button type="button" onClick={onClose} aria-label="Закрыть" className="w-9 h-9 rounded-[8px] hover:bg-default-100 flex items-center justify-center text-default-500">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+
+        {/* Тело: 3 колонки */}
+        <div className="flex-1 min-h-0 flex">
+          {/* Профиль */}
+          <aside className="w-[320px] shrink-0 border-r border-default-200 overflow-y-auto p-5 flex flex-col gap-4">
+            <h3 className="text-[15px] font-semibold text-[#1A1A1A]">Профиль клиента</h3>
+            <Field label="Имя" value={conv.visitorName} />
+            <Field label="Email" value={conv.visitorEmail} />
+            <Field label="Телефон" value={conv.visitorPhone} />
+            <div className="h-px bg-default-200" />
+            <Field label="Статус беседы" value={conv.category || (conv.status === 'closed' ? 'Завершён' : 'Открыт')} />
+            <Field label="Канал" value={conv.channel || 'Чат на сайте'} />
+            <Field label="Заметка оператора" value={conv.note} />
+          </aside>
+
+          {/* История диалогов */}
+          <section className="flex-1 min-w-0 flex flex-col">
+            <div className="px-6 py-4 border-b border-default-200 shrink-0">
+              <h3 className="text-[16px] font-semibold text-[#1A1A1A]">История диалогов</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {groups.length === 0 ? (
+                <div className="text-center text-default-400 text-[14px] py-10">Сообщений пока нет</div>
+              ) : (
+                groups.map((g, gi) => (
+                  <div key={gi} className="flex flex-col gap-3">
+                    <div className="text-center text-[13px] text-default-400">{g.day}</div>
+                    {g.items.map(m =>
+                      m.sender === 'system' ? (
+                        <div key={m.id} className="text-center text-[13px] text-default-400">{m.body}</div>
+                      ) : (
+                        <div key={m.id} className={cn('w-full flex', m.sender === 'manager' ? 'justify-end' : 'justify-start')}>
+                          <div className={cn('max-w-[70%] px-4 py-2.5 rounded-[14px] text-[15px] leading-5', m.sender === 'manager' ? 'bg-primary/10 rounded-br-[4px]' : 'bg-default-100 rounded-bl-[4px]')}>
+                            {m.body}
+                            <div className="text-[11px] text-default-400 mt-1">{fmtTime(m.createdAt)}</div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-default-200 shrink-0">
+              <button type="button" onClick={() => { onOpen(conv.id); onClose() }} className="w-full h-11 rounded-[10px] border border-default-200 text-[15px] text-[#1A1A1A] hover:bg-default-50">Перейти в диалог</button>
+            </div>
+          </section>
+
+          {/* События пользователя */}
+          <aside className="w-[340px] shrink-0 border-l border-default-200 overflow-y-auto p-5 flex flex-col gap-5">
+            <h3 className="text-[16px] font-semibold text-[#1A1A1A]">События пользователя</h3>
+            <div className="flex flex-col gap-5">
+              {conv.lastMessageAt && (
+                <EventItem title="Последнее сообщение" time={conv.lastMessageAt} rows={[['Превью', conv.lastMessagePreview ?? '—']]} />
+              )}
+              <EventItem
+                title="Начат чат"
+                time={conv.createdAt}
+                rows={[
+                  ['ID диалога', conv.number],
+                  ['Первое сообщение', messages[0]?.body ?? '—'],
+                ]}
+              />
+            </div>
+            <p className="text-[13px] text-default-400 mt-1">
+              Расширенная аналитика (гео, браузер, источник) для чата пока не собирается.
+            </p>
+          </aside>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const DialogsSection = ({
   conversations,
   onOpen,
+  preview,
 }: {
   conversations: ChatConversation[]
   onOpen: (id: string) => void
+  preview?: boolean
 }) => {
+  const [cardId, setCardId] = useState<string | null>(null)
+  const cardConv = cardId ? conversations.find(c => c.id === cardId) ?? null : null
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(conversations.filter(c => MOCK_DIALOG_META[c.id]?.selected).map(c => c.id))
@@ -439,7 +608,7 @@ const DialogsSection = ({
             >
               <CheckBox checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
 
-              <button type="button" onClick={() => onOpen(c.id)} className="flex items-center gap-3 min-w-0 text-left">
+              <button type="button" onClick={() => setCardId(c.id)} className="flex items-center gap-3 min-w-0 text-left">
                 <Avatar name={convName(c)} />
                 <div className="min-w-0">
                   <div className="text-[15px] font-medium truncate flex items-center gap-1.5">
@@ -474,6 +643,10 @@ const DialogsSection = ({
         })}
         {list.length === 0 && <div className="p-6 text-[15px] text-default-400">Диалогов нет</div>}
       </div>
+
+      {cardConv && (
+        <DialogCard conv={cardConv} preview={preview} onClose={() => setCardId(null)} onOpen={onOpen} />
+      )}
     </div>
   )
 }
@@ -583,7 +756,7 @@ const SocialSection = ({
 
 /* ----------------------------- operators -------------------------------- */
 
-type Operator = { id: string; name: string; email: string; role: string; online: boolean; avatar?: string; dept: string }
+type Operator = { id: string; name: string; email: string; role: string; online: boolean; avatar?: string; dept: string; isOwner?: boolean }
 
 // Общий список отделов (используется и в «Отделах», и в форме оператора).
 const DEPARTMENT_NAMES = ['Техническая поддержка', 'Коммерческий отдел', 'Общие вопросы']
@@ -599,12 +772,11 @@ const LOAD_WEEK = [
   { day: 'Вс', value: 3 },
 ]
 
-const OperatorLoad = () => {
-  const active = 5
-  const capacity = 8
-  const pct = Math.round((active / capacity) * 100)
+const OperatorLoad = ({ week, active = 5, capacity = 8 }: { week?: { day: string; value: number }[]; active?: number; capacity?: number }) => {
+  const data = week && week.length ? week : LOAD_WEEK
+  const pct = capacity > 0 ? Math.min(100, Math.round((active / capacity) * 100)) : 0
   const loadColor = pct >= 80 ? '#E5484D' : pct >= 50 ? '#F5A623' : '#3BB240'
-  const max = Math.max(...LOAD_WEEK.map(d => d.value))
+  const max = Math.max(1, ...data.map(d => d.value))
 
   return (
     <div className="rounded-[14px] border border-default-200 p-5 flex flex-col gap-5">
@@ -626,8 +798,8 @@ const OperatorLoad = () => {
       <div className="flex flex-col gap-2">
         <span className="text-[14px] text-default-500">Диалогов по дням</span>
         <div className="flex items-end gap-2 h-32">
-          {LOAD_WEEK.map(d => (
-            <div key={d.day} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
+          {data.map((d, i) => (
+            <div key={`${d.day}-${i}`} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
               <span className="text-[12px] text-default-500">{d.value}</span>
               <div
                 className="w-full rounded-t-[6px] bg-primary/80 min-h-[4px]"
@@ -637,8 +809,8 @@ const OperatorLoad = () => {
           ))}
         </div>
         <div className="flex gap-2">
-          {LOAD_WEEK.map(d => (
-            <span key={d.day} className="flex-1 text-center text-[12px] text-default-400">{d.day}</span>
+          {data.map((d, i) => (
+            <span key={`${d.day}-${i}`} className="flex-1 text-center text-[12px] text-default-400">{d.day}</span>
           ))}
         </div>
       </div>
@@ -688,6 +860,7 @@ const OperatorsSection = ({
       online: o.online,
       avatar: o.avatarUrl ?? undefined,
       dept: o.departmentId ? (names[o.departmentId] ?? '') : '',
+      isOwner: o.isOwner,
     }),
     []
   )
@@ -808,10 +981,73 @@ const OperatorsSection = ({
     }
   }
 
+  // Реальная статистика выбранного оператора — из назначенных ему диалогов.
+  const assignedToArchive = useMemo(
+    () => (archiveOf ? conversations.filter(c => c.assignedOperatorId === archiveOf.id) : []),
+    [conversations, archiveOf]
+  )
+  const archiveStats = useMemo(() => {
+    const open = assignedToArchive.filter(c => c.status === 'open').length
+    const closed = assignedToArchive.filter(c => c.status === 'closed').length
+    return { open, closed, total: assignedToArchive.length }
+  }, [assignedToArchive])
+  const weeklyLoad = useMemo(() => {
+    const labels = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+    const out: { day: string; value: number }[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setHours(0, 0, 0, 0)
+      d.setDate(d.getDate() - i)
+      const next = new Date(d)
+      next.setDate(d.getDate() + 1)
+      const value = assignedToArchive.filter(c => {
+        const t = new Date(c.lastMessageAt ?? c.createdAt)
+        return t >= d && t < next
+      }).length
+      out.push({ day: labels[d.getDay()], value })
+    }
+    return out
+  }, [assignedToArchive])
+  // Среднее время ответа — считаем по сообщениям назначенных диалогов (visitor → следующий manager).
+  const [avgRespSec, setAvgRespSec] = useState<number | null>(null)
+  useEffect(() => {
+    if (!archiveOf || !real) {
+      setAvgRespSec(null)
+      return
+    }
+    let alive = true
+    void (async () => {
+      try {
+        const gaps: number[] = []
+        for (const c of assignedToArchive.slice(0, 15)) {
+          const { messages } = await chatsService.getConversationMessages(c.id)
+          for (let i = 0; i < messages.length; i++) {
+            if (messages[i].sender === 'visitor') {
+              const reply = messages.slice(i + 1).find(m => m.sender === 'manager')
+              if (reply) {
+                gaps.push((new Date(reply.createdAt).getTime() - new Date(messages[i].createdAt).getTime()) / 1000)
+                break
+              }
+            }
+          }
+        }
+        if (!alive) return
+        setAvgRespSec(gaps.length ? Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length) : null)
+      } catch {
+        if (alive) setAvgRespSec(null)
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [archiveOf, real, assignedToArchive])
+
   // Экран архива оператора со статистикой.
   if (archiveOf) {
     const op = archiveOf
-    const quality = 0.78 // 0 — плохо, 1 — отлично
+    const fmtDur = (s: number) => (s < 60 ? `${s} сек` : `${Math.floor(s / 60)} мин ${s % 60} сек`)
+    // Качество: ≤0 c — отлично (1), ≥5 мин — плохо (0).
+    const quality = avgRespSec == null ? null : Math.max(0, Math.min(1, 1 - avgRespSec / 300))
     const stat = (label: string, value: string) => (
       <div className="rounded-[14px] border border-default-200 p-4 flex flex-col gap-1">
         <span className="text-[14px] text-default-400">{label}</span>
@@ -853,38 +1089,40 @@ const OperatorsSection = ({
             </span>
           </div>
 
-          {/* Статистика */}
+          {/* Статистика (реальная, по назначенным диалогам) */}
           <div className="grid grid-cols-3 gap-3">
-            {stat('Активных диалогов', String(conversations.length))}
-            {stat('Сообщений за день', '128')}
-            {stat('Решено диалогов', '42')}
+            {stat('Активных диалогов', String(archiveStats.open))}
+            {stat('Решено диалогов', String(archiveStats.closed))}
+            {stat('Всего диалогов', String(archiveStats.total))}
           </div>
 
           {/* Среднее время ответа — шкала плохо → отлично */}
           <div className="rounded-[14px] border border-default-200 p-5 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-[15px] text-default-500">Среднее время ответа</span>
-              <span className="text-[18px] font-semibold text-[#1A1A1A]">1 мин 12 сек</span>
+              <span className="text-[18px] font-semibold text-[#1A1A1A]">{avgRespSec == null ? '—' : fmtDur(avgRespSec)}</span>
             </div>
-            {/* Указатель над шкалой */}
+            {/* Указатель над шкалой (только если есть данные) */}
             <div className="relative h-6">
-              <div
-                className="absolute flex flex-col items-center -translate-x-1/2"
-                style={{ left: `${quality * 100}%` }}
-              >
-                <span className="text-[12px] font-medium text-[#1A1A1A] whitespace-nowrap">1:12</span>
-                <svg width="14" height="9" viewBox="0 0 14 9" className="text-[#1A1A1A]"><path d="M7 9 0 0h14z" fill="currentColor" /></svg>
-              </div>
+              {quality != null && (
+                <div
+                  className="absolute flex flex-col items-center -translate-x-1/2"
+                  style={{ left: `${quality * 100}%` }}
+                >
+                  <span className="text-[12px] font-medium text-[#1A1A1A] whitespace-nowrap">{avgRespSec != null ? fmtDur(avgRespSec) : ''}</span>
+                  <svg width="14" height="9" viewBox="0 0 14 9" className="text-[#1A1A1A]"><path d="M7 9 0 0h14z" fill="currentColor" /></svg>
+                </div>
+              )}
             </div>
             <div className="h-2.5 rounded-full" style={{ background: 'linear-gradient(90deg,#E5484D 0%,#F5A623 50%,#3BD16F 100%)' }} />
             <div className="flex items-center justify-between text-[13px] text-default-400">
-              <span>плохо</span>
+              <span>плохо{quality == null ? ' · нет данных' : ''}</span>
               <span>отлично</span>
             </div>
           </div>
 
           {/* Загрузка оператора */}
-          <OperatorLoad />
+          <OperatorLoad week={weeklyLoad} active={archiveStats.open} />
 
           {/* Архив диалогов */}
           <div className="flex items-center justify-between mt-1">
@@ -996,7 +1234,7 @@ const OperatorsSection = ({
         </button>
       </div>
 
-      <div className="p-6 flex flex-col gap-3 max-w-[760px]">
+      <div className="p-6 flex flex-col gap-3 w-full">
         {adding && (
           <div className="rounded-[14px] border border-default-200 p-4 flex items-center gap-3">
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Имя оператора" className="flex-1 min-w-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
@@ -1027,20 +1265,24 @@ const OperatorsSection = ({
               <div className="text-[16px] font-medium text-[#1A1A1A] truncate">{o.name}</div>
               <div className="text-[14px] text-default-400 truncate">{o.email || '—'}</div>
             </div>
-            <span className="text-[14px] text-default-500 w-[190px] shrink-0 truncate">{o.dept}</span>
-            <span className="text-[14px] text-default-500 w-[120px] shrink-0">{o.role}</span>
+            <span className="text-[14px] text-default-500 flex-1 min-w-0 truncate">{o.dept}</span>
+            <span className="text-[14px] text-default-500 w-[150px] shrink-0">{o.role}</span>
             <span className="text-[14px] text-default-400 w-[80px] shrink-0">{o.online ? 'Онлайн' : 'Офлайн'}</span>
-            <button
-              type="button"
-              onClick={e => {
-                e.stopPropagation()
-                remove(o.id)
-              }}
-              aria-label="Удалить"
-              className="w-9 h-9 shrink-0 rounded-[8px] border border-default-200 text-default-400 hover:text-[#E5484D] hover:border-[#E5484D] transition-colors flex items-center justify-center"
-            >
-              ✕
-            </button>
+            {o.isOwner ? (
+              <span className="w-9 h-9 shrink-0" />
+            ) : (
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation()
+                  remove(o.id)
+                }}
+                aria-label="Удалить"
+                className="w-9 h-9 shrink-0 rounded-[8px] border border-default-200 text-default-400 hover:text-[#E5484D] hover:border-[#E5484D] transition-colors flex items-center justify-center"
+              >
+                ✕
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -1858,11 +2100,12 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
   return (
     <div className="h-screen w-full flex bg-white text-[#1A1A1A] overflow-hidden">
-      <ModuleSidebar section={section} onSection={setSection} inboxCount={preview ? 13 : inboxCount} />
+      <ModuleSidebar section={section} onSection={setSection} inboxCount={preview ? 13 : inboxCount} onExit={() => navigate('/')} />
 
       {section === 'dialogs' ? (
         <DialogsSection
           conversations={conversations}
+          preview={preview}
           onOpen={id => {
             setSection('inbox')
             void select(id)

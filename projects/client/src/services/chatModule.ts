@@ -6,6 +6,8 @@ import { API } from '@common/api/endpoints'
 export type ChatOperatorItem = {
   id: string
   projectId: string
+  userId: string | null
+  isOwner: boolean
   name: string
   email: string | null
   role: string

@@ -9,6 +9,10 @@ model ChatOperator {
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  // userId владельца кабинета — оператор-владелец заводится автоматически (см. listForProject).
+  // null — обычный добавленный оператор.
+  userId    String? @map("user_id")
+
   name      String
   email     String?
   role      String  @default("Оператор")
@@ -25,6 +29,7 @@ model ChatOperator {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt      @map("updated_at")
 
+  @@unique([projectId, userId])
   @@index([projectId])
   @@index([departmentId])
   @@map("chat_operators")

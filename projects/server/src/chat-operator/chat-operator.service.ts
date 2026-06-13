@@ -7,6 +7,7 @@ import type { ChatOperatorEntity } from './entities/chat-operator.entity'
 type ChatOperatorRow = {
   id: string
   projectId: string
+  userId: string | null
   name: string
   email: string | null
   role: string
@@ -20,6 +21,8 @@ type ChatOperatorRow = {
 const toEntity = (o: ChatOperatorRow): ChatOperatorEntity => ({
   id: o.id,
   projectId: o.projectId,
+  userId: o.userId,
+  isOwner: o.userId != null,
   name: o.name,
   email: o.email,
   role: o.role,
@@ -54,16 +57,46 @@ export class ChatOperatorService {
     if (!owned) throw new ForbiddenException('Operator not found')
   }
 
+  /**
+   * Гарантирует, что владелец кабинета присутствует в списке операторов проекта
+   * (заводится один раз; роль «Владелец», online по умолчанию).
+   */
+  private async ensureOwnerOperator(ownerUserId: string, projectId: string) {
+    const existing = await this.prisma.chatOperator.findFirst({
+      where: { projectId, userId: ownerUserId },
+      select: { id: true }
+    })
+    if (existing) return
+    const user = await this.prisma.user.findUnique({
+      where: { id: ownerUserId },
+      select: { name: true, email: true }
+    })
+    await this.prisma.chatOperator.create({
+      data: {
+        projectId,
+        userId: ownerUserId,
+        name: user?.name?.trim() || user?.email || 'Владелец',
+        email: user?.email ?? null,
+        role: 'Владелец',
+        online: true,
+        status: 'work'
+      }
+    })
+  }
+
   async listForProject(
     userId: string,
     projectId: string
   ): Promise<{ operators: ChatOperatorEntity[]; total: number }> {
     await this.assertOwnsProject(userId, projectId)
+    await this.ensureOwnerOperator(userId, projectId)
     const rows = await this.prisma.chatOperator.findMany({
       where: { projectId },
       orderBy: { createdAt: 'asc' }
     })
-    return { operators: rows.map(toEntity), total: rows.length }
+    // Владелец — первым в списке.
+    const sorted = [...rows].sort((a, b) => (b.userId ? 1 : 0) - (a.userId ? 1 : 0))
+    return { operators: sorted.map(toEntity), total: sorted.length }
   }
 
   async create(userId: string, projectId: string, dto: CreateChatOperatorDto): Promise<ChatOperatorEntity> {
@@ -90,6 +123,8 @@ export class ChatOperatorService {
 
   async remove(userId: string, id: string): Promise<{ ok: true }> {
     await this.assertOwnsOperator(userId, id)
+    const op = await this.prisma.chatOperator.findUnique({ where: { id }, select: { userId: true } })
+    if (op?.userId) throw new ForbiddenException('Owner operator cannot be deleted')
     await this.prisma.chatOperator.delete({ where: { id } })
     return { ok: true }
   }
