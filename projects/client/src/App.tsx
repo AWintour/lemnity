@@ -18,6 +18,7 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import RequestsPage from './pages/RequestsPage/RequestsPage.tsx'
 import CallsPage from './pages/CallsPage/CallsPage.tsx'
 import ChatsPage from './pages/ChatsPage/ChatsPage.tsx'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import ChatModulePage from './pages/ChatModulePage/ChatModulePage.tsx'
 import EditorSsoPage from './pages/EditorSsoPage.tsx'
 import { memo, useEffect } from 'react'
@@ -35,6 +36,8 @@ const ExternalLoginRedirect = () => {
 }
 
 function App() {
+  // «Модуль Чат» на тестировании — доступен только администратору.
+  const isAdmin = useIsAdmin()
   return (
     <Routes>
       <Route
@@ -105,9 +108,13 @@ function App() {
         path="/chats"
         element={
           <ProtectedRoute>
-            <FullWidthLayout>
-              <ChatsPage />
-            </FullWidthLayout>
+            {isAdmin ? (
+              <FullWidthLayout>
+                <ChatsPage />
+              </FullWidthLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )}
           </ProtectedRoute>
         }
       />
@@ -115,7 +122,7 @@ function App() {
         path="/chat-module"
         element={
           <ProtectedRoute>
-            <ChatModulePage />
+            {isAdmin ? <ChatModulePage /> : <Navigate to="/" replace />}
           </ProtectedRoute>
         }
       />
