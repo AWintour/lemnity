@@ -173,6 +173,15 @@
 Поля схемы, не вошедшие в исходный план, но реализованные: `windowFormat`, `soundEnabled`,
 `scenario.steps[].image`, расширенные `contacts`/`contactsTab`/`schedule`/`aiAgent`/`scrollOpen` и др.
 
+### Прод-деплой + гейт (2026-06-13)
+
+- **Выкачено на прод**: push в `main` (commit `82fd111`) → GitHub Actions CI/CD (сборка образов →
+  SSH на прод → `deploy.sh`: `prisma db push` + up стека). Бэкенд командных разделов «Модуля Чат»
+  построен (операторы/отделы/распределение/соцсети/групп-чат) — см. `plan-module-chat.md`.
+- **Гейт на время теста**: «Чат» (каталог), «Модуль Чат» (сайдбар), `/chat-module`, `/chats` —
+  только администратору (`hooks/useIsAdmin`: роль `ADMIN` или email из `VITE_ADMIN_EMAILS`,
+  дефолт включает `lemnitycom@gmail.com`). Снять при открытии всем.
+
 ### Осталось
 
 - [ ] Полный e2e на реальном CHAT-виджете: создать виджет в проекте (websiteUrl = origin стенда),
