@@ -38,6 +38,18 @@ model ChatConversation {
   category           String?       // «Первичный контакт» | «В работе» | «Завершен с успехом» | ...
   note               String?       // внутренняя заметка оператора
 
+  // Расширенная аналитика посетителя (захват при создании беседы; см. common/visitor-meta.ts).
+  ip         String? @map("ip")
+  userAgent  String? @map("user_agent")
+  browser    String? // напр. «Chrome 130»
+  os         String? // напр. «Windows 11»
+  deviceType String? @map("device_type") // desktop|mobile_ios|mobile_android
+  referer    String? // страница-источник (referer)
+  country    String? // ISO-страна по IP
+  region     String?
+  city       String?
+  timezone   String?
+
   // Денормализация для быстрого списка диалогов в кабинете.
   lastMessageAt      DateTime? @map("last_message_at")
   lastMessagePreview String?   @map("last_message_preview")

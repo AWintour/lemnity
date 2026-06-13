@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import { cn } from '@heroui/theme'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 import { useChatSocket } from '@/hooks/useChatSocket'
@@ -412,6 +412,12 @@ const DialogCard = ({
     </div>
   )
 
+  // Расширенная аналитика посетителя.
+  const deviceLabel = conv.deviceType
+    ? (({ desktop: 'Компьютер', mobile_ios: 'iPhone/iPad', mobile_android: 'Android' } as Record<string, string>)[conv.deviceType] ?? conv.deviceType)
+    : null
+  const geoStr = [conv.city, conv.region, conv.country].filter(Boolean).join(', ') || null
+
   return (
     <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-[1240px] h-[88vh] bg-white rounded-[16px] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -437,6 +443,14 @@ const DialogCard = ({
             <Field label="Статус беседы" value={conv.category || (conv.status === 'closed' ? 'Завершён' : 'Открыт')} />
             <Field label="Канал" value={conv.channel || 'Чат на сайте'} />
             <Field label="Заметка оператора" value={conv.note} />
+            <div className="h-px bg-default-200" />
+            <Field label="Местоположение" value={geoStr} />
+            <Field label="Часовой пояс" value={conv.timezone} />
+            <Field label="Браузер" value={conv.browser} />
+            <Field label="ОС" value={conv.os} />
+            <Field label="Устройство" value={deviceLabel} />
+            <Field label="IP" value={conv.ip} />
+            <Field label="Источник" value={conv.referer} />
           </aside>
 
           {/* История диалогов */}
@@ -487,10 +501,19 @@ const DialogCard = ({
                   ['Первое сообщение', messages[0]?.body ?? '—'],
                 ]}
               />
+              <EventItem
+                title="Зашёл на сайт"
+                time={conv.createdAt}
+                rows={[
+                  ['IP', conv.ip ?? '—'],
+                  ['Браузер', conv.browser ?? '—'],
+                  ['ОС', conv.os ?? '—'],
+                  ['Устройство', deviceLabel ?? '—'],
+                  ['Местоположение', geoStr ?? '—'],
+                  ['Источник', conv.referer ?? '—'],
+                ]}
+              />
             </div>
-            <p className="text-[13px] text-default-400 mt-1">
-              Расширенная аналитика (гео, браузер, источник) для чата пока не собирается.
-            </p>
           </aside>
         </div>
       </div>
@@ -1861,7 +1884,22 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const [search, setSearch] = useState('')
   const [topic, setTopic] = useState('Первичный контакт')
   const [note, setNote] = useState('')
-  const [section, setSection] = useState<Section>('inbox')
+  // Раздел — из URL (/chat-module/:section). В preview-стенде нет <Routes>, поэтому там стейт.
+  const { section: sectionParam } = useParams<{ section?: string }>()
+  const [previewSection, setPreviewSection] = useState<Section>('inbox')
+  const VALID_SECTIONS = Object.keys(SECTION_TITLES) as Section[]
+  const section: Section = preview
+    ? previewSection
+    : VALID_SECTIONS.includes(sectionParam as Section)
+      ? (sectionParam as Section)
+      : 'inbox'
+  const go = useCallback(
+    (s: Section) => {
+      if (preview) setPreviewSection(s)
+      else navigate(s === 'inbox' ? '/chat-module' : `/chat-module/${s}`)
+    },
+    [preview, navigate]
+  )
   const [filter, setFilter] = useState<'all' | 'unread' | 'archived'>('all')
   const [filterOpen, setFilterOpen] = useState(false)
   const [groupOpen, setGroupOpen] = useState(false)
@@ -2100,14 +2138,14 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
   return (
     <div className="h-screen w-full flex bg-white text-[#1A1A1A] overflow-hidden">
-      <ModuleSidebar section={section} onSection={setSection} inboxCount={preview ? 13 : inboxCount} onExit={() => navigate('/')} />
+      <ModuleSidebar section={section} onSection={go} inboxCount={preview ? 13 : inboxCount} onExit={() => navigate('/')} />
 
       {section === 'dialogs' ? (
         <DialogsSection
           conversations={conversations}
           preview={preview}
           onOpen={id => {
-            setSection('inbox')
+            go('inbox')
             void select(id)
           }}
         />
@@ -2117,7 +2155,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         <OperatorsSection
           conversations={conversations}
           onOpenDialog={id => {
-            setSection('inbox')
+            go('inbox')
             void select(id)
           }}
           preview={preview}

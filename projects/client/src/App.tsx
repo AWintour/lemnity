@@ -127,6 +127,14 @@ function App() {
         }
       />
       <Route
+        path="/chat-module/:section"
+        element={
+          <ProtectedRoute>
+            {isAdmin ? <ChatModulePage /> : <Navigate to="/" replace />}
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/projects"
         element={
           <ProtectedRoute>

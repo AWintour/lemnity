@@ -14,6 +14,7 @@ import type { Server, Socket } from 'socket.io'
 import { ChatService } from './chat.service'
 import type { ChatMessageEntity } from './entities/chat-message.entity'
 import { extractOriginHostFromHeaders } from '../common/origin'
+import { buildVisitorMeta, extractHandshakeRawMeta } from '../common/visitor-meta'
 
 type VisitorData = {
   role: 'visitor'
@@ -81,7 +82,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const originHost = extractOriginHostFromHeaders(client.handshake.headers)
 
     await this.chat.assertVisitorAllowed(widgetId, originHost)
-    const conversation = await this.chat.getOrCreateConversation(widgetId, sessionId)
+    const conversation = await this.chat.getOrCreateConversation(
+      widgetId,
+      sessionId,
+      undefined,
+      buildVisitorMeta(extractHandshakeRawMeta(client.handshake))
+    )
 
     const data: VisitorData = {
       role: 'visitor',

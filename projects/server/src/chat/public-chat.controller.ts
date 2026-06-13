@@ -20,6 +20,7 @@ import {
   ChatMessagesResponse
 } from './entities/chat-conversation.entity'
 import { extractRequestOriginHost } from '../common/origin'
+import { buildVisitorMeta, extractRequestRawMeta } from '../common/visitor-meta'
 
 /**
  * Публичный вход для виджета чата на сайте клиента. Создаёт/возвращает диалог и историю.
@@ -47,7 +48,8 @@ export class PublicChatController {
           visitorName: body.visitorName,
           visitorPhone: body.visitorPhone,
           visitorEmail: body.visitorEmail
-        }
+        },
+        buildVisitorMeta(extractRequestRawMeta(req))
       )
       return this.chat.toConversationEntity(conversation)
     } catch (e) {

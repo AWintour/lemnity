@@ -41,6 +41,37 @@ export class ChatConversationEntity {
   @ApiProperty({ required: false, nullable: true, description: 'Внутренняя заметка оператора' })
   note?: string | null
 
+  // Расширенная аналитика посетителя.
+  @ApiProperty({ required: false, nullable: true })
+  ip?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  userAgent?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  browser?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  os?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  deviceType?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  referer?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  country?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  region?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  city?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  timezone?: string | null
+
   @ApiProperty({ required: false, nullable: true })
   lastMessageAt?: string | null
 

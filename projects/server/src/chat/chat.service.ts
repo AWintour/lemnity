@@ -12,6 +12,7 @@ import {
   isDevOriginHostAllowed,
   isHostAllowedByWebsiteHosts
 } from '../common/origin'
+import type { VisitorMeta } from '../common/visitor-meta'
 import type { ListConversationsDto } from './dto/list-conversations.dto'
 import type {
   ChatConversationEntity,
@@ -45,6 +46,16 @@ const toConversationEntity = (c: ChatConversation): ChatConversationEntity => ({
   channel: c.channel,
   category: c.category,
   note: c.note,
+  ip: c.ip,
+  userAgent: c.userAgent,
+  browser: c.browser,
+  os: c.os,
+  deviceType: c.deviceType,
+  referer: c.referer,
+  country: c.country,
+  region: c.region,
+  city: c.city,
+  timezone: c.timezone,
   lastMessageAt: c.lastMessageAt ? c.lastMessageAt.toISOString() : null,
   lastMessagePreview: c.lastMessagePreview,
   unreadForManager: c.unreadForManager,
@@ -98,7 +109,8 @@ export class ChatService {
   async getOrCreateConversation(
     widgetId: string,
     sessionId: string,
-    contact?: { visitorName?: string; visitorPhone?: string; visitorEmail?: string }
+    contact?: { visitorName?: string; visitorPhone?: string; visitorEmail?: string },
+    meta?: VisitorMeta
   ): Promise<ChatConversation> {
     const session = sanitize(sessionId)
     if (!session) throw new BadRequestException('sessionId is required')
@@ -122,7 +134,19 @@ export class ChatService {
         sessionId: session,
         visitorName: sanitize(contact?.visitorName),
         visitorPhone: sanitize(contact?.visitorPhone),
-        visitorEmail: sanitize(contact?.visitorEmail)
+        visitorEmail: sanitize(contact?.visitorEmail),
+        // Расширенная аналитика — фиксируется при создании беседы.
+        channel: 'web',
+        ip: meta?.ip ?? null,
+        userAgent: meta?.userAgent ?? null,
+        browser: meta?.browser ?? null,
+        os: meta?.os ?? null,
+        deviceType: meta?.deviceType ?? null,
+        referer: meta?.referer ?? null,
+        country: meta?.country ?? null,
+        region: meta?.region ?? null,
+        city: meta?.city ?? null,
+        timezone: meta?.timezone ?? null
       }
     })
   }

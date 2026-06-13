@@ -569,7 +569,7 @@ const Widget = (props: WidgetProps) => {
               isSidebar
                 ? 'h-[100dvh] max-h-[100dvh] rounded-none'
                 : 'h-[620px] max-h-[78vh] rounded-[18px]',
-              'shadow-[0px_12px_30px_8px_rgba(0,0,0,0.18)]',
+              'shadow-[0px_8px_24px_rgba(0,0,0,0.10)]',
             )}
             style={{ backgroundColor: props.windowBackgroundColor }}
           >

@@ -18,6 +18,16 @@ export type ChatConversation = {
   channel?: string | null
   category?: string | null
   note?: string | null
+  ip?: string | null
+  userAgent?: string | null
+  browser?: string | null
+  os?: string | null
+  deviceType?: string | null
+  referer?: string | null
+  country?: string | null
+  region?: string | null
+  city?: string | null
+  timezone?: string | null
   lastMessageAt?: string | null
   lastMessagePreview?: string | null
   unreadForManager: number
