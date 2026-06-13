@@ -138,6 +138,22 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
 - Realtime для групп-чата/назначений (сейчас REST; socket-события не добавлены).
 - Загрузка файлов оператором + архив медиа группового чата.
 
+## Маршруты разделов + аналитика беседы (2026-06-14, commit `5f35475`)
+
+- **Разделы через URL**: каждый раздел модуля — свой маршрут `/chat-module/:section`
+  (`App.tsx`). `ChatModulePage` читает раздел из `useParams` (в preview-стенде нет `<Routes>` →
+  там стейт `previewSection`); `ModuleSidebar`/`onOpen` ходят через `navigate`. Переключение —
+  реальная навигация: работают «обновить»/«назад», состояние под-разделов сбрасывается.
+- **Расширенная аналитика беседы (офлайн, без внешних API)**: `projects/server/src/common/visitor-meta.ts`
+  парсит IP, браузер/ОС (`ua-parser-js`), устройство, источник (referer), гео по IP (`geoip-lite`,
+  оффлайн-БД). Захватывается ОДИН РАЗ при создании беседы (`public-chat.controller` + `chat.gateway`
+  handshake → `chat.service.getOrCreateConversation`). Новые nullable-поля `ChatConversation`
+  (`ip/userAgent/browser/os/deviceType/referer/country/region/city/timezone`) — в entity и
+  клиентском типе. Карточка беседы (`DialogCard`) показывает их в профиле и в событии «Зашёл на
+  сайт» (заглушка «пока не собирается» удалена). Старые беседы без метаданных → «—».
+  ⚠️ Зависимости `ua-parser-js`/`geoip-lite` в `pnpm-lock.yaml` (CI `--frozen-lockfile`); geoip-lite
+  держит БД в памяти (десятки МБ). Прод применил поля через `db push`.
+
 ## Деплой
 
 Прод-деплой — push в `main` → GitHub Actions (`.github/workflows/CI-CD.yml`): сборка образов →
