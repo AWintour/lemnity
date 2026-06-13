@@ -158,6 +158,11 @@ services:
       NOTISEND_API_KEY: ${NOTISEND_API_KEY}
       PASSWORD_RESET_URL_PATH: ${PASSWORD_RESET_URL_PATH}
       WIDGETS_HANDOFF_SECRET: ${WIDGETS_HANDOFF_SECRET}
+      # Обратная связь «Есть идея или замечания?» → пересылка в lmntai с HMAC-подписью.
+      # FEEDBACK_INGEST_SECRET ОБЯЗАН совпадать с одноимённым секретом в lmntai (хранится в server .env, не в git).
+      # URL приёмника дефолтится на прод lmntai — отдельной строки в .env не требует.
+      FEEDBACK_INGEST_SECRET: ${FEEDBACK_INGEST_SECRET}
+      LMNTAI_FEEDBACK_URL: ${LMNTAI_FEEDBACK_URL:-https://lemnity.ru/api/feedback/ingest}
       # Callback Widget: шифрование BYO-секретов Mango + глобальный аккаунт Server API Mango (Фаза 2)
       INTEGRATION_ENC_KEY: ${INTEGRATION_ENC_KEY}
       MANGO_VPBX_BASE_URL: ${MANGO_VPBX_BASE_URL}
