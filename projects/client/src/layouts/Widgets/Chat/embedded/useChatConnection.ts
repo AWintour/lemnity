@@ -18,10 +18,18 @@ type UseChatConnectionArgs = {
   onIncoming: (message: ChatUiMessage) => void
 }
 
+export type VisitorContact = {
+  visitorName?: string
+  visitorPhone?: string
+  visitorEmail?: string
+}
+
 type UseChatConnectionResult = {
   operatorOnline: boolean
   sendToOperator: (body: string) => void
   markRead: () => void
+  // Сохраняет контакт посетителя в диалог (visitorName/Phone/Email), чтобы он был в карточке оператора.
+  updateContact: (contact: VisitorContact) => void
 }
 
 const fetchJson = async <T>(url: string, init?: RequestInit): Promise<T | null> => {
@@ -111,5 +119,21 @@ export const useChatConnection = (
     }
   }, [args.preview])
 
-  return { operatorOnline, sendToOperator, markRead }
+  // Контакт сохраняется повторным POST'ом на создание диалога: upsert обновляет
+  // visitorName/Phone/Email у существующего диалога (см. ChatService.getOrCreateConversation).
+  const updateContact = useCallback((contact: VisitorContact) => {
+    if (args.preview || !args.widgetId) return
+    const sessionId = getCollectorSessionId()
+    if (!sessionId) return
+    const hasAny = contact.visitorName || contact.visitorPhone || contact.visitorEmail
+    if (!hasAny) return
+    const apiOrigin = getDefaultApiOrigin()
+    void fetchJson(`${apiOrigin}/api/public/chat/conversations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ widgetId: args.widgetId, sessionId, ...contact }),
+    })
+  }, [args.preview, args.widgetId])
+
+  return { operatorOnline, sendToOperator, markRead, updateContact }
 }

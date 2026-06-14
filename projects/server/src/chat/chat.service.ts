@@ -56,6 +56,8 @@ const toConversationEntity = (c: ChatConversation): ChatConversationEntity => ({
   region: c.region,
   city: c.city,
   timezone: c.timezone,
+  firstVisitorAt: c.firstVisitorAt ? c.firstVisitorAt.toISOString() : null,
+  firstManagerAt: c.firstManagerAt ? c.firstManagerAt.toISOString() : null,
   lastMessageAt: c.lastMessageAt ? c.lastMessageAt.toISOString() : null,
   lastMessagePreview: c.lastMessagePreview,
   unreadForManager: c.unreadForManager,
@@ -164,6 +166,7 @@ export class ChatService {
     const body = args.body.trim()
     if (!body) throw new BadRequestException('Message body is required')
 
+    const now = new Date()
     const [message] = await this.prisma.$transaction([
       this.prisma.chatMessage.create({
         data: {
@@ -176,7 +179,7 @@ export class ChatService {
       this.prisma.chatConversation.update({
         where: { id: args.conversationId },
         data: {
-          lastMessageAt: new Date(),
+          lastMessageAt: now,
           lastMessagePreview: buildPreview(body),
           status: 'open',
           ...(args.sender === 'visitor'
@@ -187,6 +190,19 @@ export class ChatService {
         }
       })
     ])
+
+    // Денормализация времени реакции: первый визитор/первый ответ менеджера (ставим один раз).
+    if (args.sender === 'visitor') {
+      await this.prisma.chatConversation.updateMany({
+        where: { id: args.conversationId, firstVisitorAt: null },
+        data: { firstVisitorAt: now }
+      })
+    } else if (args.sender === 'manager') {
+      await this.prisma.chatConversation.updateMany({
+        where: { id: args.conversationId, firstManagerAt: null },
+        data: { firstManagerAt: now }
+      })
+    }
 
     return toMessageEntity(message)
   }

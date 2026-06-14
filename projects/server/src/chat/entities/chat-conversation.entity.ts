@@ -73,6 +73,12 @@ export class ChatConversationEntity {
   timezone?: string | null
 
   @ApiProperty({ required: false, nullable: true })
+  firstVisitorAt?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  firstManagerAt?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
   lastMessageAt?: string | null
 
   @ApiProperty({ required: false, nullable: true })

@@ -44,6 +44,7 @@ const ChatGeneralSettings = () => {
     brandingEnabled,
     deferredLoad,
     windowFormat,
+    windowRadius,
   } = useWidgetSettingsStore(
     useShallow(s => {
       const settings = s.settings?.widget as ChatWidgetType
@@ -55,6 +56,7 @@ const ChatGeneralSettings = () => {
         brandingEnabled: settings.brandingEnabled ?? defaults.brandingEnabled,
         deferredLoad: settings.deferredLoad ?? defaults.deferredLoad,
         windowFormat: settings.windowFormat ?? defaults.windowFormat,
+        windowRadius: settings.windowRadius ?? defaults.windowRadius,
       }
     })
   )
@@ -199,6 +201,22 @@ const ChatGeneralSettings = () => {
                 </button>
               )
             })}
+          </div>
+
+          {/* Скругление окна — ползунок (для модального формата) */}
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[16px] leading-5.5 font-medium text-[#1A1A1A]">Скругление окна</span>
+              <span className="text-[16px] leading-5.5 text-[#1A1A1A]">{windowRadius} px</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={40}
+              value={windowRadius}
+              onChange={e => setChatPatch({ windowRadius: Number(e.target.value) })}
+              className="w-full accent-[#1A52DB] cursor-pointer"
+            />
           </div>
         </div>
       </BorderedContainer>

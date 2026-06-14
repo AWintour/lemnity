@@ -20,6 +20,8 @@ const ScenarioButtonSchema = z.object({
   label: z.string().max(60, 'Текст кнопки не длиннее 60 символов'),
   // id шага-получателя; null = «передать менеджеру» (handoff к живому оператору).
   next: z.string().nullable(),
+  // id отдела, куда направлять диалог при хэндофе (когда next === null). Опционально.
+  department: z.string().nullable().optional(),
 })
 
 export type ScenarioButton = z.infer<typeof ScenarioButtonSchema>
@@ -122,6 +124,8 @@ const ChatWidgetSchema = z.object({
     .max(60, 'Текст должен быть не длиннее 60 символов'),
   // Формат окна: 'modal' — плавающее окошко (как сейчас), 'sidebar' — панель на всю высоту экрана.
   windowFormat: z.enum(['sidebar', 'modal']),
+  // Радиус скругления окна (px), применяется к модальному формату.
+  windowRadius: z.number(),
   windowBackgroundColor: z
     .string()
     .regex(

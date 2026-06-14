@@ -28,6 +28,8 @@ export type ChatConversation = {
   region?: string | null
   city?: string | null
   timezone?: string | null
+  firstVisitorAt?: string | null
+  firstManagerAt?: string | null
   lastMessageAt?: string | null
   lastMessagePreview?: string | null
   unreadForManager: number

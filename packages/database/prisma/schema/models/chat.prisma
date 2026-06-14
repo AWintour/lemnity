@@ -50,6 +50,10 @@ model ChatConversation {
   city       String?
   timezone   String?
 
+  // Время реакции: первый визитор-месседж и первый ответ менеджера (денормализация для списка).
+  firstVisitorAt DateTime? @map("first_visitor_at")
+  firstManagerAt DateTime? @map("first_manager_at")
+
   // Денормализация для быстрого списка диалогов в кабинете.
   lastMessageAt      DateTime? @map("last_message_at")
   lastMessagePreview String?   @map("last_message_preview")

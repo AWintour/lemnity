@@ -47,6 +47,7 @@ export const chatWidgetDefaults: ChatWidgetType = {
   offlineMessage: 'Увы, но сейчас нас здесь нет.\nМы вернемся в рабочее время пн-пт с 09:00 по 19:00 мск',
   placeholder: 'Напишите сообщение…',
   windowFormat: 'modal',
+  windowRadius: 18,
   windowBackgroundColor: '#FFFFFF',
   windowAccentColor: '#5951E5',
   clientColor: '#5951E5',

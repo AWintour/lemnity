@@ -49,6 +49,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     offlineMessage,
     placeholder,
     windowFormat,
+    windowRadius,
     windowBackgroundColor,
     windowAccentColor,
     clientColor,
@@ -85,6 +86,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         offlineMessage: settings.offlineMessage ?? defaults.offlineMessage,
         placeholder: settings.placeholder ?? defaults.placeholder,
         windowFormat: settings.windowFormat ?? defaults.windowFormat,
+        windowRadius: settings.windowRadius ?? defaults.windowRadius,
         windowBackgroundColor:
           settings.windowBackgroundColor ?? defaults.windowBackgroundColor,
         windowAccentColor: settings.windowAccentColor ?? defaults.windowAccentColor,
@@ -108,6 +110,8 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   const [messages, setMessages] = useState<ChatUiMessage[]>([])
   const [currentStepId, setCurrentStepId] = useState<string | null>(null)
   const [mode, setMode] = useState<'bot' | 'operator'>('bot')
+  // Офлайн-сообщение отправлено (показываем подтверждение вместо поля).
+  const [offlineSent, setOfflineSent] = useState(false)
   // 'home' — первый экран (меню), 'chat' — переписка, 'form'/'callback' — формы, 'contacts' — вкладка.
   const [view, setView] = useState<ChatView>('home')
   const [formHeader, setFormHeader] = useState('Чат с менеджерами')
@@ -179,7 +183,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     })
   }, [playMessageSound])
 
-  const { operatorOnline, sendToOperator, markRead } = useChatConnection({
+  const { operatorOnline, sendToOperator, markRead, updateContact } = useChatConnection({
     widgetId: useWidgetSettingsStore.getState().settings?.id,
     preview: props.preview,
     onIncoming: append,
@@ -202,6 +206,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       setView('chat')
     }
     setMode('bot')
+    setOfflineSent(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [greetingMessage, scenario, props.preview])
 
@@ -212,12 +217,14 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     return () => clearTimeout(timer)
   }, [props.preview, autoOpen, delay])
 
+  // Кнопки текущего шага показываем всегда (закреплены над текстом); в режиме оператора
+  // Widget рендерит их неактивными (см. chatActive). Поэтому без гейта по mode.
   const quickReplies: QuickReply[] = useMemo(() => {
-    if (mode !== 'bot' || !scenario.enabled || !currentStepId) return []
+    if (!scenario.enabled || !currentStepId) return []
     const step = stepById.get(currentStepId)
     if (!step) return []
     return step.buttons.map(b => ({ id: b.id, emoji: b.emoji, label: b.label, isHandoff: b.next === null }))
-  }, [mode, scenario.enabled, currentStepId, stepById])
+  }, [scenario.enabled, currentStepId, stepById])
 
   const nowIso = () => new Date().toISOString()
 
@@ -238,7 +245,6 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       }
       navigate('chat')
       setMode('operator')
-      setCurrentStepId(null)
       append({ id: uuidv4(), sender: 'visitor', body: `${button.emoji ? button.emoji + ' ' : ''}${button.label}`, createdAt: nowIso() })
       append({ id: uuidv4(), sender: 'system', body: 'Передаю менеджеру…', createdAt: nowIso() })
       sendToOperator(`${button.emoji ? button.emoji + ' ' : ''}${button.label}`)
@@ -255,6 +261,24 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     }
   }, [currentStepId, stepById, append, sendToOperator, contacts])
 
+  // Онлайн: «Войти в чат» — открываем переписку с живым оператором.
+  const handleEnterChat = useCallback(() => {
+    navigate('chat')
+    setMode('operator')
+  }, [navigate])
+
+  // Офлайн: одно поле сообщения — отправляем оператору (придёт в рабочее время) + подтверждение.
+  const handleOfflineMessage = useCallback(
+    (text: string) => {
+      const t = text.trim()
+      if (!t) return
+      append({ id: uuidv4(), sender: 'visitor', body: t, createdAt: nowIso(), pending: !props.preview })
+      sendToOperator(t)
+      setOfflineSent(true)
+    },
+    [append, sendToOperator, props.preview]
+  )
+
   // Отправка формы «Оставить сообщение»: собираем контакт + комментарий и уходим к оператору.
   const handleSubmitForm = useCallback(
     (values: { name?: string; phone?: string; email?: string; comment?: string }) => {
@@ -266,14 +290,16 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       ].filter(Boolean) as string[]
       const body = lines.join('\n') || 'Заявка из чата'
 
+      // Сохраняем контакт в диалог — чтобы имя/телефон/email были в карточке оператора.
+      updateContact({ visitorName: values.name, visitorPhone: values.phone, visitorEmail: values.email })
+
       navigate('chat')
       setMode('operator')
-      setCurrentStepId(null)
       append({ id: uuidv4(), sender: 'visitor', body, createdAt: nowIso(), pending: !props.preview })
       append({ id: uuidv4(), sender: 'system', body: 'Спасибо! Мы свяжемся с вами.', createdAt: nowIso() })
       sendToOperator(body)
     },
-    [append, sendToOperator, props.preview]
+    [append, sendToOperator, updateContact, props.preview]
   )
 
   // Кнопка «Назад» — всегда на предыдущий экран.
@@ -403,6 +429,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     offlineMessage,
     placeholder,
     windowFormat,
+    windowRadius,
     windowBackgroundColor,
     windowAccentColor,
     clientColor,
@@ -419,7 +446,11 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     contactsTab,
     formHeader,
     preview: props.preview,
+    chatActive: mode === 'operator',
+    offlineSent,
     onSend: handleSend,
+    onEnterChat: handleEnterChat,
+    onOfflineSend: handleOfflineMessage,
     onQuickReply: handleQuickReply,
     onSubmitForm: handleSubmitForm,
     onBack: handleBack,

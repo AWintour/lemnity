@@ -17,6 +17,7 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import { useChatSocket } from '@/hooks/useChatSocket'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import type { WidgetSettings } from '@/stores/widgetSettings/types'
 import { useProjectsStore } from '@/stores/projectsStore'
 import * as chatsService from '@/services/chats'
 import * as chatModule from '@/services/chatModule'
@@ -109,7 +110,8 @@ const mockConv = (
   number: string,
   name: string | null,
   preview: string,
-  unread: number
+  unread: number,
+  contact?: { email?: string; phone?: string }
 ): ChatConversation => ({
   id,
   number,
@@ -118,6 +120,8 @@ const mockConv = (
   sessionId: id,
   status: 'open',
   visitorName: name ?? undefined,
+  visitorPhone: contact?.phone,
+  visitorEmail: contact?.email,
   lastMessageAt: '2025-11-12T15:27:00',
   lastMessagePreview: preview,
   unreadForManager: unread,
@@ -126,8 +130,8 @@ const mockConv = (
 
 const MOCK_CONVERSATIONS: ChatConversation[] = [
   mockConv('m1', '0001', 'Клиент #1', '+2', 2),
-  mockConv('m2', '0002', 'Елизавета', '+1', 1),
-  mockConv('m3', '0003', 'Клиент #3', '12', 0),
+  mockConv('m2', '0002', 'Елизавета', '+1', 1, { email: 'liza@example.com', phone: '+7 905 000-11-22' }),
+  mockConv('m3', '0003', 'Клиент #3', '12', 0, { email: 'client3@example.com', phone: '+7 900 123-45-67' }),
   mockConv('m4', '0004', 'Демин Александр', '34', 0),
   mockConv('m5', '0005', 'Демин Александр', '34', 0),
 ]
@@ -184,6 +188,22 @@ const MOCK_DIALOG_META: Record<string, DialogMeta> = {
   m5: { status: 'Спам', channel: 'telegram', resp: 'Без ответа', respKind: 'none', selected: true },
 }
 const DEFAULT_META: DialogMeta = { status: 'Первичный контакт', channel: 'web', resp: '—', respKind: 'fast' }
+
+// Реальное время реакции: firstVisitorAt → firstManagerAt (денормализовано на бэкенде).
+const respFromConv = (c: ChatConversation): { resp: string; respKind: RespKind } => {
+  if (!c.firstManagerAt) return { resp: 'Без ответа', respKind: 'none' }
+  const start = c.firstVisitorAt ?? c.createdAt
+  const sec = Math.max(0, Math.round((new Date(c.firstManagerAt).getTime() - new Date(start).getTime()) / 1000))
+  if (sec < 10) return { resp: 'Сразу', respKind: 'instant' }
+  if (sec < 60) return { resp: `${sec} секунд`, respKind: 'fast' }
+  const min = Math.round(sec / 60)
+  if (min < 60) return { resp: `${min} мин`, respKind: min <= 5 ? 'fast' : 'slow' }
+  return { resp: `${Math.round(min / 60)} ч`, respKind: 'slow' }
+}
+const channelOf = (c: ChatConversation): Channel => {
+  const ch = c.channel
+  return ch === 'vk' || ch === 'telegram' ? ch : 'web'
+}
 
 // Статусы оператора (блок «Мои входящие»).
 const OPERATOR_STATUSES = [
@@ -537,7 +557,7 @@ const DialogsSection = ({
     () => new Set(conversations.filter(c => MOCK_DIALOG_META[c.id]?.selected).map(c => c.id))
   )
   const [statusById, setStatusById] = useState<Record<string, string>>(
-    () => Object.fromEntries(conversations.map(c => [c.id, (MOCK_DIALOG_META[c.id] ?? DEFAULT_META).status]))
+    () => Object.fromEntries(conversations.map(c => [c.id, (preview ? MOCK_DIALOG_META[c.id]?.status : c.category) ?? DEFAULT_META.status]))
   )
   const [unreadMap, setUnreadMap] = useState<Record<string, boolean>>(
     () => Object.fromEntries(conversations.map(c => [c.id, c.unreadForManager > 0]))
@@ -621,8 +641,11 @@ const DialogsSection = ({
 
       <div className="flex-1 overflow-y-auto">
         {list.map(c => {
-          const meta = MOCK_DIALOG_META[c.id] ?? DEFAULT_META
-          const status = statusById[c.id] ?? meta.status
+          // В preview — мок-метаданные; в боевом — реальные поля диалога.
+          const mock = preview ? MOCK_DIALOG_META[c.id] : undefined
+          const status = statusById[c.id] ?? mock?.status ?? c.category ?? 'Первичный контакт'
+          const channel = mock?.channel ?? channelOf(c)
+          const { resp, respKind } = mock ? { resp: mock.resp, respKind: mock.respKind } : respFromConv(c)
           return (
             <div
               key={c.id}
@@ -645,21 +668,27 @@ const DialogsSection = ({
               <div className="flex flex-col items-center gap-1 text-default-400">
                 <span className="text-[12px]">{fmtTime(c.lastMessageAt)}</span>
                 <div className="flex items-center gap-1">
-                  <ChannelIcon ch={meta.channel} />
+                  <ChannelIcon ch={channel} />
                   <IconEnter />
                 </div>
               </div>
 
-              <StatusSelect value={status} onChange={v => setStatusById(prev => ({ ...prev, [c.id]: v }))} />
+              <StatusSelect
+                value={status}
+                onChange={v => {
+                  setStatusById(prev => ({ ...prev, [c.id]: v }))
+                  if (!preview) void chatModule.updateConversationFields(c.id, { category: v })
+                }}
+              />
 
               <div className="flex items-center gap-2 text-[15px] text-[#1A1A1A] min-w-0">
-                <span className="text-default-500 shrink-0"><RespIcon kind={meta.respKind} /></span>
-                <span className="truncate">{meta.resp}</span>
+                <span className="text-default-500 shrink-0"><RespIcon kind={respKind} /></span>
+                <span className="truncate">{resp}</span>
               </div>
 
               <div className="flex items-center gap-2 text-[15px] text-[#1A1A1A] min-w-0">
-                <span className="shrink-0"><ChannelIcon ch={meta.channel} /></span>
-                <span className="truncate">{CHANNEL_LABEL[meta.channel]}</span>
+                <span className="shrink-0"><ChannelIcon ch={channel} /></span>
+                <span className="truncate">{CHANNEL_LABEL[channel]}</span>
               </div>
             </div>
           )
@@ -868,7 +897,9 @@ const OperatorsSection = ({
   const [operators, setOperators] = useState<Operator[]>(INITIAL_OPERATORS)
   // Карта id отдела → имя (и обратная), нужна для отображения и форм.
   const [deptList, setDeptList] = useState<{ id: string; name: string }[]>([])
-  const deptNames = real && deptList.length > 0 ? deptList.map(d => d.name) : DEPARTMENT_NAMES
+  // В реальном режиме НЕ подставляем мок-отделы: если их нет — покажем «Создайте отдел».
+  const deptNames = real ? deptList.map(d => d.name) : DEPARTMENT_NAMES
+  const noDepts = real && deptList.length === 0
   const deptNameById = useMemo(() => Object.fromEntries(deptList.map(d => [d.id, d.name])), [deptList])
   const deptIdByName = useMemo(() => Object.fromEntries(deptList.map(d => [d.name, d.id])), [deptList])
   // Сырые операторы из бэка — чтобы знать departmentId по id оператора.
@@ -961,7 +992,7 @@ const OperatorsSection = ({
     setName('')
     setEmail('')
     setRole('Оператор')
-    setDept(deptNames[0])
+    setDept(deptNames[0] ?? '')
     setAdding(false)
   }
   const add = () => {
@@ -1201,7 +1232,12 @@ const OperatorsSection = ({
                 </button>
                 <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={e => {
                   const f = e.target.files?.[0]
-                  if (f) setSAvatar(URL.createObjectURL(f))
+                  if (!f) return
+                  // data-URL (а не blob), чтобы аватар реально сохранялся через updateOperator.
+                  const reader = new FileReader()
+                  reader.onload = () => setSAvatar(String(reader.result))
+                  reader.readAsDataURL(f)
+                  e.target.value = ''
                 }} />
               </div>
 
@@ -1266,9 +1302,15 @@ const OperatorsSection = ({
               <option>Оператор</option>
               <option>Администратор</option>
             </select>
-            <select value={dept} onChange={e => setDept(e.target.value)} className="w-[190px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white">
-              {deptNames.map(d => <option key={d}>{d}</option>)}
-            </select>
+            {noDepts ? (
+              <span className="w-[190px] shrink-0 h-11 px-3 rounded-[10px] border border-dashed border-default-300 text-[14px] text-default-400 flex items-center">
+                Создайте отдел
+              </span>
+            ) : (
+              <select value={dept} onChange={e => setDept(e.target.value)} className="w-[190px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white">
+                {deptNames.map(d => <option key={d}>{d}</option>)}
+              </select>
+            )}
             <button type="button" onClick={reset} className="shrink-0 h-11 px-4 rounded-[10px] border border-default-200 text-[15px]">Отмена</button>
             <button type="button" onClick={add} disabled={!name.trim()} className="shrink-0 h-11 px-5 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50">Добавить</button>
           </div>
@@ -1792,15 +1834,25 @@ const SettingsSection = ({
 }) => {
   const [ready, setReady] = useState(false)
   const [subview, setSubview] = useState<'settings' | 'scenario' | 'autodist'>('settings')
+  const projects = useProjectsStore(s => s.projects)
+  // Реальный включённый CHAT-виджет проекта — настройки/сценарий правят и сохраняют именно его.
+  const realWidget = useMemo(
+    () => projects.find(p => p.id === projectId)?.widgets.find(w => w.type === WidgetTypeEnum.CHAT && w.enabled),
+    [projects, projectId]
+  )
   const [chatSel, setChatSel] = useState(SETTINGS_CHATS[0])
 
   useEffect(() => {
     const s = useWidgetSettingsStore.getState()
-    if (s.settings?.id !== SETTINGS_WIDGET_ID) {
+    if (!preview && realWidget && projectId) {
+      if (s.settings?.id !== realWidget.id) {
+        s.init(realWidget.id, WidgetTypeEnum.CHAT, projectId, realWidget.config as Partial<WidgetSettings> | undefined)
+      }
+    } else if (s.settings?.id !== SETTINGS_WIDGET_ID) {
       s.init(SETTINGS_WIDGET_ID, WidgetTypeEnum.CHAT, 'chat-module')
     }
     setReady(true)
-  }, [])
+  }, [preview, realWidget, projectId])
 
   const allSections = getWidgetDefinition(WidgetTypeEnum.CHAT).settings.sections
   const settingsSections = allSections.filter(s => s.id !== 'chat.scenario')
@@ -1906,7 +1958,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const [transferOpen, setTransferOpen] = useState(false)
   const [emojiOpen, setEmojiOpen] = useState(false)
   const [groupDraft, setGroupDraft] = useState('')
-  const [groupMsgs, setGroupMsgs] = useState<GroupMsg[]>(INITIAL_GROUP)
+  const [groupMsgs, setGroupMsgs] = useState<GroupMsg[]>(preview ? INITIAL_GROUP : [])
   const fileRef = useRef<HTMLInputElement | null>(null)
   const selectedIdRef = useRef<string | null>(null)
   selectedIdRef.current = selectedId
@@ -1940,9 +1992,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     }
   }, [loadConversations, preview])
 
-  // Групповой чат операторов — загрузка истории при открытии (real-режим).
+  // Групповой чат операторов — загрузка истории (real-режим, при монтировании: нужна и для счётчика на карточке).
   useEffect(() => {
-    if (!groupOpen || preview || !activeProjectId) return
+    if (preview || !activeProjectId) return
     let alive = true
     void (async () => {
       try {
@@ -1962,7 +2014,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       }
     })()
     return () => { alive = false }
-  }, [groupOpen, preview, activeProjectId])
+  }, [preview, activeProjectId])
 
   const { subscribe, sendMessage, markRead } = useChatSocket({
     onMessage: useCallback((msg: ChatMessage) => {
@@ -2238,8 +2290,8 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             </div>
           </div>
           <div className="mt-2 flex items-center justify-between text-[13px] text-default-400">
-            <span>+16</span>
-            <span className="flex items-center gap-1 text-primary">+352 <IconBubble /></span>
+            <span className="flex items-center gap-1"><IconUsers /> {preview ? INITIAL_OPERATORS.length : transferOps.length}</span>
+            <span className="flex items-center gap-1 text-primary">{groupMsgs.length} <IconBubble /></span>
           </div>
         </button>
 

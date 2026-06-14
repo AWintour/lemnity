@@ -32,6 +32,7 @@ type WidgetProps = {
   offlineMessage: string
   placeholder: string
   windowFormat: 'sidebar' | 'modal'
+  windowRadius: number
   windowBackgroundColor: string
   windowAccentColor: string
   clientColor: string
@@ -49,7 +50,13 @@ type WidgetProps = {
   formHeader: string
   disabled?: boolean
   preview?: boolean
+  // Идёт живой чат с оператором — кнопки сценария неактивны, показан ввод сообщения.
+  chatActive: boolean
+  // Офлайн-сообщение отправлено — показать подтверждение вместо поля.
+  offlineSent: boolean
   onSend: (body: string) => void
+  onEnterChat: () => void
+  onOfflineSend: (text: string) => void
   onQuickReply: (buttonId: string) => void
   onSubmitForm: (values: ContactFormValues) => void
   onBack: () => void
@@ -566,12 +573,13 @@ const Widget = (props: WidgetProps) => {
             transition={motionTransition}
             className={cn(
               'w-[380px] max-w-[94vw] shrink-0 flex flex-col overflow-hidden',
-              isSidebar
-                ? 'h-[100dvh] max-h-[100dvh] rounded-none'
-                : 'h-[620px] max-h-[78vh] rounded-[18px]',
+              isSidebar ? 'h-[100dvh] max-h-[100dvh]' : 'h-[620px] max-h-[78vh]',
               'shadow-[0px_8px_24px_rgba(0,0,0,0.10)]',
             )}
-            style={{ backgroundColor: props.windowBackgroundColor }}
+            style={{
+              backgroundColor: props.windowBackgroundColor,
+              borderRadius: isSidebar ? 0 : props.windowRadius,
+            }}
           >
             <>
             {/* Шапка — статична на всех экранах; логотип и приветствие только на home */}
@@ -670,56 +678,59 @@ const Widget = (props: WidgetProps) => {
               {props.messages.map(message => (
                 <MessageBubble key={message.id} message={message} clientColor={props.clientColor} />
               ))}
-
-              {showQuickReplies && (() => {
-                const regular = props.quickReplies.filter(q => !q.isHandoff)
-                const handoff = props.quickReplies.filter(q => q.isHandoff)
-                return (
-                  <div className="w-full flex flex-col gap-3 mt-1">
-                    {regular.length > 0 && (
-                      <div className="rounded-[14px] border border-[#E3E3E8] overflow-hidden">
-                        {regular.map((qr, i) => (
-                          <button
-                            key={qr.id}
-                            type="button"
-                            disabled={props.disabled}
-                            onClick={() => props.onQuickReply(qr.id)}
-                            className={cn(
-                              'w-full px-4 py-4 flex items-center justify-between gap-3 text-left',
-                              'text-[16px] leading-5 text-[#1A1A1A] hover:bg-[#FAFAFB] transition-colors',
-                              i !== regular.length - 1 && 'border-b border-[#EDEDF0]',
-                            )}
-                          >
-                            <span>{qr.emoji ? `${qr.emoji} ` : ''}{qr.label}</span>
-                            <span className="shrink-0 text-[#1A1A1A]"><IconArrowCircle color="currentColor" /></span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {handoff.map(qr => (
-                      <button
-                        key={qr.id}
-                        type="button"
-                        disabled={props.disabled}
-                        onClick={() => props.onQuickReply(qr.id)}
-                        className={cn(
-                          'w-full px-4 py-4 flex items-center justify-between gap-3 text-left',
-                          'rounded-[14px] border text-[16px] leading-5 transition-colors',
-                        )}
-                        style={{ borderColor: accent, color: accent }}
-                      >
-                        <span>{qr.emoji ? `${qr.emoji} ` : ''}{qr.label}</span>
-                        <span className="shrink-0"><IconArrowCircle color={accent} /></span>
-                      </button>
-                    ))}
-                  </div>
-                )
-              })()}
             </div>
 
-            {/* Поле ввода и тулбар — только в режиме переписки */}
-            {props.view === 'chat' && (
+            {/* Кнопки сценария — закреплены над текстом; неактивны во время живого чата */}
+            {showQuickReplies && (() => {
+              const regular = props.quickReplies.filter(q => !q.isHandoff)
+              const handoff = props.quickReplies.filter(q => q.isHandoff)
+              const btnDisabled = props.disabled || props.chatActive
+              return (
+                <div className="shrink-0 px-4 pb-1 flex flex-col gap-3">
+                  {regular.length > 0 && (
+                    <div className={cn('rounded-[14px] border border-[#E3E3E8] overflow-hidden', btnDisabled && 'opacity-50')}>
+                      {regular.map((qr, i) => (
+                        <button
+                          key={qr.id}
+                          type="button"
+                          disabled={btnDisabled}
+                          onClick={() => props.onQuickReply(qr.id)}
+                          className={cn(
+                            'w-full px-4 py-4 flex items-center justify-between gap-3 text-left',
+                            'text-[16px] leading-5 text-[#1A1A1A] hover:bg-[#FAFAFB] transition-colors disabled:cursor-not-allowed',
+                            i !== regular.length - 1 && 'border-b border-[#EDEDF0]',
+                          )}
+                        >
+                          <span>{qr.emoji ? `${qr.emoji} ` : ''}{qr.label}</span>
+                          <span className="shrink-0 text-[#1A1A1A]"><IconArrowCircle color="currentColor" /></span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {handoff.map(qr => (
+                    <button
+                      key={qr.id}
+                      type="button"
+                      disabled={btnDisabled}
+                      onClick={() => props.onQuickReply(qr.id)}
+                      className={cn(
+                        'w-full px-4 py-4 flex items-center justify-between gap-3 text-left',
+                        'rounded-[14px] border text-[16px] leading-5 transition-colors disabled:cursor-not-allowed',
+                        btnDisabled && 'opacity-50',
+                      )}
+                      style={{ borderColor: accent, color: accent }}
+                    >
+                      <span>{qr.emoji ? `${qr.emoji} ` : ''}{qr.label}</span>
+                      <span className="shrink-0"><IconArrowCircle color={accent} /></span>
+                    </button>
+                  ))}
+                </div>
+              )
+            })()}
+
+            {/* Низ окна: живой чат / «Войти в чат» (онлайн) / поле сообщения (офлайн) / подтверждение */}
+            {props.chatActive ? (
               <>
                 <form onSubmit={handleSubmit} className="shrink-0 px-4 pt-2">
                   <div className="flex items-center gap-2 border-t border-[#EFEFF2] pt-3">
@@ -757,6 +768,55 @@ const Widget = (props: WidgetProps) => {
                   </EmojiPicker>
                 </div>
               </>
+            ) : props.operatorOnline ? (
+              <div className="shrink-0 px-4 pt-2 pb-3">
+                <button
+                  type="button"
+                  onClick={props.onEnterChat}
+                  className="w-full h-12 rounded-[12px] text-white text-[16px] font-medium"
+                  style={{ backgroundColor: accent }}
+                >
+                  Войти в чат
+                </button>
+              </div>
+            ) : props.offlineSent ? (
+              <div className="shrink-0 px-4 pt-2 pb-3">
+                <div
+                  className="rounded-[12px] p-4 text-center text-[15px] leading-5 text-[#1A1A1A]"
+                  style={{ backgroundColor: '#DFF3E2' }}
+                >
+                  Ваше сообщение отправлено, менеджер свяжется в рабочее время.
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={e => {
+                  e.preventDefault()
+                  const text = draft.trim()
+                  if (!text || props.disabled) return
+                  props.onOfflineSend(text)
+                  setDraft('')
+                }}
+                className="shrink-0 px-4 pt-2 pb-3"
+              >
+                <div className="flex items-center gap-2 border border-[#E3E3E8] rounded-[12px] px-3 h-12">
+                  <input
+                    value={draft}
+                    onChange={e => setDraft(e.target.value)}
+                    disabled={props.disabled}
+                    placeholder="Сообщение"
+                    className="flex-1 text-[16px] text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
+                  />
+                  <button
+                    type="submit"
+                    disabled={props.disabled || draft.trim().length === 0}
+                    className="shrink-0 p-1 disabled:opacity-40"
+                    aria-label="Отправить"
+                  >
+                    <IconSend color="#8E8B97" />
+                  </button>
+                </div>
+              </form>
             )}
 
             {/* Футер брендинга */}

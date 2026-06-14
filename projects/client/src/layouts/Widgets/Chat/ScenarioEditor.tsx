@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import {
   ReactFlow,
@@ -19,6 +19,8 @@ import '@xyflow/react/dist/style.css'
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import EmojiPicker from '@/components/EmojiPicker'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import { useProjectsStore } from '@/stores/projectsStore'
+import * as chatModule from '@/services/chatModule'
 import { uuidv4 } from '@/common/utils/uuidv4'
 
 import type {
@@ -41,6 +43,7 @@ const readScenario = (): Scenario => {
 type StepNodeData = {
   step: ScenarioStep
   isStart: boolean
+  departments: { id: string; name: string }[]
   onMessage: (stepId: string, message: string) => void
   onImage: (stepId: string, image: string | undefined) => void
   onButtonChange: (stepId: string, buttonId: string, patch: Partial<ScenarioButton>) => void
@@ -128,49 +131,65 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
 
         <div className="flex flex-col gap-1.5">
           {step.buttons.map(btn => (
-            <div key={btn.id} className="relative flex items-center gap-1">
-              <EmojiPicker
-                onPick={em => data.onButtonChange(step.id, btn.id, { emoji: em })}
-                className="w-7 h-7 shrink-0 flex items-center justify-center text-[15px] rounded-[6px] border border-[#E3E3E8] hover:bg-[#F4F4F6]"
-              >
-                {btn.emoji || '🙂'}
-              </EmojiPicker>
-              <input
-                value={btn.label}
-                onChange={e => data.onButtonChange(step.id, btn.id, { label: e.target.value })}
-                placeholder="Текст кнопки"
-                className="nodrag flex-1 min-w-0 text-[12px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5]"
-              />
-              <button
-                type="button"
-                onClick={() => data.onToggleHandoff(step.id, btn.id)}
-                title={btn.next === null ? 'Передаёт менеджеру' : 'Сделать передачей менеджеру'}
-                className={
-                  'nodrag shrink-0 text-[11px] px-1.5 py-1 rounded-[6px] border ' +
-                  (btn.next === null
-                    ? 'border-[#5951E5] text-[#5951E5] bg-[#EEEDFB]'
-                    : 'border-[#E3E3E8] text-[#9A96A2]')
-                }
-              >
-                👤
-              </button>
-              <button
-                type="button"
-                onClick={() => data.onDeleteButton(step.id, btn.id)}
-                className="nodrag shrink-0 text-[#B0AEBA] hover:text-[#FF4D4D] text-[12px]"
-                title="Удалить кнопку"
-              >
-                ✕
-              </button>
-              {/* Источник связи для кнопки (если не handoff) */}
-              {btn.next !== null && (
-                <Handle
-                  type="source"
-                  id={btn.id}
-                  position={Position.Right}
-                  className="!bg-[#5951E5]"
-                  style={{ right: -7 }}
+            <div key={btn.id} className="relative flex flex-col gap-1">
+              <div className="flex items-center gap-1">
+                <EmojiPicker
+                  onPick={em => data.onButtonChange(step.id, btn.id, { emoji: em })}
+                  className="w-7 h-7 shrink-0 flex items-center justify-center text-[15px] rounded-[6px] border border-[#E3E3E8] hover:bg-[#F4F4F6]"
+                >
+                  {btn.emoji || '🙂'}
+                </EmojiPicker>
+                <input
+                  value={btn.label}
+                  onChange={e => data.onButtonChange(step.id, btn.id, { label: e.target.value })}
+                  placeholder="Текст кнопки"
+                  className="nodrag flex-1 min-w-0 text-[12px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5]"
                 />
+                <button
+                  type="button"
+                  onClick={() => data.onToggleHandoff(step.id, btn.id)}
+                  title={btn.next === null ? 'Передаёт менеджеру' : 'Сделать передачей менеджеру'}
+                  className={
+                    'nodrag shrink-0 text-[11px] px-1.5 py-1 rounded-[6px] border ' +
+                    (btn.next === null
+                      ? 'border-[#5951E5] text-[#5951E5] bg-[#EEEDFB]'
+                      : 'border-[#E3E3E8] text-[#9A96A2]')
+                  }
+                >
+                  👤
+                </button>
+                <button
+                  type="button"
+                  onClick={() => data.onDeleteButton(step.id, btn.id)}
+                  className="nodrag shrink-0 text-[#B0AEBA] hover:text-[#FF4D4D] text-[12px]"
+                  title="Удалить кнопку"
+                >
+                  ✕
+                </button>
+                {/* Источник связи для кнопки (если не handoff) */}
+                {btn.next !== null && (
+                  <Handle
+                    type="source"
+                    id={btn.id}
+                    position={Position.Right}
+                    className="!bg-[#5951E5]"
+                    style={{ right: -7 }}
+                  />
+                )}
+              </div>
+              {/* Маршрут в отдел — для кнопки-хэндофа (передаёт менеджеру) */}
+              {btn.next === null && data.departments.length > 0 && (
+                <select
+                  value={btn.department ?? ''}
+                  onChange={e => data.onButtonChange(step.id, btn.id, { department: e.target.value || null })}
+                  className="nodrag text-[11px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5] bg-white text-[#5A5A5A]"
+                  title="Направить в отдел"
+                >
+                  <option value="">Отдел: любой</option>
+                  {data.departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
               )}
             </div>
           ))}
@@ -194,6 +213,7 @@ const nodeTypes = { step: StepNode }
 
 const ScenarioEditor = () => {
   const setChatPatch = useWidgetSettingsStore(s => s.setChatPatch)
+  const saveWidgetConfig = useProjectsStore(s => s.saveWidgetConfig)
 
   // Реактивно следим за структурой сценария (кол-во шагов/кнопок/тексты), чтобы перестроить граф.
   const scenario = useWidgetSettingsStore(
@@ -202,6 +222,45 @@ const ScenarioEditor = () => {
       return w?.scenario ?? defaults.scenario
     })
   )
+
+  // Отделы проекта — для маршрутизации кнопок-хэндофов. Грузим по реальному projectId стора.
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    const projectId = useWidgetSettingsStore.getState().projectId
+    if (!projectId || projectId === 'preview-project' || projectId === 'chat-module') return
+    let alive = true
+    void (async () => {
+      try {
+        const res = await chatModule.listDepartments(projectId)
+        if (alive) setDepartments(res.departments.map(d => ({ id: d.id, name: d.name })))
+      } catch {
+        // отделов нет/нет доступа — без выпадающего списка
+      }
+    })()
+    return () => { alive = false }
+  }, [])
+
+  // Сохранение сценария/настроек в реальный виджет (через widgets API).
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const handleSave = useCallback(async () => {
+    const store = useWidgetSettingsStore.getState()
+    const projectId = store.projectId
+    const widgetId = store.settings?.id
+    if (!projectId || !widgetId || projectId === 'preview-project' || projectId === 'chat-module') return
+    setSaveState('saving')
+    try {
+      const res = store.prepareForSave()
+      if (!res.ok) {
+        setSaveState('error')
+        return
+      }
+      await saveWidgetConfig(projectId, widgetId, res.data)
+      setSaveState('saved')
+      setTimeout(() => setSaveState('idle'), 2000)
+    } catch {
+      setSaveState('error')
+    }
+  }, [saveWidgetConfig])
 
   const commit = useCallback(
     (mutator: (prev: Scenario) => Scenario) => {
@@ -312,9 +371,9 @@ const ScenarioEditor = () => {
         id: step.id,
         type: 'step',
         position: step.position,
-        data: { step, isStart: step.id === scenario.startStepId, ...handlers },
+        data: { step, isStart: step.id === scenario.startStepId, departments, ...handlers },
       })),
-    [scenario, handlers]
+    [scenario, handlers, departments]
   )
 
   const buildEdges = useCallback(
@@ -341,9 +400,9 @@ const ScenarioEditor = () => {
   const signature = useMemo(
     () =>
       JSON.stringify(
-        scenario.steps.map(s => [s.id, s.message, s.image, s.buttons.map(b => [b.id, b.emoji, b.label, b.next])])
-      ) + `|${scenario.startStepId}`,
-    [scenario]
+        scenario.steps.map(s => [s.id, s.message, s.image, s.buttons.map(b => [b.id, b.emoji, b.label, b.next, b.department])])
+      ) + `|${scenario.startStepId}|${departments.length}`,
+    [scenario, departments.length]
   )
   const draggingRef = useRef(false)
 
@@ -435,6 +494,16 @@ const ScenarioEditor = () => {
             >
               + Шаг
             </button>
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saveState === 'saving'}
+              className="text-[13px] px-2.5 py-1 rounded-[6px] border border-[#5951E5] text-[#5951E5] disabled:opacity-50"
+            >
+              {saveState === 'saving' ? 'Сохранение…' : 'Сохранить'}
+            </button>
+            {saveState === 'saved' && <span className="text-[12px] text-[#3BB240]">Сохранено</span>}
+            {saveState === 'error' && <span className="text-[12px] text-[#E5484D]">Ошибка</span>}
           </div>
         </div>
 
