@@ -183,8 +183,9 @@ services:
       start_period: 30s
 
   # Nginx - единая точка входа (статический фронт + API proxy)
+  # Кастомный образ = stock nginx:1.28.1 + ngx_brotli (projects/nginx/Dockerfile), собирается в CI.
   nginx:
-    image: nginx:1.28.1
+    image: ghcr.io/${REPOSITORY_OWNER}/nginx:${IMAGE_TAG}
     container_name: nginx
     ports:
       - '80:80'
