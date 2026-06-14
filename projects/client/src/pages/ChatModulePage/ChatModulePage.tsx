@@ -1323,7 +1323,7 @@ const OperatorsSection = ({
             className="rounded-[14px] border border-default-200 p-4 flex items-center gap-4 cursor-pointer hover:bg-default-50 transition-colors"
           >
             <div className="relative">
-              <Avatar name={o.name} />
+              <Avatar name={o.name} url={o.avatar} />
               <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white', o.online ? 'bg-[#3BD16F]' : 'bg-default-300')} />
             </div>
             <div className="flex-1 min-w-0">

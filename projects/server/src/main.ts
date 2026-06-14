@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module'
 import cookieParser from 'cookie-parser'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -16,6 +17,13 @@ async function bootstrap() {
   // rawBody: true — нужен сырой body для проверки HMAC-подписи вебхука /api/lemnity/widget-subscription
   // (подпись считается по точным байтам тела, ре-сериализация JSON может не совпасть).
   const app = await NestFactory.create(AppModule, { rawBody: true })
+
+  // Конфиг виджета может содержать data-URL картинки (картинки шагов сценария, аватары операторов),
+  // дефолтный лимит body-parser 100kb → 413. Поднимаем до 25mb (в пределах nginx client_max_body_size 25M).
+  // useBodyParser на уровне app сам прокидывает rawBody:true → сырой body для HMAC-вебхука сохраняется.
+  const expressApp = app as unknown as NestExpressApplication
+  expressApp.useBodyParser('json', { limit: '25mb' })
+  expressApp.useBodyParser('urlencoded', { limit: '25mb', extended: true })
 
   const config = new DocumentBuilder()
     .setTitle('Lemnity API')
