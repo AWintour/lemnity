@@ -18,10 +18,16 @@ type UseChatSocketHandlers = {
   onPresence?: (online: boolean) => void
 }
 
+export type SocketAttachment = {
+  attachmentUrl: string
+  attachmentType: 'image' | 'video' | 'file'
+  attachmentName?: string
+}
+
 type UseChatSocketResult = {
   connected: boolean
   subscribe: (conversationId: string) => void
-  sendMessage: (conversationId: string, body: string) => void
+  sendMessage: (conversationId: string, body: string, attachment?: SocketAttachment) => void
   markRead: (conversationId: string) => void
 }
 
@@ -88,9 +94,12 @@ export const useChatSocket = (handlers: UseChatSocketHandlers): UseChatSocketRes
     socketRef.current?.emit('conversation:subscribe', { conversationId })
   }, [])
 
-  const sendMessage = useCallback((conversationId: string, body: string) => {
-    socketRef.current?.emit('message:send', { conversationId, body })
-  }, [])
+  const sendMessage = useCallback(
+    (conversationId: string, body: string, attachment?: SocketAttachment) => {
+      socketRef.current?.emit('message:send', { conversationId, body, ...attachment })
+    },
+    []
+  )
 
   const markRead = useCallback((conversationId: string) => {
     socketRef.current?.emit('conversation:read', { conversationId })

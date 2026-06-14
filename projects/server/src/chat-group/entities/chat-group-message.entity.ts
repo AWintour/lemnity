@@ -5,5 +5,8 @@ export class ChatGroupMessageEntity {
   senderUserId!: string | null
   senderName!: string | null
   body!: string
+  attachmentUrl!: string | null
+  attachmentType!: string | null
+  attachmentName!: string | null
   createdAt!: string
 }

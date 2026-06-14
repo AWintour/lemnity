@@ -162,17 +162,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message:send')
   async onMessageSend(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { conversationId?: string; body?: string }
+    @MessageBody()
+    payload: {
+      conversationId?: string
+      body?: string
+      attachmentUrl?: string
+      attachmentType?: 'image' | 'video' | 'file'
+      attachmentName?: string
+    }
   ) {
     const data = client.data as SocketData | undefined
     const body = typeof payload?.body === 'string' ? payload.body : ''
-    if (!data || !body.trim()) return
+    const attachmentUrl =
+      typeof payload?.attachmentUrl === 'string' ? payload.attachmentUrl : undefined
+    // Допускаем сообщение только с вложением (без текста).
+    if (!data || (!body.trim() && !attachmentUrl)) return
 
     if (data.role === 'visitor') {
       const message = await this.chat.appendMessage({
         conversationId: data.conversationId,
         sender: 'visitor',
-        body
+        body,
+        attachmentUrl,
+        attachmentType: payload?.attachmentType,
+        attachmentName: payload?.attachmentName
       })
       this.broadcastMessage(
         { id: data.conversationId, projectId: data.projectId },
@@ -190,7 +203,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       conversationId,
       sender: 'manager',
       body,
-      senderUserId: data.userId
+      senderUserId: data.userId,
+      attachmentUrl,
+      attachmentType: payload?.attachmentType,
+      attachmentName: payload?.attachmentName
     })
     this.broadcastMessage(conversation, message)
     return message

@@ -69,6 +69,9 @@ const toMessageEntity = (m: ChatMessage): ChatMessageEntity => ({
   conversationId: m.conversationId,
   sender: m.sender,
   body: m.body,
+  attachmentUrl: m.attachmentUrl,
+  attachmentType: m.attachmentType,
+  attachmentName: m.attachmentName,
   senderUserId: m.senderUserId,
   readAt: m.readAt ? m.readAt.toISOString() : null,
   createdAt: m.createdAt.toISOString()
@@ -162,25 +165,34 @@ export class ChatService {
     sender: ChatSender
     body: string
     senderUserId?: string
+    attachmentUrl?: string | null
+    attachmentType?: string | null
+    attachmentName?: string | null
   }): Promise<ChatMessageEntity> {
     const body = args.body.trim()
-    if (!body) throw new BadRequestException('Message body is required')
+    const attachmentUrl = sanitize(args.attachmentUrl) ?? null
+    // Сообщение допустимо без текста, если есть вложение.
+    if (!body && !attachmentUrl) throw new BadRequestException('Message body is required')
 
     const now = new Date()
+    const preview = body || (attachmentUrl ? `📎 ${args.attachmentName ?? 'Вложение'}` : '')
     const [message] = await this.prisma.$transaction([
       this.prisma.chatMessage.create({
         data: {
           conversation: { connect: { id: args.conversationId } },
           sender: args.sender,
           body,
-          senderUserId: args.senderUserId ?? null
+          senderUserId: args.senderUserId ?? null,
+          attachmentUrl,
+          attachmentType: attachmentUrl ? args.attachmentType ?? 'file' : null,
+          attachmentName: attachmentUrl ? sanitize(args.attachmentName) ?? null : null
         }
       }),
       this.prisma.chatConversation.update({
         where: { id: args.conversationId },
         data: {
           lastMessageAt: now,
-          lastMessagePreview: buildPreview(body),
+          lastMessagePreview: buildPreview(preview),
           status: 'open',
           ...(args.sender === 'visitor'
             ? { unreadForManager: { increment: 1 } }

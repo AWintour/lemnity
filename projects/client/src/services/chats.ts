@@ -36,14 +36,25 @@ export type ChatConversation = {
   createdAt: string
 }
 
+export type ChatAttachmentType = 'image' | 'video' | 'file'
+
 export type ChatMessage = {
   id: string
   conversationId: string
   sender: ChatMessageSender
   body: string
+  attachmentUrl?: string | null
+  attachmentType?: string | null
+  attachmentName?: string | null
   senderUserId?: string | null
   readAt?: string | null
   createdAt: string
+}
+
+export type ReplyAttachment = {
+  attachmentUrl: string
+  attachmentType: ChatAttachmentType
+  attachmentName?: string
 }
 
 export type ListConversationsParams = {
@@ -74,8 +85,12 @@ export async function getConversationMessages(id: string) {
   return res.data
 }
 
-export async function replyToConversation(id: string, body: string) {
-  const res = await http.post<ChatMessage>(API.CHAT.MESSAGES(id), { body })
+export async function replyToConversation(
+  id: string,
+  body: string,
+  attachment?: ReplyAttachment
+) {
+  const res = await http.post<ChatMessage>(API.CHAT.MESSAGES(id), { body, ...attachment })
   return res.data
 }
 

@@ -9,7 +9,26 @@ type ServerMessage = {
   sender: 'visitor' | 'manager' | 'system'
   body: string
   createdAt: string
+  attachmentUrl?: string | null
+  attachmentType?: 'image' | 'video' | 'file' | null
+  attachmentName?: string | null
 }
+
+// Серверное сообщение → UI: вложение-картинка дублируется в image (обратная совместимость).
+const toUiMessage = (m: ServerMessage): ChatUiMessage => ({
+  id: m.id,
+  sender: m.sender,
+  body: m.body,
+  createdAt: m.createdAt,
+  ...(m.attachmentType === 'image' && m.attachmentUrl ? { image: m.attachmentUrl } : {}),
+  ...(m.attachmentUrl
+    ? {
+        attachmentUrl: m.attachmentUrl,
+        attachmentType: m.attachmentType ?? 'file',
+        attachmentName: m.attachmentName ?? undefined,
+      }
+    : {}),
+})
 
 type UseChatConnectionArgs = {
   widgetId?: string
@@ -82,7 +101,7 @@ export const useChatConnection = (
           `?sessionId=${encodeURIComponent(sessionId)}`
       )
       if (disposed) return
-      history?.messages?.forEach(m => onIncomingRef.current({ ...m }))
+      history?.messages?.forEach(m => onIncomingRef.current(toUiMessage(m)))
 
       const socket = io(`${apiOrigin}/chat`, {
         path: '/socket.io',
@@ -90,7 +109,7 @@ export const useChatConnection = (
         auth: { role: 'visitor', widgetId: args.widgetId, sessionId },
       })
       socketRef.current = socket
-      socket.on('message:new', (msg: ServerMessage) => onIncomingRef.current({ ...msg }))
+      socket.on('message:new', (msg: ServerMessage) => onIncomingRef.current(toUiMessage(msg)))
       socket.on('operator:presence', (p: { online: boolean }) =>
         setOperatorOnline(Boolean(p?.online))
       )

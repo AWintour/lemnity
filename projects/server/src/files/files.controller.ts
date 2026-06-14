@@ -70,6 +70,49 @@ export class FilesController {
     return `users/${userId}/videos/${yyyy}/${mm}`
   }
 
+  private buildFilesPrefix(userId: string): string {
+    const now = new Date()
+    const yyyy = String(now.getFullYear())
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    return `users/${userId}/files/${yyyy}/${mm}`
+  }
+
+  // Универсальная загрузка любого файла (вложения чата): картинки/видео/документы.
+  @Post('uploads')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage,
+      limits: { fileSize: MAX_FILE_SIZE_BYTES }
+    })
+  )
+  async uploadAny(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
+    @Query('cache') cache?: string
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required')
+    }
+    const bucket = process.env.S3_BUCKET_UPLOADS
+    if (!bucket) {
+      throw new BadRequestException('S3_BUCKET_UPLOADS is not configured on server')
+    }
+    const prefix = this.buildFilesPrefix(userId)
+    const sanitized = this.sanitizeFileName(file.originalname)
+    const key = `${randomUUID()}-${sanitized}`
+    await this.s3.putObject({
+      bucket,
+      key,
+      prefix,
+      body: file.buffer,
+      contentType: file.mimetype,
+      cacheControl: cache ?? 'public, max-age=31536000, immutable'
+    })
+    const fullKey = `${prefix}/${key}`
+    const url = this.s3.getPublicUrlForKey(fullKey)
+    return { key: fullKey, url, contentType: file.mimetype, name: file.originalname }
+  }
+
   @Post('images')
   @UseInterceptors(
     FileInterceptor('file', {

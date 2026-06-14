@@ -14,6 +14,15 @@ export class ChatMessageEntity {
   body!: string
 
   @ApiProperty({ required: false, nullable: true })
+  attachmentUrl?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  attachmentType?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
+  attachmentName?: string | null
+
+  @ApiProperty({ required: false, nullable: true })
   senderUserId?: string | null
 
   @ApiProperty({ required: false, nullable: true })

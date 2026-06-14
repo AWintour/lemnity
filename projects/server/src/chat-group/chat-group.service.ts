@@ -10,6 +10,9 @@ type ChatGroupMessageRow = {
   senderUserId: string | null
   senderName: string | null
   body: string
+  attachmentUrl: string | null
+  attachmentType: string | null
+  attachmentName: string | null
   createdAt: Date
 }
 
@@ -20,6 +23,9 @@ const toEntity = (m: ChatGroupMessageRow): ChatGroupMessageEntity => ({
   senderUserId: m.senderUserId,
   senderName: m.senderName,
   body: m.body,
+  attachmentUrl: m.attachmentUrl,
+  attachmentType: m.attachmentType,
+  attachmentName: m.attachmentName,
   createdAt: m.createdAt.toISOString()
 })
 
@@ -61,7 +67,10 @@ export class ChatGroupService {
         body: dto.body,
         operatorId: dto.operatorId ?? null,
         senderName: dto.senderName ?? null,
-        senderUserId: userId
+        senderUserId: userId,
+        attachmentUrl: dto.attachmentUrl ?? null,
+        attachmentType: dto.attachmentType ?? null,
+        attachmentName: dto.attachmentName ?? null
       }
     })
     return toEntity(row)

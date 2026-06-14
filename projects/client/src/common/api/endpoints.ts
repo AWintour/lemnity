@@ -24,7 +24,8 @@ export const API = {
   FILES: {
     CREATE: '/files' as const,
     IMAGES: '/files/images' as const,
-    VIDEOS: '/files/videos' as const
+    VIDEOS: '/files/videos' as const,
+    UPLOADS: '/files/uploads' as const
   },
   STATS: {
     SUMMARY: '/stats/summary' as const,

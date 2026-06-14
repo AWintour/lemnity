@@ -1,8 +1,8 @@
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
+import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class CreateGroupMessageDto {
+  // Может быть пустым, если сообщение — только вложение.
   @IsString()
-  @MinLength(1)
   @MaxLength(2000)
   body!: string
 
@@ -13,4 +13,18 @@ export class CreateGroupMessageDto {
   @IsOptional()
   @IsString()
   senderName?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  attachmentUrl?: string
+
+  @IsOptional()
+  @IsIn(['image', 'video', 'file'])
+  attachmentType?: 'image' | 'video' | 'file'
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  attachmentName?: string
 }

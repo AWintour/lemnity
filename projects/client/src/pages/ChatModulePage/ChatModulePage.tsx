@@ -21,7 +21,13 @@ import type { WidgetSettings } from '@/stores/widgetSettings/types'
 import { useProjectsStore } from '@/stores/projectsStore'
 import * as chatsService from '@/services/chats'
 import * as chatModule from '@/services/chatModule'
-import { uploadImage, MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE } from '@/api/upload'
+import {
+  uploadImage,
+  uploadFile,
+  classifyAttachment,
+  MAX_IMAGE_BYTES,
+  IMAGE_TOO_LARGE_MESSAGE
+} from '@/api/upload'
 import type { ChatConversation, ChatMessage } from '@/services/chats'
 
 const ACCENT = '#1A52DB' // primary платформы
@@ -217,7 +223,16 @@ const OPERATOR_STATUSES = [
 // Библиотека эмодзи для композера.
 const EMOJIS = ['😀','😁','😂','🤣','🙂','😉','😍','😘','🤔','😎','🥳','😢','😡','👍','👎','🙏','👌','🔥','🎉','✅','❗','💡','❤️','💬','📞','🚀','⭐','💯']
 
-type GroupMsg = { id: string; author: string; me?: boolean; body: string; createdAt: string }
+type GroupMsg = {
+  id: string
+  author: string
+  me?: boolean
+  body: string
+  createdAt: string
+  attachmentUrl?: string | null
+  attachmentType?: string | null
+  attachmentName?: string | null
+}
 const INITIAL_GROUP: GroupMsg[] = [
   { id: 'g1', author: 'Анна Смирнова', body: 'Коллеги, кто возьмёт Клиента #3? Спрашивает про артикул.', createdAt: '2025-11-12T10:02:00' },
   { id: 'g2', author: 'Игорь Петров', body: 'Я возьму, уже отвечаю.', createdAt: '2025-11-12T10:03:00' },
@@ -235,6 +250,43 @@ const Avatar = ({ name, size = 40, url }: { name: string; size?: number; url?: s
       {name.slice(0, 1).toUpperCase()}
     </div>
   )
+
+/* Вложение в сообщении: картинка (открывается), видео (плеер) или файл (скачать). */
+const AttachmentView = ({
+  url,
+  type,
+  name,
+}: {
+  url: string
+  type?: string | null
+  name?: string | null
+}) => {
+  if (type === 'image')
+    return (
+      <a href={url} target="_blank" rel="noreferrer" className="block">
+        <img
+          src={url}
+          alt={name ?? ''}
+          className="max-w-[220px] max-h-[220px] rounded-[10px] object-cover"
+        />
+      </a>
+    )
+  if (type === 'video')
+    return (
+      <video src={url} controls className="max-w-[260px] max-h-[260px] rounded-[10px]" />
+    )
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      download
+      className="flex items-center gap-2 text-primary hover:underline break-all"
+    >
+      <Ic d="M7 3h7l4 4v14H7z|M14 3v4h4" size={18} /> {name ?? 'Файл'}
+    </a>
+  )
+}
 
 /* ----------------------------- sidebar ---------------------------------- */
 
@@ -1539,21 +1591,20 @@ const DepartmentsSection = ({
 
 /* --------------------- групповой чат: архив вложений -------------------- */
 
-const GROUP_PHOTOS = ['#F4A8A8', '#A8C7F4', '#A8F4C0', '#F4E1A8', '#D8A8F4', '#A8F0F4']
-const GROUP_MEDIA = ['#C9B6F4', '#B6E3F4', '#F4C9B6']
-const GROUP_DOCS = [
-  { name: 'Прайс-2025.pdf', size: '1.2 МБ' },
-  { name: 'Инструкция оператора.docx', size: '340 КБ' },
-  { name: 'Логотипы.zip', size: '5.4 МБ' },
-  { name: 'Скрипты продаж.pdf', size: '820 КБ' },
-]
-
-const GroupInfoPanel = () => {
+// Архив вложений общего чата операторов — собирается из реальных сообщений группы.
+const GroupInfoPanel = ({ messages }: { messages: GroupMsg[] }) => {
   const [tab, setTab] = useState<'photos' | 'media' | 'docs'>('photos')
+  const atts = useMemo(() => messages.filter(m => m.attachmentUrl), [messages])
+  const photos = useMemo(() => atts.filter(m => m.attachmentType === 'image'), [atts])
+  const media = useMemo(() => atts.filter(m => m.attachmentType === 'video'), [atts])
+  const docs = useMemo(
+    () => atts.filter(m => m.attachmentType !== 'image' && m.attachmentType !== 'video'),
+    [atts]
+  )
   const tabs: { key: typeof tab; label: string; count: number }[] = [
-    { key: 'photos', label: 'Фото', count: GROUP_PHOTOS.length },
-    { key: 'media', label: 'Медиа', count: GROUP_MEDIA.length },
-    { key: 'docs', label: 'Документы', count: GROUP_DOCS.length },
+    { key: 'photos', label: 'Фото', count: photos.length },
+    { key: 'media', label: 'Медиа', count: media.length },
+    { key: 'docs', label: 'Документы', count: docs.length },
   ]
   return (
     <aside className="w-[340px] shrink-0 border-l border-default-200 p-5 flex flex-col gap-4 overflow-y-auto">
@@ -1577,42 +1628,70 @@ const GroupInfoPanel = () => {
       </div>
 
       {tab === 'photos' && (
-        <div className="grid grid-cols-3 gap-2">
-          {GROUP_PHOTOS.map((c, i) => (
-            <div key={i} className="aspect-square rounded-[10px]" style={{ backgroundColor: c }} />
-          ))}
-        </div>
+        photos.length ? (
+          <div className="grid grid-cols-3 gap-2">
+            {photos.map(m => (
+              <a
+                key={m.id}
+                href={m.attachmentUrl!}
+                target="_blank"
+                rel="noreferrer"
+                className="aspect-square rounded-[10px] overflow-hidden bg-default-100"
+              >
+                <img src={m.attachmentUrl!} alt="" className="w-full h-full object-cover" />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-default-400">Фото пока нет</p>
+        )
       )}
 
       {tab === 'media' && (
-        <div className="grid grid-cols-2 gap-2">
-          {GROUP_MEDIA.map((c, i) => (
-            <div key={i} className="aspect-video rounded-[10px] flex items-center justify-center" style={{ backgroundColor: c }}>
-              <span className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#1A1A1A]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-              </span>
-            </div>
-          ))}
-        </div>
+        media.length ? (
+          <div className="grid grid-cols-2 gap-2">
+            {media.map(m => (
+              <video
+                key={m.id}
+                src={m.attachmentUrl!}
+                controls
+                className="aspect-video rounded-[10px] bg-black/80 object-cover"
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-default-400">Видео пока нет</p>
+        )
       )}
 
       {tab === 'docs' && (
-        <div className="flex flex-col gap-2">
-          {GROUP_DOCS.map(d => (
-            <div key={d.name} className="flex items-center gap-3 rounded-[10px] border border-default-200 p-3">
-              <span className="w-9 h-9 shrink-0 rounded-[8px] bg-primary/10 text-primary flex items-center justify-center">
-                <Ic d="M7 3h7l4 4v14H7z|M14 3v4h4" size={18} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="text-[14px] text-[#1A1A1A] truncate">{d.name}</div>
-                <div className="text-[12px] text-default-400">{d.size}</div>
+        docs.length ? (
+          <div className="flex flex-col gap-2">
+            {docs.map(m => (
+              <div key={m.id} className="flex items-center gap-3 rounded-[10px] border border-default-200 p-3">
+                <span className="w-9 h-9 shrink-0 rounded-[8px] bg-primary/10 text-primary flex items-center justify-center">
+                  <Ic d="M7 3h7l4 4v14H7z|M14 3v4h4" size={18} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] text-[#1A1A1A] truncate">{m.attachmentName ?? 'Файл'}</div>
+                  <div className="text-[12px] text-default-400">{fmtFull(m.createdAt)}</div>
+                </div>
+                <a
+                  href={m.attachmentUrl!}
+                  target="_blank"
+                  rel="noreferrer"
+                  download
+                  aria-label="Скачать"
+                  className="text-default-400 hover:text-primary"
+                >
+                  <Ic d="M12 4v10M8 11l4 4 4-4M5 20h14" size={18} />
+                </a>
               </div>
-              <button type="button" aria-label="Скачать" className="text-default-400 hover:text-primary">
-                <Ic d="M12 4v10M8 11l4 4 4-4M5 20h14" size={18} />
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-default-400">Документов пока нет</p>
+        )
       )}
     </aside>
   )
@@ -1970,6 +2049,8 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const [groupDraft, setGroupDraft] = useState('')
   const [groupMsgs, setGroupMsgs] = useState<GroupMsg[]>(preview ? INITIAL_GROUP : [])
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const groupFileRef = useRef<HTMLInputElement | null>(null)
+  const [attachErr, setAttachErr] = useState<string | null>(null)
   const selectedIdRef = useRef<string | null>(null)
   selectedIdRef.current = selectedId
 
@@ -2017,6 +2098,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             me: !!m.senderUserId,
             body: m.body,
             createdAt: m.createdAt,
+            attachmentUrl: m.attachmentUrl,
+            attachmentType: m.attachmentType,
+            attachmentName: m.attachmentName,
           }))
         )
       } catch (e) {
@@ -2083,28 +2167,118 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     void loadConversations()
   }, [selectedId, loadConversations, preview])
 
-  // Отправка реплики оператора (через сокет или локально в превью).
+  // Отправка реплики оператора (через сокет или локально в превью), с опциональным вложением.
+  type Attachment = {
+    attachmentUrl: string
+    attachmentType: 'image' | 'video' | 'file'
+    attachmentName?: string
+  }
   const sendManager = useCallback(
-    (body: string) => {
-      if (!selectedId || !body.trim()) return
+    (body: string, attachment?: Attachment) => {
+      if (!selectedId || (!body.trim() && !attachment)) return
       if (preview) {
         setMessages(prev => [
           ...prev,
-          { id: `local-${prev.length}-${body.length}`, conversationId: selectedId, sender: 'manager', body, createdAt: new Date().toISOString() },
+          {
+            id: `local-${prev.length}-${body.length}`,
+            conversationId: selectedId,
+            sender: 'manager',
+            body,
+            createdAt: new Date().toISOString(),
+            attachmentUrl: attachment?.attachmentUrl ?? null,
+            attachmentType: attachment?.attachmentType ?? null,
+            attachmentName: attachment?.attachmentName ?? null,
+          },
         ])
         return
       }
-      sendMessage(selectedId, body)
+      sendMessage(selectedId, body, attachment)
     },
     [selectedId, sendMessage, preview]
   )
 
-  const handleAttach = useCallback(() => fileRef.current?.click(), [])
+  const handleAttach = useCallback(() => {
+    if (fileRef.current) {
+      fileRef.current.accept = ''
+      fileRef.current.click()
+    }
+  }, [])
+  const handleAttachImage = useCallback(() => {
+    if (fileRef.current) {
+      fileRef.current.accept = 'image/*'
+      fileRef.current.click()
+    }
+  }, [])
+  // Загрузка вложения в основную переписку: проверка размера → upload → отправка как вложение.
   const onFilePicked = useCallback(
-    (file: File | null) => {
-      if (file) sendManager(`📎 ${file.name}`)
+    async (file: File | null) => {
+      if (!file) return
+      setAttachErr(null)
+      const type = classifyAttachment(file.type)
+      if (file.size > MAX_IMAGE_BYTES) {
+        setAttachErr(type === 'image' ? IMAGE_TOO_LARGE_MESSAGE : 'Файл слишком большой (до 5 МБ)')
+        return
+      }
+      if (preview) {
+        sendManager('', { attachmentUrl: URL.createObjectURL(file), attachmentType: type, attachmentName: file.name })
+        return
+      }
+      try {
+        const up = await uploadFile(file)
+        sendManager('', { attachmentUrl: up.url, attachmentType: up.type, attachmentName: up.name })
+      } catch {
+        setAttachErr('Не удалось загрузить файл')
+      }
     },
-    [sendManager]
+    [preview, sendManager]
+  )
+
+  // Загрузка вложения во внутренний групповой чат операторов.
+  const handleGroupAttach = useCallback(() => groupFileRef.current?.click(), [])
+  const onGroupFilePicked = useCallback(
+    async (file: File | null) => {
+      if (!file) return
+      setAttachErr(null)
+      const type = classifyAttachment(file.type)
+      if (file.size > MAX_IMAGE_BYTES) {
+        setAttachErr(type === 'image' ? IMAGE_TOO_LARGE_MESSAGE : 'Файл слишком большой (до 5 МБ)')
+        return
+      }
+      const pushLocal = (url: string) =>
+        setGroupMsgs(prev => [
+          ...prev,
+          {
+            id: `gm-${prev.length}-${Date.now()}`,
+            author: 'Вы',
+            me: true,
+            body: '',
+            createdAt: new Date().toISOString(),
+            attachmentUrl: url,
+            attachmentType: type,
+            attachmentName: file.name,
+          },
+        ])
+      if (preview) {
+        pushLocal(URL.createObjectURL(file))
+        return
+      }
+      try {
+        const up = await uploadFile(file)
+        pushLocal(up.url)
+        if (activeProjectId) {
+          await chatModule.sendGroupMessage(activeProjectId, {
+            body: '',
+            senderName: 'Вы',
+            attachmentUrl: up.url,
+            attachmentType: up.type,
+            attachmentName: up.name,
+          })
+        }
+      } catch {
+        setAttachErr('Не удалось загрузить файл')
+      }
+    },
+    [preview, activeProjectId]
   )
   const handleSparkles = useCallback(
     () => setDraft('Здравствуйте! Уточните, пожалуйста, детали — и я помогу подобрать решение.'),
@@ -2398,7 +2572,12 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                 <div key={m.id} className={cn('w-full flex flex-col', m.me ? 'items-end' : 'items-start')}>
                   {!m.me && <span className="text-[12px] text-default-400 mb-0.5 px-1">{m.author}</span>}
                   <div className={cn('max-w-[60%] px-4 py-3 rounded-[14px] text-[15px] leading-5', m.me ? 'bg-primary/10 rounded-br-[4px]' : 'bg-default-100 rounded-bl-[4px]')}>
-                    {m.body}
+                    {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
+                    {m.attachmentUrl && (
+                      <div className={cn(m.body && 'mt-2')}>
+                        <AttachmentView url={m.attachmentUrl} type={m.attachmentType} name={m.attachmentName} />
+                      </div>
+                    )}
                     <div className="text-[11px] text-[#A6A2B0] mt-1.5 text-right">{fmtFull(m.createdAt)}</div>
                   </div>
                 </div>
@@ -2423,7 +2602,12 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
               }}
               className="shrink-0 p-4"
             >
+              {attachErr && <div className="mb-2 text-[13px] text-[#E5484D]">{attachErr}</div>}
               <div className="rounded-[14px] bg-default-100 px-4 py-3 flex items-center gap-2">
+                <button type="button" onClick={handleGroupAttach} aria-label="Прикрепить файл" className="text-[#6E6E76] hover:text-[#1A1A1A] shrink-0">
+                  <Ic d="M20 11.5 12 19.5a4.5 4.5 0 0 1-6.4-6.4l8-8a3 3 0 0 1 4.3 4.3l-8 8a1.5 1.5 0 0 1-2.2-2.1l7.3-7.3" size={20} />
+                </button>
+                <input ref={groupFileRef} type="file" className="hidden" onChange={e => { onGroupFilePicked(e.target.files?.[0] ?? null); e.target.value = '' }} />
                 <input value={groupDraft} onChange={e => setGroupDraft(e.target.value)} placeholder="Сообщение коллегам" className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-default-400" />
                 <button type="submit" disabled={!groupDraft.trim()} className="h-9 px-5 rounded-[8px] text-white text-[15px] disabled:opacity-50" style={{ backgroundColor: ACCENT }}>Отправить</button>
               </div>
@@ -2460,7 +2644,12 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                             isManager ? 'bg-primary/10 rounded-br-[4px]' : 'bg-default-100 rounded-bl-[4px]',
                           )}
                         >
-                          {m.body}
+                          {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
+                          {m.attachmentUrl && (
+                            <div className={cn(m.body && 'mt-2')}>
+                              <AttachmentView url={m.attachmentUrl} type={m.attachmentType} name={m.attachmentName} />
+                            </div>
+                          )}
                           <div className="text-[11px] text-[#A6A2B0] mt-1.5 text-right">{fmtFull(m.createdAt)}</div>
                         </div>
                         {isManager && <Avatar name="Я" size={32} />}
@@ -2472,6 +2661,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             </div>
 
             <form onSubmit={handleSend} className="shrink-0 p-4">
+              {attachErr && <div className="mb-2 text-[13px] text-[#E5484D]">{attachErr}</div>}
               <div className="rounded-[14px] bg-default-100 px-4 py-3">
                 <textarea
                   value={draft}
@@ -2513,10 +2703,10 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                         </>
                       )}
                     </div>
-                    <button type="button" onClick={handleAttach} aria-label="Изображение" className="hover:text-[#1A1A1A] flex items-center">
+                    <button type="button" onClick={handleAttachImage} aria-label="Изображение" className="hover:text-[#1A1A1A] flex items-center">
                       <Ic d="M4 5h16v14H4z|M8 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3|M5 18l5-5 4 4 2-2 3 3" size={20} />
                     </button>
-                    <input ref={fileRef} type="file" className="hidden" onChange={e => onFilePicked(e.target.files?.[0] ?? null)} />
+                    <input ref={fileRef} type="file" className="hidden" onChange={e => { onFilePicked(e.target.files?.[0] ?? null); e.target.value = '' }} />
                   </div>
                   <button
                     type="submit"
@@ -2539,7 +2729,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
       {/* Информация */}
       {groupOpen ? (
-      <GroupInfoPanel />
+      <GroupInfoPanel messages={groupMsgs} />
       ) : (
       <aside className="w-[340px] shrink-0 border-l border-default-200 p-5 flex flex-col gap-5 overflow-y-auto">
         <div className="flex items-center justify-between">

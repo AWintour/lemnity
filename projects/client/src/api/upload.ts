@@ -15,6 +15,28 @@ export async function uploadImage(file: File): Promise<{ key: string; url: strin
   return data
 }
 
+export type AttachmentType = 'image' | 'video' | 'file'
+
+export function classifyAttachment(mime: string): AttachmentType {
+  if (mime.startsWith('image/')) return 'image'
+  if (mime.startsWith('video/')) return 'video'
+  return 'file'
+}
+
+// Универсальная загрузка вложения чата (картинка/видео/документ) → URL + тип.
+export async function uploadFile(
+  file: File
+): Promise<{ key: string; url: string; type: AttachmentType; name: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await http.post<{ key: string; url: string; contentType: string; name: string }>(
+    API.FILES.UPLOADS,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return { key: data.key, url: data.url, type: classifyAttachment(data.contentType || file.type), name: data.name || file.name }
+}
+
 export async function uploadVideo(file: File): Promise<{ key: string; url: string }> {
   const form = new FormData()
   form.append('file', file)

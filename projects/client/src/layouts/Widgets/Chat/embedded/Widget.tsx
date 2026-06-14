@@ -264,11 +264,35 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
         style={isVisitor ? { backgroundColor: clientColor } : undefined}
       >
         {message.image && (
-          <img
-            src={message.image}
-            alt=""
-            className={cn('w-full max-h-[220px] object-cover rounded-[12px]', message.body && 'mb-2')}
+          <a href={message.image} target="_blank" rel="noreferrer" className="block">
+            <img
+              src={message.image}
+              alt=""
+              className={cn('w-full max-h-[220px] object-cover rounded-[12px]', message.body && 'mb-2')}
+            />
+          </a>
+        )}
+        {message.attachmentType === 'video' && message.attachmentUrl && (
+          <video
+            src={message.attachmentUrl}
+            controls
+            className={cn('w-full max-h-[240px] rounded-[12px]', message.body && 'mb-2')}
           />
+        )}
+        {message.attachmentType === 'file' && message.attachmentUrl && (
+          <a
+            href={message.attachmentUrl}
+            target="_blank"
+            rel="noreferrer"
+            download
+            className={cn(
+              'flex items-center gap-2 underline break-all',
+              message.body && 'mb-2',
+              isVisitor ? 'text-white' : 'text-[#1A52DB]',
+            )}
+          >
+            📎 {message.attachmentName ?? 'Файл'}
+          </a>
         )}
         {message.body}
         {time && (

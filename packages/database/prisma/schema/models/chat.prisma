@@ -83,6 +83,11 @@ model ChatMessage {
   sender         ChatMessageSender
   body           String
 
+  // Вложение (загружается в хранилище, в сообщении — URL). type: image|video|file.
+  attachmentUrl  String? @map("attachment_url")
+  attachmentType String? @map("attachment_type")
+  attachmentName String? @map("attachment_name")
+
   // userId продавца-автора (денормализация, чтобы список не зависел от Manager).
   senderUserId   String?  @map("sender_user_id")
 

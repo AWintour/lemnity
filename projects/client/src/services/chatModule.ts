@@ -148,6 +148,9 @@ export type ChatGroupMessageItem = {
   senderUserId: string | null
   senderName: string | null
   body: string
+  attachmentUrl: string | null
+  attachmentType: string | null
+  attachmentName: string | null
   createdAt: string
 }
 
@@ -160,7 +163,14 @@ export async function listGroupMessages(projectId: string) {
 
 export async function sendGroupMessage(
   projectId: string,
-  dto: { body: string; operatorId?: string; senderName?: string }
+  dto: {
+    body: string
+    operatorId?: string
+    senderName?: string
+    attachmentUrl?: string
+    attachmentType?: 'image' | 'video' | 'file'
+    attachmentName?: string
+  }
 ) {
   const res = await http.post<ChatGroupMessageItem>(API.CHAT_OPS.GROUP_MESSAGES(projectId), dto)
   return res.data
