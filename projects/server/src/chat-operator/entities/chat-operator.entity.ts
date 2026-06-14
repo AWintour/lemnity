@@ -10,5 +10,6 @@ export class ChatOperatorEntity {
   online!: boolean
   status!: string
   departmentId!: string | null
+  widgetId!: string | null
   createdAt!: string
 }

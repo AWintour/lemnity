@@ -23,6 +23,10 @@ model ChatOperator {
   departmentId String?         @map("department_id")
   department   ChatDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
+  // Чат (CHAT-виджет), к которому ограничен доступ оператора. null = все чаты владельца.
+  // Без FK-связи: при удалении виджета скоупинг трактует отсутствующий чат отдельно (см. план, слайс 3).
+  widgetId  String? @map("widget_id")
+
   assignedConversations ChatConversation[]
   groupMessages         ChatGroupMessage[]
 
@@ -32,6 +36,7 @@ model ChatOperator {
   @@unique([projectId, userId])
   @@index([projectId])
   @@index([departmentId])
+  @@index([widgetId])
   @@map("chat_operators")
 }
 

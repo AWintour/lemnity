@@ -110,7 +110,23 @@ const dayLabel = (iso: string) => {
 }
 const convName = (c: ChatConversation) => c.visitorName || `Клиент #${c.number}`
 
+// Название чата для модуля: сначала «Название чата» из конфига виджета (config.title),
+// затем имя виджета, имя проекта и в крайнем случае — «Чат».
+const chatLabel = (
+  widget?: { name?: string; config?: object | null },
+  projectName?: string,
+): string => {
+  const cfgTitle = (widget?.config as { title?: string } | null | undefined)?.title?.trim()
+  return cfgTitle || widget?.name?.trim() || projectName?.trim() || 'Чат'
+}
+
 /* ----------------------------- mock (preview) --------------------------- */
+
+// Мок-чаты для превью (несколько чатов = несколько проектов, по одному CHAT-виджету на проект).
+const MOCK_CHATS: { projectId: string; widgetId: string; label: string }[] = [
+  { projectId: 'p-site', widgetId: 'w-site', label: 'Чат на сайте' },
+  { projectId: 'p-landing', widgetId: 'w-landing', label: 'Чат лендинга' },
+]
 
 const mockConv = (
   id: string,
@@ -118,12 +134,13 @@ const mockConv = (
   name: string | null,
   preview: string,
   unread: number,
+  widgetId: string,
   contact?: { email?: string; phone?: string }
 ): ChatConversation => ({
   id,
   number,
-  projectId: 'p',
-  widgetId: 'w',
+  projectId: widgetId === 'w-landing' ? 'p-landing' : 'p-site',
+  widgetId,
   sessionId: id,
   status: 'open',
   visitorName: name ?? undefined,
@@ -136,11 +153,11 @@ const mockConv = (
 })
 
 const MOCK_CONVERSATIONS: ChatConversation[] = [
-  mockConv('m1', '0001', 'Клиент #1', '+2', 2),
-  mockConv('m2', '0002', 'Елизавета', '+1', 1, { email: 'liza@example.com', phone: '+7 905 000-11-22' }),
-  mockConv('m3', '0003', 'Клиент #3', '12', 0, { email: 'client3@example.com', phone: '+7 900 123-45-67' }),
-  mockConv('m4', '0004', 'Демин Александр', '34', 0),
-  mockConv('m5', '0005', 'Демин Александр', '34', 0),
+  mockConv('m1', '0001', 'Клиент #1', '+2', 2, 'w-site'),
+  mockConv('m2', '0002', 'Елизавета', '+1', 1, 'w-site', { email: 'liza@example.com', phone: '+7 905 000-11-22' }),
+  mockConv('m3', '0003', 'Клиент #3', '12', 0, 'w-site', { email: 'client3@example.com', phone: '+7 900 123-45-67' }),
+  mockConv('m4', '0004', 'Демин Александр', '34', 0, 'w-landing'),
+  mockConv('m5', '0005', 'Демин Александр', '34', 0, 'w-landing'),
 ]
 
 const MOCK_MESSAGES: Record<string, ChatMessage[]> = {
@@ -921,7 +938,7 @@ const SocialSection = ({
 
 /* ----------------------------- operators -------------------------------- */
 
-type Operator = { id: string; name: string; email: string; role: string; online: boolean; avatar?: string; dept: string; isOwner?: boolean }
+type Operator = { id: string; name: string; email: string; role: string; online: boolean; avatar?: string; dept: string; isOwner?: boolean; widgetId?: string | null }
 
 // Общий список отделов (используется и в «Отделах», и в форме оператора).
 const DEPARTMENT_NAMES = ['Техническая поддержка', 'Коммерческий отдел', 'Общие вопросы']
@@ -1028,8 +1045,28 @@ const OperatorsSection = ({
       avatar: o.avatarUrl ?? undefined,
       dept: o.departmentId ? (names[o.departmentId] ?? '') : '',
       isOwner: o.isOwner,
+      widgetId: o.widgetId,
     }),
     []
+  )
+
+  // Список чатов владельца (проекты с CHAT-виджетом) — опции дропдауна «Чат» оператора.
+  const allProjects = useProjectsStore(s => s.projects)
+  const chatOptions = useMemo(
+    () =>
+      preview
+        ? MOCK_CHATS.map(c => ({ widgetId: c.widgetId, label: c.label }))
+        : allProjects
+            .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT))
+            .map(p => {
+              const w = p.widgets.find(x => x.type === WidgetTypeEnum.CHAT)!
+              return { widgetId: w.id, label: w.name?.trim() || p.name?.trim() || 'Чат' }
+            }),
+    [allProjects, preview]
+  )
+  const chatLabelById = useMemo(
+    () => Object.fromEntries(chatOptions.map(c => [c.widgetId, c.label])) as Record<string, string>,
+    [chatOptions]
   )
 
   useEffect(() => {
@@ -1101,12 +1138,15 @@ const OperatorsSection = ({
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('Оператор')
   const [dept, setDept] = useState(DEPARTMENT_NAMES[0])
+  // '' = все чаты владельца; иначе widgetId конкретного чата.
+  const [chatSel, setChatSel] = useState('')
 
   const reset = () => {
     setName('')
     setEmail('')
     setRole('Оператор')
     setDept(deptNames[0] ?? '')
+    setChatSel('')
     setAdding(false)
   }
   const add = () => {
@@ -1120,6 +1160,7 @@ const OperatorsSection = ({
             email: email.trim() || undefined,
             role,
             departmentId,
+            widgetId: chatSel || null,
           })
           rawOpsRef.current[created.id] = created
           setOperators(prev => [...prev, mapOp(created, deptNameById)])
@@ -1132,7 +1173,7 @@ const OperatorsSection = ({
     }
     setOperators(prev => [
       ...prev,
-      { id: `op-${prev.length}-${name.length}-${Date.now()}`, name: name.trim(), email: email.trim(), role, online: false, dept },
+      { id: `op-${prev.length}-${name.length}-${Date.now()}`, name: name.trim(), email: email.trim(), role, online: false, dept, widgetId: chatSel || null },
     ])
     reset()
   }
@@ -1425,14 +1466,23 @@ const OperatorsSection = ({
               <option>Администратор</option>
             </select>
             {noDepts ? (
-              <span className="w-[190px] shrink-0 h-11 px-3 rounded-[10px] border border-dashed border-default-300 text-[14px] text-default-400 flex items-center">
+              <span className="w-[170px] shrink-0 h-11 px-3 rounded-[10px] border border-dashed border-default-300 text-[14px] text-default-400 flex items-center">
                 Создайте отдел
               </span>
             ) : (
-              <select value={dept} onChange={e => setDept(e.target.value)} className="w-[190px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white">
+              <select value={dept} onChange={e => setDept(e.target.value)} className="w-[170px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white">
                 {deptNames.map(d => <option key={d}>{d}</option>)}
               </select>
             )}
+            <select
+              value={chatSel}
+              onChange={e => setChatSel(e.target.value)}
+              title="Чат, к которому ограничен оператор"
+              className="w-[170px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white"
+            >
+              <option value="">Все чаты</option>
+              {chatOptions.map(c => <option key={c.widgetId} value={c.widgetId}>{c.label}</option>)}
+            </select>
             <button type="button" onClick={reset} className="shrink-0 h-11 px-4 rounded-[10px] border border-default-200 text-[15px]">Отмена</button>
             <button type="button" onClick={add} disabled={!name.trim()} className="shrink-0 h-11 px-5 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50">Добавить</button>
           </div>
@@ -1453,7 +1503,10 @@ const OperatorsSection = ({
               <div className="text-[14px] text-default-400 truncate">{o.email || '—'}</div>
             </div>
             <span className="text-[14px] text-default-500 flex-1 min-w-0 truncate">{o.dept}</span>
-            <span className="text-[14px] text-default-500 w-[150px] shrink-0">{o.role}</span>
+            <span className="text-[14px] text-default-500 w-[150px] shrink-0 truncate" title="Доступный чат">
+              {o.isOwner ? 'Все чаты' : o.widgetId ? (chatLabelById[o.widgetId] ?? 'Чат') : 'Все чаты'}
+            </span>
+            <span className="text-[14px] text-default-500 w-[120px] shrink-0">{o.role}</span>
             <span className="text-[14px] text-default-400 w-[80px] shrink-0">{o.online ? 'Онлайн' : 'Офлайн'}</span>
             {o.isOwner ? (
               <span className="w-9 h-9 shrink-0" />
@@ -1987,13 +2040,15 @@ const SettingsSection = ({
   // конфиг какого чата (Настройки/Сценарий/Автораспределение) сейчас редактируется.
   const chats = useMemo(
     () =>
-      projects
-        .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT))
-        .map(p => {
-          const widget = p.widgets.find(w => w.type === WidgetTypeEnum.CHAT)!
-          return { projectId: p.id, widget, label: widget.name?.trim() || p.name?.trim() || 'Чат' }
-        }),
-    [projects]
+      preview
+        ? MOCK_CHATS.map(c => ({ projectId: c.projectId, widget: undefined, label: c.label }))
+        : projects
+            .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT))
+            .map(p => {
+              const widget = p.widgets.find(w => w.type === WidgetTypeEnum.CHAT)
+              return { projectId: p.id, widget, label: chatLabel(widget, p.name) }
+            }),
+    [projects, preview]
   )
   // chatSel хранит projectId выбранного чата; дефолт — переданный projectId (activeProjectId) или первый.
   const [chatSel, setChatSel] = useState<string | null>(null)
@@ -2150,13 +2205,15 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   // Активные чаты всех проектов (один чат на проект) — опции глобального селектора диалогов.
   const dialogChats = useMemo(
     () =>
-      projects
-        .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled))
-        .map(p => {
-          const w = p.widgets.find(x => x.type === WidgetTypeEnum.CHAT && x.enabled)!
-          return { widgetId: w.id, label: w.name?.trim() || p.name?.trim() || 'Чат' }
-        }),
-    [projects]
+      preview
+        ? MOCK_CHATS.map(c => ({ widgetId: c.widgetId, label: c.label }))
+        : projects
+            .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled))
+            .map(p => {
+              const w = p.widgets.find(x => x.type === WidgetTypeEnum.CHAT && x.enabled)!
+              return { widgetId: w.id, label: chatLabel(w, p.name) }
+            }),
+    [projects, preview]
   )
   // 'all' — диалоги всех активных чатов; иначе widgetId конкретного чата.
   const [dialogChat, setDialogChat] = useState<'all' | string>('all')
@@ -2440,9 +2497,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
   // Беседы под выбранным в сайдбаре чатом ('all' — все). На этом строятся Входящие и Диалоги.
   const dialogScoped = useMemo(() => {
-    if (preview || dialogChat === 'all') return conversations
+    if (dialogChat === 'all') return conversations
     return conversations.filter(c => c.widgetId === dialogChat)
-  }, [conversations, dialogChat, preview])
+  }, [conversations, dialogChat])
 
   const inboxCount = useMemo(
     () => dialogScoped.filter(c => c.unreadForManager > 0).length,

@@ -21,6 +21,11 @@ export class CreateChatOperatorDto {
   @IsString()
   departmentId?: string
 
+  // Чат (CHAT-виджет), к которому ограничен оператор. null/отсутствует = все чаты владельца.
+  @IsOptional()
+  @IsString()
+  widgetId?: string | null
+
   @IsOptional()
   @IsString()
   status?: string

@@ -22,6 +22,11 @@ export class UpdateChatOperatorDto {
   @IsString()
   departmentId?: string
 
+  // Чат-скоуп оператора. null = все чаты владельца.
+  @IsOptional()
+  @IsString()
+  widgetId?: string | null
+
   @IsOptional()
   @IsString()
   status?: string

@@ -15,6 +15,7 @@ type ChatOperatorRow = {
   online: boolean
   status: string
   departmentId: string | null
+  widgetId: string | null
   createdAt: Date
 }
 
@@ -30,6 +31,7 @@ const toEntity = (o: ChatOperatorRow): ChatOperatorEntity => ({
   online: o.online,
   status: o.status,
   departmentId: o.departmentId,
+  widgetId: o.widgetId,
   createdAt: o.createdAt.toISOString()
 })
 
@@ -55,6 +57,21 @@ export class ChatOperatorService {
       select: { id: true }
     })
     if (!owned) throw new ForbiddenException('Operator not found')
+  }
+
+  // Чат-скоуп оператора должен быть CHAT-виджетом одного из проектов владельца (или пусто = все чаты).
+  private async resolveWidgetScope(
+    userId: string,
+    widgetId: string | null | undefined
+  ): Promise<string | null | undefined> {
+    if (widgetId === undefined) return undefined
+    if (!widgetId) return null
+    const widget = await this.prisma.widget.findFirst({
+      where: { id: widgetId, type: 'CHAT', project: { userId } },
+      select: { id: true }
+    })
+    if (!widget) throw new ForbiddenException('Chat widget not found')
+    return widget.id
   }
 
   /**
@@ -101,6 +118,7 @@ export class ChatOperatorService {
 
   async create(userId: string, projectId: string, dto: CreateChatOperatorDto): Promise<ChatOperatorEntity> {
     await this.assertOwnsProject(userId, projectId)
+    const widgetId = (await this.resolveWidgetScope(userId, dto.widgetId)) ?? null
     const row = await this.prisma.chatOperator.create({
       data: {
         projectId,
@@ -109,6 +127,7 @@ export class ChatOperatorService {
         role: dto.role,
         avatarUrl: dto.avatarUrl,
         departmentId: dto.departmentId,
+        widgetId,
         status: dto.status
       }
     })
@@ -117,7 +136,12 @@ export class ChatOperatorService {
 
   async update(userId: string, id: string, dto: UpdateChatOperatorDto): Promise<ChatOperatorEntity> {
     await this.assertOwnsOperator(userId, id)
-    const row = await this.prisma.chatOperator.update({ where: { id }, data: dto })
+    // widgetId: undefined — не трогаем; null — снять скоуп (все чаты); строка — валидируем владение.
+    const widgetId = await this.resolveWidgetScope(userId, dto.widgetId)
+    const row = await this.prisma.chatOperator.update({
+      where: { id },
+      data: { ...dto, ...(widgetId === undefined ? {} : { widgetId }) }
+    })
     return toEntity(row)
   }
 
