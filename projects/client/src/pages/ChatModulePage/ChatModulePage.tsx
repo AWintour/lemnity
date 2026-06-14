@@ -333,16 +333,73 @@ const SECTION_TITLES: Record<Section, string> = {
   settings: 'Настройки',
 }
 
+// Глобальный выбор чата: «Все» (диалоги всех активных чатов) или конкретный чат-виджет.
+// Фильтрует Входящие и Диалоги. chats — активные CHAT-виджеты всех проектов (один чат на проект).
+const SidebarChatSelect = ({
+  chats,
+  value,
+  onChange,
+}: {
+  chats: { widgetId: string; label: string }[]
+  value: 'all' | string
+  onChange: (v: 'all' | string) => void
+}) => {
+  const [open, setOpen] = useState(false)
+  const current = value === 'all' ? 'Все чаты' : chats.find(c => c.widgetId === value)?.label ?? 'Все чаты'
+  const options = [{ widgetId: 'all', label: 'Все чаты' }, ...chats]
+  return (
+    <div className="relative px-2 pb-2 mb-1 border-b border-default-200">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full h-9 px-3 flex items-center justify-between gap-2 rounded-[10px] border border-default-200 bg-white text-[14px] text-[#1A1A1A]"
+      >
+        <span className="truncate">{current}</span>
+        <IconChevron />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-2 right-2 top-full mt-1 z-20 rounded-[12px] border border-default-200 bg-white shadow-lg py-1.5 max-h-64 overflow-y-auto">
+            {options.map(c => (
+              <button
+                key={c.widgetId}
+                type="button"
+                onClick={() => {
+                  onChange(c.widgetId as 'all' | string)
+                  setOpen(false)
+                }}
+                className={cn(
+                  'w-full px-4 py-2 text-left text-[14px] hover:bg-default-50 truncate',
+                  value === c.widgetId && 'text-primary font-medium',
+                )}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 const ModuleSidebar = ({
   section,
   onSection,
   inboxCount,
   onExit,
+  chats,
+  dialogChat,
+  onDialogChat,
 }: {
   section: Section
   onSection: (s: Section) => void
   inboxCount: number
   onExit: () => void
+  chats: { widgetId: string; label: string }[]
+  dialogChat: 'all' | string
+  onDialogChat: (v: 'all' | string) => void
 }) => (
   <aside className="w-60 shrink-0 sidebar-bg flex flex-col p-4 gap-1.5">
     <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pt-1">
@@ -356,6 +413,9 @@ const ModuleSidebar = ({
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
       Личный кабинет
     </button>
+    {chats.length > 0 && (
+      <SidebarChatSelect chats={chats} value={dialogChat} onChange={onDialogChat} />
+    )}
     <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} />
     <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} />
     <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} />
@@ -1912,7 +1972,6 @@ const AutoDistributionPanel = ({
 /* ----------------------------- settings --------------------------------- */
 
 const SETTINGS_WIDGET_ID = 'chat-module-settings'
-const SETTINGS_CHATS = ['Чат на сайте', 'Чат лендинга', 'Поддержка']
 
 const SettingsSection = ({
   preview,
@@ -1924,24 +1983,41 @@ const SettingsSection = ({
   const [ready, setReady] = useState(false)
   const [subview, setSubview] = useState<'settings' | 'scenario' | 'autodist'>('settings')
   const projects = useProjectsStore(s => s.projects)
-  // Реальный включённый CHAT-виджет проекта — настройки/сценарий правят и сохраняют именно его.
-  const realWidget = useMemo(
-    () => projects.find(p => p.id === projectId)?.widgets.find(w => w.type === WidgetTypeEnum.CHAT && w.enabled),
-    [projects, projectId]
+  // Все чаты пользователя = проекты с CHAT-виджетом (один чат на проект). Выпадашка переключает,
+  // конфиг какого чата (Настройки/Сценарий/Автораспределение) сейчас редактируется.
+  const chats = useMemo(
+    () =>
+      projects
+        .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT))
+        .map(p => {
+          const widget = p.widgets.find(w => w.type === WidgetTypeEnum.CHAT)!
+          return { projectId: p.id, widget, label: widget.name?.trim() || p.name?.trim() || 'Чат' }
+        }),
+    [projects]
   )
-  const [chatSel, setChatSel] = useState(SETTINGS_CHATS[0])
+  // chatSel хранит projectId выбранного чата; дефолт — переданный projectId (activeProjectId) или первый.
+  const [chatSel, setChatSel] = useState<string | null>(null)
+  useEffect(() => {
+    if (chatSel && chats.some(c => c.projectId === chatSel)) return
+    setChatSel(chats.find(c => c.projectId === projectId)?.projectId ?? chats[0]?.projectId ?? null)
+  }, [chats, projectId, chatSel])
+
+  const realWidget = useMemo(
+    () => chats.find(c => c.projectId === chatSel)?.widget,
+    [chats, chatSel]
+  )
 
   useEffect(() => {
     const s = useWidgetSettingsStore.getState()
-    if (!preview && realWidget && projectId) {
+    if (!preview && realWidget && chatSel) {
       if (s.settings?.id !== realWidget.id) {
-        s.init(realWidget.id, WidgetTypeEnum.CHAT, projectId, realWidget.config as Partial<WidgetSettings> | undefined)
+        s.init(realWidget.id, WidgetTypeEnum.CHAT, chatSel, realWidget.config as Partial<WidgetSettings> | undefined)
       }
-    } else if (s.settings?.id !== SETTINGS_WIDGET_ID) {
+    } else if ((preview || !realWidget) && s.settings?.id !== SETTINGS_WIDGET_ID) {
       s.init(SETTINGS_WIDGET_ID, WidgetTypeEnum.CHAT, 'chat-module')
     }
     setReady(true)
-  }, [preview, realWidget, projectId])
+  }, [preview, realWidget, chatSel])
 
   const allSections = getWidgetDefinition(WidgetTypeEnum.CHAT).settings.sections
   const settingsSections = allSections.filter(s => s.id !== 'chat.scenario')
@@ -1968,11 +2044,16 @@ const SettingsSection = ({
           <span className="text-[13px] text-default-400">Чат</span>
           <div className="relative">
             <select
-              value={chatSel}
+              value={chatSel ?? ''}
               onChange={e => setChatSel(e.target.value)}
-              className="w-full appearance-none h-11 pl-3 pr-9 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white cursor-pointer"
+              disabled={chats.length === 0}
+              className="w-full appearance-none h-11 pl-3 pr-9 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white cursor-pointer disabled:opacity-60"
             >
-              {SETTINGS_CHATS.map(c => <option key={c}>{c}</option>)}
+              {chats.length === 0 ? (
+                <option value="">Нет чатов</option>
+              ) : (
+                chats.map(c => <option key={c.projectId} value={c.projectId}>{c.label}</option>)
+              )}
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-default-400"><IconChevron /></span>
           </div>
@@ -1989,7 +2070,7 @@ const SettingsSection = ({
         {!ready ? (
           <div className="p-6 text-[15px] text-default-400">Загрузка…</div>
         ) : subview === 'autodist' ? (
-          <AutoDistributionPanel preview={preview} projectId={projectId} />
+          <AutoDistributionPanel preview={preview} projectId={chatSel ?? projectId} />
         ) : subview === 'scenario' ? (
           <div className="w-full h-full flex flex-col px-6 py-6">
             <Suspense fallback={<div className="text-[15px] text-default-400">Загрузка…</div>}>
@@ -2065,6 +2146,25 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       null,
     [projects]
   )
+
+  // Активные чаты всех проектов (один чат на проект) — опции глобального селектора диалогов.
+  const dialogChats = useMemo(
+    () =>
+      projects
+        .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled))
+        .map(p => {
+          const w = p.widgets.find(x => x.type === WidgetTypeEnum.CHAT && x.enabled)!
+          return { widgetId: w.id, label: w.name?.trim() || p.name?.trim() || 'Чат' }
+        }),
+    [projects]
+  )
+  // 'all' — диалоги всех активных чатов; иначе widgetId конкретного чата.
+  const [dialogChat, setDialogChat] = useState<'all' | string>('all')
+  useEffect(() => {
+    if (dialogChat !== 'all' && !dialogChats.some(c => c.widgetId === dialogChat)) {
+      setDialogChat('all')
+    }
+  }, [dialogChats, dialogChat])
 
   const loadConversations = useCallback(async () => {
     if (preview) {
@@ -2338,21 +2438,27 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     return () => { alive = false }
   }, [preview, activeProjectId])
 
+  // Беседы под выбранным в сайдбаре чатом ('all' — все). На этом строятся Входящие и Диалоги.
+  const dialogScoped = useMemo(() => {
+    if (preview || dialogChat === 'all') return conversations
+    return conversations.filter(c => c.widgetId === dialogChat)
+  }, [conversations, dialogChat, preview])
+
   const inboxCount = useMemo(
-    () => conversations.filter(c => c.unreadForManager > 0).length,
-    [conversations]
+    () => dialogScoped.filter(c => c.unreadForManager > 0).length,
+    [dialogScoped]
   )
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return conversations.filter(c => {
+    return dialogScoped.filter(c => {
       if (filter === 'unread' && c.unreadForManager === 0) return false
       if (filter === 'archived' && c.status !== 'closed') return false
       if (filter === 'all' && c.status === 'closed') return false
       if (!q) return true
       return convName(c).toLowerCase().includes(q) || (c.lastMessagePreview ?? '').toLowerCase().includes(q)
     })
-  }, [conversations, search, filter])
+  }, [dialogScoped, search, filter])
 
   /* messages grouped by day */
   const grouped = useMemo(() => {
@@ -2374,11 +2480,19 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
   return (
     <div className="h-screen w-full flex bg-white text-[#1A1A1A] overflow-hidden">
-      <ModuleSidebar section={section} onSection={go} inboxCount={preview ? 13 : inboxCount} onExit={() => navigate('/')} />
+      <ModuleSidebar
+        section={section}
+        onSection={go}
+        inboxCount={preview ? 13 : inboxCount}
+        onExit={() => navigate('/')}
+        chats={dialogChats}
+        dialogChat={dialogChat}
+        onDialogChat={setDialogChat}
+      />
 
       {section === 'dialogs' ? (
         <DialogsSection
-          conversations={conversations}
+          conversations={dialogScoped}
           preview={preview}
           onOpen={id => {
             go('inbox')
