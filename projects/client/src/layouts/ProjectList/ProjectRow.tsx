@@ -10,6 +10,8 @@ import iconBin from '@/assets/icons/bin.svg'
 import { useProjectsStore } from '@/stores/projectsStore'
 import AddProjectModal from '@/layouts/AddProjectsBlock/AddProjectModal'
 import Modal from '@/components/Modal/Modal'
+import EmbedSnippetBox from '@/layouts/WidgetSettings/IntegrationTab/EmbedSnippetBox'
+import { buildProjectEmbedSnippet } from '@/config/embed'
 import './ProjectRow.css'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@heroui/theme'
@@ -50,7 +52,11 @@ const ProjectRow = ({
 
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [isEmbedOpen, setIsEmbedOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  // Общий проектный скрипт: один тег подтягивает все включённые виджеты проекта (до 3).
+  const projectSnippet = id ? buildProjectEmbedSnippet(id) : ''
 
   const handleSwitchChange = (value: boolean) => {
     if (project) toggleProjectEnabled(project.id, value)
@@ -120,9 +126,7 @@ const ProjectRow = ({
                   </DropdownItem>
                   <DropdownItem
                     key="settings"
-                    onPress={() => {
-                      alert('Код для вставки')
-                    }}
+                    onPress={() => setIsEmbedOpen(true)}
                   >
                     Код для вставки
                   </DropdownItem>
@@ -199,6 +203,31 @@ const ProjectRow = ({
           />
         </div>
       </div>
+
+      {isEmbedOpen && (
+        <Modal
+          isOpen={isEmbedOpen}
+          onClose={() => setIsEmbedOpen(false)}
+          containerClassName="w-full max-w-[600px]"
+        >
+          <div className="flex flex-col gap-4 p-6">
+            <h3 className="font-display font-semibold text-2xl">Код для вставки</h3>
+            <EmbedSnippetBox
+              snippet={projectSnippet}
+              title="Один скрипт для всего проекта"
+              emptyText="Код станет доступен после загрузки проекта."
+              helpText={
+                <>
+                  Добавьте код на все страницы (внутри &lt;head&gt; или перед &lt;/body&gt;).
+                  <br />
+                  Один тег подтянет все включённые виджеты проекта (до 3). Включайте и
+                  выключайте виджеты в каталоге — они подтягиваются автоматически.
+                </>
+              }
+            />
+          </div>
+        </Modal>
+      )}
 
       <AddProjectModal
         isOpen={isEditOpen}
