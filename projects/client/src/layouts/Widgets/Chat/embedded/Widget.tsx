@@ -5,6 +5,7 @@ import { cn } from '@heroui/theme'
 
 import EmojiPicker from '@/components/EmojiPicker'
 import type { ChatUiMessage } from './types'
+import type { OperatorInfo } from './useChatConnection'
 
 type ContactFieldCfg = { enabled: boolean; required: boolean }
 export type ContactsCfg = {
@@ -30,6 +31,8 @@ type WidgetProps = {
   operatorSubtitle?: string
   operatorAvatarUrl?: string
   operatorOnline: boolean
+  // Реальные операторы проекта (из чат-модуля) — подтягиваются в шапку.
+  operators: OperatorInfo[]
   onlineMessage: string
   onlineMessageEnabled: boolean
   offlineMessage: string
@@ -206,18 +209,34 @@ const AvatarCircle = ({
 )
 
 const OperatorAvatars = ({
+  operators,
   primaryAvatarUrl,
   online,
 }: {
+  operators?: OperatorInfo[]
   primaryAvatarUrl?: string
   online: boolean
 }) => {
-  // Главный оператор (бот) отражает реальный статус онлайн/офлайн; доп. операторы — офлайн.
+  // Реальные операторы проекта (если подтянулись) — аватар или инициал, индикатор по каждому.
+  const list = (operators ?? []).slice(0, MAX_OPERATOR_AVATARS)
+  if (list.length > 0) {
+    return (
+      <div className="flex items-center justify-center -space-x-2">
+        {list.map((op, i) => (
+          <AvatarCircle key={op.id} online={op.online} bg="bg-[#E9E4DC]" z={list.length - i}>
+            {op.avatarUrl
+              ? <img src={op.avatarUrl} alt="" className="w-full h-full object-cover" />
+              : <span className="text-[15px] font-semibold text-[#6E6E76]">{(op.name || '?').charAt(0).toUpperCase()}</span>}
+          </AvatarCircle>
+        ))}
+      </div>
+    )
+  }
+
+  // Фолбэк (операторы не подтянулись): бот + плейсхолдеры.
   const secondaryCount = Math.max(0, Math.min(3, MAX_OPERATOR_AVATARS - 1))
   const total = secondaryCount + 1
   return (
-    // -space-x-2 — лёгкое наложение как в макете; z-index по убыванию, чтобы индикатор
-    // каждого аватара оставался поверх соседа справа и не перекрывался.
     <div className="flex items-center justify-center -space-x-2">
       <AvatarCircle online={online} bg="bg-white" z={total}>
         {primaryAvatarUrl
@@ -253,6 +272,7 @@ const CompactHeader = ({
   operatorName,
   operatorSubtitle,
   operatorAvatarUrl,
+  avatarInitial,
   operatorOnline,
   canGoBack,
   showClose,
@@ -265,6 +285,7 @@ const CompactHeader = ({
   operatorName: string
   operatorSubtitle?: string
   operatorAvatarUrl?: string
+  avatarInitial?: string
   operatorOnline: boolean
   canGoBack: boolean
   showClose?: boolean
@@ -295,7 +316,9 @@ const CompactHeader = ({
         <div className="w-full h-full rounded-full ring-2 ring-white/70 overflow-hidden bg-white flex items-center justify-center">
           {operatorAvatarUrl
             ? <img src={operatorAvatarUrl} alt="" className="w-full h-full object-cover" />
-            : <span className="text-[15px]">🤖</span>}
+            : avatarInitial
+              ? <span className="text-[15px] font-semibold text-[#6E6E76]">{avatarInitial}</span>
+              : <span className="text-[15px]">🤖</span>}
         </div>
         <StatusDot online={operatorOnline} />
       </div>
@@ -481,10 +504,13 @@ const FORM_GREEN = '#56B65C'
 const ContactForm = ({
   contacts,
   disabled,
+  online,
   onSubmit,
 }: {
   contacts: ContactsCfg
   disabled?: boolean
+  // Оператор онлайн — собираем только контакты и «Начать чат» (без поля сообщения).
+  online?: boolean
   onSubmit: (values: ContactFormValues) => void
 }) => {
   const [name, setName] = useState('')
@@ -518,9 +544,13 @@ const ContactForm = ({
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-y-auto p-3 gap-3">
       <form onSubmit={submit} className="rounded-[16px] border border-[#E3E3E8] p-4 flex flex-col gap-3">
-        <div className="text-[24px] leading-7 font-bold text-[#1A1A1A]">Оставить сообщение</div>
+        <div className="text-[24px] leading-7 font-bold text-[#1A1A1A]">
+          {online ? 'Начать чат' : 'Оставить сообщение'}
+        </div>
         <p className="text-[16px] leading-5.5 text-[#1A1A1A]">
-          Заполните форму и мы обязательно свяжемся с вами
+          {online
+            ? 'Оставьте контакты, и мы начнём диалог'
+            : 'Заполните форму и мы обязательно свяжемся с вами'}
         </p>
 
         {contacts.name.enabled && (
@@ -541,13 +571,16 @@ const ContactForm = ({
         {contacts.email.enabled && (
           <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className={inputCx} />
         )}
-        <textarea
-          value={comment}
-          onChange={e => setComment(e.target.value)}
-          placeholder="Вопрос или комментарий"
-          rows={2}
-          className={cn(inputCx, 'h-auto py-3 resize-none')}
-        />
+        {/* Поле сообщения — только когда оператор офлайн (заявка). */}
+        {!online && (
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="Вопрос или комментарий"
+            rows={2}
+            className={cn(inputCx, 'h-auto py-3 resize-none')}
+          />
+        )}
 
         <button
           type="submit"
@@ -555,7 +588,7 @@ const ContactForm = ({
           className="h-13 rounded-[12px] flex items-center justify-center gap-2 text-white text-[17px] disabled:opacity-50"
           style={{ backgroundColor: FORM_GREEN }}
         >
-          Отправить сообщение
+          {online ? 'Начать чат' : 'Отправить сообщение'}
           <IconArrowCircle color="#FFFFFF" />
         </button>
       </form>
@@ -750,6 +783,18 @@ const Widget = (props: WidgetProps) => {
   const motionTransition: Transition = { duration: 0.3, ease: 'easeInOut' }
 
   const accent = props.windowAccentColor
+
+  // Шапка: подтягиваем реальных операторов проекта. Главный = первый онлайн (иначе первый);
+  // имя/роль/аватар берём у него, иначе — значения из конфига.
+  const onlineOperators = props.operators.filter(o => o.online)
+  const primaryOperator = onlineOperators[0] ?? props.operators[0]
+  const headerName = primaryOperator?.name ?? props.operatorName
+  const headerSubtitle = primaryOperator?.role ?? props.operatorSubtitle
+  // Аватар: фото оператора → (если оператор есть, но без фото) его инициал → конфиг → бот.
+  const headerAvatarUrl = primaryOperator ? primaryOperator.avatarUrl ?? undefined : props.operatorAvatarUrl
+  const headerAvatarInitial = primaryOperator && !primaryOperator.avatarUrl
+    ? (primaryOperator.name || '?').charAt(0).toUpperCase()
+    : undefined
   const showQuickReplies = props.quickReplies.length > 0
 
   const isSidebar = props.windowFormat === 'sidebar' && !props.mobile
@@ -807,6 +852,7 @@ const Widget = (props: WidgetProps) => {
                     </div>
 
                     <OperatorAvatars
+                      operators={props.operators}
                       primaryAvatarUrl={props.operatorAvatarUrl}
                       online={props.operatorOnline}
                     />
@@ -836,9 +882,10 @@ const Widget = (props: WidgetProps) => {
               ) : (
                 <CompactHeader
                   accent={accent}
-                  operatorName={props.operatorName}
-                  operatorSubtitle={props.operatorSubtitle}
-                  operatorAvatarUrl={props.operatorAvatarUrl}
+                  operatorName={headerName}
+                  operatorSubtitle={headerSubtitle}
+                  operatorAvatarUrl={headerAvatarUrl ?? undefined}
+                  avatarInitial={headerAvatarInitial}
                   operatorOnline={props.operatorOnline}
                   canGoBack={props.canGoBack}
                   showClose={isSidebar}
@@ -892,6 +939,7 @@ const Widget = (props: WidgetProps) => {
               <ContactForm
                 contacts={props.contacts}
                 disabled={props.disabled}
+                online={props.operatorOnline}
                 onSubmit={props.onSubmitForm}
               />
             )}

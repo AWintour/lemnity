@@ -17,6 +17,7 @@ import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import { useChatSocket } from '@/hooks/useChatSocket'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import { buildDefaults } from '@/stores/widgetSettings/defaults'
 import type { WidgetSettings } from '@/stores/widgetSettings/types'
 import { useProjectsStore } from '@/stores/projectsStore'
 import useOperatorAuthStore from '@stores/operatorAuthStore'
@@ -602,14 +603,6 @@ const DialogCard = ({
             <Field label="Статус беседы" value={conv.category || (conv.status === 'closed' ? 'Завершён' : 'Открыт')} />
             <Field label="Канал" value={conv.channel || 'Чат на сайте'} />
             <Field label="Заметка оператора" value={conv.note} />
-            <div className="h-px bg-default-200" />
-            <Field label="Местоположение" value={geoStr} />
-            <Field label="Часовой пояс" value={conv.timezone} />
-            <Field label="Браузер" value={conv.browser} />
-            <Field label="ОС" value={conv.os} />
-            <Field label="Устройство" value={deviceLabel} />
-            <Field label="IP" value={conv.ip} />
-            <Field label="Источник" value={conv.referer} />
           </aside>
 
           {/* История диалогов */}
@@ -669,6 +662,7 @@ const DialogCard = ({
                   ['ОС', conv.os ?? '—'],
                   ['Устройство', deviceLabel ?? '—'],
                   ['Местоположение', geoStr ?? '—'],
+                  ['Часовой пояс', conv.timezone ?? '—'],
                   ['Источник', conv.referer ?? '—'],
                 ]}
               />
@@ -2091,8 +2085,10 @@ const SettingsSection = ({
   projectId?: string | null
 }) => {
   const [ready, setReady] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [subview, setSubview] = useState<'settings' | 'scenario' | 'autodist'>('settings')
   const projects = useProjectsStore(s => s.projects)
+  const saveWidgetConfig = useProjectsStore(s => s.saveWidgetConfig)
   // Все чаты пользователя = проекты с CHAT-виджетом (один чат на проект). Выпадашка переключает,
   // конфиг какого чата (Настройки/Сценарий/Автораспределение) сейчас редактируется.
   const chats = useMemo(
@@ -2119,17 +2115,73 @@ const SettingsSection = ({
     [chats, chatSel]
   )
 
+  // Реактивный снимок настроек из стора — нужен, чтобы определять «есть несохранённые изменения».
+  const liveSettings = useWidgetSettingsStore(s => s.settings)
+  // Сигнатура «чистого» конфига (на момент загрузки/сохранения). Кнопка «Сохранить» активна, только
+  // если текущий конфиг в сторе отличается от базового.
+  const baselineRef = useRef<string>('')
+  const markClean = useCallback(() => {
+    baselineRef.current = JSON.stringify(useWidgetSettingsStore.getState().settings?.widget ?? null)
+  }, [])
+
+  // Последний применённый в стор конфиг (id + сигнатура). Переинициализируем стор не только при
+  // смене виджета, но и когда у того же виджета изменился config (правка в редакторе → подтянуть).
+  const appliedRef = useRef<string | null>(null)
   useEffect(() => {
     const s = useWidgetSettingsStore.getState()
     if (!preview && realWidget && chatSel) {
-      if (s.settings?.id !== realWidget.id) {
+      const sig = `${realWidget.id}:${JSON.stringify(realWidget.config ?? null)}`
+      if (appliedRef.current !== sig) {
         s.init(realWidget.id, WidgetTypeEnum.CHAT, chatSel, realWidget.config as Partial<WidgetSettings> | undefined)
+        appliedRef.current = sig
       }
     } else if ((preview || !realWidget) && s.settings?.id !== SETTINGS_WIDGET_ID) {
       s.init(SETTINGS_WIDGET_ID, WidgetTypeEnum.CHAT, 'chat-module')
+      appliedRef.current = null
     }
+    // Текущее состояние стора считаем «чистым» (новый виджет/конфиг загружен).
+    markClean()
     setReady(true)
-  }, [preview, realWidget, chatSel])
+  }, [preview, realWidget, chatSel, markClean])
+
+  // Есть ли несохранённые изменения относительно базового конфига.
+  const dirty = ready && JSON.stringify(liveSettings?.widget ?? null) !== baselineRef.current
+
+  // Сохранение настроек чата на сервер (по образцу EditWidgetPage.handleSave). Секции редактора
+  // пишут только в стор/черновик — без этого изменения никуда не подтягиваются.
+  const handleSaveSettings = useCallback(async () => {
+    const s = useWidgetSettingsStore.getState()
+    s.setValidationVisible(true)
+    const res = s.prepareForSave()
+    if (!res.ok) {
+      alert('Исправьте ошибки перед сохранением')
+      return
+    }
+    if (preview) {
+      s.setValidationVisible(false)
+      alert('В превью сохранение недоступно — проверьте в кабинете')
+      return
+    }
+    if (!realWidget || !chatSel) return
+    setSaving(true)
+    try {
+      const updated = await saveWidgetConfig(chatSel, realWidget.id, res.data)
+      useWidgetSettingsStore.getState().clearPersistedDraft(realWidget.id)
+      const base = useWidgetSettingsStore.getState().settings ?? buildDefaults(realWidget.id, WidgetTypeEnum.CHAT)
+      const next = updated?.config ? ({ ...base, ...updated.config } as typeof base) : undefined
+      useWidgetSettingsStore.getState().init(realWidget.id, WidgetTypeEnum.CHAT, chatSel, next)
+      // Синхронизируем сигнатуру, чтобы init-эффект не делал повторный re-init после обновления стора.
+      appliedRef.current = `${realWidget.id}:${JSON.stringify(updated?.config ?? null)}`
+      markClean()
+      useWidgetSettingsStore.getState().setValidationVisible(false)
+      alert('Сохранено')
+    } catch (e) {
+      console.error('save chat settings failed', e)
+      alert('Ошибка сохранения')
+    } finally {
+      setSaving(false)
+    }
+  }, [preview, realWidget, chatSel, saveWidgetConfig, markClean])
 
   const allSections = getWidgetDefinition(WidgetTypeEnum.CHAT).settings.sections
   const settingsSections = allSections.filter(s => s.id !== 'chat.scenario')
@@ -2175,6 +2227,16 @@ const SettingsSection = ({
           <SubBtn id="scenario" label="Сценарий" />
           <SubBtn id="autodist" label="Автораспределение" />
         </div>
+        {subview === 'settings' && (
+          <button
+            type="button"
+            onClick={() => void handleSaveSettings()}
+            disabled={saving || !dirty || (!preview && !realWidget)}
+            className="w-full h-11 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50"
+          >
+            {saving ? 'Сохранение…' : 'Сохранить'}
+          </button>
+        )}
       </div>
 
       {/* Центр */}
@@ -2208,7 +2270,7 @@ const SettingsSection = ({
 const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const navigate = useNavigate()
   const projects = useProjectsStore(s => s.projects)
-  const ensureProjectsLoaded = useProjectsStore(s => s.ensureLoaded)
+  const loadProjects = useProjectsStore(s => s.loadProjects)
   const [conversations, setConversations] = useState<ChatConversation[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -2259,8 +2321,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
   useEffect(() => {
     // Оператор не владеет проектами и не должен дёргать owner-эндпоинты (иначе 401 → выход).
-    if (!preview && !isOperator) void ensureProjectsLoaded()
-  }, [preview, isOperator, ensureProjectsLoaded])
+    // Форсируем загрузку (не кэширующий ensureLoaded), чтобы правки виджета из редактора подтянулись.
+    if (!preview && !isOperator) void loadProjects()
+  }, [preview, isOperator, loadProjects])
 
   const activeProjectId = useMemo(
     () =>
@@ -2283,6 +2346,21 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             }),
     [projects, preview]
   )
+  // widgetId → название чата (для блока «источник» в панели «Информация»). Берём ВСЕ CHAT-виджеты,
+  // не только enabled, чтобы диалог завершённого/выключенного чата тоже подписался.
+  const chatNameByWidgetId = useMemo(() => {
+    const m = new Map<string, string>()
+    if (preview) {
+      MOCK_CHATS.forEach(c => m.set(c.widgetId, c.label))
+      return m
+    }
+    projects.forEach(p =>
+      p.widgets
+        .filter(w => w.type === WidgetTypeEnum.CHAT)
+        .forEach(w => m.set(w.id, chatLabel(w, p.name)))
+    )
+    return m
+  }, [projects, preview])
   // 'all' — диалоги всех активных чатов; иначе widgetId конкретного чата.
   const [dialogChat, setDialogChat] = useState<'all' | string>('all')
   useEffect(() => {
@@ -2996,6 +3074,19 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             <IconSparkles />
           </button>
         </div>
+
+        {/* Источник диалога: с какого чата (виджета) и по какому каналу идёт общение */}
+        {selected && (() => {
+          const ch = preview ? (MOCK_DIALOG_META[selected.id]?.channel ?? channelOf(selected)) : channelOf(selected)
+          return (
+            <div className="flex items-center gap-2 -mt-1 text-[14px] text-default-400">
+              <ChannelIcon ch={ch} />
+              <span className="truncate">
+                {chatNameByWidgetId.get(selected.widgetId) ?? 'Чат'} · {CHANNEL_LABEL[ch]}
+              </span>
+            </div>
+          )
+        })()}
 
         {/* Контакты клиента */}
         <div className="flex flex-col gap-3">

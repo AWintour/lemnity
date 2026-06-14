@@ -43,8 +43,20 @@ export type VisitorContact = {
   visitorEmail?: string
 }
 
+// Оператор проекта для шапки виджета (публичные поля).
+export type OperatorInfo = {
+  id: string
+  name: string
+  role: string
+  avatarUrl?: string | null
+  online: boolean
+  status: string
+}
+
 type UseChatConnectionResult = {
   operatorOnline: boolean
+  // Операторы проекта (имя/роль/аватар/онлайн) — для шапки.
+  operators: OperatorInfo[]
   sendToOperator: (body: string) => void
   markRead: () => void
   // Сохраняет контакт посетителя в диалог (visitorName/Phone/Email), чтобы он был в карточке оператора.
@@ -73,18 +85,39 @@ export const useChatConnection = (
   args: UseChatConnectionArgs
 ): UseChatConnectionResult => {
   const [operatorOnline, setOperatorOnline] = useState(false)
+  const [operators, setOperators] = useState<OperatorInfo[]>([])
   const socketRef = useRef<Socket | null>(null)
   const conversationIdRef = useRef<string | null>(null)
   const onIncomingRef = useRef(args.onIncoming)
   onIncomingRef.current = args.onIncoming
 
   useEffect(() => {
-    if (args.preview || !args.widgetId) return
+    if (args.preview) {
+      // В превью нет сокета — симулируем присутствие оператора, чтобы показать онлайн-сценарий
+      // («Начать чат»). По умолчанию онлайн; ?offline=1 в URL — проверить офлайн-вариант.
+      const offline =
+        typeof window !== 'undefined' && /[?&]offline=1\b/.test(window.location.search)
+      setOperatorOnline(!offline)
+      // Демо-операторы для шапки.
+      setOperators([
+        { id: 'p1', name: 'Анна', role: 'Менеджер', avatarUrl: null, online: !offline, status: 'work' },
+        { id: 'p2', name: 'Игорь', role: 'Поддержка', avatarUrl: null, online: false, status: 'away' },
+      ])
+      return
+    }
+    if (!args.widgetId) return
     const sessionId = getCollectorSessionId()
     if (!sessionId) return
 
     const apiOrigin = getDefaultApiOrigin()
     let disposed = false
+
+    // Операторы проекта для шапки.
+    void fetchJson<OperatorInfo[]>(
+      `${apiOrigin}/api/public/chat/operators?widgetId=${encodeURIComponent(args.widgetId)}`
+    ).then(list => {
+      if (!disposed && Array.isArray(list)) setOperators(list)
+    })
 
     const start = async () => {
       const conversation = await fetchJson<{ id: string }>(
@@ -163,5 +196,5 @@ export const useChatConnection = (
     })
   }, [args.preview, args.widgetId])
 
-  return { operatorOnline, sendToOperator, markRead, updateContact, closeConversation }
+  return { operatorOnline, operators, sendToOperator, markRead, updateContact, closeConversation }
 }

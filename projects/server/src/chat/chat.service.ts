@@ -112,6 +112,19 @@ export class ChatService {
     return widget
   }
 
+  /**
+   * Публичный список операторов проекта для шапки виджета (имя/роль/аватар/онлайн).
+   * Без чувствительных полей (email/loginEmail/passwordHash). Origin валидируется по виджету.
+   */
+  async listPublicOperators(widgetId: string, originHost: string | null) {
+    const widget = await this.assertVisitorAllowed(widgetId, originHost)
+    return this.prisma.chatOperator.findMany({
+      where: { projectId: widget.projectId },
+      select: { id: true, name: true, role: true, avatarUrl: true, online: true, status: true },
+      orderBy: [{ online: 'desc' }, { createdAt: 'asc' }]
+    })
+  }
+
   async getOrCreateConversation(
     widgetId: string,
     sessionId: string,

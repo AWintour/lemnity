@@ -254,7 +254,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     })
   }, [playMessageSound])
 
-  const { operatorOnline, sendToOperator, markRead, updateContact, closeConversation } = useChatConnection({
+  const { operatorOnline, operators, sendToOperator, markRead, updateContact, closeConversation } = useChatConnection({
     widgetId: useWidgetSettingsStore.getState().settings?.id,
     preview: props.preview,
     onIncoming: append,
@@ -395,27 +395,40 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     [append, sendToOperator, props.preview]
   )
 
-  // Отправка формы «Оставить сообщение»: собираем контакт + комментарий и уходим к оператору.
+  // Отправка формы контактов перед чатом.
+  // Онлайн («Начать чат»): сохраняем контакты и входим в живой диалог (без поля сообщения).
+  // Офлайн («Отправить сообщение»): отправляем заявку с контактами и комментарием.
   const handleSubmitForm = useCallback(
     (values: { name?: string; phone?: string; email?: string; comment?: string }) => {
-      const lines = [
-        values.name && `Имя: ${values.name}`,
-        values.phone && `Телефон: ${values.phone}`,
-        values.email && `Email: ${values.email}`,
-        values.comment && `Сообщение: ${values.comment}`,
-      ].filter(Boolean) as string[]
-      const body = lines.join('\n') || 'Заявка из чата'
-
       // Сохраняем контакт в диалог — чтобы имя/телефон/email были в карточке оператора.
       updateContact({ visitorName: values.name, visitorPhone: values.phone, visitorEmail: values.email })
 
+      const contactLines = [
+        values.name && `Имя: ${values.name}`,
+        values.phone && `Телефон: ${values.phone}`,
+        values.email && `Email: ${values.email}`,
+      ].filter(Boolean) as string[]
+
       navigate('chat')
       setMode('operator')
+
+      if (operatorOnline) {
+        // Живой чат: открываем диалог; контакты уже в карточке. Уведомляем оператора.
+        const opener = contactLines.join('\n') || 'Здравствуйте!'
+        append({ id: uuidv4(), sender: 'visitor', body: opener, createdAt: nowIso(), pending: !props.preview })
+        sendToOperator(opener)
+        return
+      }
+
+      // Офлайн: заявка с комментарием — придёт оператору в рабочее время.
+      const body = [...contactLines, values.comment && `Сообщение: ${values.comment}`]
+        .filter(Boolean)
+        .join('\n') || 'Заявка из чата'
       append({ id: uuidv4(), sender: 'visitor', body, createdAt: nowIso(), pending: !props.preview })
       append({ id: uuidv4(), sender: 'system', body: 'Спасибо! Мы свяжемся с вами.', createdAt: nowIso() })
       sendToOperator(body)
     },
-    [append, sendToOperator, updateContact, props.preview]
+    [append, sendToOperator, updateContact, props.preview, operatorOnline]
   )
 
   // Кнопка «Назад» — всегда на предыдущий экран.
@@ -553,6 +566,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     operatorSubtitle,
     operatorAvatarUrl,
     operatorOnline,
+    operators,
     onlineMessage,
     onlineMessageEnabled,
     offlineMessage,

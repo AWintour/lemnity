@@ -66,4 +66,10 @@ export class PublicChatController {
   ): Promise<ChatMessagesResponse> {
     return this.chat.getMessagesForVisitor(id, sessionId ?? '')
   }
+
+  // Операторы проекта для шапки виджета (имя/роль/аватар/онлайн).
+  @Get('operators')
+  operators(@Query('widgetId') widgetId: string, @Req() req: Request) {
+    return this.chat.listPublicOperators(widgetId ?? '', extractRequestOriginHost(req))
+  }
 }
