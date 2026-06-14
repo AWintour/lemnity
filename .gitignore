@@ -111,3 +111,17 @@ yarn.lock
 
 # Prisma generated files
 projects/*/prisma/generated/
+
+# Local scratch / tooling (не часть сборки приложения)
+.claude/
+.design/
+plan/wid-call-prototype/
+
+# Случайные дубликаты ассетов в корне репо — канонические копии лежат в
+# projects/client/src/assets/. Не путать с одноимёнными файлами внутри src/assets.
+/chatbubble-ellipses.svg
+/location.svg
+/reader.svg
+/sparkles.svg
+/szvuk.mp3
+/zvuk-chat.mp3
