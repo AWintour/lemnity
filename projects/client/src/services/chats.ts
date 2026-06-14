@@ -38,6 +38,12 @@ export type ChatConversation = {
 
 export type ChatAttachmentType = 'image' | 'video' | 'file'
 
+export type MessageAttachment = {
+  url: string
+  type: ChatAttachmentType
+  name?: string
+}
+
 export type ChatMessage = {
   id: string
   conversationId: string
@@ -46,6 +52,7 @@ export type ChatMessage = {
   attachmentUrl?: string | null
   attachmentType?: string | null
   attachmentName?: string | null
+  attachments?: MessageAttachment[] | null
   senderUserId?: string | null
   readAt?: string | null
   createdAt: string

@@ -65,6 +65,18 @@ const toConversationEntity = (c: ChatConversation): ChatConversationEntity => ({
   createdAt: c.createdAt.toISOString()
 })
 
+type MessageAttachment = { url: string; type: 'image' | 'video' | 'file'; name?: string }
+
+// Json-поле attachments → массив вложений (с базовой проверкой формы).
+const parseAttachments = (value: unknown): MessageAttachment[] | null => {
+  if (!Array.isArray(value)) return null
+  const list = value.filter(
+    (a): a is MessageAttachment =>
+      !!a && typeof (a as MessageAttachment).url === 'string' && typeof (a as MessageAttachment).type === 'string'
+  )
+  return list.length ? list : null
+}
+
 const toMessageEntity = (m: ChatMessage): ChatMessageEntity => ({
   id: m.id,
   conversationId: m.conversationId,
@@ -73,6 +85,7 @@ const toMessageEntity = (m: ChatMessage): ChatMessageEntity => ({
   attachmentUrl: m.attachmentUrl,
   attachmentType: m.attachmentType,
   attachmentName: m.attachmentName,
+  attachments: parseAttachments(m.attachments),
   senderUserId: m.senderUserId,
   readAt: m.readAt ? m.readAt.toISOString() : null,
   createdAt: m.createdAt.toISOString()
@@ -182,14 +195,32 @@ export class ChatService {
     attachmentUrl?: string | null
     attachmentType?: string | null
     attachmentName?: string | null
+    attachments?: MessageAttachment[] | null
   }): Promise<ChatMessageEntity> {
     const body = args.body.trim()
-    const attachmentUrl = sanitize(args.attachmentUrl) ?? null
-    // Сообщение допустимо без текста, если есть вложение.
+    // Мультивложения (до 10). Если переданы — первый дублируем в single-поля для обратной совместимости.
+    const gallery = (args.attachments ?? [])
+      .filter(a => a && typeof a.url === 'string')
+      .slice(0, 10)
+    const attachmentUrl = sanitize(args.attachmentUrl) ?? gallery[0]?.url ?? null
+    const attachmentType = attachmentUrl
+      ? args.attachmentType ?? gallery[0]?.type ?? 'file'
+      : null
+    const attachmentName = attachmentUrl
+      ? sanitize(args.attachmentName) ?? gallery[0]?.name ?? null
+      : null
+    // Сообщение допустимо без текста, если есть вложение(я).
     if (!body && !attachmentUrl) throw new BadRequestException('Message body is required')
 
     const now = new Date()
-    const preview = body || (attachmentUrl ? `📎 ${args.attachmentName ?? 'Вложение'}` : '')
+    const attachCount = gallery.length || (attachmentUrl ? 1 : 0)
+    const preview =
+      body ||
+      (attachCount > 1
+        ? `📎 ${attachCount} вложений`
+        : attachmentUrl
+          ? `📎 ${attachmentName ?? 'Вложение'}`
+          : '')
     const [message] = await this.prisma.$transaction([
       this.prisma.chatMessage.create({
         data: {
@@ -198,8 +229,9 @@ export class ChatService {
           body,
           senderUserId: args.senderUserId ?? null,
           attachmentUrl,
-          attachmentType: attachmentUrl ? args.attachmentType ?? 'file' : null,
-          attachmentName: attachmentUrl ? sanitize(args.attachmentName) ?? null : null
+          attachmentType,
+          attachmentName,
+          attachments: gallery.length ? gallery : undefined
         }
       }),
       this.prisma.chatConversation.update({

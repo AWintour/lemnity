@@ -211,6 +211,26 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   кнопка, сбрасывающая на главный экран (`resetConversation`). Новый диалог переоткрывается на
   сервере автоматически — `appendMessage` ставит `status:'open'`.
 
+## Батч багфиксов №2 (2026-06-15): аватар, завершение, название, мультивложения
+
+- **Аватар оператора — единый фолбэк** (`embedded/Widget.tsx`): `headerAvatarInitial` теперь всегда
+  инициал оператора (не 🤖), `useChatConnection` префиксует относительный `avatarUrl` origin'ом API.
+  Если фото всё равно не грузится в embed — проверять публичность S3 (объекты должны быть public-read).
+- **Завершение у оператора** (`ChatModulePage.tsx`): кнопка «Завершить» при `status==='closed'` —
+  серая/неактивная, текст «Завершено»; в треде плашка «Беседа завершена». Закрытие шлёт PATCH на тот
+  же эндпоинт, что и `notifyClosed` → посетитель получает «Оператор завершил беседу».
+- **Название чата во всех селекторах** (`ChatModulePage.tsx`): единый `labelOf` с live-override по
+  `widget.id` из виджет-стора — применён в `dialogChats`, `chatNameByWidgetId`, селекторе настроек.
+  Переименование видно сразу во всех списках, после Save — и из `projects`.
+- **Мультивложения оператора (до 10) + текст одним сообщением, галерея**:
+  - Prisma `ChatMessage.attachments Json?` (массив `{url,type,name}`); `db push` (аддитивно).
+  - Сервер: `appendMessage`/`toMessageEntity`/gateway `message:send`(manager)/REST `reply`/
+    `SendMessageDto` принимают и отдают `attachments[]` (single-поля — back-compat, дубль первого).
+  - Клиент-оператор: стейджинг до 10 файлов (выбор НЕ шлёт сразу), превью с удалением, отправка
+    `body + attachments` одним сообщением (`useChatSocket.sendMessage` +`attachments`).
+  - Рендер: `MessageAttachments` (тред оператора) и `MessageBubble` (виджет) — картинки сеткой 2 кол.
+    + файлы-чипсы. Посетитель шлёт по-прежнему одиночно, но галерею от оператора видит.
+
 ## Картинки → персональное хранилище (правило по умолчанию)
 
 Аватар оператора (и картинки шага сценария, логотип компании) грузятся через

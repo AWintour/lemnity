@@ -211,14 +211,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       attachmentUrl?: string
       attachmentType?: 'image' | 'video' | 'file'
       attachmentName?: string
+      attachments?: { url: string; type: 'image' | 'video' | 'file'; name?: string }[]
     }
   ) {
     const data = client.data as SocketData | undefined
     const body = typeof payload?.body === 'string' ? payload.body : ''
     const attachmentUrl =
       typeof payload?.attachmentUrl === 'string' ? payload.attachmentUrl : undefined
-    // Допускаем сообщение только с вложением (без текста).
-    if (!data || (!body.trim() && !attachmentUrl)) return
+    const attachments = Array.isArray(payload?.attachments)
+      ? payload.attachments.filter(a => a && typeof a.url === 'string').slice(0, 10)
+      : undefined
+    // Допускаем сообщение только с вложением(ями) (без текста).
+    if (!data || (!body.trim() && !attachmentUrl && !attachments?.length)) return
 
     if (data.role === 'visitor') {
       const message = await this.chat.appendMessage({
@@ -248,7 +252,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderUserId: data.actor.kind === 'owner' ? data.actor.userId : undefined,
       attachmentUrl,
       attachmentType: payload?.attachmentType,
-      attachmentName: payload?.attachmentName
+      attachmentName: payload?.attachmentName,
+      attachments
     })
     this.broadcastMessage(conversation, message)
     return message

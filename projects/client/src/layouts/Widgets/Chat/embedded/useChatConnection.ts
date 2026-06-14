@@ -4,6 +4,7 @@ import { io, type Socket } from 'socket.io-client'
 import { getCollectorSessionId, getDefaultApiOrigin } from '@/common/api/publicApi'
 import type { ChatUiMessage } from './types'
 
+type ServerAttachment = { url: string; type: 'image' | 'video' | 'file'; name?: string }
 type ServerMessage = {
   id: string
   sender: 'visitor' | 'manager' | 'system'
@@ -12,23 +13,29 @@ type ServerMessage = {
   attachmentUrl?: string | null
   attachmentType?: 'image' | 'video' | 'file' | null
   attachmentName?: string | null
+  attachments?: ServerAttachment[] | null
 }
 
-// Серверное сообщение → UI: вложение-картинка дублируется в image (обратная совместимость).
-const toUiMessage = (m: ServerMessage): ChatUiMessage => ({
-  id: m.id,
-  sender: m.sender,
-  body: m.body,
-  createdAt: m.createdAt,
-  ...(m.attachmentType === 'image' && m.attachmentUrl ? { image: m.attachmentUrl } : {}),
-  ...(m.attachmentUrl
-    ? {
-        attachmentUrl: m.attachmentUrl,
-        attachmentType: m.attachmentType ?? 'file',
-        attachmentName: m.attachmentName ?? undefined,
-      }
-    : {}),
-})
+// Серверное сообщение → UI: галерея (attachments) рендерится отдельно; одиночная картинка
+// дублируется в image (обратная совместимость со сценарными картинками/одиночными вложениями).
+const toUiMessage = (m: ServerMessage): ChatUiMessage => {
+  const gallery = Array.isArray(m.attachments) && m.attachments.length ? m.attachments : null
+  return {
+    id: m.id,
+    sender: m.sender,
+    body: m.body,
+    createdAt: m.createdAt,
+    ...(gallery ? { attachments: gallery } : {}),
+    ...(!gallery && m.attachmentType === 'image' && m.attachmentUrl ? { image: m.attachmentUrl } : {}),
+    ...(!gallery && m.attachmentUrl
+      ? {
+          attachmentUrl: m.attachmentUrl,
+          attachmentType: m.attachmentType ?? 'file',
+          attachmentName: m.attachmentName ?? undefined,
+        }
+      : {}),
+  }
+}
 
 type UseChatConnectionArgs = {
   widgetId?: string
@@ -125,11 +132,18 @@ export const useChatConnection = (
     const apiOrigin = getDefaultApiOrigin()
     let disposed = false
 
+    // Относительный URL аватара (напр. `/files/...`) в iframe на чужом сайте резолвится против
+    // чужого домена → 404. Префиксуем origin API, чтобы аватар грузился из хранилища Lemnity.
+    const toAbsolute = (url?: string | null): string | null =>
+      url && url.startsWith('/') ? `${apiOrigin}${url}` : url ?? null
+
     // Операторы проекта для шапки.
     void fetchJson<OperatorInfo[]>(
       `${apiOrigin}/api/public/chat/operators?widgetId=${encodeURIComponent(args.widgetId)}`
     ).then(list => {
-      if (!disposed && Array.isArray(list)) setOperators(list)
+      if (!disposed && Array.isArray(list)) {
+        setOperators(list.map(o => ({ ...o, avatarUrl: toAbsolute(o.avatarUrl) })))
+      }
     })
 
     const start = async () => {

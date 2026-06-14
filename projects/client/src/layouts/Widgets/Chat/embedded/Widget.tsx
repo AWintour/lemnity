@@ -473,7 +473,34 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
         )}
         style={isVisitor ? { backgroundColor: clientColor } : undefined}
       >
-        {message.image && !imgBroken && (
+        {/* Галерея (мультивложения от оператора): картинки сеткой + видео/файлы */}
+        {message.attachments && message.attachments.length > 0 && (() => {
+          const imgs = message.attachments.filter(a => a.type === 'image')
+          const files = message.attachments.filter(a => a.type !== 'image')
+          return (
+            <div className={cn('flex flex-col gap-1.5', message.body && 'mb-2')}>
+              {imgs.length > 0 && (
+                <div className={cn('grid gap-1.5', imgs.length === 1 ? 'grid-cols-1' : 'grid-cols-2')}>
+                  {imgs.map((a, i) => (
+                    <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block">
+                      <img src={a.url} alt={a.name ?? ''} className={cn('w-full object-cover rounded-[12px]', imgs.length === 1 ? 'max-h-[220px]' : 'h-[110px]')} />
+                    </a>
+                  ))}
+                </div>
+              )}
+              {files.map((a, i) =>
+                a.type === 'video' ? (
+                  <video key={`v${i}`} src={a.url} controls className="w-full max-h-[240px] rounded-[12px]" />
+                ) : (
+                  <a key={`f${i}`} href={a.url} target="_blank" rel="noreferrer" download className={cn('flex items-center gap-2 underline break-all', isVisitor ? 'text-white' : 'text-[#1A52DB]')}>
+                    📎 {a.name ?? 'Файл'}
+                  </a>
+                ),
+              )}
+            </div>
+          )
+        })()}
+        {!message.attachments?.length && message.image && !imgBroken && (
           <a href={message.image} target="_blank" rel="noreferrer" className="block">
             <img
               src={message.image}
@@ -483,14 +510,14 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
             />
           </a>
         )}
-        {message.attachmentType === 'video' && message.attachmentUrl && (
+        {!message.attachments?.length && message.attachmentType === 'video' && message.attachmentUrl && (
           <video
             src={message.attachmentUrl}
             controls
             className={cn('w-full max-h-[240px] rounded-[12px]', message.body && 'mb-2')}
           />
         )}
-        {message.attachmentType === 'file' && message.attachmentUrl && (
+        {!message.attachments?.length && message.attachmentType === 'file' && message.attachmentUrl && (
           <a
             href={message.attachmentUrl}
             target="_blank"
@@ -814,9 +841,9 @@ const Widget = (props: WidgetProps) => {
   const primaryOperator = onlineOperators[0] ?? props.operators[0]
   const headerName = primaryOperator?.name ?? props.operatorName
   const headerSubtitle = primaryOperator?.role ?? props.operatorSubtitle
-  // Аватар: фото оператора → (если оператор есть, но без фото) его инициал → конфиг → бот.
+  // Аватар: фото оператора → его инициал (единый фолбэк, в т.ч. если фото не загрузилось) → конфиг → бот.
   const headerAvatarUrl = primaryOperator ? primaryOperator.avatarUrl ?? undefined : props.operatorAvatarUrl
-  const headerAvatarInitial = primaryOperator && !primaryOperator.avatarUrl
+  const headerAvatarInitial = primaryOperator
     ? (primaryOperator.name || '?').charAt(0).toUpperCase()
     : undefined
   const showQuickReplies = props.quickReplies.length > 0

@@ -84,9 +84,12 @@ model ChatMessage {
   body           String
 
   // Вложение (загружается в хранилище, в сообщении — URL). type: image|video|file.
+  // Одиночное вложение (legacy/посетитель) — single-поля; мультивложения (оператор, до 10) — attachments[].
   attachmentUrl  String? @map("attachment_url")
   attachmentType String? @map("attachment_type")
   attachmentName String? @map("attachment_name")
+  // Массив вложений [{ url, type, name }] — галерея в одном сообщении. Nullable/аддитивно.
+  attachments    Json?
 
   // userId продавца-автора (денормализация, чтобы список не зависел от Manager).
   senderUserId   String?  @map("sender_user_id")

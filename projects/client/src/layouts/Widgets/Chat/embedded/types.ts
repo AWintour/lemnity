@@ -13,6 +13,8 @@ export type ChatUiMessage = {
   attachmentUrl?: string
   attachmentType?: ChatMessageAttachmentType
   attachmentName?: string
+  // Мультивложения (галерея от оператора): [{ url, type, name }].
+  attachments?: { url: string; type: ChatMessageAttachmentType; name?: string }[]
   // Сообщение посетителя, ещё не подтверждённое сервером (optimistic send).
   pending?: boolean
 }

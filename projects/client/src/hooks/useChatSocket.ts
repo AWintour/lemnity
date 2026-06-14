@@ -25,10 +25,22 @@ export type SocketAttachment = {
   attachmentName?: string
 }
 
+export type MessageAttachment = {
+  url: string
+  type: 'image' | 'video' | 'file'
+  name?: string
+}
+
 type UseChatSocketResult = {
   connected: boolean
   subscribe: (conversationId: string) => void
-  sendMessage: (conversationId: string, body: string, attachment?: SocketAttachment) => void
+  // attachment — одиночное (legacy), attachments — галерея (до 10) одним сообщением.
+  sendMessage: (
+    conversationId: string,
+    body: string,
+    attachment?: SocketAttachment,
+    attachments?: MessageAttachment[]
+  ) => void
   markRead: (conversationId: string) => void
 }
 
@@ -102,8 +114,18 @@ export const useChatSocket = (handlers: UseChatSocketHandlers): UseChatSocketRes
   }, [])
 
   const sendMessage = useCallback(
-    (conversationId: string, body: string, attachment?: SocketAttachment) => {
-      socketRef.current?.emit('message:send', { conversationId, body, ...attachment })
+    (
+      conversationId: string,
+      body: string,
+      attachment?: SocketAttachment,
+      attachments?: MessageAttachment[]
+    ) => {
+      socketRef.current?.emit('message:send', {
+        conversationId,
+        body,
+        ...attachment,
+        ...(attachments?.length ? { attachments } : {})
+      })
     },
     []
   )

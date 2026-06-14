@@ -84,7 +84,8 @@ export class ChatController {
       senderUserId: actor.kind === 'owner' ? actor.userId : undefined,
       attachmentUrl: dto.attachmentUrl ?? null,
       attachmentType: dto.attachmentType ?? null,
-      attachmentName: dto.attachmentName ?? null
+      attachmentName: dto.attachmentName ?? null,
+      attachments: dto.attachments ?? null
     })
     // Доставляем в реальном времени (REST как надёжный фолбэк к socket).
     this.gateway.broadcastMessage(conversation, message)

@@ -307,6 +307,43 @@ const AttachmentView = ({
   )
 }
 
+// Вложения сообщения: галерея картинок (сетка 2 кол.) + файлы-чипсы. Поддерживает массив
+// attachments (мультивложения оператора) и одиночные legacy-поля.
+const MessageAttachments = ({ message }: { message: ChatMessage }) => {
+  const list =
+    message.attachments && message.attachments.length
+      ? message.attachments
+      : message.attachmentUrl
+        ? [{ url: message.attachmentUrl, type: (message.attachmentType as 'image' | 'video' | 'file') ?? 'file', name: message.attachmentName ?? undefined }]
+        : []
+  if (list.length === 0) return null
+  const images = list.filter(a => a.type === 'image')
+  const files = list.filter(a => a.type !== 'image')
+  return (
+    <div className="flex flex-col gap-2">
+      {images.length > 0 && (
+        <div className={cn('grid gap-1.5', images.length === 1 ? 'grid-cols-1' : 'grid-cols-2')}>
+          {images.map((a, i) => (
+            <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block">
+              <img
+                src={a.url}
+                alt={a.name ?? ''}
+                className={cn(
+                  'w-full object-cover rounded-[10px]',
+                  images.length === 1 ? 'max-h-[220px] max-w-[220px]' : 'h-[110px]',
+                )}
+              />
+            </a>
+          ))}
+        </div>
+      )}
+      {files.map((a, i) => (
+        <AttachmentView key={`f${i}`} url={a.url} type={a.type} name={a.name} />
+      ))}
+    </div>
+  )
+}
+
 /* ----------------------------- sidebar ---------------------------------- */
 
 const NavItem = ({
@@ -2327,6 +2364,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const fileRef = useRef<HTMLInputElement | null>(null)
   const groupFileRef = useRef<HTMLInputElement | null>(null)
   const [attachErr, setAttachErr] = useState<string | null>(null)
+  // Стейджинг вложений оператора: до 10 файлов прикрепляются БЕЗ отправки, шлются одним сообщением.
+  const [staged, setStaged] = useState<{ id: string; url: string; type: 'image' | 'video' | 'file'; name: string }[]>([])
+  const [uploadingCount, setUploadingCount] = useState(0)
   const selectedIdRef = useRef<string | null>(null)
   selectedIdRef.current = selectedId
 
@@ -2344,6 +2384,19 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     [projects]
   )
 
+  // Живое название редактируемого чата (config.title из виджет-стора) — чтобы переименование
+  // подтягивалось во ВСЕ селекторы сразу, а не только в выбранную опцию настроек.
+  const liveChatSettings = useWidgetSettingsStore(s => s.settings)
+  const liveChat = useMemo(() => {
+    const t = (liveChatSettings?.widget as { title?: string } | undefined)?.title?.trim()
+    return liveChatSettings?.id && t ? { id: liveChatSettings.id, title: t } : null
+  }, [liveChatSettings])
+  const labelOf = useCallback(
+    (w: { id?: string; name?: string; config?: object | null } | undefined, projectName?: string) =>
+      liveChat && w?.id === liveChat.id ? liveChat.title : chatLabel(w, projectName),
+    [liveChat]
+  )
+
   // Активные чаты всех проектов (один чат на проект) — опции глобального селектора диалогов.
   const dialogChats = useMemo(
     () =>
@@ -2353,9 +2406,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled))
             .map(p => {
               const w = p.widgets.find(x => x.type === WidgetTypeEnum.CHAT && x.enabled)!
-              return { widgetId: w.id, label: chatLabel(w, p.name) }
+              return { widgetId: w.id, label: labelOf(w, p.name) }
             }),
-    [projects, preview]
+    [projects, preview, labelOf]
   )
   // widgetId → название чата (для блока «источник» в панели «Информация»). Берём ВСЕ CHAT-виджеты,
   // не только enabled, чтобы диалог завершённого/выключенного чата тоже подписался.
@@ -2368,10 +2421,10 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     projects.forEach(p =>
       p.widgets
         .filter(w => w.type === WidgetTypeEnum.CHAT)
-        .forEach(w => m.set(w.id, chatLabel(w, p.name)))
+        .forEach(w => m.set(w.id, labelOf(w, p.name)))
     )
     return m
-  }, [projects, preview])
+  }, [projects, preview, labelOf])
   // 'all' — диалоги всех активных чатов; иначе widgetId конкретного чата.
   const [dialogChat, setDialogChat] = useState<'all' | string>('all')
   useEffect(() => {
@@ -2454,19 +2507,32 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     (e: FormEvent) => {
       e.preventDefault()
       const body = draft.trim()
-      if (!body || !selectedId) return
+      if (!selectedId || (!body && staged.length === 0)) return
+      const gallery = staged.map(s => ({ url: s.url, type: s.type, name: s.name }))
       if (preview) {
         setMessages(prev => [
           ...prev,
-          { id: `local-${prev.length}`, conversationId: selectedId, sender: 'manager', body, createdAt: new Date().toISOString() },
+          {
+            id: `local-${prev.length}`,
+            conversationId: selectedId,
+            sender: 'manager',
+            body,
+            createdAt: new Date().toISOString(),
+            attachments: gallery.length ? gallery : null,
+            attachmentUrl: gallery[0]?.url ?? null,
+            attachmentType: gallery[0]?.type ?? null,
+            attachmentName: gallery[0]?.name ?? null,
+          },
         ])
         setDraft('')
+        setStaged([])
         return
       }
-      sendMessage(selectedId, body)
+      sendMessage(selectedId, body, undefined, gallery.length ? gallery : undefined)
       setDraft('')
+      setStaged([])
     },
-    [draft, selectedId, sendMessage, preview]
+    [draft, staged, selectedId, sendMessage, preview]
   )
 
   const handleComplete = useCallback(async () => {
@@ -2481,36 +2547,6 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     void loadConversations()
   }, [selectedId, loadConversations, preview])
 
-  // Отправка реплики оператора (через сокет или локально в превью), с опциональным вложением.
-  type Attachment = {
-    attachmentUrl: string
-    attachmentType: 'image' | 'video' | 'file'
-    attachmentName?: string
-  }
-  const sendManager = useCallback(
-    (body: string, attachment?: Attachment) => {
-      if (!selectedId || (!body.trim() && !attachment)) return
-      if (preview) {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `local-${prev.length}-${body.length}`,
-            conversationId: selectedId,
-            sender: 'manager',
-            body,
-            createdAt: new Date().toISOString(),
-            attachmentUrl: attachment?.attachmentUrl ?? null,
-            attachmentType: attachment?.attachmentType ?? null,
-            attachmentName: attachment?.attachmentName ?? null,
-          },
-        ])
-        return
-      }
-      sendMessage(selectedId, body, attachment)
-    },
-    [selectedId, sendMessage, preview]
-  )
-
   const handleAttach = useCallback(() => {
     if (fileRef.current) {
       fileRef.current.accept = ''
@@ -2523,29 +2559,47 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       fileRef.current.click()
     }
   }, [])
-  // Загрузка вложения в основную переписку: проверка размера → upload → отправка как вложение.
-  const onFilePicked = useCallback(
-    async (file: File | null) => {
-      if (!file) return
+  // Выбор файлов → стейджинг (до 10), БЕЗ отправки. Картинки/файлы грузятся в хранилище заранее.
+  const onFilesPicked = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return
       setAttachErr(null)
-      const type = classifyAttachment(file.type)
-      if (file.size > MAX_IMAGE_BYTES) {
-        setAttachErr(type === 'image' ? IMAGE_TOO_LARGE_MESSAGE : 'Файл слишком большой (до 5 МБ)')
-        return
-      }
-      if (preview) {
-        sendManager('', { attachmentUrl: URL.createObjectURL(file), attachmentType: type, attachmentName: file.name })
-        return
-      }
-      try {
-        const up = await uploadFile(file)
-        sendManager('', { attachmentUrl: up.url, attachmentType: up.type, attachmentName: up.name })
-      } catch {
-        setAttachErr('Не удалось загрузить файл')
+      const picked = Array.from(files)
+      for (const file of picked) {
+        const type = classifyAttachment(file.type)
+        if (file.size > MAX_IMAGE_BYTES) {
+          setAttachErr(type === 'image' ? IMAGE_TOO_LARGE_MESSAGE : 'Файл слишком большой (до 5 МБ)')
+          continue
+        }
+        const id = crypto.randomUUID()
+        if (preview) {
+          setStaged(prev =>
+            prev.length >= 10
+              ? (setAttachErr('Не более 10 файлов в сообщении'), prev)
+              : [...prev, { id, url: URL.createObjectURL(file), type, name: file.name }]
+          )
+          continue
+        }
+        setUploadingCount(c => c + 1)
+        try {
+          const up = await uploadFile(file)
+          setStaged(prev =>
+            prev.length >= 10
+              ? (setAttachErr('Не более 10 файлов в сообщении'), prev)
+              : [...prev, { id, url: up.url, type: up.type, name: up.name }]
+          )
+        } catch {
+          setAttachErr('Не удалось загрузить файл')
+        } finally {
+          setUploadingCount(c => c - 1)
+        }
       }
     },
-    [preview, sendManager]
+    [preview]
   )
+  const removeStaged = useCallback((id: string) => {
+    setStaged(prev => prev.filter(s => s.id !== id))
+  }, [])
 
   // Загрузка вложения во внутренний групповой чат операторов.
   const handleGroupAttach = useCallback(() => groupFileRef.current?.click(), [])
@@ -2598,13 +2652,28 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     () => setDraft('Здравствуйте! Уточните, пожалуйста, детали — и я помогу подобрать решение.'),
     []
   )
+  // Текстовое сообщение оператора (без вложений) — для служебных реплик (запрос контакта/передача).
+  const sendManagerText = useCallback(
+    (body: string) => {
+      if (!selectedId || !body.trim()) return
+      if (preview) {
+        setMessages(prev => [
+          ...prev,
+          { id: `local-${prev.length}-${body.length}`, conversationId: selectedId, sender: 'manager', body, createdAt: new Date().toISOString() },
+        ])
+        return
+      }
+      sendMessage(selectedId, body)
+    },
+    [selectedId, preview, sendMessage]
+  )
   const handleRequestContact = useCallback(
-    () => sendManager('Оставьте, пожалуйста, ваш телефон или email — так мы точно с вами свяжемся.'),
-    [sendManager]
+    () => sendManagerText('Оставьте, пожалуйста, ваш телефон или email — так мы точно с вами свяжемся.'),
+    [sendManagerText]
   )
   const handleTransfer = useCallback(
-    (name?: string) => sendManager(name ? `Передаю диалог оператору: ${name}.` : 'Передаю диалог другому оператору.'),
-    [sendManager]
+    (name?: string) => sendManagerText(name ? `Передаю диалог оператору: ${name}.` : 'Передаю диалог другому оператору.'),
+    [sendManagerText]
   )
   const handleRefresh = useCallback(() => void loadConversations(), [loadConversations])
 
@@ -2974,9 +3043,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                           )}
                         >
                           {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
-                          {m.attachmentUrl && (
+                          {(m.attachmentUrl || (m.attachments && m.attachments.length > 0)) && (
                             <div className={cn(m.body && 'mt-2')}>
-                              <AttachmentView url={m.attachmentUrl} type={m.attachmentType} name={m.attachmentName} />
+                              <MessageAttachments message={m} />
                             </div>
                           )}
                           <div className="text-[11px] text-[#A6A2B0] mt-1.5 text-right">{fmtFull(m.createdAt)}</div>
@@ -2989,9 +3058,44 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
               ))}
             </div>
 
+            {selected?.status === 'closed' && (
+              <div className="shrink-0 px-4 pt-3 -mb-1 flex justify-center">
+                <span className="rounded-[10px] bg-default-100 px-4 py-2 text-[13px] text-default-400">
+                  Беседа завершена
+                </span>
+              </div>
+            )}
+
             <form onSubmit={handleSend} className="shrink-0 p-4">
               {attachErr && <div className="mb-2 text-[13px] text-[#E5484D]">{attachErr}</div>}
               <div className="rounded-[14px] bg-default-100 px-4 py-3">
+                {(staged.length > 0 || uploadingCount > 0) && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {staged.map(s => (
+                      <div key={s.id} className="relative">
+                        {s.type === 'image' ? (
+                          <img src={s.url} alt="" className="w-16 h-16 object-cover rounded-[8px] border border-default-200" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-[8px] border border-default-200 bg-white flex flex-col items-center justify-center px-1 gap-0.5 text-[10px] text-default-400 text-center">
+                            <span className="text-[18px]">📄</span>
+                            <span className="truncate w-full">{s.name}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeStaged(s.id)}
+                          aria-label="Убрать вложение"
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#3D3D3B] text-white text-[12px] leading-none flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {uploadingCount > 0 && (
+                      <div className="w-16 h-16 rounded-[8px] border border-default-200 flex items-center justify-center text-[13px] text-default-400">…</div>
+                    )}
+                  </div>
+                )}
                 <textarea
                   value={draft}
                   onChange={e => setDraft(e.target.value)}
@@ -3035,11 +3139,11 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                     <button type="button" onClick={handleAttachImage} aria-label="Изображение" className="hover:text-[#1A1A1A] flex items-center">
                       <Ic d="M4 5h16v14H4z|M8 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3|M5 18l5-5 4 4 2-2 3 3" size={20} />
                     </button>
-                    <input ref={fileRef} type="file" className="hidden" onChange={e => { onFilePicked(e.target.files?.[0] ?? null); e.target.value = '' }} />
+                    <input ref={fileRef} type="file" multiple className="hidden" onChange={e => { void onFilesPicked(e.target.files); e.target.value = '' }} />
                   </div>
                   <button
                     type="submit"
-                    disabled={!draft.trim()}
+                    disabled={(!draft.trim() && staged.length === 0) || uploadingCount > 0}
                     className="h-9 px-5 rounded-[8px] text-white text-[15px] disabled:opacity-50"
                     style={{ backgroundColor: ACCENT }}
                   >
@@ -3070,10 +3174,15 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
           <button
             type="button"
             onClick={() => void handleComplete()}
-            disabled={!selected}
-            className="flex-1 h-10 rounded-[8px] bg-[#FDE7E7] text-[#E5484D] text-[15px] disabled:opacity-50"
+            disabled={!selected || selected.status === 'closed'}
+            className={cn(
+              'flex-1 h-10 rounded-[8px] text-[15px] disabled:cursor-default',
+              selected?.status === 'closed'
+                ? 'bg-default-100 text-default-400'
+                : 'bg-[#FDE7E7] text-[#E5484D] disabled:opacity-50',
+            )}
           >
-            Завершить
+            {selected?.status === 'closed' ? 'Завершено' : 'Завершить'}
           </button>
           <button
             type="button"
