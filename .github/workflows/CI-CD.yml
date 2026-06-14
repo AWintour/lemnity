@@ -52,11 +52,15 @@ jobs:
       # - name: Format
       #   run: pnpm --filter client --filter server format
 
-      # Собираем embed.js заранее, чтобы он попал в public/dist
+      # Собираем embed.js заранее и СИНКАЕМ его в projects/client/public, чтобы в client dist
+      # попал именно этот билд (с VITE_API_URL), а не версия из postinstall. Без sync:public
+      # бандл из этого шага оставался в packages/embed-script/dist и в прод не уезжал.
       - name: Build embed script
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        run: pnpm --filter @lemnity/embed-script run build
+        run: |
+          pnpm --filter @lemnity/embed-script run build
+          pnpm --filter @lemnity/embed-script run sync:public
 
       # Собираем production-билд клиента как статику (dist)
       - name: Build client dist
