@@ -678,15 +678,14 @@ const Widget = (props: WidgetProps) => {
               {props.messages.map(message => (
                 <MessageBubble key={message.id} message={message} clientColor={props.clientColor} />
               ))}
-            </div>
 
-            {/* Кнопки сценария — закреплены над текстом; неактивны во время живого чата */}
+            {/* Кнопки сценария — скроллятся вместе с лентой; неактивны во время живого чата */}
             {showQuickReplies && (() => {
               const regular = props.quickReplies.filter(q => !q.isHandoff)
               const handoff = props.quickReplies.filter(q => q.isHandoff)
               const btnDisabled = props.disabled || props.chatActive
               return (
-                <div className="shrink-0 px-4 pb-1 flex flex-col gap-3">
+                <div className="w-full flex flex-col gap-3 mt-1">
                   {regular.length > 0 && (
                     <div className={cn('rounded-[14px] border border-[#E3E3E8] overflow-hidden', btnDisabled && 'opacity-50')}>
                       {regular.map((qr, i) => (
@@ -728,6 +727,7 @@ const Widget = (props: WidgetProps) => {
                 </div>
               )
             })()}
+            </div>
 
             {/* Низ окна: живой чат / «Войти в чат» (онлайн) / поле сообщения (офлайн) / подтверждение */}
             {props.chatActive ? (
