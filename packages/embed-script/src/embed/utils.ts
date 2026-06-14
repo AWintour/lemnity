@@ -1,5 +1,8 @@
 import type { PublicWidgetResponse } from './types'
 
+// Имя файла embed.js в src скрипта зависит от окружения (prod-домен vs относительный путь).
+const getEmbedScriptMatch = () => (isLocalEnv() ? '/embed.js' : 'app.lemnity.ru/embed.js')
+
 export const getWindowOrigin = () => {
   if (typeof window === 'undefined') return ''
   return window.location.origin
@@ -70,9 +73,50 @@ export const collectEmbedWidgetIds = (): string[] => {
   return ids
 }
 
+/**
+ * Собирает уникальные projectId со всех тегов <script src=".../embed.js?projectId=...">.
+ * Зеркалит collectEmbedWidgetIds, но для проектного размещения: один тег → все включённые
+ * виджеты проекта.
+ */
+export const collectEmbedProjectIds = (): string[] => {
+  if (typeof document === 'undefined') return []
+  const match = getEmbedScriptMatch()
+  const ids: string[] = []
+  for (const script of Array.from(document.querySelectorAll<HTMLScriptElement>('script'))) {
+    const src = script.src || ''
+    if (!src.includes(match)) continue
+    try {
+      const id = new URL(src).searchParams.get('projectId')
+      if (id && !ids.includes(id)) ids.push(id)
+    } catch {
+      // ignore parse errors
+    }
+  }
+  return ids
+}
+
 const buildPublicWidgetUrl = (widgetId: string, apiBase?: string) => {
   const base = apiBase ?? getApiBase()
   return `${base}/public/widgets/${encodeURIComponent(widgetId)}`
+}
+
+const buildPublicProjectWidgetsUrl = (projectId: string, apiBase?: string) => {
+  const base = apiBase ?? getApiBase()
+  return `${base}/public/projects/${encodeURIComponent(projectId)}/widgets`
+}
+
+export const fetchPublicProjectWidgets = async (
+  projectId: string,
+  apiBase?: string
+): Promise<PublicWidgetResponse[]> => {
+  const res = await fetch(buildPublicProjectWidgetsUrl(projectId, apiBase), {
+    method: 'GET',
+    credentials: 'omit'
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to load project widgets ${projectId}: ${res.status}`)
+  }
+  return (await res.json()) as PublicWidgetResponse[]
 }
 
 export const fetchPublicWidget = async (

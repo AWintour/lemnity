@@ -90,6 +90,10 @@ const ChatWidgetSchema = z.object({
   operatorName: z
     .string()
     .max(40, 'Имя должно быть не длиннее 40 символов'),
+  operatorSubtitle: z
+    .string()
+    .max(60, 'Подзаголовок должен быть не длиннее 60 символов')
+    .optional(),
   operatorAvatarUrl: z.string().optional(),
 
   // Логотип компании в шапке окна.
@@ -104,6 +108,8 @@ const ChatWidgetSchema = z.object({
     .string()
     .max(200, 'Заголовок не длиннее 200 символов'),
   welcomeTitleSize: z.number().min(8).max(64),
+  // Толщина шрифта приветственного заголовка (CSS font-weight).
+  welcomeTitleWeight: z.number().min(100).max(900).optional(),
   welcomeTitleColor: z
     .string()
     .regex(/^#[0-9A-F]{6}$/i, 'Цвет должен быть в HEX формате'),
@@ -112,13 +118,15 @@ const ChatWidgetSchema = z.object({
   greetingMessage: z
     .string()
     .max(300, 'Сообщение должно быть не длиннее 300 символов'),
-  // Информационный заголовок в шапке: онлайн / офлайн.
+  // Информационный заголовок в шапке: онлайн / офлайн (+ выключатели показа).
   onlineMessage: z
     .string()
     .max(300, 'Сообщение должно быть не длиннее 300 символов'),
+  onlineMessageEnabled: z.boolean().optional(),
   offlineMessage: z
     .string()
     .max(300, 'Сообщение должно быть не длиннее 300 символов'),
+  offlineMessageEnabled: z.boolean().optional(),
   placeholder: z
     .string()
     .max(60, 'Текст должен быть не длиннее 60 символов'),

@@ -1,0 +1,14 @@
+import { chromium } from '/Users/thesimakov/.npm/_npx/705bc6b22212b352/node_modules/playwright/index.mjs';
+const b = await chromium.launch();
+const p = await b.newPage({ viewport:{width:560,height:1200} });
+const errs=[];
+p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+p.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
+await p.goto('http://localhost:5173/preview/callback.html',{waitUntil:'networkidle'});
+await p.waitForTimeout(2500);
+const txt = await p.evaluate(()=>document.getElementById('root')?.innerText?.slice(0,200));
+const h = await p.evaluate(()=>document.body.scrollHeight);
+console.log('ROOT TEXT:', JSON.stringify(txt));
+console.log('HEIGHT:', h);
+console.log('ERRORS:\n'+errs.slice(0,20).join('\n'));
+await b.close();

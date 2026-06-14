@@ -90,7 +90,9 @@ const FieldsSettingsTab = () => {
     [setCompanyLogoFile]
   )
 
-  const customSections: WidgetSettingsSection[] = widgetDefinition?.settings.sections ?? []
+  // «Сценарий бота» (chat.scenario) редактируется только в модуле Чат, не в редакторе виджета.
+  const customSections: WidgetSettingsSection[] = (widgetDefinition?.settings.sections ?? [])
+    .filter(s => s.id !== 'chat.scenario')
   const hasCustomSections = customSections.length > 0
   const CustomFieldsSurface = widgetDefinition?.settings.surfaces?.fields
 

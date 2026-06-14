@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 560, height: 1200 }, deviceScaleFactor: 2 });
+const errors = [];
+page.on('console', m => { if (m.type()==='error') errors.push(m.text()); });
+page.on('pageerror', e => errors.push('PAGEERROR: '+e.message));
+await page.goto('http://localhost:5173/preview/callback.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+await page.screenshot({ path: 'callback-editor-real.png', fullPage: true });
+console.log('ERRORS:', errors.slice(0,15).join('\n'));
+const h = await page.evaluate(()=>document.body.scrollHeight);
+console.log('body height', h);
+await browser.close();

@@ -207,7 +207,7 @@ class EmbedManager {
 
   async init(options: InitOptions) {
     try {
-      const { widgetId, apiBase } = options
+      const { widgetId, apiBase, payload: prefetched } = options
 
       // Защита от дублирования: если этот же виджет уже смонтирован ДРУГИМ экземпляром менеджера
       // (скрипт embed.js подключён/инициализирован на странице дважды) — не создаём второй виджет.
@@ -226,7 +226,7 @@ class EmbedManager {
 
       await this.destroy()
 
-      const payload = await fetchPublicWidget(widgetId, apiBase)
+      const payload = prefetched ?? (await fetchPublicWidget(widgetId, apiBase))
       if (!payload.enabled) throw new Error('Widget is disabled')
       if (!payload.config) throw new Error('Widget config is empty')
       const widgetType = (payload.config.widgetType as WidgetTypeEnum | undefined) ?? payload.type

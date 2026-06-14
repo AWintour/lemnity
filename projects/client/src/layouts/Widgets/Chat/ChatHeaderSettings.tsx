@@ -17,19 +17,36 @@ import { uploadImage, MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE } from '@/api/upl
 const ACCENT = '!bg-[#5951E5]'
 
 const ChatHeaderSettings = () => {
-  const { companyLogo, welcomeTitle, welcomeTitleSize, welcomeTitleColor, welcomeTitleAlign } =
-    useWidgetSettingsStore(
+  const {
+    operatorName,
+    operatorSubtitle,
+    companyLogo,
+    welcomeTitle,
+    welcomeTitleSize,
+    welcomeTitleWeight,
+    welcomeTitleColor,
+    welcomeTitleAlign,
+  } = useWidgetSettingsStore(
       useShallow(s => {
         const w = s.settings?.widget as ChatWidgetType
         return {
+          operatorName: w.operatorName ?? defaults.operatorName,
+          operatorSubtitle: w.operatorSubtitle ?? defaults.operatorSubtitle ?? '',
           companyLogo: w.companyLogo ?? defaults.companyLogo,
           welcomeTitle: w.welcomeTitle ?? defaults.welcomeTitle,
           welcomeTitleSize: w.welcomeTitleSize ?? defaults.welcomeTitleSize,
+          welcomeTitleWeight: w.welcomeTitleWeight ?? defaults.welcomeTitleWeight ?? 600,
           welcomeTitleColor: w.welcomeTitleColor ?? defaults.welcomeTitleColor,
           welcomeTitleAlign: w.welcomeTitleAlign ?? defaults.welcomeTitleAlign,
         }
       })
     )
+
+  const WEIGHTS: { value: number; label: string }[] = [
+    { value: 400, label: 'Обычный' },
+    { value: 600, label: 'Полужирный' },
+    { value: 700, label: 'Жирный' },
+  ]
   const setChatPatch = useWidgetSettingsStore(s => s.setChatPatch)
   const fileRef = useRef<HTMLInputElement | null>(null)
   const [logoError, setLogoError] = useState('')
@@ -49,6 +66,33 @@ const ChatHeaderSettings = () => {
 
   return (
     <div className="w-full min-w-122 flex flex-col gap-5">
+      {/* Оператор: имя и подзаголовок (компактная шапка экрана чата) */}
+      <BorderedContainer>
+        <div className="w-full flex flex-col gap-4">
+          <span className="text-[20px] leading-6 font-semibold text-[#1A1A1A]">Оператор</span>
+          <input
+            value={operatorName}
+            onChange={e => setChatPatch({ operatorName: e.target.value })}
+            placeholder="Имя оператора"
+            maxLength={40}
+            className={cn(
+              'w-full rounded-[12px] border border-[#E4E4E7] px-4 py-3',
+              'text-[18px] leading-6 text-[#1A1A1A] outline-none focus:border-[#5951E5]',
+            )}
+          />
+          <input
+            value={operatorSubtitle}
+            onChange={e => setChatPatch({ operatorSubtitle: e.target.value })}
+            placeholder="Подзаголовок (например: Супер гид города)"
+            maxLength={60}
+            className={cn(
+              'w-full rounded-[12px] border border-[#E4E4E7] px-4 py-3',
+              'text-[18px] leading-6 text-[#1A1A1A] outline-none focus:border-[#5951E5]',
+            )}
+          />
+        </div>
+      </BorderedContainer>
+
       {/* Логотип компании */}
       <BorderedContainer>
         <div className="w-full flex flex-col gap-4">
@@ -153,6 +197,29 @@ const ChatHeaderSettings = () => {
                 initialColor={welcomeTitleColor}
                 onColorChange={v => setChatPatch({ welcomeTitleColor: v })}
               />
+            </div>
+
+            {/* Толщина шрифта */}
+            <div className="flex items-center gap-2.5">
+              <span className="text-[18px] text-[#1A1A1A] whitespace-nowrap">Толщина</span>
+              <div className="inline-flex rounded-[10px] border border-[#E4E4E7] overflow-hidden h-11">
+                {WEIGHTS.map((w, i) => (
+                  <button
+                    key={w.value}
+                    type="button"
+                    aria-pressed={welcomeTitleWeight === w.value}
+                    onClick={() => setChatPatch({ welcomeTitleWeight: w.value })}
+                    style={{ fontWeight: w.value }}
+                    className={cn(
+                      'px-3.5 flex items-center justify-center text-[15px] transition-colors',
+                      i > 0 && 'border-l border-[#E4E4E7]',
+                      welcomeTitleWeight === w.value ? 'bg-[#EEEDFB] text-[#5951E5]' : 'text-[#6E6E76] hover:bg-[#F4F4F6]',
+                    )}
+                  >
+                    {w.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

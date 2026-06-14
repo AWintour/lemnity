@@ -12,6 +12,9 @@ import { chatWidgetDefaults as defaults } from './defaults'
 
 const ACCENT = '!bg-[#5951E5]'
 
+// Аи-агент временно отключён (скоро). Тумблер недоступен, настройки скрыты.
+const AI_AGENT_COMING_SOON = true
+
 const ChatAiAgentSettings = () => {
   const { enabled, name, knowledge } = useWidgetSettingsStore(
     useShallow(s => {
@@ -37,20 +40,30 @@ const ChatAiAgentSettings = () => {
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-[20px] leading-6 font-semibold text-[#1A1A1A]">Аи агент</h2>
           <div className="flex items-center gap-3">
-            <span className="text-[14px] leading-4 text-white bg-[#FF4D4D] rounded-full px-3 py-1.5">
-              Платно
+            <span className="text-[14px] leading-4 text-white bg-[#9A96A2] rounded-full px-3 py-1.5">
+              {AI_AGENT_COMING_SOON ? 'Скоро' : 'Платно'}
             </span>
             <CustomSwitch
               size="sm"
-              isSelected={enabled}
-              onValueChange={v => setChatPatch({ aiAgentEnabled: v })}
+              isSelected={AI_AGENT_COMING_SOON ? false : enabled}
+              isDisabled={AI_AGENT_COMING_SOON}
+              onValueChange={v => {
+                if (AI_AGENT_COMING_SOON) return
+                setChatPatch({ aiAgentEnabled: v })
+              }}
               selectedColor={ACCENT}
             />
           </div>
         </div>
 
+        {AI_AGENT_COMING_SOON && (
+          <p className="text-[16px] leading-5.5 text-[#9A9A9A]">
+            Аи-агент скоро будет доступен — мы готовим эту возможность.
+          </p>
+        )}
+
         <AnimatePresence initial={false}>
-          {enabled && (
+          {!AI_AGENT_COMING_SOON && enabled && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}

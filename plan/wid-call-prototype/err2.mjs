@@ -1,0 +1,11 @@
+import { chromium } from '/Users/thesimakov/.npm/_npx/705bc6b22212b352/node_modules/playwright/index.mjs';
+const b = await chromium.launch();
+const p = await (await b.newContext()).newPage();
+const errs=[]; p.on('pageerror',e=>errs.push('PE: '+e.message)); p.on('console',m=>{if(m.type()==='error'&&!/Zod schema|ERR_FAILED|Failed to load/.test(m.text()))errs.push(m.text().slice(0,240));});
+await p.goto('http://localhost:5173/preview/callback.html',{waitUntil:'domcontentloaded'});
+await p.waitForTimeout(2500);
+await p.getByRole('button',{name:'Просмотр'}).click();
+await p.waitForTimeout(1200);
+console.log('FAB count:', await p.locator('button[aria-label="Обратный звонок"]').count());
+console.log('ERRORS:\n'+(errs.slice(0,10).join('\n')||'none'));
+await b.close();

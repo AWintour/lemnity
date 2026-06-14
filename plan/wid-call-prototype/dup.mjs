@@ -1,0 +1,12 @@
+import { chromium } from '/Users/thesimakov/.npm/_npx/705bc6b22212b352/node_modules/playwright/index.mjs';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:1320,height:1100}, deviceScaleFactor:2 });
+await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+const p = await ctx.newPage();
+const errs=[]; p.on('pageerror',e=>errs.push('PAGEERR: '+e.message)); p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+await p.goto('http://localhost:5173/preview/callback.html',{waitUntil:'domcontentloaded'});
+await p.waitForTimeout(3500);
+console.log('ROOT:', JSON.stringify(await p.evaluate(()=>document.getElementById('root')?.innerText?.slice(0,120))));
+console.log('ERR:', errs.slice(0,10).join(' | ')||'none');
+await p.screenshot({ path:'dup-editor.png' });
+await b.close();

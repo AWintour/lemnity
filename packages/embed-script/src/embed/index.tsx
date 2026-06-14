@@ -1,6 +1,6 @@
 import type { InitOptions } from './types'
 import EmbedManager from './embedManager'
-import { collectEmbedWidgetIds } from './utils'
+import { collectEmbedProjectIds, collectEmbedWidgetIds, fetchPublicProjectWidgets } from './utils'
 
 // По одному менеджеру на widgetId: один EmbedManager хостит ровно один виджет
 // (init вызывает destroy предыдущего). Так одно исполнение может смонтировать несколько
@@ -37,6 +37,23 @@ const autoInitFromQuery = () => {
   console.debug('[LemnityWidgets] autoInit widgetIds', widgetIds)
   widgetIds.forEach(widgetId => {
     api.init({ widgetId }).catch(err => console.error('[LemnityWidgets]', err))
+  })
+
+  // Проектное размещение: один тег ?projectId=... → все включённые виджеты проекта одним
+  // запросом. Конфиги прокидываем как payload, чтобы менеджеры не делали повторных запросов.
+  // Дедуп с одиночными ?widgetId= тегами обеспечивает гард __lemnityMounted в EmbedManager.
+  const projectIds = collectEmbedProjectIds()
+  console.debug('[LemnityWidgets] autoInit projectIds', projectIds)
+  projectIds.forEach(projectId => {
+    fetchPublicProjectWidgets(projectId)
+      .then(widgets => {
+        widgets.forEach(payload => {
+          api.init({ widgetId: payload.id, payload }).catch(err =>
+            console.error('[LemnityWidgets]', err)
+          )
+        })
+      })
+      .catch(err => console.error('[LemnityWidgets]', err))
   })
 }
 

@@ -49,6 +49,8 @@ type UseChatConnectionResult = {
   markRead: () => void
   // Сохраняет контакт посетителя в диалог (visitorName/Phone/Email), чтобы он был в карточке оператора.
   updateContact: (contact: VisitorContact) => void
+  // Закрывает диалог на сервере (status: 'closed') — по действию «Завершить диалог».
+  closeConversation: () => void
 }
 
 const fetchJson = async <T>(url: string, init?: RequestInit): Promise<T | null> => {
@@ -138,6 +140,13 @@ export const useChatConnection = (
     }
   }, [args.preview])
 
+  const closeConversation = useCallback(() => {
+    const id = conversationIdRef.current
+    if (!args.preview && id) {
+      socketRef.current?.emit('conversation:close', { conversationId: id })
+    }
+  }, [args.preview])
+
   // Контакт сохраняется повторным POST'ом на создание диалога: upsert обновляет
   // visitorName/Phone/Email у существующего диалога (см. ChatService.getOrCreateConversation).
   const updateContact = useCallback((contact: VisitorContact) => {
@@ -154,5 +163,5 @@ export const useChatConnection = (
     })
   }, [args.preview, args.widgetId])
 
-  return { operatorOnline, sendToOperator, markRead, updateContact }
+  return { operatorOnline, sendToOperator, markRead, updateContact, closeConversation }
 }

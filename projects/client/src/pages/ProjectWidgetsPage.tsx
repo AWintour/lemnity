@@ -16,6 +16,8 @@ import WidgetCategoryFilter, {
 } from '@/layouts/WidgetCard/WidgetCategoryFilter'
 import { WidgetTypeEnum, UserRoleEnum, type CreateWidgetDtoTypeEnum } from '@lemnity/api-sdk'
 import useUserStore from '@/stores/userStore'
+import { buildProjectEmbedSnippet } from '@/config/embed'
+import EmbedSnippetBox from '@/layouts/WidgetSettings/IntegrationTab/EmbedSnippetBox'
 
 // Виджеты, доступные пока только администратору (тестовый период).
 // После проверки — убрать из набора, чтобы открыть всем.
@@ -58,6 +60,11 @@ const ProjectWidgetsPage = (): ReactElement => {
 
   const projectName = project?.name || ''
   const widgets = useMemo(() => project?.widgets || [], [project?.widgets])
+  // Общий проектный скрипт: один тег подтягивает все включённые виджеты проекта (до 3).
+  const projectSnippet = useMemo(
+    () => (projectId ? buildProjectEmbedSnippet(projectId) : ''),
+    [projectId]
+  )
 
   const user = useUserStore(s => s.user)
   const isAdmin =
@@ -225,6 +232,22 @@ const ProjectWidgetsPage = (): ReactElement => {
           <hr className="border-[#C0C0C0]" />
           <div className="flex flex-col gap-[15px] h-full overflow-y-auto">
             {getProjectWidgets()}
+            <hr className="border-[#C0C0C0]" />
+            <div className="flex flex-col gap-[10px] pb-1">
+              <span className="text-xl font-display">Код для вставки</span>
+              <EmbedSnippetBox
+                snippet={projectSnippet}
+                title="Один скрипт для всего проекта"
+                emptyText="Код станет доступен после загрузки проекта."
+                helpText={
+                  <>
+                    Добавьте код на все страницы (внутри &lt;head&gt; или перед &lt;/body&gt;).
+                    <br />
+                    Один тег подтянет все включённые виджеты проекта (до 3).
+                  </>
+                }
+              />
+            </div>
           </div>
         </div>
       </DashboardLayout>

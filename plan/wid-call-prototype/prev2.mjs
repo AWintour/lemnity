@@ -1,0 +1,10 @@
+import { chromium } from '/Users/thesimakov/.npm/_npx/705bc6b22212b352/node_modules/playwright/index.mjs';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:1320,height:900}, deviceScaleFactor:2 });
+await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+const p = await ctx.newPage();
+await p.addInitScript(()=>{ try{ const r=localStorage.getItem('widget-settings'); if(r){const m=JSON.parse(r); delete m['cb-preview']; localStorage.setItem('widget-settings',JSON.stringify(m));} }catch{} });
+await p.goto('http://localhost:5173/preview/callback.html',{waitUntil:'domcontentloaded'});
+await p.waitForTimeout(3200);
+await p.screenshot({ path:'preview-layout2.png', clip:{x:868,y:28,width:452,height:760} });
+await b.close(); console.log('ok');

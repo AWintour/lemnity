@@ -261,6 +261,10 @@ export class WidgetService {
       throw new ForbiddenException('Project not found or access denied')
     }
 
+    if (createWidgetDto.enabled === true) {
+      await this.assertEnableLimit(createWidgetDto.projectId)
+    }
+
     const data: Prisma.WidgetCreateInput = {
       name: createWidgetDto.name,
       type: createWidgetDto.type,
@@ -362,14 +366,7 @@ export class WidgetService {
     if (!widget || !widget.enabled) {
       throw new NotFoundException('Widget not found')
     }
-    if (!originHost) throw new ForbiddenException('Origin is required')
-    const isProd = process.env.NODE_ENV === 'production'
-    if (isProd || !isDevOriginHostAllowed(originHost)) {
-      const websiteHosts = extractWebsiteHosts(widget.project.websiteUrl)
-      if (!websiteHosts.length || !isHostAllowedByWebsiteHosts(originHost, websiteHosts)) {
-        throw new ForbiddenException('Origin is not allowed')
-      }
-    }
+    this.assertOriginAllowed(originHost, widget.project.websiteUrl)
 
     if (widget.config) {
       const { data } = migrateToCurrent(widget.config as unknown, widget.configVersion ?? undefined)
@@ -391,9 +388,81 @@ export class WidgetService {
     }
   }
 
+  // Один проектный embed-тег (?projectId=...) подтягивает все включённые виджеты проекта
+  // одним запросом. Те же условия активности, что и у findPublic (enabled + project.enabled +
+  // paidUntil). Origin проверяем один раз по сайту проекта. take: 3 — защитный потолок,
+  // бизнес-лимит «не более 3 включённых» гарантируется валидацией при включении.
+  async findPublicByProject(projectId: string, originHost: string | null) {
+    const widgets = await this.prisma.widget.findMany({
+      where: {
+        projectId,
+        enabled: true,
+        project: { enabled: true },
+        OR: [{ paidUntil: null }, { paidUntil: { gt: new Date() } }]
+      },
+      select: {
+        id: true,
+        projectId: true,
+        type: true,
+        enabled: true,
+        config: true,
+        configVersion: true,
+        project: { select: { websiteUrl: true } }
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 3
+    })
+
+    if (!widgets.length) {
+      throw new NotFoundException('No enabled widgets for project')
+    }
+    this.assertOriginAllowed(originHost, widgets[0].project.websiteUrl)
+
+    return widgets.map(widget => {
+      const config = widget.config
+        ? (migrateToCurrent(widget.config as unknown, widget.configVersion ?? undefined)
+            .data as Prisma.JsonValue)
+        : null
+      return {
+        id: widget.id,
+        projectId: widget.projectId,
+        type: widget.type,
+        enabled: widget.enabled,
+        config
+      }
+    })
+  }
+
+  // Origin сайта-встройки должен совпадать с websiteUrl проекта. В dev допускаем localhost/LAN.
+  private assertOriginAllowed(originHost: string | null, websiteUrl: string) {
+    if (!originHost) throw new ForbiddenException('Origin is required')
+    const isProd = process.env.NODE_ENV === 'production'
+    if (isProd || !isDevOriginHostAllowed(originHost)) {
+      const websiteHosts = extractWebsiteHosts(websiteUrl)
+      if (!websiteHosts.length || !isHostAllowedByWebsiteHosts(originHost, websiteHosts)) {
+        throw new ForbiddenException('Origin is not allowed')
+      }
+    }
+  }
+
+  // Бизнес-лимит: не более 3 включённых виджетов на проект. excludeId — текущий виджет,
+  // чтобы повторное включение уже включённого не считалось дважды.
+  private async assertEnableLimit(projectId: string, excludeId?: string) {
+    const enabledCount = await this.prisma.widget.count({
+      where: { projectId, enabled: true, ...(excludeId ? { id: { not: excludeId } } : {}) }
+    })
+    if (enabledCount >= 3) {
+      throw new BadRequestException('Можно включить не более 3 виджетов на проект')
+    }
+  }
+
   async update(id: string, updateWidgetDto: UpdateWidgetDto, userId: string) {
     // First verify access
-    await this.findOne(id, userId)
+    const existing = await this.findOne(id, userId)
+
+    if (updateWidgetDto.enabled === true) {
+      await this.assertEnableLimit(existing.projectId, id)
+    }
 
     const data: Prisma.WidgetUpdateInput = {}
     if (updateWidgetDto.name !== undefined) data.name = updateWidgetDto.name
@@ -424,7 +493,11 @@ export class WidgetService {
 
   async toggleEnabled(id: string, enabled: boolean, userId: string) {
     // First verify access
-    await this.findOne(id, userId)
+    const existing = await this.findOne(id, userId)
+
+    if (enabled) {
+      await this.assertEnableLimit(existing.projectId, id)
+    }
 
     return this.prisma.widget.update({
       where: { id },

@@ -33,18 +33,22 @@ export const chatWidgetDefaults: ChatWidgetType = {
   triggerPosition: 'bottom-right',
 
   operatorName: 'Поддержка',
+  operatorSubtitle: 'Супер гид города',
   operatorAvatarUrl: undefined,
 
   companyLogo: { enabled: true, fileName: undefined, url: undefined },
 
   welcomeTitle: 'Приветствуем!\nЭто наш умный чат для удобства связи с нами.',
-  welcomeTitleSize: 24,
+  welcomeTitleSize: 20,
+  welcomeTitleWeight: 600,
   welcomeTitleColor: '#FFFFFF',
   welcomeTitleAlign: 'left',
 
   greetingMessage: 'Здравствуйте! Чем можем помочь?',
   onlineMessage: 'Операторы онлайн\nОтвечаем в течение 3 мин.',
+  onlineMessageEnabled: true,
   offlineMessage: 'Увы, но сейчас нас здесь нет.\nМы вернемся в рабочее время пн-пт с 09:00 по 19:00 мск',
+  offlineMessageEnabled: true,
   placeholder: 'Напишите сообщение…',
   windowFormat: 'modal',
   windowRadius: 18,
@@ -60,7 +64,8 @@ export const chatWidgetDefaults: ChatWidgetType = {
 
   personalizedGreetings: true,
 
-  aiAgentEnabled: true,
+  // Аи-агент временно отключён (скоро) — см. ChatAiAgentSettings (AI_AGENT_COMING_SOON).
+  aiAgentEnabled: false,
   aiAgentName: 'Лемми',
   aiKnowledge: ['Тарифы и оплата', 'Возможности виджетов', 'Как подключить чат'],
 

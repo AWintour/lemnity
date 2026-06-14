@@ -1,0 +1,16 @@
+import { chromium } from '/Users/thesimakov/.npm/_npx/705bc6b22212b352/node_modules/playwright/index.mjs';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:760,height:900}, deviceScaleFactor:2 });
+await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+const p = await ctx.newPage();
+await p.addInitScript(()=>{ try{ const r=localStorage.getItem('widget-settings'); if(r){const m=JSON.parse(r); delete m['cb-preview']; localStorage.setItem('widget-settings',JSON.stringify(m));} }catch{} });
+await p.goto('http://localhost:5173/preview/callback.html',{waitUntil:'domcontentloaded'});
+await p.waitForTimeout(3000);
+await (await p.$('button:has-text("Просмотр")')).click();
+await p.waitForTimeout(700);
+const tel = await p.$('input[type=tel]'); await tel.click(); await tel.type('9991234567',{delay:15});
+await p.waitForTimeout(200);
+await (await p.$('button:has-text("Жду звонка")')).click();
+await p.waitForTimeout(900);
+await p.screenshot({ path:'w-call.png' });
+await b.close();

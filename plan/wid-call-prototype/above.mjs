@@ -1,0 +1,17 @@
+import { chromium } from '/Users/thesimakov/.npm/_npx/705bc6b22212b352/node_modules/playwright/index.mjs';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:1000,height:820}, deviceScaleFactor:2 });
+await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+const p = await ctx.newPage();
+const errs=[]; p.on('pageerror',e=>errs.push(e.message));
+await p.addInitScript(()=>{ try{ const r=localStorage.getItem('widget-settings'); if(r){const m=JSON.parse(r); delete m['cb-preview']; localStorage.setItem('widget-settings',JSON.stringify(m));} }catch{} });
+await p.goto('http://localhost:5173/preview/callback.html',{waitUntil:'domcontentloaded'});
+await p.waitForTimeout(2800);
+await p.getByRole('button',{name:'Просмотр'}).click();
+await p.waitForTimeout(400);
+await p.locator('button[aria-label="Обратный звонок"]').click();
+await p.waitForTimeout(600);
+console.log('ERR:', errs.slice(0,5).join(' | ')||'none');
+console.log('close button present:', await p.locator('button[aria-label="Закрыть"]').count());
+await p.screenshot({ path:'above-form.png' });
+await b.close(); console.log('ok');

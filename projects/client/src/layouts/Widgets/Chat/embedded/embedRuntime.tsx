@@ -23,8 +23,33 @@ import type { ChatWidgetType, Scenario } from '@lemnity/widget-config/widgets/ch
 import { chatWidgetDefaults as defaults } from '../defaults'
 import type { ChatUiMessage } from './types'
 import type { QuickReply } from './Widget'
+import { exportChatToPdf } from './exportPdf'
 
 type ChatView = 'home' | 'chat' | 'form' | 'contacts' | 'callback'
+
+// Окно, скролл которого определяет авто-открытие по прокрутке. Виджет живёт в srcdoc-iframe
+// (тот же origin) → визитёр скроллит родительскую страницу. Если доступа нет — своё окно.
+const getScrollHost = (): Window => {
+  try {
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+      void window.parent.document // проверка доступа (same-origin)
+      return window.parent
+    }
+  } catch {
+    /* кросс-ориджин — используем собственное окно */
+  }
+  return window
+}
+
+// Процент вертикальной прокрутки страницы (0–100).
+const scrollPercent = (w: Window): number => {
+  const doc = w.document?.documentElement
+  if (!doc) return 0
+  const scrollTop = w.scrollY || doc.scrollTop || 0
+  const max = doc.scrollHeight - w.innerHeight
+  if (max <= 0) return 0
+  return Math.min(100, (scrollTop / max) * 100)
+}
 
 type ChatEmbedRuntimeProps = {
   preview?: boolean
@@ -38,15 +63,19 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     triggerBackgroundColor,
     triggerPosition,
     operatorName,
+    operatorSubtitle,
     operatorAvatarUrl,
     companyLogo,
     welcomeTitle,
     welcomeTitleSize,
+    welcomeTitleWeight,
     welcomeTitleColor,
     welcomeTitleAlign,
     greetingMessage,
     onlineMessage,
+    onlineMessageEnabled,
     offlineMessage,
+    offlineMessageEnabled,
     placeholder,
     windowFormat,
     windowRadius,
@@ -55,6 +84,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     clientColor,
     autoOpen,
     delay,
+    afterOpenEnabled,
+    scrollOpenEnabled,
+    scrollOpenPercent,
     brandingEnabled,
     soundEnabled,
     scenario,
@@ -75,15 +107,19 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         triggerPosition: settings.triggerPosition ?? defaults.triggerPosition,
 
         operatorName: settings.operatorName ?? defaults.operatorName,
+        operatorSubtitle: settings.operatorSubtitle ?? defaults.operatorSubtitle,
         operatorAvatarUrl: settings.operatorAvatarUrl ?? defaults.operatorAvatarUrl,
         companyLogo: settings.companyLogo ?? defaults.companyLogo,
         welcomeTitle: settings.welcomeTitle ?? defaults.welcomeTitle,
         welcomeTitleSize: settings.welcomeTitleSize ?? defaults.welcomeTitleSize,
+        welcomeTitleWeight: settings.welcomeTitleWeight ?? defaults.welcomeTitleWeight ?? 600,
         welcomeTitleColor: settings.welcomeTitleColor ?? defaults.welcomeTitleColor,
         welcomeTitleAlign: settings.welcomeTitleAlign ?? defaults.welcomeTitleAlign,
         greetingMessage: settings.greetingMessage ?? defaults.greetingMessage,
         onlineMessage: settings.onlineMessage ?? defaults.onlineMessage,
+        onlineMessageEnabled: settings.onlineMessageEnabled ?? defaults.onlineMessageEnabled ?? true,
         offlineMessage: settings.offlineMessage ?? defaults.offlineMessage,
+        offlineMessageEnabled: settings.offlineMessageEnabled ?? defaults.offlineMessageEnabled ?? true,
         placeholder: settings.placeholder ?? defaults.placeholder,
         windowFormat: settings.windowFormat ?? defaults.windowFormat,
         windowRadius: settings.windowRadius ?? defaults.windowRadius,
@@ -94,6 +130,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
 
         autoOpen: settings.autoOpen ?? defaults.autoOpen,
         delay: settings.delay ?? defaults.delay,
+        afterOpenEnabled: settings.afterOpenEnabled ?? defaults.afterOpenEnabled ?? true,
+        scrollOpenEnabled: (settings.scrollOpen ?? defaults.scrollOpen).enabled,
+        scrollOpenPercent: (settings.scrollOpen ?? defaults.scrollOpen).percent,
 
         brandingEnabled: settings.brandingEnabled ?? defaults.brandingEnabled,
         soundEnabled: settings.soundEnabled ?? defaults.soundEnabled,
@@ -115,16 +154,48 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   // 'home' — первый экран (меню), 'chat' — переписка, 'form'/'callback' — формы, 'contacts' — вкладка.
   const [view, setView] = useState<ChatView>('home')
   const [formHeader, setFormHeader] = useState('Чат с менеджерами')
-  // Стек экранов — кнопка «Назад» возвращает на предыдущий.
-  const historyRef = useRef<ChatView[]>([])
-  const navigate = useCallback((next: ChatView) => {
-    setView(prev => {
-      if (prev !== next) historyRef.current.push(prev)
-      return next
+
+  // Снимок состояния экрана для корректного «Назад»: восстанавливаем не только view,
+  // но и шаг сценария, режим и длину ленты (иначе на первом экране остаётся чужой шаг).
+  type NavSnapshot = {
+    view: ChatView
+    stepId: string | null
+    mode: 'bot' | 'operator'
+    messageCount: number
+  }
+  const historyRef = useRef<NavSnapshot[]>([])
+  // Зеркала состояния в ref — чтобы снимок брал свежие значения без устаревших замыканий.
+  const viewRef = useRef(view); viewRef.current = view
+  const stepIdRef = useRef(currentStepId); stepIdRef.current = currentStepId
+  const modeRef = useRef(mode); modeRef.current = mode
+  const messagesRef = useRef(messages); messagesRef.current = messages
+
+  const pushHistory = useCallback(() => {
+    historyRef.current.push({
+      view: viewRef.current,
+      stepId: stepIdRef.current,
+      mode: modeRef.current,
+      messageCount: messagesRef.current.length,
     })
   }, [])
+
+  // Переход на новый экран/шаг: сначала фиксируем текущее состояние в историю.
+  const navigate = useCallback((next: ChatView) => {
+    pushHistory()
+    setView(next)
+  }, [pushHistory])
+
+  // «Назад»: восстанавливаем полный снимок предыдущего экрана (view + шаг + режим + лента).
   const goBack = useCallback(() => {
-    setView(historyRef.current.pop() ?? 'home')
+    const snap = historyRef.current.pop()
+    if (!snap) {
+      setView('home')
+      return
+    }
+    setView(snap.view)
+    setCurrentStepId(snap.stepId)
+    setMode(snap.mode)
+    setMessages(prev => prev.slice(0, snap.messageCount))
   }, [])
   const [unreadCount, setUnreadCount] = useState(0)
   const openRef = useRef(false)
@@ -183,15 +254,16 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     })
   }, [playMessageSound])
 
-  const { operatorOnline, sendToOperator, markRead, updateContact } = useChatConnection({
+  const { operatorOnline, sendToOperator, markRead, updateContact, closeConversation } = useChatConnection({
     widgetId: useWidgetSettingsStore.getState().settings?.id,
     preview: props.preview,
     onIncoming: append,
   })
 
-  // Сид: при включённом сценарии лента пустая (приветствие — крупным заголовком в шапке,
-  // варианты — кнопки стартового шага). Без сценария — приветствие отдельным сообщением.
-  useEffect(() => {
+  // Сброс к первому экрану: при включённом сценарии лента пустая (приветствие — крупным
+  // заголовком в шапке, варианты — кнопки стартового шага). Без сценария — приветствие
+  // отдельным сообщением сразу в переписке. Используется для сида и «Завершить диалог».
+  const resetConversation = useCallback(() => {
     historyRef.current = []
     if (scenario.enabled) {
       const start = stepById.get(scenario.startStepId)
@@ -207,15 +279,52 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     }
     setMode('bot')
     setOfflineSent(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [greetingMessage, scenario, props.preview])
+  }, [scenario, stepById, greetingMessage])
 
-  // Автооткрытие окна.
+  useEffect(() => {
+    resetConversation()
+  }, [resetConversation, props.preview])
+
+  // Автооткрытие окна: два независимых триггера (оба под общим тумблером autoOpen):
+  //  • по времени — через delay секунд (если включён afterOpenEnabled);
+  //  • по скроллу — когда страница прокручена ниже scrollOpenPercent% (если включён scrollOpenEnabled).
+  // Виджет встроен в srcdoc-iframe (тот же origin), поэтому скролл считаем у родительской
+  // страницы (window.parent); при недоступности — фоллбэк на собственное окно.
   useEffect(() => {
     if (props.preview || !autoOpen) return
-    const timer = setTimeout(() => setOpen(true), delay * 1000)
-    return () => clearTimeout(timer)
-  }, [props.preview, autoOpen, delay])
+    if (openRef.current) return
+
+    let done = false
+    const openOnce = () => {
+      if (done || openRef.current) return
+      done = true
+      setOpen(true)
+      cleanup()
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined
+    if (afterOpenEnabled) {
+      timer = setTimeout(openOnce, Math.max(0, delay) * 1000)
+    }
+
+    let scrollHost: Window | null = null
+    let onScroll: (() => void) | undefined
+    if (scrollOpenEnabled) {
+      scrollHost = getScrollHost()
+      onScroll = () => {
+        if (scrollHost && scrollPercent(scrollHost) >= scrollOpenPercent) openOnce()
+      }
+      scrollHost.addEventListener('scroll', onScroll, { passive: true })
+      onScroll() // вдруг страница уже прокручена ниже порога
+    }
+
+    function cleanup() {
+      if (timer) clearTimeout(timer)
+      if (scrollHost && onScroll) scrollHost.removeEventListener('scroll', onScroll)
+    }
+
+    return cleanup
+  }, [props.preview, autoOpen, afterOpenEnabled, delay, scrollOpenEnabled, scrollOpenPercent])
 
   // Кнопки текущего шага показываем всегда (закреплены над текстом); в режиме оператора
   // Widget рендерит их неактивными (см. chatActive). Поэтому без гейта по mode.
@@ -223,7 +332,14 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     if (!scenario.enabled || !currentStepId) return []
     const step = stepById.get(currentStepId)
     if (!step) return []
-    return step.buttons.map(b => ({ id: b.id, emoji: b.emoji, label: b.label, isHandoff: b.next === null }))
+    // Кнопки-«Назад» сценария не показываем — возврат есть иконкой в шапке.
+    const isBackButton = (label: string) => {
+      const t = label.replace(/^[\s←⟵«»<-]+/, '').trim().toLowerCase()
+      return t === 'назад' || t === 'back'
+    }
+    return step.buttons
+      .filter(b => !isBackButton(b.label))
+      .map(b => ({ id: b.id, emoji: b.emoji, label: b.label, isHandoff: b.next === null }))
   }, [scenario.enabled, currentStepId, stepById])
 
   const nowIso = () => new Date().toISOString()
@@ -304,6 +420,17 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
 
   // Кнопка «Назад» — всегда на предыдущий экран.
   const handleBack = goBack
+
+  // Меню три-точки: «Завершить диалог» — закрываем на сервере и возвращаемся на первый экран.
+  const handleEndDialog = useCallback(() => {
+    closeConversation()
+    resetConversation()
+  }, [closeConversation, resetConversation])
+
+  // «Скачать диалог» — PDF всей видимой переписки (jsPDF подгружается динамически).
+  const handleDownloadDialog = useCallback(() => {
+    void exportChatToPdf(messages, { operatorName, title: 'Переписка' })
+  }, [messages, operatorName])
 
   // Вкладки окна.
   const handleTabChat = useCallback(() => navigate(messages.length ? 'chat' : 'home'), [messages.length, navigate])
@@ -423,10 +550,13 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
 
   const widgetProps = {
     operatorName,
+    operatorSubtitle,
     operatorAvatarUrl,
     operatorOnline,
     onlineMessage,
+    onlineMessageEnabled,
     offlineMessage,
+    offlineMessageEnabled,
     placeholder,
     windowFormat,
     windowRadius,
@@ -436,6 +566,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     companyLogoUrl: companyLogo.enabled ? companyLogo.url : undefined,
     welcomeTitle,
     welcomeTitleSize,
+    welcomeTitleWeight,
     welcomeTitleColor,
     welcomeTitleAlign,
     messages,
@@ -448,12 +579,15 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     preview: props.preview,
     chatActive: mode === 'operator',
     offlineSent,
+    canGoBack: historyRef.current.length > 0,
     onSend: handleSend,
     onEnterChat: handleEnterChat,
     onOfflineSend: handleOfflineMessage,
     onQuickReply: handleQuickReply,
     onSubmitForm: handleSubmitForm,
     onBack: handleBack,
+    onEndDialog: handleEndDialog,
+    onDownloadDialog: handleDownloadDialog,
     onTabChat: handleTabChat,
     onTabContacts: handleTabContacts,
     onTabAi: handleTabAi,
