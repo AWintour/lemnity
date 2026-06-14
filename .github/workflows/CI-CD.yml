@@ -177,13 +177,15 @@ jobs:
 
             cd ${{ secrets.PROD_APP_DIR }}
 
-            echo "==> Update repo on server (git pull)"
+            echo "==> Update repo on server (sync to origin/main)"
             if [ -d .git ]; then
+              # Прод — зеркало origin/main. reset --hard вместо git pull, чтобы деплой не падал
+              # при расхождении/перезаписи истории (force-push). Локальные правки на проде не ожидаются.
               git fetch origin
-              git checkout main
-              git pull origin main
+              git checkout -f main
+              git reset --hard origin/main
             else
-              echo "WARNING: .git not found in PROD_APP_DIR, skip git pull"
+              echo "WARNING: .git not found in PROD_APP_DIR, skip git sync"
             fi
 
             IMAGE_TAG="${{ env.IMAGE_TAG }}"
