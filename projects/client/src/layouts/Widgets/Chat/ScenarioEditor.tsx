@@ -21,6 +21,7 @@ import EmojiPicker from '@/components/EmojiPicker'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useProjectsStore } from '@/stores/projectsStore'
 import * as chatModule from '@/services/chatModule'
+import { uploadImage, MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE } from '@/api/upload'
 import { uuidv4 } from '@/common/utils/uuidv4'
 
 import type {
@@ -56,6 +57,7 @@ type StepNodeData = {
 const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
   const { step, isStart } = data
   const fileRef = useRef<HTMLInputElement>(null)
+  const [imgError, setImgError] = useState('')
 
   return (
     <div className="w-[270px] rounded-[12px] border border-[#D9D7E2] bg-white shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
@@ -112,11 +114,17 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
               className="hidden"
               onChange={e => {
                 const f = e.target.files?.[0]
-                if (!f) return
-                const reader = new FileReader()
-                reader.onload = () => data.onImage(step.id, String(reader.result))
-                reader.readAsDataURL(f)
                 e.target.value = ''
+                if (!f) return
+                if (f.size > MAX_IMAGE_BYTES) {
+                  setImgError(IMAGE_TOO_LARGE_MESSAGE)
+                  return
+                }
+                setImgError('')
+                // Грузим в персональное хранилище → URL (не data-URL в конфиге).
+                uploadImage(f)
+                  .then(({ url }) => data.onImage(step.id, url))
+                  .catch(() => setImgError('Не удалось загрузить. ' + IMAGE_TOO_LARGE_MESSAGE))
               }}
             />
             <button
@@ -126,6 +134,7 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
             >
               🖼️ Добавить изображение
             </button>
+            {imgError && <span className="nodrag text-[11px] text-[#E5484D]">{imgError}</span>}
           </>
         )}
 

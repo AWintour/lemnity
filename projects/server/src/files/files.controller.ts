@@ -10,12 +10,16 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import multer from 'multer'
 import { randomUUID } from 'crypto'
 import { S3Service } from '../storage/s3.service'
+import { Auth } from '../auth/decorators/auth.decorator'
+import { CurrentUser } from '../auth/decorators/user.decorator'
 import * as path from 'path'
 
 const memoryStorage = multer.memoryStorage()
-const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024 // 25 MB
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB — больше нельзя (статус «Уменьшите размер файла»)
 const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
 
+// Файлы складываются в персональную «ячейку» пользователя: users/{userId}/...
+@Auth()
 @Controller('files')
 export class FilesController {
   constructor(private readonly s3: S3Service) {}
@@ -44,11 +48,11 @@ export class FilesController {
     return file.mimetype
   }
 
-  private buildImagesPrefix(): string {
+  private buildImagesPrefix(userId: string): string {
     const now = new Date()
     const yyyy = String(now.getFullYear())
     const mm = String(now.getMonth() + 1).padStart(2, '0')
-    return `images/${yyyy}/${mm}`
+    return `users/${userId}/images/${yyyy}/${mm}`
   }
 
   private assertAllowedVideo(file: Express.Multer.File): string {
@@ -59,11 +63,11 @@ export class FilesController {
     return file.mimetype
   }
 
-  private buildVideosPrefix(): string {
+  private buildVideosPrefix(userId: string): string {
     const now = new Date()
     const yyyy = String(now.getFullYear())
     const mm = String(now.getMonth() + 1).padStart(2, '0')
-    return `videos/${yyyy}/${mm}`
+    return `users/${userId}/videos/${yyyy}/${mm}`
   }
 
   @Post('images')
@@ -73,7 +77,11 @@ export class FilesController {
       limits: { fileSize: MAX_FILE_SIZE_BYTES }
     })
   )
-  async uploadImage(@UploadedFile() file: Express.Multer.File, @Query('cache') cache?: string) {
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
+    @Query('cache') cache?: string
+  ) {
     if (!file) {
       throw new BadRequestException('File is required')
     }
@@ -82,7 +90,7 @@ export class FilesController {
       throw new BadRequestException('S3_BUCKET_UPLOADS is not configured on server')
     }
     const contentType = this.assertAllowedImage(file)
-    const prefix = this.buildImagesPrefix()
+    const prefix = this.buildImagesPrefix(userId)
     const sanitized = this.sanitizeFileName(file.originalname)
     const key = `${randomUUID()}-${sanitized}`
     await this.s3.putObject({
@@ -105,7 +113,11 @@ export class FilesController {
       limits: { fileSize: MAX_VIDEO_SIZE_BYTES }
     })
   )
-  async uploadVideo(@UploadedFile() file: Express.Multer.File, @Query('cache') cache?: string) {
+  async uploadVideo(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
+    @Query('cache') cache?: string
+  ) {
     if (!file) {
       throw new BadRequestException('File is required')
     }
@@ -114,7 +126,7 @@ export class FilesController {
       throw new BadRequestException('S3_BUCKET_UPLOADS is not configured on server')
     }
     const contentType = this.assertAllowedVideo(file)
-    const prefix = this.buildVideosPrefix()
+    const prefix = this.buildVideosPrefix(userId)
     const sanitized = this.sanitizeFileName(file.originalname)
     const key = `${randomUUID()}-${sanitized}`
     await this.s3.putObject({

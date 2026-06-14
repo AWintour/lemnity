@@ -21,6 +21,7 @@ import type { WidgetSettings } from '@/stores/widgetSettings/types'
 import { useProjectsStore } from '@/stores/projectsStore'
 import * as chatsService from '@/services/chats'
 import * as chatModule from '@/services/chatModule'
+import { uploadImage, MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE } from '@/api/upload'
 import type { ChatConversation, ChatMessage } from '@/services/chats'
 
 const ACCENT = '#1A52DB' // primary платформы
@@ -950,6 +951,7 @@ const OperatorsSection = ({
   const [sEmail, setSEmail] = useState('')
   const [sPass, setSPass] = useState('')
   const [sAvatar, setSAvatar] = useState<string | undefined>(undefined)
+  const [avatarError, setAvatarError] = useState('')
   const [sMsgr, setSMsgr] = useState<'telegram' | 'vk' | 'max'>('telegram')
   const [sMsgrHandle, setSMsgrHandle] = useState('')
   const avatarRef = useRef<HTMLInputElement | null>(null)
@@ -1227,17 +1229,25 @@ const OperatorsSection = ({
               {/* Аватар */}
               <div className="flex items-center gap-4">
                 <Avatar name={sName || op.name} size={64} url={sAvatar} />
-                <button type="button" onClick={() => avatarRef.current?.click()} className="h-9 px-4 rounded-[10px] border border-default-200 text-[14px]">
-                  Загрузить аватар
-                </button>
+                <div className="flex flex-col gap-1">
+                  <button type="button" onClick={() => avatarRef.current?.click()} className="h-9 px-4 rounded-[10px] border border-default-200 text-[14px]">
+                    Загрузить аватар
+                  </button>
+                  {avatarError && <span className="text-[12px] text-[#E5484D]">{avatarError}</span>}
+                </div>
                 <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={e => {
                   const f = e.target.files?.[0]
-                  if (!f) return
-                  // data-URL (а не blob), чтобы аватар реально сохранялся через updateOperator.
-                  const reader = new FileReader()
-                  reader.onload = () => setSAvatar(String(reader.result))
-                  reader.readAsDataURL(f)
                   e.target.value = ''
+                  if (!f) return
+                  if (f.size > MAX_IMAGE_BYTES) {
+                    setAvatarError(IMAGE_TOO_LARGE_MESSAGE)
+                    return
+                  }
+                  setAvatarError('')
+                  // Грузим в персональное хранилище → URL (не data-URL в БД).
+                  uploadImage(f)
+                    .then(({ url }) => setSAvatar(url))
+                    .catch(() => setAvatarError('Не удалось загрузить. ' + IMAGE_TOO_LARGE_MESSAGE))
                 }} />
               </div>
 

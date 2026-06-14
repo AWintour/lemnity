@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
@@ -12,6 +12,7 @@ import imageUpload from '@/assets/icons/image-upload.svg'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 import { chatWidgetDefaults as defaults } from './defaults'
+import { uploadImage, MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE } from '@/api/upload'
 
 const ACCENT = '!bg-[#5951E5]'
 
@@ -31,11 +32,19 @@ const ChatHeaderSettings = () => {
     )
   const setChatPatch = useWidgetSettingsStore(s => s.setChatPatch)
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const [logoError, setLogoError] = useState('')
 
   const onPickFile = (file: File | null) => {
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setChatPatch({ companyLogo: { ...companyLogo, fileName: file.name, url } })
+    if (file.size > MAX_IMAGE_BYTES) {
+      setLogoError(IMAGE_TOO_LARGE_MESSAGE)
+      return
+    }
+    setLogoError('')
+    // Грузим в персональное хранилище → URL (не blob/data-URL в конфиге).
+    uploadImage(file)
+      .then(({ url }) => setChatPatch({ companyLogo: { ...companyLogo, fileName: file.name, url } }))
+      .catch(() => setLogoError('Не удалось загрузить. ' + IMAGE_TOO_LARGE_MESSAGE))
   }
 
   return (
@@ -78,11 +87,12 @@ const ChatHeaderSettings = () => {
             />
 
             <div className="flex flex-col justify-center text-[16px] leading-6 text-[#9A9A9A]">
-              <span>Размер файла: менее 1 Мб</span>
+              <span>Размер файла: до 5 МБ</span>
               <span>Рекомендуемый размер: 120x70</span>
               <span>Формат: png без фона</span>
             </div>
           </div>
+          {logoError && <span className="text-[14px] text-[#E5484D]">{logoError}</span>}
         </div>
       </BorderedContainer>
 

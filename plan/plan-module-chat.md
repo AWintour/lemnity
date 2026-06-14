@@ -154,6 +154,13 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   ⚠️ Зависимости `ua-parser-js`/`geoip-lite` в `pnpm-lock.yaml` (CI `--frozen-lockfile`); geoip-lite
   держит БД в памяти (десятки МБ). Прод применил поля через `db push`.
 
+## Картинки → персональное хранилище (правило по умолчанию)
+
+Аватар оператора (и картинки шага сценария, логотип компании) грузятся через
+`@/api/upload.uploadImage` в S3 под персональным префиксом `users/{userId}/…` (лимит 5 МБ, статус
+«Уменьшите размер файла (картинки)»); в `ChatOperator.avatarUrl`/конфиге — только URL, без base64.
+Эндпоинт `/files/images` закрыт `@Auth()`. Подробно: `docs/instructions/image-storage.md`.
+
 ## Деплой
 
 Прод-деплой — push в `main` → GitHub Actions (`.github/workflows/CI-CD.yml`): сборка образов →
