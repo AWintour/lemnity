@@ -54,10 +54,92 @@ type StepNodeData = {
   onDeleteStep: (stepId: string) => void
 }
 
+// Строка кнопки шага. Текст кнопки — локальный стейт (seed из btn.label), чтобы ввод не зависел
+// от пересборки ноды react-flow и не терял фокус. В стор пишем на каждый ввод.
+const ButtonRow = ({
+  step,
+  btn,
+  data,
+}: {
+  step: ScenarioStep
+  btn: ScenarioButton
+  data: StepNodeData
+}) => {
+  const [label, setLabel] = useState(btn.label)
+  return (
+    <div className="relative flex flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <EmojiPicker
+          onPick={em => data.onButtonChange(step.id, btn.id, { emoji: em })}
+          className="w-7 h-7 shrink-0 flex items-center justify-center text-[15px] rounded-[6px] border border-[#E3E3E8] hover:bg-[#F4F4F6]"
+        >
+          {btn.emoji || '🙂'}
+        </EmojiPicker>
+        <input
+          value={label}
+          onChange={e => {
+            setLabel(e.target.value)
+            data.onButtonChange(step.id, btn.id, { label: e.target.value })
+          }}
+          placeholder="Текст кнопки"
+          className="nodrag flex-1 min-w-0 text-[12px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5]"
+        />
+        <button
+          type="button"
+          onClick={() => data.onToggleHandoff(step.id, btn.id)}
+          title={btn.next === null ? 'Передаёт менеджеру' : 'Сделать передачей менеджеру'}
+          className={
+            'nodrag shrink-0 text-[11px] px-1.5 py-1 rounded-[6px] border ' +
+            (btn.next === null
+              ? 'border-[#5951E5] text-[#5951E5] bg-[#EEEDFB]'
+              : 'border-[#E3E3E8] text-[#9A96A2]')
+          }
+        >
+          👤
+        </button>
+        <button
+          type="button"
+          onClick={() => data.onDeleteButton(step.id, btn.id)}
+          className="nodrag shrink-0 text-[#B0AEBA] hover:text-[#FF4D4D] text-[12px]"
+          title="Удалить кнопку"
+        >
+          ✕
+        </button>
+        {/* Источник связи для кнопки (если не handoff) */}
+        {btn.next !== null && (
+          <Handle
+            type="source"
+            id={btn.id}
+            position={Position.Right}
+            className="!bg-[#5951E5]"
+            style={{ right: -7 }}
+          />
+        )}
+      </div>
+      {/* Маршрут в отдел — для кнопки-хэндофа (передаёт менеджеру) */}
+      {btn.next === null && data.departments.length > 0 && (
+        <select
+          value={btn.department ?? ''}
+          onChange={e => data.onButtonChange(step.id, btn.id, { department: e.target.value || null })}
+          className="nodrag text-[11px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5] bg-white text-[#5A5A5A]"
+          title="Направить в отдел"
+        >
+          <option value="">Отдел: любой</option>
+          {data.departments.map(d => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      )}
+    </div>
+  )
+}
+
 const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
   const { step, isStart } = data
   const fileRef = useRef<HTMLInputElement>(null)
   const [imgError, setImgError] = useState('')
+  // Текст сообщения — локальный стейт (см. ButtonRow): ввод не зависит от пересборки ноды.
+  const [msg, setMsg] = useState(step.message)
 
   return (
     <div className="w-[270px] rounded-[12px] border border-[#D9D7E2] bg-white shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
@@ -81,8 +163,11 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
 
       <div className="p-3 flex flex-col gap-2">
         <textarea
-          value={step.message}
-          onChange={e => data.onMessage(step.id, e.target.value)}
+          value={msg}
+          onChange={e => {
+            setMsg(e.target.value)
+            data.onMessage(step.id, e.target.value)
+          }}
           rows={2}
           placeholder="Сообщение бота…"
           className="nodrag resize-none w-full text-[13px] leading-4 rounded-[8px] border border-[#E3E3E8] px-2 py-1.5 outline-none focus:border-[#5951E5]"
@@ -140,67 +225,7 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
 
         <div className="flex flex-col gap-1.5">
           {step.buttons.map(btn => (
-            <div key={btn.id} className="relative flex flex-col gap-1">
-              <div className="flex items-center gap-1">
-                <EmojiPicker
-                  onPick={em => data.onButtonChange(step.id, btn.id, { emoji: em })}
-                  className="w-7 h-7 shrink-0 flex items-center justify-center text-[15px] rounded-[6px] border border-[#E3E3E8] hover:bg-[#F4F4F6]"
-                >
-                  {btn.emoji || '🙂'}
-                </EmojiPicker>
-                <input
-                  value={btn.label}
-                  onChange={e => data.onButtonChange(step.id, btn.id, { label: e.target.value })}
-                  placeholder="Текст кнопки"
-                  className="nodrag flex-1 min-w-0 text-[12px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5]"
-                />
-                <button
-                  type="button"
-                  onClick={() => data.onToggleHandoff(step.id, btn.id)}
-                  title={btn.next === null ? 'Передаёт менеджеру' : 'Сделать передачей менеджеру'}
-                  className={
-                    'nodrag shrink-0 text-[11px] px-1.5 py-1 rounded-[6px] border ' +
-                    (btn.next === null
-                      ? 'border-[#5951E5] text-[#5951E5] bg-[#EEEDFB]'
-                      : 'border-[#E3E3E8] text-[#9A96A2]')
-                  }
-                >
-                  👤
-                </button>
-                <button
-                  type="button"
-                  onClick={() => data.onDeleteButton(step.id, btn.id)}
-                  className="nodrag shrink-0 text-[#B0AEBA] hover:text-[#FF4D4D] text-[12px]"
-                  title="Удалить кнопку"
-                >
-                  ✕
-                </button>
-                {/* Источник связи для кнопки (если не handoff) */}
-                {btn.next !== null && (
-                  <Handle
-                    type="source"
-                    id={btn.id}
-                    position={Position.Right}
-                    className="!bg-[#5951E5]"
-                    style={{ right: -7 }}
-                  />
-                )}
-              </div>
-              {/* Маршрут в отдел — для кнопки-хэндофа (передаёт менеджеру) */}
-              {btn.next === null && data.departments.length > 0 && (
-                <select
-                  value={btn.department ?? ''}
-                  onChange={e => data.onButtonChange(step.id, btn.id, { department: e.target.value || null })}
-                  className="nodrag text-[11px] rounded-[6px] border border-[#E3E3E8] px-2 py-1 outline-none focus:border-[#5951E5] bg-white text-[#5A5A5A]"
-                  title="Направить в отдел"
-                >
-                  <option value="">Отдел: любой</option>
-                  {data.departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-              )}
-            </div>
+            <ButtonRow key={btn.id} step={step} btn={btn} data={data} />
           ))}
         </div>
 
@@ -408,11 +433,14 @@ const ScenarioEditor = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<StepNodeData>>(buildNodes())
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(buildEdges())
 
-  // Сигнатура структуры — перестраиваем граф при добавлении/удалении/редактировании.
+  // Сигнатура СТРУКТУРЫ графа — перестраиваем ноды только при изменении структуры (шаги/кнопки/
+  // связи/картинка/эмодзи), но НЕ при вводе текста (message/label). Текст живёт в локальном стейте
+  // ноды (StepNode/ButtonRow) и пишется в стор напрямую — иначе каждый символ ремаунтит ноду и
+  // инпут теряет фокус.
   const signature = useMemo(
     () =>
       JSON.stringify(
-        scenario.steps.map(s => [s.id, s.message, s.image, s.buttons.map(b => [b.id, b.emoji, b.label, b.next, b.department])])
+        scenario.steps.map(s => [s.id, s.image, s.buttons.map(b => [b.id, b.emoji, b.next, b.department])])
       ) + `|${scenario.startStepId}|${departments.length}`,
     [scenario, departments.length]
   )

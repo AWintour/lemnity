@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, type Transition } from 'framer-motion'
 import { PatternFormat } from 'react-number-format'
 import { cn } from '@heroui/theme'
@@ -62,9 +62,13 @@ type WidgetProps = {
   chatActive: boolean
   // Офлайн-сообщение отправлено — показать подтверждение вместо поля.
   offlineSent: boolean
+  // Диалог завершён оператором — вместо поля ввода показываем кнопку «Начать беседу».
+  ended?: boolean
   // Доступен ли возврат на предыдущий экран (иконка «Назад» в компактной шапке).
   canGoBack: boolean
   onSend: (body: string) => void
+  // Начать новый диалог (после завершения оператором) — сброс на главный экран.
+  onRestart?: () => void
   // Выбран файл во вложение (кнопки «+»/«скрепка»). Отправка — на стороне рантайма.
   onAttach?: (file: File) => void
   onEnterChat: () => void
@@ -208,6 +212,22 @@ const AvatarCircle = ({
   </div>
 )
 
+// <img> с фолбэком: при ошибке загрузки (битый/недоступный URL) скрываем картинку и показываем
+// запасной контент (инициал / иконку), а не «сломанное изображение».
+const ImgWithFallback = ({
+  src,
+  className,
+  fallback,
+}: {
+  src: string
+  className: string
+  fallback: ReactNode
+}) => {
+  const [broken, setBroken] = useState(false)
+  if (broken) return <>{fallback}</>
+  return <img src={src} alt="" className={className} onError={() => setBroken(true)} />
+}
+
 const OperatorAvatars = ({
   operators,
   primaryAvatarUrl,
@@ -225,7 +245,7 @@ const OperatorAvatars = ({
         {list.map((op, i) => (
           <AvatarCircle key={op.id} online={op.online} bg="bg-[#E9E4DC]" z={list.length - i}>
             {op.avatarUrl
-              ? <img src={op.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ? <ImgWithFallback src={op.avatarUrl} className="w-full h-full object-cover" fallback={<span className="text-[15px] font-semibold text-[#6E6E76]">{(op.name || '?').charAt(0).toUpperCase()}</span>} />
               : <span className="text-[15px] font-semibold text-[#6E6E76]">{(op.name || '?').charAt(0).toUpperCase()}</span>}
           </AvatarCircle>
         ))}
@@ -240,7 +260,7 @@ const OperatorAvatars = ({
     <div className="flex items-center justify-center -space-x-2">
       <AvatarCircle online={online} bg="bg-white" z={total}>
         {primaryAvatarUrl
-          ? <img src={primaryAvatarUrl} alt="" className="w-full h-full object-cover" />
+          ? <ImgWithFallback src={primaryAvatarUrl} className="w-full h-full object-cover" fallback={<span className="text-[16px]">🤖</span>} />
           : <span className="text-[16px]">🤖</span>}
       </AvatarCircle>
       {Array.from({ length: secondaryCount }).map((_, i) => (
@@ -315,7 +335,7 @@ const CompactHeader = ({
       <div className="relative w-9 h-9 shrink-0">
         <div className="w-full h-full rounded-full ring-2 ring-white/70 overflow-hidden bg-white flex items-center justify-center">
           {operatorAvatarUrl
-            ? <img src={operatorAvatarUrl} alt="" className="w-full h-full object-cover" />
+            ? <ImgWithFallback src={operatorAvatarUrl} className="w-full h-full object-cover" fallback={avatarInitial ? <span className="text-[15px] font-semibold text-[#6E6E76]">{avatarInitial}</span> : <span className="text-[15px]">🤖</span>} />
             : avatarInitial
               ? <span className="text-[15px] font-semibold text-[#6E6E76]">{avatarInitial}</span>
               : <span className="text-[15px]">🤖</span>}
@@ -431,6 +451,7 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
   const isVisitor = message.sender === 'visitor'
   const isSystem = message.sender === 'system'
   const time = formatTime(message.createdAt)
+  const [imgBroken, setImgBroken] = useState(false)
 
   if (isSystem) {
     return (
@@ -452,11 +473,12 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
         )}
         style={isVisitor ? { backgroundColor: clientColor } : undefined}
       >
-        {message.image && (
+        {message.image && !imgBroken && (
           <a href={message.image} target="_blank" rel="noreferrer" className="block">
             <img
               src={message.image}
               alt=""
+              onError={() => setImgBroken(true)}
               className={cn('w-full max-h-[220px] object-cover rounded-[12px]', message.body && 'mb-2')}
             />
           </a>
@@ -761,9 +783,11 @@ const Widget = (props: WidgetProps) => {
   }, [viewKey])
 
   useEffect(() => {
+    // Автоскролл вниз — только на экране чата; на главном экране (только кнопки) не трогаем скролл.
+    if (props.view !== 'chat') return
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [props.messages, props.open])
+  }, [props.messages, props.open, props.view])
 
   const submit = (body: string) => {
     const text = body.trim()
@@ -847,7 +871,7 @@ const Widget = (props: WidgetProps) => {
                   <div className="flex items-center justify-between gap-3">
                     <div className="h-9 flex items-center">
                       {props.companyLogoUrl
-                        ? <img src={props.companyLogoUrl} alt="" className="max-h-9 max-w-[120px] object-contain" />
+                        ? <ImgWithFallback src={props.companyLogoUrl} className="max-h-9 max-w-[120px] object-contain" fallback={<IconBot color="#FFFFFF" />} />
                         : <IconBot color="#FFFFFF" />}
                     </div>
 
@@ -951,12 +975,13 @@ const Widget = (props: WidgetProps) => {
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3"
             >
-              {props.messages.map(message => (
+              {/* Лента сообщений — только на экране чата (первый экран показывает только кнопки) */}
+              {props.view === 'chat' && props.messages.map(message => (
                 <MessageBubble key={message.id} message={message} clientColor={props.clientColor} />
               ))}
 
-            {/* Кнопки сценария — скроллятся вместе с лентой; неактивны во время живого чата */}
-            {showQuickReplies && (() => {
+            {/* Кнопки сценария — ТОЛЬКО на главном экране (в чате их нет) */}
+            {props.view === 'home' && showQuickReplies && (() => {
               const regular = props.quickReplies.filter(q => !q.isHandoff)
               const handoff = props.quickReplies.filter(q => q.isHandoff)
               const btnDisabled = props.disabled || props.chatActive
@@ -1006,8 +1031,20 @@ const Widget = (props: WidgetProps) => {
             </div>
 
             {/* Низ окна — только на экране чата (на первом экране поля сообщения нет):
-                живой чат / «Войти в чат» (онлайн) / поле сообщения (офлайн) / подтверждение. */}
-            {props.view === 'chat' && (props.chatActive ? (
+                завершён оператором → «Начать беседу»; иначе живой чат / «Войти в чат» (онлайн) /
+                поле сообщения (офлайн) / подтверждение. */}
+            {props.view === 'chat' && (props.ended ? (
+              <div className="shrink-0 px-4 pt-2 pb-3">
+                <button
+                  type="button"
+                  onClick={() => props.onRestart?.()}
+                  className="w-full h-12 rounded-[12px] text-white text-[16px] font-medium"
+                  style={{ backgroundColor: accent }}
+                >
+                  Начать беседу
+                </button>
+              </div>
+            ) : props.chatActive ? (
               <>
                 <form onSubmit={handleSubmit} className="shrink-0 px-4 pt-2">
                   <div className="flex items-center gap-2 border-t border-[#EFEFF2] pt-3">

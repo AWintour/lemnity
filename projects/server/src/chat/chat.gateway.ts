@@ -191,6 +191,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       .emit('conversation:updated', { conversationId: conversation.id })
   }
 
+  /** Диалог закрыт оператором — уведомляем посетителя (виджет покажет «Оператор завершил беседу»). */
+  notifyClosed(conversation: { id: string; projectId: string }) {
+    this.server
+      .to(convRoom(conversation.id))
+      .emit('conversation:closed', { conversationId: conversation.id, by: 'operator' })
+    this.server
+      .to(projManagersRoom(conversation.projectId))
+      .emit('conversation:updated', { conversationId: conversation.id })
+  }
+
   @SubscribeMessage('message:send')
   async onMessageSend(
     @ConnectedSocket() client: Socket,

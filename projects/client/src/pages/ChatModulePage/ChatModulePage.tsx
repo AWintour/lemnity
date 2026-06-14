@@ -2117,6 +2117,17 @@ const SettingsSection = ({
 
   // Реактивный снимок настроек из стора — нужен, чтобы определять «есть несохранённые изменения».
   const liveSettings = useWidgetSettingsStore(s => s.settings)
+
+  // Лейбл выбранного чата берём из ЖИВОГО стора (config.title) — чтобы название обновлялось сразу
+  // при вводе и гарантированно после сохранения, а не только после рефетча projects.
+  const chatsForSelect = useMemo(() => {
+    const liveTitle =
+      realWidget && liveSettings?.id === realWidget.id
+        ? (liveSettings?.widget as { title?: string } | undefined)?.title?.trim()
+        : undefined
+    if (!liveTitle) return chats
+    return chats.map(c => (c.projectId === chatSel ? { ...c, label: liveTitle } : c))
+  }, [chats, chatSel, realWidget, liveSettings])
   // Сигнатура «чистого» конфига (на момент загрузки/сохранения). Кнопка «Сохранить» активна, только
   // если текущий конфиг в сторе отличается от базового.
   const baselineRef = useRef<string>('')
@@ -2213,10 +2224,10 @@ const SettingsSection = ({
               disabled={chats.length === 0}
               className="w-full appearance-none h-11 pl-3 pr-9 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white cursor-pointer disabled:opacity-60"
             >
-              {chats.length === 0 ? (
+              {chatsForSelect.length === 0 ? (
                 <option value="">Нет чатов</option>
               ) : (
-                chats.map(c => <option key={c.projectId} value={c.projectId}>{c.label}</option>)
+                chatsForSelect.map(c => <option key={c.projectId} value={c.projectId}>{c.label}</option>)
               )}
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-default-400"><IconChevron /></span>

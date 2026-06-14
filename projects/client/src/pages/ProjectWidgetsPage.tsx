@@ -18,6 +18,7 @@ import { WidgetTypeEnum, UserRoleEnum, type CreateWidgetDtoTypeEnum } from '@lem
 import useUserStore from '@/stores/userStore'
 import { buildProjectEmbedSnippet } from '@/config/embed'
 import EmbedSnippetBox from '@/layouts/WidgetSettings/IntegrationTab/EmbedSnippetBox'
+import Modal from '@/components/Modal/Modal'
 
 // Виджеты, доступные пока только администратору (тестовый период).
 // После проверки — убрать из набора, чтобы открыть всем.
@@ -65,6 +66,7 @@ const ProjectWidgetsPage = (): ReactElement => {
     () => (projectId ? buildProjectEmbedSnippet(projectId) : ''),
     [projectId]
   )
+  const [isEmbedOpen, setIsEmbedOpen] = useState(false)
 
   const user = useUserStore(s => s.user)
   const isAdmin =
@@ -235,22 +237,37 @@ const ProjectWidgetsPage = (): ReactElement => {
             <hr className="border-[#C0C0C0]" />
             <div className="flex flex-col gap-[10px] pb-1">
               <span className="text-xl font-display">Код для вставки</span>
-              <EmbedSnippetBox
-                snippet={projectSnippet}
-                title="Один скрипт для всего проекта"
-                emptyText="Код станет доступен после загрузки проекта."
-                helpText={
-                  <>
-                    Добавьте код на все страницы (внутри &lt;head&gt; или перед &lt;/body&gt;).
-                    <br />
-                    Один тег подтянет все включённые виджеты проекта (до 3).
-                  </>
-                }
-              />
+              <Button onPress={() => setIsEmbedOpen(true)} className="w-fit px-6">
+                Показать код для вставки
+              </Button>
             </div>
           </div>
         </div>
       </DashboardLayout>
+      {isEmbedOpen && (
+        <Modal
+          isOpen={isEmbedOpen}
+          onClose={() => setIsEmbedOpen(false)}
+          containerClassName="w-full max-w-[600px]"
+        >
+          <div className="flex flex-col gap-4 p-6">
+            <h3 className="font-display font-semibold text-2xl">Код для вставки</h3>
+            <EmbedSnippetBox
+              snippet={projectSnippet}
+              title="Один скрипт для всего проекта"
+              emptyText="Код станет доступен после загрузки проекта."
+              helpText={
+                <>
+                  Добавьте код на все страницы (внутри &lt;head&gt; или перед &lt;/body&gt;).
+                  <br />
+                  Один тег подтянет все включённые виджеты проекта (до 3). Включайте и
+                  выключайте виджеты в каталоге — они подтягиваются автоматически.
+                </>
+              }
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

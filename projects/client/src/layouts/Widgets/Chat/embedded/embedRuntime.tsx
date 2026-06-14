@@ -17,6 +17,7 @@ import { useChatConnection } from './useChatConnection'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { uuidv4 } from '@/common/utils/uuidv4'
+import { uploadImage, MAX_IMAGE_BYTES } from '@/api/upload'
 import messageSoundUrl from '@/assets/zvuk-chat.mp3'
 
 import type { ChatWidgetType, Scenario } from '@lemnity/widget-config/widgets/chat'
@@ -151,6 +152,8 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   const [mode, setMode] = useState<'bot' | 'operator'>('bot')
   // Офлайн-сообщение отправлено (показываем подтверждение вместо поля).
   const [offlineSent, setOfflineSent] = useState(false)
+  // Диалог завершён оператором — показываем кнопку «Начать беседу» вместо поля ввода.
+  const [ended, setEnded] = useState(false)
   // 'home' — первый экран (меню), 'chat' — переписка, 'form'/'callback' — формы, 'contacts' — вкладка.
   const [view, setView] = useState<ChatView>('home')
   const [formHeader, setFormHeader] = useState('Чат с менеджерами')
@@ -254,10 +257,23 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     })
   }, [playMessageSound])
 
-  const { operatorOnline, operators, sendToOperator, markRead, updateContact, closeConversation } = useChatConnection({
+  // Диалог закрыт оператором: системное сообщение в ленте + режим «завершён» (кнопка «Начать беседу»).
+  const handleClosed = useCallback(() => {
+    setView('chat')
+    setEnded(true)
+    append({
+      id: `closed-${uuidv4().slice(0, 6)}`,
+      sender: 'system',
+      body: 'Оператор завершил беседу',
+      createdAt: new Date().toISOString(),
+    })
+  }, [append])
+
+  const { operatorOnline, operators, sendToOperator, sendAttachment, markRead, updateContact, closeConversation } = useChatConnection({
     widgetId: useWidgetSettingsStore.getState().settings?.id,
     preview: props.preview,
     onIncoming: append,
+    onClosed: handleClosed,
   })
 
   // Сброс к первому экрану: при включённом сценарии лента пустая (приветствие — крупным
@@ -279,6 +295,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     }
     setMode('bot')
     setOfflineSent(false)
+    setEnded(false)
   }, [scenario, stepById, greetingMessage])
 
   useEffect(() => {
@@ -490,6 +507,26 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     sendToOperator(text)
   }, [append, sendToOperator, props.preview])
 
+  // Вложение из живого чата: грузим картинку в хранилище → оптимистично показываем у себя →
+  // отправляем оператору с вложением (сервер сохранит и разошлёт в комнату диалога).
+  const handleAttach = useCallback((file: File) => {
+    if (props.preview) return
+    if (file.size > MAX_IMAGE_BYTES) return
+    setMode('operator')
+    void uploadImage(file)
+      .then(({ url }) => {
+        append({ id: uuidv4(), sender: 'visitor', image: url, body: '', createdAt: nowIso(), pending: true })
+        sendAttachment({ attachmentUrl: url, attachmentType: 'image', attachmentName: file.name })
+      })
+      .catch(() => {})
+  }, [props.preview, append, sendAttachment])
+
+  // «Начать беседу» после завершения оператором — сброс на главный экран (новый диалог).
+  // Следующее сообщение переоткроет диалог на сервере (appendMessage ставит status: 'open').
+  const handleRestart = useCallback(() => {
+    resetConversation()
+  }, [resetConversation])
+
   const sendBoundingRectToIframe = useCallback((clipOnlyTrigger?: boolean) => {
     if (!containerRef.current || !triggerRef.current) return
     const isBottomRight = triggerPosition === 'bottom-right'
@@ -593,8 +630,11 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     preview: props.preview,
     chatActive: mode === 'operator',
     offlineSent,
+    ended,
     canGoBack: historyRef.current.length > 0,
     onSend: handleSend,
+    onAttach: handleAttach,
+    onRestart: handleRestart,
     onEnterChat: handleEnterChat,
     onOfflineSend: handleOfflineMessage,
     onQuickReply: handleQuickReply,

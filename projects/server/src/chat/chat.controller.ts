@@ -55,12 +55,17 @@ export class ChatController {
 
   @Patch('conversations/:id')
   @ApiResponse({ status: 200, type: ChatConversationEntity })
-  updateConversation(
+  async updateConversation(
     @ChatActorParam() actor: ChatActor,
     @Param('id') id: string,
     @Body() dto: UpdateConversationDto
   ): Promise<ChatConversationEntity> {
-    return this.chat.updateConversation(actor, id, dto)
+    const updated = await this.chat.updateConversation(actor, id, dto)
+    // Закрытие оператором → уведомляем посетителя (виджет покажет «Оператор завершил беседу»).
+    if (dto.status === 'closed') {
+      this.gateway.notifyClosed({ id: updated.id, projectId: updated.projectId })
+    }
+    return updated
   }
 
   @Post('conversations/:id/messages')

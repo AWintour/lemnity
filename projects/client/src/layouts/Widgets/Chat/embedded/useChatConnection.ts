@@ -35,6 +35,15 @@ type UseChatConnectionArgs = {
   preview?: boolean
   // Вызывается для каждого входящего/исторического серверного сообщения.
   onIncoming: (message: ChatUiMessage) => void
+  // Вызывается, когда диалог закрыт оператором (сервер шлёт `conversation:closed`).
+  onClosed?: () => void
+}
+
+export type OutgoingAttachment = {
+  attachmentUrl: string
+  attachmentType: 'image' | 'video' | 'file'
+  attachmentName?: string
+  body?: string
 }
 
 export type VisitorContact = {
@@ -58,6 +67,8 @@ type UseChatConnectionResult = {
   // Операторы проекта (имя/роль/аватар/онлайн) — для шапки.
   operators: OperatorInfo[]
   sendToOperator: (body: string) => void
+  // Отправка вложения оператору (картинка/видео/файл) — message:send с attachment*.
+  sendAttachment: (attachment: OutgoingAttachment) => void
   markRead: () => void
   // Сохраняет контакт посетителя в диалог (visitorName/Phone/Email), чтобы он был в карточке оператора.
   updateContact: (contact: VisitorContact) => void
@@ -90,6 +101,8 @@ export const useChatConnection = (
   const conversationIdRef = useRef<string | null>(null)
   const onIncomingRef = useRef(args.onIncoming)
   onIncomingRef.current = args.onIncoming
+  const onClosedRef = useRef(args.onClosed)
+  onClosedRef.current = args.onClosed
 
   useEffect(() => {
     if (args.preview) {
@@ -148,6 +161,7 @@ export const useChatConnection = (
       socket.on('operator:presence', (p: { online: boolean }) =>
         setOperatorOnline(Boolean(p?.online))
       )
+      socket.on('conversation:closed', () => onClosedRef.current?.())
     }
 
     void start()
@@ -164,6 +178,16 @@ export const useChatConnection = (
     const trimmed = body.trim()
     if (!trimmed || args.preview) return
     socketRef.current?.emit('message:send', { body: trimmed })
+  }, [args.preview])
+
+  const sendAttachment = useCallback((attachment: OutgoingAttachment) => {
+    if (args.preview || !attachment.attachmentUrl) return
+    socketRef.current?.emit('message:send', {
+      body: attachment.body ?? '',
+      attachmentUrl: attachment.attachmentUrl,
+      attachmentType: attachment.attachmentType,
+      attachmentName: attachment.attachmentName
+    })
   }, [args.preview])
 
   const markRead = useCallback(() => {
@@ -196,5 +220,5 @@ export const useChatConnection = (
     })
   }, [args.preview, args.widgetId])
 
-  return { operatorOnline, operators, sendToOperator, markRead, updateContact, closeConversation }
+  return { operatorOnline, operators, sendToOperator, sendAttachment, markRead, updateContact, closeConversation }
 }
