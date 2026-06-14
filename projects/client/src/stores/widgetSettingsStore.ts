@@ -55,6 +55,9 @@ type CoreActions = {
   validateNow: () => { ok: boolean; issues: Issue[] }
   getErrors: (prefix?: string) => Issue[]
   prepareForSave: () => { ok: true; data: WidgetSettings } | { ok: false; issues: Issue[] }
+  // Удаляет персист-черновик конкретного виджета из localStorage (после успешного сохранения),
+  // чтобы редактор не показывал устаревший черновик вместо серверного конфига.
+  clearPersistedDraft: (widgetId: string) => void
 }
 
 type ValidationState = {
@@ -262,6 +265,20 @@ const useWidgetSettingsStore = create<WidgetSettingsStore>()(
             const v = validateWidgetSettings(n)
             if (!v.ok) return { ok: false as const, issues: v.issues }
             return { ok: true as const, data: n }
+          },
+          clearPersistedDraft: (widgetId: string) => {
+            // Удаляем только запись этого виджета из карты persist (не зависим от activeWidgetId).
+            const raw = localStorage.getItem(PERSIST_NAME)
+            if (!raw || !widgetId) return
+            try {
+              const map = JSON.parse(raw) as Record<string, unknown>
+              if (widgetId in map) {
+                delete map[widgetId]
+                localStorage.setItem(PERSIST_NAME, JSON.stringify(map))
+              }
+            } catch {
+              // ignore
+            }
           },
           ...createFieldsSlice(patchFields),
           ...createDisplaySlice(patchDisplay),

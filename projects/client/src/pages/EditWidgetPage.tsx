@@ -196,6 +196,10 @@ const EditWidgetPage = () => {
       return
     }
 
+    // Серверный конфиг сохранён: убираем устаревший персист-черновик этого виджета, чтобы редактор
+    // не расходился с опубликованным виджетом при следующих загрузках.
+    useWidgetSettingsStore.getState().clearPersistedDraft(widgetId)
+
     // Re-init settings with server config
     // 
     // i do not know why he implemented it this way and honestly i have no

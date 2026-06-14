@@ -264,6 +264,9 @@ const ScenarioEditor = () => {
         return
       }
       await saveWidgetConfig(projectId, widgetId, res.data)
+      // Серверный конфиг теперь = текущему стору: убираем персист-черновик, чтобы при следующей
+      // загрузке редактор взял серверный конфиг и не расходился с опубликованным виджетом.
+      store.clearPersistedDraft(widgetId)
       setSaveState('saved')
       setTimeout(() => setSaveState('idle'), 2000)
     } catch {
