@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import type { S3ClientConfig, PutObjectCommandInput } from '@aws-sdk/client-s3'
+import type { Readable } from 'stream'
 import * as path from 'path'
 
 export interface UploadResult {
@@ -75,5 +76,19 @@ export class S3Service {
 
   getPublicUrlForKey(key: string): string {
     return `${this.publicBaseUrl}/${key}`
+  }
+
+  // Чтение объекта (стрим) — для публичной отдачи файлов через бэкенд (не зависим от
+  // анонимной политики бакета: используем те же креды, что и при загрузке).
+  async getObject(
+    bucket: string,
+    key: string
+  ): Promise<{ body: Readable; contentType?: string; contentLength?: number }> {
+    const out = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
+    return {
+      body: out.Body as Readable,
+      contentType: out.ContentType,
+      contentLength: out.ContentLength
+    }
   }
 }

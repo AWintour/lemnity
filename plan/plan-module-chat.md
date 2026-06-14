@@ -231,6 +231,19 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   - Рендер: `MessageAttachments` (тред оператора) и `MessageBubble` (виджет) — картинки сеткой 2 кол.
     + файлы-чипсы. Посетитель шлёт по-прежнему одиночно, но галерею от оператора видит.
 
+## Отдача загруженных файлов через бэкенд (2026-06-15)
+
+Раньше `/uploads/<key>` (аватары/лого/картинки шагов/вложения) отдавались nginx напрямую из MinIO и
+зависели от анонимной политики бакета (`mc anonymous set download`), которая на проде не срабатывала
+→ картинки не грузились нигде (в кабинете показывалось только blob-превью сразу после загрузки).
+
+Теперь файлы отдаёт **бэкенд**: nginx `location /uploads/` → `http://backend/api/public/uploads/`,
+публичный `PublicUploadsController` (`@Get('*splat')`, без `@Auth`) стримит объект из MinIO через
+`S3Service.getObject(S3_BUCKET_UPLOADS, key)` теми же кредами, что и при загрузке. URL прежний
+(`https://<host>/uploads/<key>`) — ранее сохранённые ссылки в БД продолжают работать; не зависим от
+анонимной политики бакета. Защита от `..`-traversal. Файлы: `storage/s3.service.ts` (+`getObject`),
+`files/public-uploads.controller.ts`, `files/files.module.ts`, `projects/nginx/nginx.conf`.
+
 ## Картинки → персональное хранилище (правило по умолчанию)
 
 Аватар оператора (и картинки шага сценария, логотип компании) грузятся через
