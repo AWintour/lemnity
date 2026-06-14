@@ -11,5 +11,9 @@ export class ChatOperatorEntity {
   status!: string
   departmentId!: string | null
   widgetId!: string | null
+  // Учётка входа: сам хэш наружу не отдаём, только email-логин, признак наличия пароля и активность.
+  loginEmail!: string | null
+  hasLogin!: boolean
+  active!: boolean
   createdAt!: string
 }

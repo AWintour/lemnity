@@ -6,10 +6,12 @@ import { ChatService } from './chat.service'
 import { ChatGateway } from './chat.gateway'
 import { ChatController } from './chat.controller'
 import { PublicChatController } from './public-chat.controller'
+import { ChatActorGuard } from './chat-actor.guard'
+import { ChatOperatorModule } from '../chat-operator/chat-operator.module'
 
 @Module({
-  imports: [ConfigModule, JwtModule.register({})],
+  imports: [ConfigModule, JwtModule.register({}), ChatOperatorModule],
   controllers: [ChatController, PublicChatController],
-  providers: [ChatService, ChatGateway, PrismaService]
+  providers: [ChatService, ChatGateway, ChatActorGuard, PrismaService]
 })
 export class ChatModule {}

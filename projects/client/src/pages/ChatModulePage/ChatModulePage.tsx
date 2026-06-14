@@ -19,6 +19,7 @@ import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { WidgetSettings } from '@/stores/widgetSettings/types'
 import { useProjectsStore } from '@/stores/projectsStore'
+import useOperatorAuthStore from '@stores/operatorAuthStore'
 import * as chatsService from '@/services/chats'
 import * as chatModule from '@/services/chatModule'
 import {
@@ -409,6 +410,7 @@ const ModuleSidebar = ({
   chats,
   dialogChat,
   onDialogChat,
+  isOperator,
 }: {
   section: Section
   onSection: (s: Section) => void
@@ -417,6 +419,7 @@ const ModuleSidebar = ({
   chats: { widgetId: string; label: string }[]
   dialogChat: 'all' | string
   onDialogChat: (v: 'all' | string) => void
+  isOperator?: boolean
 }) => (
   <aside className="w-60 shrink-0 sidebar-bg flex flex-col p-4 gap-1.5">
     <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pt-1">
@@ -428,24 +431,30 @@ const ModuleSidebar = ({
       className="flex items-center gap-2 text-[14px] text-[#3D3D3B] hover:text-primary px-2 pb-3 mb-1 border-b border-default-200"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-      Личный кабинет
+      {isOperator ? 'Выйти' : 'Личный кабинет'}
     </button>
-    {chats.length > 0 && (
+    {/* Оператору селектор чата не нужен — доступ уже ограничен сервером. */}
+    {!isOperator && chats.length > 0 && (
       <SidebarChatSelect chats={chats} value={dialogChat} onChange={onDialogChat} />
     )}
     <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} />
     <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} />
-    <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} />
-    <div className="h-px bg-default-200 my-2" />
-    <NavItem icon={<IconPlanet />} label="Асистент" active={section === 'assistant'} onClick={() => onSection('assistant')} />
-    <NavItem icon={<IconUser />} label="Операторы" active={section === 'operators'} onClick={() => onSection('operators')} />
-    <NavItem icon={<IconUsers />} label="Отделы" active={section === 'departments'} onClick={() => onSection('departments')} />
-    <NavItem
-      icon={<Ic d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z|M19.4 13a1.7 1.7 0 0 0 .3 1.9 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 13a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.5-2.9 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11.8 4 2 2 0 1 1 15.8 4a1.7 1.7 0 0 0 2.9 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 1Z" size={22} stroke={1.6} />}
-      label="Настройки"
-      active={section === 'settings'}
-      onClick={() => onSection('settings')}
-    />
+    {/* Owner-разделы скрыты для оператора. */}
+    {!isOperator && (
+      <>
+        <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} />
+        <div className="h-px bg-default-200 my-2" />
+        <NavItem icon={<IconPlanet />} label="Асистент" active={section === 'assistant'} onClick={() => onSection('assistant')} />
+        <NavItem icon={<IconUser />} label="Операторы" active={section === 'operators'} onClick={() => onSection('operators')} />
+        <NavItem icon={<IconUsers />} label="Отделы" active={section === 'departments'} onClick={() => onSection('departments')} />
+        <NavItem
+          icon={<Ic d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z|M19.4 13a1.7 1.7 0 0 0 .3 1.9 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 13a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.5-2.9 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11.8 4 2 2 0 1 1 15.8 4a1.7 1.7 0 0 0 2.9 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 1Z" size={22} stroke={1.6} />}
+          label="Настройки"
+          active={section === 'settings'}
+          onClick={() => onSection('settings')}
+        />
+      </>
+    )}
 
     <div className="mt-auto flex flex-col gap-3">
       <a href="https://help.lemnity.ru" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[15px] text-[#3D3D3B] px-2 hover:text-[#1A1A1A]">
@@ -938,7 +947,7 @@ const SocialSection = ({
 
 /* ----------------------------- operators -------------------------------- */
 
-type Operator = { id: string; name: string; email: string; role: string; online: boolean; avatar?: string; dept: string; isOwner?: boolean; widgetId?: string | null }
+type Operator = { id: string; name: string; email: string; role: string; online: boolean; avatar?: string; dept: string; isOwner?: boolean; widgetId?: string | null; hasLogin?: boolean; active?: boolean }
 
 // Общий список отделов (используется и в «Отделах», и в форме оператора).
 const DEPARTMENT_NAMES = ['Техническая поддержка', 'Коммерческий отдел', 'Общие вопросы']
@@ -1046,6 +1055,8 @@ const OperatorsSection = ({
       dept: o.departmentId ? (names[o.departmentId] ?? '') : '',
       isOwner: o.isOwner,
       widgetId: o.widgetId,
+      hasLogin: o.hasLogin,
+      active: o.active,
     }),
     []
   )
@@ -1099,6 +1110,7 @@ const OperatorsSection = ({
   const [sName, setSName] = useState('')
   const [sEmail, setSEmail] = useState('')
   const [sPass, setSPass] = useState('')
+  const [sActive, setSActive] = useState(true)
   const [sAvatar, setSAvatar] = useState<string | undefined>(undefined)
   const [avatarError, setAvatarError] = useState('')
   const [sMsgr, setSMsgr] = useState<'telegram' | 'vk' | 'max'>('telegram')
@@ -1109,6 +1121,7 @@ const OperatorsSection = ({
     setSName(op.name)
     setSEmail(op.email)
     setSPass('')
+    setSActive(op.active ?? true)
     setSAvatar(op.avatar)
     setSMsgr('telegram')
     setSMsgrHandle('')
@@ -1116,7 +1129,14 @@ const OperatorsSection = ({
   }
   const saveSettings = () => {
     if (!archiveOf) return
-    const next = { ...archiveOf, name: sName.trim() || archiveOf.name, email: sEmail.trim(), avatar: sAvatar }
+    const next = {
+      ...archiveOf,
+      name: sName.trim() || archiveOf.name,
+      email: sEmail.trim(),
+      avatar: sAvatar,
+      active: sActive,
+      hasLogin: archiveOf.hasLogin || !!sPass,
+    }
     setOperators(prev => prev.map(o => (o.id === archiveOf.id ? next : o)))
     setArchiveOf(next)
     setSettingsOpen(false)
@@ -1127,6 +1147,10 @@ const OperatorsSection = ({
             name: next.name,
             email: next.email,
             avatarUrl: next.avatar,
+            active: sActive,
+            // Учётка: email = логин; пароль обновляем только если введён новый.
+            loginEmail: sEmail.trim() || undefined,
+            password: sPass || undefined,
           })
         } catch (e) {
           console.error('updateOperator failed', e)
@@ -1136,14 +1160,17 @@ const OperatorsSection = ({
   }
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [pass, setPass] = useState('')
   const [role, setRole] = useState('Оператор')
   const [dept, setDept] = useState(DEPARTMENT_NAMES[0])
   // '' = все чаты владельца; иначе widgetId конкретного чата.
   const [chatSel, setChatSel] = useState('')
+  const [addError, setAddError] = useState('')
 
   const reset = () => {
     setName('')
     setEmail('')
+    setPass('')
     setRole('Оператор')
     setDept(deptNames[0] ?? '')
     setChatSel('')
@@ -1151,29 +1178,41 @@ const OperatorsSection = ({
   }
   const add = () => {
     if (!name.trim()) return
+    if (pass && !email.trim()) {
+      setAddError('Для входа оператора укажите email')
+      return
+    }
     if (real && projectId) {
       const departmentId = deptIdByName[dept] ?? null
+      const loginEmail = email.trim() || undefined
       void (async () => {
         try {
+          setAddError('')
           const created = await chatModule.createOperator(projectId, {
             name: name.trim(),
-            email: email.trim() || undefined,
+            email: loginEmail,
             role,
             departmentId,
             widgetId: chatSel || null,
+            // Логин оператора = email; пароль — если задан владельцем.
+            loginEmail: pass ? loginEmail : undefined,
+            password: pass || undefined,
           })
           rawOpsRef.current[created.id] = created
           setOperators(prev => [...prev, mapOp(created, deptNameById)])
+          reset()
         } catch (e) {
-          console.error('createOperator failed', e)
+          const msg =
+            (e as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+            'Не удалось добавить оператора'
+          setAddError(typeof msg === 'string' ? msg : 'Не удалось добавить оператора')
         }
       })()
-      reset()
       return
     }
     setOperators(prev => [
       ...prev,
-      { id: `op-${prev.length}-${name.length}-${Date.now()}`, name: name.trim(), email: email.trim(), role, online: false, dept, widgetId: chatSel || null },
+      { id: `op-${prev.length}-${name.length}-${Date.now()}`, name: name.trim(), email: email.trim(), role, online: false, dept, widgetId: chatSel || null, hasLogin: !!pass, active: true },
     ])
     reset()
   }
@@ -1417,6 +1456,11 @@ const OperatorsSection = ({
                 <input value={sPass} onChange={e => setSPass(e.target.value)} type="password" placeholder="Новый пароль" className="h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
               </label>
 
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-[14px] text-default-500">Доступ активен <span className="text-default-400">(может входить)</span></span>
+                <input type="checkbox" checked={sActive} onChange={e => setSActive(e.target.checked)} className="w-5 h-5 accent-[#5951E5]" />
+              </label>
+
               <div className="flex flex-col gap-1.5">
                 <span className="text-[14px] text-default-500">Мессенджер для уведомлений</span>
                 <div className="flex gap-2">
@@ -1458,9 +1502,10 @@ const OperatorsSection = ({
 
       <div className="p-6 flex flex-col gap-3 w-full">
         {adding && (
-          <div className="rounded-[14px] border border-default-200 p-4 flex items-center gap-3">
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Имя оператора" className="flex-1 min-w-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
-            <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="flex-1 min-w-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
+          <div className="rounded-[14px] border border-default-200 p-4 flex flex-wrap items-center gap-3">
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Имя оператора" className="flex-1 min-w-[160px] h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email (логин)" className="flex-1 min-w-[160px] h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
+            <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Пароль для входа" className="flex-1 min-w-[150px] h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
             <select value={role} onChange={e => setRole(e.target.value)} className="w-[150px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white">
               <option>Оператор</option>
               <option>Администратор</option>
@@ -1485,6 +1530,10 @@ const OperatorsSection = ({
             </select>
             <button type="button" onClick={reset} className="shrink-0 h-11 px-4 rounded-[10px] border border-default-200 text-[15px]">Отмена</button>
             <button type="button" onClick={add} disabled={!name.trim()} className="shrink-0 h-11 px-5 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50">Добавить</button>
+            <div className="w-full basis-full flex items-center gap-3">
+              {addError && <span className="text-[13px] text-[#E5484D]">{addError}</span>}
+              <span className="text-[12px] text-default-400">Пароль задаёт вход оператора. Без пароля — обычная запись без входа.</span>
+            </div>
           </div>
         )}
 
@@ -1499,7 +1548,15 @@ const OperatorsSection = ({
               <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white', o.online ? 'bg-[#3BD16F]' : 'bg-default-300')} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[16px] font-medium text-[#1A1A1A] truncate">{o.name}</div>
+              <div className="text-[16px] font-medium text-[#1A1A1A] truncate flex items-center gap-2">
+                {o.name}
+                {o.hasLogin && !o.isOwner && (
+                  <span className="text-[11px] text-primary border border-primary/40 rounded-[6px] px-1.5 py-0.5 shrink-0" title="Есть вход в модуль">вход</span>
+                )}
+                {o.active === false && (
+                  <span className="text-[11px] text-[#E5484D] border border-[#E5484D]/40 rounded-[6px] px-1.5 py-0.5 shrink-0">отключён</span>
+                )}
+              </div>
               <div className="text-[14px] text-default-400 truncate">{o.email || '—'}</div>
             </div>
             <span className="text-[14px] text-default-500 flex-1 min-w-0 truncate">{o.dept}</span>
@@ -2161,15 +2218,22 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const [search, setSearch] = useState('')
   const [topic, setTopic] = useState('Первичный контакт')
   const [note, setNote] = useState('')
+  // Режим оператора: только Входящие/Диалоги; owner-разделы скрыты; доступ ограничен сервером.
+  const operatorSession = useOperatorAuthStore(s => s.operator)
+  const operatorLogout = useOperatorAuthStore(s => s.logout)
+  const isOperator = !preview && !!operatorSession
   // Раздел — из URL (/chat-module/:section). В preview-стенде нет <Routes>, поэтому там стейт.
   const { section: sectionParam } = useParams<{ section?: string }>()
   const [previewSection, setPreviewSection] = useState<Section>('inbox')
   const VALID_SECTIONS = Object.keys(SECTION_TITLES) as Section[]
-  const section: Section = preview
+  const urlSection: Section = preview
     ? previewSection
     : VALID_SECTIONS.includes(sectionParam as Section)
       ? (sectionParam as Section)
       : 'inbox'
+  // Оператору доступны только Входящие/Диалоги — прочее зажимаем в inbox (и при прямом URL).
+  const section: Section =
+    isOperator && urlSection !== 'inbox' && urlSection !== 'dialogs' ? 'inbox' : urlSection
   const go = useCallback(
     (s: Section) => {
       if (preview) setPreviewSection(s)
@@ -2177,6 +2241,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     },
     [preview, navigate]
   )
+  useEffect(() => {
+    if (isOperator && urlSection !== 'inbox' && urlSection !== 'dialogs') go('inbox')
+  }, [isOperator, urlSection, go])
   const [filter, setFilter] = useState<'all' | 'unread' | 'archived'>('all')
   const [filterOpen, setFilterOpen] = useState(false)
   const [groupOpen, setGroupOpen] = useState(false)
@@ -2191,8 +2258,9 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   selectedIdRef.current = selectedId
 
   useEffect(() => {
-    if (!preview) void ensureProjectsLoaded()
-  }, [preview, ensureProjectsLoaded])
+    // Оператор не владеет проектами и не должен дёргать owner-эндпоинты (иначе 401 → выход).
+    if (!preview && !isOperator) void ensureProjectsLoaded()
+  }, [preview, isOperator, ensureProjectsLoaded])
 
   const activeProjectId = useMemo(
     () =>
@@ -2541,10 +2609,11 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         section={section}
         onSection={go}
         inboxCount={preview ? 13 : inboxCount}
-        onExit={() => navigate('/')}
+        onExit={isOperator ? () => { operatorLogout(); navigate('/operator') } : () => navigate('/')}
         chats={dialogChats}
         dialogChat={dialogChat}
         onDialogChat={setDialogChat}
+        isOperator={isOperator}
       />
 
       {section === 'dialogs' ? (

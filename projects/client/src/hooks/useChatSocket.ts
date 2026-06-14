@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import useAuthStore from '@stores/authStore'
+import useOperatorAuthStore from '@stores/operatorAuthStore'
 import type { ChatMessage } from '@/services/chats'
 
 const getApiOrigin = () => {
@@ -46,11 +47,16 @@ export const useChatSocket = (handlers: UseChatSocketHandlers): UseChatSocketRes
     let disposed = false
     let refreshing = false
 
+    // Операторская сессия (если есть) — приоритет: role 'operator' + операторский токен.
+    const operatorToken = useOperatorAuthStore.getState().token
+    const isOperator = !!operatorToken
+    const role = isOperator ? 'operator' : 'manager'
+
     const connect = (token: string) => {
       const socket = io(`${getApiOrigin()}/chat`, {
         path: '/socket.io',
         transports: ['websocket', 'polling'],
-        auth: { role: 'manager', token },
+        auth: { role, token },
       })
       socketRef.current = socket
 
@@ -68,19 +74,20 @@ export const useChatSocket = (handlers: UseChatSocketHandlers): UseChatSocketRes
       })
 
       socket.on('connect_error', async () => {
-        if (disposed || refreshing) return
+        // У операторской сессии рефреша нет — переподключение по токену из стора.
+        if (disposed || refreshing || isOperator) return
         refreshing = true
         const newToken = await useAuthStore.getState().refreshToken()
         refreshing = false
         if (disposed) return
         if (newToken) {
-          socket.auth = { role: 'manager', token: newToken }
+          socket.auth = { role, token: newToken }
           socket.connect()
         }
       })
     }
 
-    const token = useAuthStore.getState().accessToken
+    const token = operatorToken ?? useAuthStore.getState().accessToken
     if (token) connect(token)
 
     return () => {

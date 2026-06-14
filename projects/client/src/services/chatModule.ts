@@ -16,6 +16,9 @@ export type ChatOperatorItem = {
   status: string
   departmentId: string | null
   widgetId: string | null
+  loginEmail: string | null
+  hasLogin: boolean
+  active: boolean
   createdAt: string
 }
 
@@ -27,6 +30,10 @@ export type SaveOperatorDto = {
   departmentId?: string | null
   // Чат-скоуп оператора: widgetId конкретного чата или null = все чаты владельца.
   widgetId?: string | null
+  // Учётка входа оператора.
+  loginEmail?: string
+  password?: string
+  active?: boolean
   status?: string
   online?: boolean
 }

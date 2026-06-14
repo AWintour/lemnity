@@ -12,6 +12,8 @@ import {
 } from '@nestjs/websockets'
 import type { Server, Socket } from 'socket.io'
 import { ChatService } from './chat.service'
+import { ChatOperatorService } from '../chat-operator/chat-operator.service'
+import type { ChatActor } from './chat-actor.guard'
 import type { ChatMessageEntity } from './entities/chat-message.entity'
 import { extractOriginHostFromHeaders } from '../common/origin'
 import { buildVisitorMeta, extractHandshakeRawMeta } from '../common/visitor-meta'
@@ -24,13 +26,15 @@ type VisitorData = {
   sessionId: string
 }
 
-type ManagerData = {
-  role: 'manager'
-  userId: string
+// Персонал чата: владелец (manager) или оператор. actor задаёт scope доступа к диалогам;
+// projectIds — комнаты presence (проекты, к которым он подключён).
+type StaffData = {
+  role: 'manager' | 'operator'
+  actor: ChatActor
   projectIds: string[]
 }
 
-type SocketData = VisitorData | ManagerData
+type SocketData = VisitorData | StaffData
 
 const convRoom = (conversationId: string) => `conv:${conversationId}`
 const projVisitorsRoom = (projectId: string) => `proj-visitors:${projectId}`
@@ -52,6 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chat: ChatService,
+    private readonly operators: ChatOperatorService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService
   ) {}
@@ -65,6 +70,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         await this.connectVisitor(client, auth)
       } else if (role === 'manager') {
         await this.connectManager(client, auth)
+      } else if (role === 'operator') {
+        await this.connectOperator(client, auth)
       } else {
         client.emit('chat:error', { message: 'Unknown role' })
         client.disconnect(true)
@@ -117,12 +124,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!userId) throw new Error('Invalid token')
 
     const projectIds = await this.chat.getOwnedProjectIds(userId)
-
-    const data: ManagerData = { role: 'manager', userId, projectIds }
+    const data: StaffData = { role: 'manager', actor: { kind: 'owner', userId }, projectIds }
     client.data = data
+    this.joinStaffRooms(client, projectIds)
+  }
 
+  // Оператор: операторский JWT { sub, typ:'operator' }. scope → проекты для presence/комнат.
+  private async connectOperator(client: Socket, auth: Record<string, unknown>) {
+    const token = typeof auth.token === 'string' ? auth.token : ''
+    if (!token) throw new Error('Token is required')
+
+    const secret = this.config.get<string>('JWT_SECRET')
+    const payload = await this.jwt.verifyAsync<{ sub?: string; typ?: string }>(token, { secret })
+    if (payload.typ !== 'operator' || !payload.sub) throw new Error('Invalid token')
+
+    const op = await this.operators.getActiveActor(payload.sub)
+    if (!op) throw new Error('Operator is inactive')
+
+    const projectIds = await this.chat.getOperatorProjectIds(op.ownerUserId, op.widgetId)
+    const data: StaffData = {
+      role: 'operator',
+      actor: { kind: 'operator', operatorId: op.id, ownerUserId: op.ownerUserId, widgetId: op.widgetId },
+      projectIds
+    }
+    client.data = data
+    this.joinStaffRooms(client, projectIds)
+  }
+
+  // Присоединяет персонал к комнатам менеджеров проектов + presence (виджет видит «оператор онлайн»).
+  private joinStaffRooms(client: Socket, projectIds: string[]) {
     for (const projectId of projectIds) {
-      await client.join(projManagersRoom(projectId))
+      void client.join(projManagersRoom(projectId))
       const set = this.onlineManagers.get(projectId) ?? new Set<string>()
       const wasOnline = set.size > 0
       set.add(client.id)
@@ -135,7 +167,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     const data = client.data as SocketData | undefined
-    if (!data || data.role !== 'manager') return
+    if (!data || data.role === 'visitor') return
 
     for (const projectId of data.projectIds) {
       const set = this.onlineManagers.get(projectId)
@@ -194,16 +226,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return message
     }
 
-    // manager
+    // персонал (владелец/оператор) — доступ по actor scope
     const conversationId = typeof payload?.conversationId === 'string' ? payload.conversationId : ''
     if (!conversationId) return
-    const conversation = await this.chat.assertManagerOwns(data.userId, conversationId)
+    const conversation = await this.chat.assertManagerOwns(data.actor, conversationId)
     await client.join(convRoom(conversationId))
     const message = await this.chat.appendMessage({
       conversationId,
       sender: 'manager',
       body,
-      senderUserId: data.userId,
+      senderUserId: data.actor.kind === 'owner' ? data.actor.userId : undefined,
       attachmentUrl,
       attachmentType: payload?.attachmentType,
       attachmentName: payload?.attachmentName
@@ -219,8 +251,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const data = client.data as SocketData | undefined
     const conversationId = typeof payload?.conversationId === 'string' ? payload.conversationId : ''
-    if (!data || data.role !== 'manager' || !conversationId) return
-    await this.chat.assertManagerOwns(data.userId, conversationId)
+    if (!data || data.role === 'visitor' || !conversationId) return
+    await this.chat.assertManagerOwns(data.actor, conversationId)
     await client.join(convRoom(conversationId))
     return { ok: true }
   }
@@ -240,7 +272,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const conversationId = typeof payload?.conversationId === 'string' ? payload.conversationId : ''
     if (!conversationId) return
-    const conversation = await this.chat.assertManagerOwns(data.userId, conversationId)
+    const conversation = await this.chat.assertManagerOwns(data.actor, conversationId)
     await this.chat.markReadByManager(conversationId)
     this.server
       .to(projManagersRoom(conversation.projectId))

@@ -27,6 +27,11 @@ model ChatOperator {
   // Без FK-связи: при удалении виджета скоупинг трактует отсутствующий чат отдельно (см. план, слайс 3).
   widgetId  String? @map("widget_id")
 
+  // Учётка для входа оператора в модуль (изолированно от аккаунтов-владельцев).
+  loginEmail   String? @unique @map("login_email") // идентификатор входа
+  passwordHash String? @map("password_hash")       // argon2; наружу не отдаётся
+  active       Boolean @default(true)              // отключённый оператор не может войти
+
   assignedConversations ChatConversation[]
   groupMessages         ChatGroupMessage[]
 

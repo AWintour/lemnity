@@ -13,6 +13,7 @@ import {
   isHostAllowedByWebsiteHosts
 } from '../common/origin'
 import type { VisitorMeta } from '../common/visitor-meta'
+import type { ChatActor } from './chat-actor.guard'
 import type { ListConversationsDto } from './dto/list-conversations.dto'
 import type {
   ChatConversationEntity,
@@ -219,7 +220,17 @@ export class ChatService {
     return toMessageEntity(message)
   }
 
-  async listConversations(userId: string, query: ListConversationsDto) {
+  /**
+   * Where-фильтр диалогов по «актору»: владелец — все его проекты; оператор со scope — его чат;
+   * оператор без scope — все чаты владельца.
+   */
+  private actorWhere(actor: ChatActor) {
+    if (actor.kind === 'owner') return { project: { userId: actor.userId } }
+    if (actor.widgetId) return { widgetId: actor.widgetId }
+    return { project: { userId: actor.ownerUserId } }
+  }
+
+  async listConversations(actor: ChatActor, query: ListConversationsDto) {
     const period = query.period ?? '30d'
     const take = query.take ?? 50
     const skip = query.skip ?? 0
@@ -232,11 +243,11 @@ export class ChatService {
     })()
 
     const where = {
-      project: { userId },
+      ...this.actorWhere(actor),
       ...(query.projectId ? { projectId: query.projectId } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
-    } as const
+    }
 
     const [items, total] = await Promise.all([
       this.prisma.chatConversation.findMany({
@@ -251,20 +262,20 @@ export class ChatService {
     return { conversations: items.map(toConversationEntity), total }
   }
 
-  /** Проверяет, что диалог принадлежит проекту менеджера; возвращает его. */
-  async assertManagerOwns(userId: string, conversationId: string): Promise<ChatConversation> {
+  /** Проверяет, что диалог доступен актору (владельцу/оператору в его scope); возвращает его. */
+  async assertManagerOwns(actor: ChatActor, conversationId: string): Promise<ChatConversation> {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: conversationId, project: { userId } }
+      where: { id: conversationId, ...this.actorWhere(actor) }
     })
     if (!conversation) throw new NotFoundException('Conversation not found')
     return conversation
   }
 
   async getMessagesForManager(
-    userId: string,
+    actor: ChatActor,
     conversationId: string
   ): Promise<ChatMessagesResponse> {
-    await this.assertManagerOwns(userId, conversationId)
+    await this.assertManagerOwns(actor, conversationId)
     const messages = await this.prisma.chatMessage.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'asc' }
@@ -288,8 +299,8 @@ export class ChatService {
     return { conversationId, messages: messages.map(toMessageEntity) }
   }
 
-  async updateStatus(userId: string, conversationId: string, status: 'open' | 'closed') {
-    await this.assertManagerOwns(userId, conversationId)
+  async updateStatus(actor: ChatActor, conversationId: string, status: 'open' | 'closed') {
+    await this.assertManagerOwns(actor, conversationId)
     const updated = await this.prisma.chatConversation.update({
       where: { id: conversationId },
       data: { status }
@@ -302,7 +313,7 @@ export class ChatService {
    * Передаются только заданные поля. assignedOperatorId валидируется по принадлежности проекту.
    */
   async updateConversation(
-    userId: string,
+    actor: ChatActor,
     conversationId: string,
     dto: {
       status?: 'open' | 'closed'
@@ -312,7 +323,7 @@ export class ChatService {
       channel?: string | null
     }
   ) {
-    const conversation = await this.assertManagerOwns(userId, conversationId)
+    const conversation = await this.assertManagerOwns(actor, conversationId)
 
     if (dto.assignedOperatorId) {
       const operator = await this.prisma.chatOperator.findFirst({
@@ -364,6 +375,18 @@ export class ChatService {
       select: { id: true }
     })
     return projects.map(p => p.id)
+  }
+
+  /** projectId(ы), доступные оператору (presence/комнаты): его чат или все чаты владельца. */
+  async getOperatorProjectIds(ownerUserId: string, widgetId: string | null): Promise<string[]> {
+    if (widgetId) {
+      const w = await this.prisma.widget.findUnique({
+        where: { id: widgetId },
+        select: { projectId: true }
+      })
+      return w ? [w.projectId] : []
+    }
+    return this.getOwnedProjectIds(ownerUserId)
   }
 
   toConversationEntity = toConversationEntity

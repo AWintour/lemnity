@@ -1,4 +1,6 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common'
+import { hash, verify } from 'argon2'
+import { Prisma } from '@lemnity/database'
 import { PrismaService } from '../prisma.service'
 import type { CreateChatOperatorDto } from './dto/create-chat-operator.dto'
 import type { UpdateChatOperatorDto } from './dto/update-chat-operator.dto'
@@ -16,6 +18,9 @@ type ChatOperatorRow = {
   status: string
   departmentId: string | null
   widgetId: string | null
+  loginEmail: string | null
+  passwordHash: string | null
+  active: boolean
   createdAt: Date
 }
 
@@ -32,6 +37,9 @@ const toEntity = (o: ChatOperatorRow): ChatOperatorEntity => ({
   status: o.status,
   departmentId: o.departmentId,
   widgetId: o.widgetId,
+  loginEmail: o.loginEmail,
+  hasLogin: o.passwordHash != null,
+  active: o.active,
   createdAt: o.createdAt.toISOString()
 })
 
@@ -116,33 +124,108 @@ export class ChatOperatorService {
     return { operators: sorted.map(toEntity), total: sorted.length }
   }
 
+  // Поля учётки: нормализуем email-логин и хэшируем пароль (argon2). passwordHash наружу не уходит.
+  private async credentialData(dto: {
+    loginEmail?: string
+    password?: string
+    active?: boolean
+  }): Promise<{ loginEmail?: string | null; passwordHash?: string; active?: boolean }> {
+    const data: { loginEmail?: string | null; passwordHash?: string; active?: boolean } = {}
+    if (dto.loginEmail !== undefined) data.loginEmail = dto.loginEmail?.trim().toLowerCase() || null
+    if (dto.password) data.passwordHash = await hash(dto.password)
+    if (dto.active !== undefined) data.active = dto.active
+    return data
+  }
+
+  private isUniqueConflict(e: unknown): boolean {
+    return typeof e === 'object' && e !== null && (e as { code?: string }).code === 'P2002'
+  }
+
   async create(userId: string, projectId: string, dto: CreateChatOperatorDto): Promise<ChatOperatorEntity> {
     await this.assertOwnsProject(userId, projectId)
     const widgetId = (await this.resolveWidgetScope(userId, dto.widgetId)) ?? null
-    const row = await this.prisma.chatOperator.create({
-      data: {
-        projectId,
-        name: dto.name,
-        email: dto.email,
-        role: dto.role,
-        avatarUrl: dto.avatarUrl,
-        departmentId: dto.departmentId,
-        widgetId,
-        status: dto.status
-      }
-    })
-    return toEntity(row)
+    const creds = await this.credentialData(dto)
+    try {
+      const row = await this.prisma.chatOperator.create({
+        data: {
+          projectId,
+          name: dto.name,
+          email: dto.email,
+          role: dto.role,
+          avatarUrl: dto.avatarUrl,
+          departmentId: dto.departmentId,
+          widgetId,
+          status: dto.status,
+          ...creds
+        }
+      })
+      return toEntity(row)
+    } catch (e) {
+      if (this.isUniqueConflict(e)) throw new BadRequestException('Этот email уже используется')
+      throw e
+    }
   }
 
   async update(userId: string, id: string, dto: UpdateChatOperatorDto): Promise<ChatOperatorEntity> {
     await this.assertOwnsOperator(userId, id)
     // widgetId: undefined — не трогаем; null — снять скоуп (все чаты); строка — валидируем владение.
     const widgetId = await this.resolveWidgetScope(userId, dto.widgetId)
-    const row = await this.prisma.chatOperator.update({
-      where: { id },
-      data: { ...dto, ...(widgetId === undefined ? {} : { widgetId }) }
+    // Колоночные поля из dto (без password/loginEmail/active/widgetId — их выставляем контролируемо).
+    const data: Record<string, unknown> = { ...dto }
+    delete data.password
+    delete data.loginEmail
+    delete data.active
+    delete data.widgetId
+    if (widgetId !== undefined) data.widgetId = widgetId
+    Object.assign(data, await this.credentialData(dto))
+    try {
+      const row = await this.prisma.chatOperator.update({
+        where: { id },
+        data: data as Prisma.ChatOperatorUncheckedUpdateInput
+      })
+      return toEntity(row)
+    } catch (e) {
+      if (this.isUniqueConflict(e)) throw new BadRequestException('Этот email уже используется')
+      throw e
+    }
+  }
+
+  /**
+   * Вход оператора по логину/паролю (изолированно от аккаунтов-владельцев).
+   * Возвращает scope-данные оператора, если активен и пароль верен; иначе null.
+   */
+  async verifyLogin(
+    loginEmail: string,
+    password: string
+  ): Promise<{ id: string; widgetId: string | null; ownerUserId: string; name: string } | null> {
+    const email = loginEmail.trim().toLowerCase()
+    const op = await this.prisma.chatOperator.findUnique({
+      where: { loginEmail: email },
+      select: {
+        id: true,
+        widgetId: true,
+        active: true,
+        passwordHash: true,
+        name: true,
+        project: { select: { userId: true } }
+      }
     })
-    return toEntity(row)
+    if (!op || !op.active || !op.passwordHash) return null
+    const ok = await verify(op.passwordHash, password)
+    if (!ok) return null
+    return { id: op.id, widgetId: op.widgetId, ownerUserId: op.project.userId, name: op.name }
+  }
+
+  /** Резолв активного оператора по id (для guard/сокета): scope + владелец. */
+  async getActiveActor(
+    operatorId: string
+  ): Promise<{ id: string; widgetId: string | null; ownerUserId: string; name: string } | null> {
+    const op = await this.prisma.chatOperator.findFirst({
+      where: { id: operatorId, active: true },
+      select: { id: true, widgetId: true, name: true, project: { select: { userId: true } } }
+    })
+    if (!op) return null
+    return { id: op.id, widgetId: op.widgetId, ownerUserId: op.project.userId, name: op.name }
   }
 
   async remove(userId: string, id: string): Promise<{ ok: true }> {

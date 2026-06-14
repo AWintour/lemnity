@@ -6,14 +6,14 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UsePipes,
   ValidationPipe
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
-import { Auth } from '../auth/decorators/auth.decorator'
-import { CurrentUser } from '../auth/decorators/user.decorator'
 import { ChatService } from './chat.service'
 import { ChatGateway } from './chat.gateway'
+import { ChatActorGuard, ChatActorParam, type ChatActor } from './chat-actor.guard'
 import { ListConversationsDto } from './dto/list-conversations.dto'
 import { SendMessageDto } from './dto/send-message.dto'
 import { UpdateConversationDto } from './dto/update-conversation.dto'
@@ -26,7 +26,8 @@ import { ChatMessageEntity } from './entities/chat-message.entity'
 
 @ApiTags('chat')
 @Controller('chat')
-@Auth()
+// Принимает owner-токен (владелец) ИЛИ операторский токен; actor проставляется guard'ом.
+@UseGuards(ChatActorGuard)
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class ChatController {
   constructor(
@@ -37,44 +38,45 @@ export class ChatController {
   @Get('conversations')
   @ApiResponse({ status: 200, type: ChatConversationsResponse })
   list(
-    @CurrentUser('id') userId: string,
+    @ChatActorParam() actor: ChatActor,
     @Query() query: ListConversationsDto
   ): Promise<ChatConversationsResponse> {
-    return this.chat.listConversations(userId, query)
+    return this.chat.listConversations(actor, query)
   }
 
   @Get('conversations/:id/messages')
   @ApiResponse({ status: 200, type: ChatMessagesResponse })
   messages(
-    @CurrentUser('id') userId: string,
+    @ChatActorParam() actor: ChatActor,
     @Param('id') id: string
   ): Promise<ChatMessagesResponse> {
-    return this.chat.getMessagesForManager(userId, id)
+    return this.chat.getMessagesForManager(actor, id)
   }
 
   @Patch('conversations/:id')
   @ApiResponse({ status: 200, type: ChatConversationEntity })
   updateConversation(
-    @CurrentUser('id') userId: string,
+    @ChatActorParam() actor: ChatActor,
     @Param('id') id: string,
     @Body() dto: UpdateConversationDto
   ): Promise<ChatConversationEntity> {
-    return this.chat.updateConversation(userId, id, dto)
+    return this.chat.updateConversation(actor, id, dto)
   }
 
   @Post('conversations/:id/messages')
   @ApiResponse({ status: 201, type: ChatMessageEntity })
   async reply(
-    @CurrentUser('id') userId: string,
+    @ChatActorParam() actor: ChatActor,
     @Param('id') id: string,
     @Body() dto: SendMessageDto
   ): Promise<ChatMessageEntity> {
-    const conversation = await this.chat.assertManagerOwns(userId, id)
+    const conversation = await this.chat.assertManagerOwns(actor, id)
     const message = await this.chat.appendMessage({
       conversationId: id,
       sender: 'manager',
       body: dto.body,
-      senderUserId: userId,
+      // У оператора нет userId — денормализованного автора не пишем.
+      senderUserId: actor.kind === 'owner' ? actor.userId : undefined,
       attachmentUrl: dto.attachmentUrl ?? null,
       attachmentType: dto.attachmentType ?? null,
       attachmentName: dto.attachmentName ?? null

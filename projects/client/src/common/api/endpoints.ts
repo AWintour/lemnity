@@ -9,7 +9,8 @@ export const API = {
     REFRESH: '/auth/login/refresh' as const,
     ME: '/auth/me' as const,
     FORGOT_PASSWORD: '/auth/forgot-password' as const,
-    RESET_PASSWORD: '/auth/reset-password' as const
+    RESET_PASSWORD: '/auth/reset-password' as const,
+    OPERATOR_LOGIN: '/auth/operator/login' as const
   },
   PROJECTS: {
     LIST: '/projects' as const, // GET

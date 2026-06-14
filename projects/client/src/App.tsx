@@ -20,6 +20,8 @@ import CallsPage from './pages/CallsPage/CallsPage.tsx'
 import ChatsPage from './pages/ChatsPage/ChatsPage.tsx'
 import { useIsAdmin } from '@/hooks/useIsAdmin'
 import ChatModulePage from './pages/ChatModulePage/ChatModulePage.tsx'
+import OperatorLoginPage from './pages/OperatorLoginPage.tsx'
+import useOperatorAuthStore from '@stores/operatorAuthStore'
 import EditorSsoPage from './pages/EditorSsoPage.tsx'
 import { memo, useEffect } from 'react'
 
@@ -35,8 +37,15 @@ const ExternalLoginRedirect = () => {
   return null
 }
 
+// Гейт «Модуля Чат»: либо владелец-админ (owner ProtectedRoute), либо операторская сессия.
+const ChatModuleGate = ({ isAdmin }: { isAdmin: boolean }) => {
+  const hasOperator = useOperatorAuthStore(s => !!s.operator)
+  if (hasOperator) return <ChatModulePage />
+  return <ProtectedRoute>{isAdmin ? <ChatModulePage /> : <Navigate to="/" replace />}</ProtectedRoute>
+}
+
 function App() {
-  // «Модуль Чат» на тестировании — доступен только администратору.
+  // «Модуль Чат» на тестировании — доступен только администратору (или оператору по своей сессии).
   const isAdmin = useIsAdmin()
   return (
     <Routes>
@@ -118,22 +127,10 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/chat-module"
-        element={
-          <ProtectedRoute>
-            {isAdmin ? <ChatModulePage /> : <Navigate to="/" replace />}
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat-module/:section"
-        element={
-          <ProtectedRoute>
-            {isAdmin ? <ChatModulePage /> : <Navigate to="/" replace />}
-          </ProtectedRoute>
-        }
-      />
+      {/* Вход оператора — публичный (своя сессия, не SSO владельца). */}
+      <Route path="/operator" element={<OperatorLoginPage />} />
+      <Route path="/chat-module" element={<ChatModuleGate isAdmin={isAdmin} />} />
+      <Route path="/chat-module/:section" element={<ChatModuleGate isAdmin={isAdmin} />} />
       <Route
         path="/projects"
         element={
