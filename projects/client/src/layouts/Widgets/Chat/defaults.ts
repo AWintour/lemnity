@@ -64,10 +64,11 @@ export const chatWidgetDefaults: ChatWidgetType = {
 
   personalizedGreetings: true,
 
-  // Аи-агент временно отключён (скоро) — см. ChatAiAgentSettings (AI_AGENT_COMING_SOON).
+  // Аи-агент: включение/статистика — в разделе «Ассистент», имя/страницы — в блоке «Аи агент».
   aiAgentEnabled: false,
   aiAgentName: 'Лемми',
-  aiKnowledge: ['Тарифы и оплата', 'Возможности виджетов', 'Как подключить чат'],
+  // Выбранные внутренние страницы сайта для изучения (URL). Пусто → агент изучает только главную.
+  aiKnowledge: [],
 
   deferredCall: false,
 

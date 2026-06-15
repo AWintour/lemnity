@@ -727,8 +727,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   }
   const closeIconStyle: CSSProperties = { color: triggerFontColor }
 
+  // Когда ИИ-агент включён, посетитель видит имя агента из настроек как отвечающего
+  // (без пометки «бот» — пометку «ИИ» видит только оператор в кабинете).
+  const effectiveOperatorName = aiAgentEnabled && aiAgentName ? aiAgentName : operatorName
+
   const widgetProps = {
-    operatorName,
+    operatorName: effectiveOperatorName,
     operatorSubtitle,
     operatorAvatarUrl,
     operatorOnline,

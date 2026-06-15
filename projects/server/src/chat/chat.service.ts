@@ -88,8 +88,16 @@ const toMessageEntity = (m: ChatMessage): ChatMessageEntity => ({
   attachmentName: m.attachmentName,
   attachments: parseAttachments(m.attachments),
   senderUserId: m.senderUserId,
+  aiGenerated: m.aiGenerated,
   readAt: m.readAt ? m.readAt.toISOString() : null,
   createdAt: m.createdAt.toISOString()
+})
+
+// Версия для посетителя: пометка «ИИ» (aiGenerated) НЕ раскрывается — её видит только оператор.
+// Ответ ИИ для посетителя выглядит обычным сообщением (под именем агента из настроек виджета).
+const toMessageEntityForVisitor = (m: ChatMessage): ChatMessageEntity => ({
+  ...toMessageEntity(m),
+  aiGenerated: false
 })
 
 @Injectable()
@@ -235,6 +243,7 @@ export class ChatService {
     sender: ChatSender
     body: string
     senderUserId?: string
+    aiGenerated?: boolean
     attachmentUrl?: string | null
     attachmentType?: string | null
     attachmentName?: string | null
@@ -271,6 +280,7 @@ export class ChatService {
           sender: args.sender,
           body,
           senderUserId: args.senderUserId ?? null,
+          aiGenerated: args.aiGenerated ?? false,
           attachmentUrl,
           attachmentType,
           attachmentName,
@@ -362,6 +372,20 @@ export class ChatService {
     return { conversations: items.map(toConversationEntity), total }
   }
 
+  /** Проверяет, что чат-виджет доступен актору (владельцу/оператору в его scope). */
+  async assertActorOwnsWidget(actor: ChatActor, widgetId: string): Promise<void> {
+    if (actor.kind === 'operator' && actor.widgetId && actor.widgetId !== widgetId) {
+      throw new ForbiddenException('Widget out of scope')
+    }
+    const ownerWhere =
+      actor.kind === 'owner' ? { userId: actor.userId } : { userId: actor.ownerUserId }
+    const widget = await this.prisma.widget.findFirst({
+      where: { id: widgetId, project: ownerWhere },
+      select: { id: true }
+    })
+    if (!widget) throw new NotFoundException('Widget not found')
+  }
+
   /** Проверяет, что диалог доступен актору (владельцу/оператору в его scope); возвращает его. */
   async assertManagerOwns(actor: ChatActor, conversationId: string): Promise<ChatConversation> {
     const conversation = await this.prisma.chatConversation.findFirst({
@@ -396,7 +420,7 @@ export class ChatService {
       where: { conversationId },
       orderBy: { createdAt: 'asc' }
     })
-    return { conversationId, messages: messages.map(toMessageEntity) }
+    return { conversationId, messages: messages.map(toMessageEntityForVisitor) }
   }
 
   async updateStatus(actor: ChatActor, conversationId: string, status: 'open' | 'closed') {

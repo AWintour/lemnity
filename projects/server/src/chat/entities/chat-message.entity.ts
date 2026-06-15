@@ -39,6 +39,11 @@ export class ChatMessageEntity {
   @ApiProperty({ required: false, nullable: true })
   senderUserId?: string | null
 
+  // Ответ сгенерирован ИИ-агентом. Пометку видит ТОЛЬКО оператор — посетителю не отдаём
+  // (см. toMessageEntityForVisitor в chat.service.ts).
+  @ApiProperty({ required: false, description: 'Ответ сгенерирован ИИ-агентом (только для оператора)' })
+  aiGenerated?: boolean
+
   @ApiProperty({ required: false, nullable: true })
   readAt?: string | null
 

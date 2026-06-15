@@ -44,7 +44,9 @@ export const API = {
   CHAT: {
     CONVERSATIONS: '/chat/conversations' as const,
     CONVERSATION: (id: string) => `/chat/conversations/${id}` as const,
-    MESSAGES: (id: string) => `/chat/conversations/${id}/messages` as const
+    MESSAGES: (id: string) => `/chat/conversations/${id}/messages` as const,
+    AI_USAGE: (widgetId: string) => `/chat/ai-usage?widgetId=${encodeURIComponent(widgetId)}` as const,
+    AI_PAGES: (widgetId: string) => `/chat/ai-pages?widgetId=${encodeURIComponent(widgetId)}` as const
   },
   MANAGERS: {
     LIST: (projectId: string) => `/projects/${projectId}/managers` as const,

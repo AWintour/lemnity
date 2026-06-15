@@ -33,6 +33,9 @@ import {
 import type { ChatConversation, ChatMessage } from '@/services/chats'
 import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover'
 import FeedbackPopover from '@/components/FeedbackPopover/FeedbackPopover'
+import CustomSwitch from '@/components/CustomSwitch'
+import ChatAiAgentSettings from '@/layouts/Widgets/Chat/ChatAiAgentSettings'
+import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 
 const ACCENT = '#1A52DB' // primary платформы
 
@@ -733,6 +736,12 @@ const DialogCard = ({
                       ) : (
                         <div key={m.id} className={cn('w-full flex', m.sender === 'manager' ? 'justify-end' : 'justify-start')}>
                           <div className={cn('max-w-[70%] px-4 py-2.5 rounded-[14px] text-[15px] leading-5', m.sender === 'manager' ? 'bg-primary/10 rounded-br-[4px]' : 'bg-default-100 rounded-bl-[4px]')}>
+                            {m.aiGenerated && (
+                              <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#5951E5]/12 px-2 py-0.5 text-[11px] font-medium text-[#5951E5]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#5951E5]" />
+                                ИИ
+                              </div>
+                            )}
                             {m.body}
                             <div className="text-[11px] text-default-400 mt-1">{fmtTime(m.createdAt)}</div>
                           </div>
@@ -2345,6 +2354,285 @@ const AutoDistributionPanel = ({
 
 const SETTINGS_WIDGET_ID = 'chat-module-settings'
 
+/* ----------------------------- assistant -------------------------------- */
+
+const ASSISTANT_ACCENT = '!bg-[#5951E5]'
+
+// Раздел «Ассистент»: включение ИИ-агента и статистика остатка месячной квоты сообщений.
+// Имя агента и разделы для изучения настраиваются в блоке «Аи агент» (Настройки).
+const AssistantSection = ({
+  preview,
+  projectId
+}: {
+  preview?: boolean
+  projectId?: string | null
+}) => {
+  const projects = useProjectsStore(s => s.projects)
+  const saveWidgetConfig = useProjectsStore(s => s.saveWidgetConfig)
+  const setChatPatch = useWidgetSettingsStore(s => s.setChatPatch)
+  const liveSettings = useWidgetSettingsStore(s => s.settings)
+
+  // Чаты пользователя (один CHAT-виджет на проект); дропдаун выбирает, какой чат настраиваем.
+  const chats = useMemo(
+    () =>
+      preview
+        ? MOCK_CHATS.map(c => ({ projectId: c.projectId, widget: undefined, label: c.label }))
+        : projects
+            .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT))
+            .map(p => {
+              const widget = p.widgets.find(w => w.type === WidgetTypeEnum.CHAT)
+              return { projectId: p.id, widget, label: chatLabel(widget, p.name) }
+            }),
+    [projects, preview]
+  )
+
+  const [chatSel, setChatSel] = useState<string | null>(null)
+  useEffect(() => {
+    if (chatSel && chats.some(c => c.projectId === chatSel)) return
+    setChatSel(chats.find(c => c.projectId === projectId)?.projectId ?? chats[0]?.projectId ?? null)
+  }, [chats, projectId, chatSel])
+
+  const realWidget = useMemo(
+    () => chats.find(c => c.projectId === chatSel)?.widget,
+    [chats, chatSel]
+  )
+
+  // Инициализация общего стора настроек выбранным чатом (как в SettingsSection) — чтобы тумблер
+  // писал в тот же config, что и блок «Аи агент».
+  const baselineRef = useRef<string>('')
+  const markClean = useCallback(() => {
+    baselineRef.current = JSON.stringify(useWidgetSettingsStore.getState().settings?.widget ?? null)
+  }, [])
+  const appliedRef = useRef<string | null>(null)
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const s = useWidgetSettingsStore.getState()
+    if (!preview && realWidget && chatSel) {
+      const sig = `${realWidget.id}:${JSON.stringify(realWidget.config ?? null)}`
+      if (appliedRef.current !== sig) {
+        s.init(
+          realWidget.id,
+          WidgetTypeEnum.CHAT,
+          chatSel,
+          realWidget.config as Partial<WidgetSettings> | undefined
+        )
+        appliedRef.current = sig
+      }
+    } else if ((preview || !realWidget) && s.settings?.id !== SETTINGS_WIDGET_ID) {
+      s.init(SETTINGS_WIDGET_ID, WidgetTypeEnum.CHAT, 'chat-module')
+      appliedRef.current = null
+    }
+    markClean()
+    setReady(true)
+  }, [preview, realWidget, chatSel, markClean])
+
+  const widgetCfg = liveSettings?.widget as ChatWidgetType | undefined
+  const enabled = widgetCfg?.aiAgentEnabled ?? false
+  const agentName = widgetCfg?.aiAgentName?.trim() || 'Лемми'
+  const dirty = ready && JSON.stringify(liveSettings?.widget ?? null) !== baselineRef.current
+  const [showSettings, setShowSettings] = useState(false)
+
+  const [saving, setSaving] = useState(false)
+  const handleSave = useCallback(async () => {
+    const s = useWidgetSettingsStore.getState()
+    const res = s.prepareForSave()
+    if (!res.ok) {
+      alert('Исправьте ошибки перед сохранением')
+      return
+    }
+    if (preview) {
+      alert('В превью сохранение недоступно — проверьте в кабинете')
+      return
+    }
+    if (!realWidget || !chatSel) return
+    setSaving(true)
+    try {
+      const updated = await saveWidgetConfig(chatSel, realWidget.id, res.data)
+      useWidgetSettingsStore.getState().clearPersistedDraft(realWidget.id)
+      const base =
+        useWidgetSettingsStore.getState().settings ?? buildDefaults(realWidget.id, WidgetTypeEnum.CHAT)
+      const next = updated?.config ? ({ ...base, ...updated.config } as typeof base) : undefined
+      useWidgetSettingsStore.getState().init(realWidget.id, WidgetTypeEnum.CHAT, chatSel, next)
+      appliedRef.current = `${realWidget.id}:${JSON.stringify(updated?.config ?? null)}`
+      markClean()
+      alert('Сохранено')
+    } catch (e) {
+      console.error('save assistant failed', e)
+      alert('Ошибка сохранения')
+    } finally {
+      setSaving(false)
+    }
+  }, [preview, realWidget, chatSel, saveWidgetConfig, markClean])
+
+  // Статистика месячной квоты ИИ.
+  const [usage, setUsage] = useState<chatModule.AiUsage | null>(null)
+  const [usageErr, setUsageErr] = useState(false)
+  useEffect(() => {
+    setUsage(null)
+    setUsageErr(false)
+    if (preview) {
+      setUsage({
+        limit: 1000,
+        used: 137,
+        remaining: 863,
+        resetAt: '',
+        dailyLimit: 40,
+        dailyUsed: 12,
+        dailyRemaining: 28,
+        dailyResetAt: ''
+      })
+      return
+    }
+    const id = realWidget?.id
+    if (!id) return
+    let alive = true
+    chatModule
+      .getAiUsage(id)
+      .then(u => alive && setUsage(u))
+      .catch(() => alive && setUsageErr(true))
+    return () => {
+      alive = false
+    }
+  }, [preview, realWidget?.id])
+
+  const usedPct = usage && usage.limit > 0 ? Math.min(100, Math.round((usage.used / usage.limit) * 100)) : 0
+  const nearLimit = usedPct >= 80
+  const barColor = usage && usage.remaining <= 0 ? '#FF4D4D' : nearLimit ? '#F5A623' : '#5951E5'
+  const resetLabel = usage?.resetAt
+    ? new Date(usage.resetAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    : null
+
+  return (
+    <div className="flex-1 overflow-y-auto border-l border-default-200 p-6">
+      <div className="max-w-[720px] mx-auto flex flex-col gap-5">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-[24px] leading-7 font-semibold text-[#1A1A1A]">Ассистент</h1>
+          {dirty && (
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="h-10 px-5 rounded-[10px] bg-[#5951E5] text-white text-[15px] disabled:opacity-60"
+            >
+              {saving ? 'Сохранение…' : 'Сохранить'}
+            </button>
+          )}
+        </div>
+
+        {chats.length > 1 && (
+          <select
+            value={chatSel ?? ''}
+            onChange={e => setChatSel(e.target.value || null)}
+            className="h-11 px-3 rounded-[10px] border border-[#E4E4E7] text-[15px] bg-white"
+          >
+            {chats.map(c => (
+              <option key={c.projectId} value={c.projectId}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {!realWidget && !preview ? (
+          <div className="rounded-[14px] border border-[#E4E4E7] p-6 text-[15px] text-[#9A9A9A]">
+            Чтобы настроить ИИ-агента, создайте чат-виджет в проекте.
+          </div>
+        ) : (
+          <>
+            {/* Включение агента */}
+            <div className="rounded-[14px] border border-[#E4E4E7] p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[18px] leading-6 font-semibold text-[#1A1A1A]">
+                    ИИ-агент
+                  </span>
+                  <span className="text-[14px] leading-5 text-[#9A9A9A]">
+                    Отвечает посетителям на их языке на основе вашего сайта и продукта.
+                  </span>
+                </div>
+                <CustomSwitch
+                  size="sm"
+                  isSelected={enabled}
+                  onValueChange={v => setChatPatch({ aiAgentEnabled: v })}
+                  selectedColor={ASSISTANT_ACCENT}
+                />
+              </div>
+              <p className="text-[13px] leading-5 text-[#9A9A9A]">
+                Имя агента («{agentName}») и разделы для изучения — в блоке «Аи агент» (Настройки).
+              </p>
+            </div>
+
+            {/* Статистика остатка сообщений */}
+            <div className="rounded-[14px] border border-[#E4E4E7] p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-[16px] leading-5 font-medium text-[#1A1A1A]">
+                  Осталось сообщений в этом месяце
+                </span>
+                {usage && (
+                  <span className="text-[18px] font-semibold text-[#1A1A1A]">
+                    {usage.remaining}{' '}
+                    <span className="text-[14px] font-normal text-[#9A9A9A]">/ {usage.limit}</span>
+                  </span>
+                )}
+              </div>
+              {usageErr ? (
+                <span className="text-[14px] text-[#FF4D4D]">Не удалось загрузить статистику.</span>
+              ) : !usage ? (
+                <span className="text-[14px] text-[#9A9A9A]">Загрузка…</span>
+              ) : (
+                <>
+                  <div className="h-2 w-full rounded-full bg-[#EEEEF2] overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${usedPct}%`, backgroundColor: barColor }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[13px] text-[#9A9A9A]">
+                    <span>Использовано {usage.used} из {usage.limit}</span>
+                    {resetLabel && <span>Обновится {resetLabel}</span>}
+                  </div>
+                  {/* Дневной лимит — фактический потолок на бесплатном тарифе ИИ. */}
+                  <div className="mt-1 flex items-center justify-between text-[13px] text-[#9A9A9A] border-t border-[#EEEEF2] pt-2">
+                    <span>Сегодня осталось</span>
+                    <span
+                      className={cn(
+                        'font-medium',
+                        usage.dailyRemaining <= 0 ? 'text-[#FF4D4D]' : 'text-[#1A1A1A]'
+                      )}
+                    >
+                      {usage.dailyRemaining} / {usage.dailyLimit}
+                    </span>
+                  </div>
+                  {usage.remaining <= 0 ? (
+                    <span className="text-[13px] text-[#FF4D4D]">
+                      Месячный лимит исчерпан — до обновления отвечают операторы.
+                    </span>
+                  ) : usage.dailyRemaining <= 0 ? (
+                    <span className="text-[13px] text-[#FF4D4D]">
+                      Дневной лимит исчерпан — сегодня отвечают операторы, завтра ИИ снова доступен.
+                    </span>
+                  ) : null}
+                </>
+              )}
+            </div>
+
+            {/* Кнопка настройки ИИ-агента: имя и страницы для изучения. */}
+            <button
+              type="button"
+              onClick={() => setShowSettings(v => !v)}
+              className="h-11 px-5 self-start rounded-[10px] border border-[#5951E5] text-[#5951E5] text-[15px] hover:bg-[#5951E5]/5 transition-colors"
+            >
+              {showSettings ? 'Скрыть настройки ИИ-агента' : 'Настроить ИИ-агента'}
+            </button>
+
+            {showSettings && <ChatAiAgentSettings />}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const SettingsSection = ({
   preview,
   projectId,
@@ -3076,6 +3364,8 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         <DepartmentsSection preview={preview} projectId={activeProjectId} />
       ) : section === 'settings' ? (
         <SettingsSection preview={preview} projectId={activeProjectId} />
+      ) : section === 'assistant' ? (
+        <AssistantSection preview={preview} projectId={activeProjectId} />
       ) : section !== 'inbox' ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-2 border-l border-default-200 text-default-400">
           <span className="text-[18px] font-medium text-[#1A1A1A]">{SECTION_TITLES[section]}</span>
@@ -3319,6 +3609,13 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                             isManager ? 'bg-primary/10 rounded-br-[4px]' : 'bg-default-100 rounded-bl-[4px]',
                           )}
                         >
+                          {/* Пометка «ИИ» — видна ТОЛЬКО оператору (визиторский API флаг не отдаёт). */}
+                          {m.aiGenerated && (
+                            <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#5951E5]/12 px-2 py-0.5 text-[11px] font-medium text-[#5951E5]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#5951E5]" />
+                              ИИ
+                            </div>
+                          )}
                           {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
                           {(m.attachmentUrl || (m.attachments && m.attachments.length > 0)) && (
                             <div className={cn(m.body && 'mt-2')}>

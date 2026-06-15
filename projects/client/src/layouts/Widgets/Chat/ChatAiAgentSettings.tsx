@@ -1,6 +1,6 @@
+import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@heroui/theme'
 
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import CustomSwitch from '@/components/CustomSwitch'
@@ -9,11 +9,27 @@ import { Input } from '@/components'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 import { chatWidgetDefaults as defaults } from './defaults'
+import * as chatModule from '@/services/chatModule'
 
 const ACCENT = '!bg-[#5951E5]'
 
-// Аи-агент временно отключён (скоро). Тумблер недоступен, настройки скрыты.
-const AI_AGENT_COMING_SOON = true
+// Аи-агент доступен. Имя и разделы для изучения задаются здесь; включение и статистика
+// остатка сообщений — в разделе «Ассистент» (см. ChatModulePage).
+const AI_AGENT_COMING_SOON = false
+
+// Технические id виджета-заглушки (превью / общий редактор без реального чата) — для них
+// список страниц с сервера не запрашиваем.
+const PLACEHOLDER_IDS = new Set(['chat-module-settings', 'chat-module', 'preview'])
+
+// Путь страницы из абсолютного URL (для отображения). Для не-URL возвращаем как есть.
+const pathOf = (u: string) => {
+  try {
+    const p = new URL(u)
+    return p.pathname + p.search || '/'
+  } catch {
+    return u
+  }
+}
 
 const ChatAiAgentSettings = () => {
   const { enabled, name, knowledge } = useWidgetSettingsStore(
@@ -26,13 +42,35 @@ const ChatAiAgentSettings = () => {
       }
     })
   )
+  const widgetId = useWidgetSettingsStore(s => s.settings?.id)
   const setChatPatch = useWidgetSettingsStore(s => s.setChatPatch)
 
   const updateKnowledge = (next: string[]) => setChatPatch({ aiKnowledge: next })
-  const setItem = (i: number, v: string) =>
-    updateKnowledge(knowledge.map((k, idx) => (idx === i ? v : k)))
-  const addItem = () => updateKnowledge([...knowledge, ''])
-  const removeItem = (i: number) => updateKnowledge(knowledge.filter((_, idx) => idx !== i))
+  const removeItem = (url: string) => updateKnowledge(knowledge.filter(u => u !== url))
+  const addItem = (url: string) => {
+    if (!knowledge.includes(url)) updateKnowledge([...knowledge, url])
+  }
+
+  // Список внутренних страниц сайта (для выбора). Грузим лениво при открытии пикера.
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pages, setPages] = useState<chatModule.AiPage[] | null>(null)
+  const [loadingPages, setLoadingPages] = useState(false)
+  const [pagesError, setPagesError] = useState(false)
+
+  const canLoadPages = !!widgetId && !PLACEHOLDER_IDS.has(widgetId)
+
+  useEffect(() => {
+    if (!pickerOpen || pages || loadingPages || !canLoadPages) return
+    setLoadingPages(true)
+    setPagesError(false)
+    chatModule
+      .getAiPages(widgetId as string)
+      .then(setPages)
+      .catch(() => setPagesError(true))
+      .finally(() => setLoadingPages(false))
+  }, [pickerOpen, pages, loadingPages, canLoadPages, widgetId])
+
+  const available = (pages ?? []).filter(p => !knowledge.includes(p.url))
 
   return (
     <BorderedContainer>
@@ -91,35 +129,81 @@ const ChatAiAgentSettings = () => {
                     Разделы для изучения
                   </span>
                   <p className="text-[14px] text-[#9A9A9A]">
-                    О чём агент должен знать и информировать клиента.
+                    Страницы вашего сайта, которые агент изучит и по которым будет отвечать.
+                    Если ничего не выбрано — агент изучает только главную страницу.
                   </p>
-                  {knowledge.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <Input
-                        value={item}
-                        placeholder="Раздел"
-                        onValueChange={v => setItem(i, v)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeItem(i)}
-                        aria-label="Удалить раздел"
-                        className={cn(
-                          'shrink-0 w-10 h-10 rounded-[10px] border border-[#E4E4E7]',
-                          'text-[#B0AEBA] hover:text-[#FF4D4D] hover:border-[#FF4D4D] transition-colors',
-                        )}
-                      >
-                        ✕
-                      </button>
+
+                  {/* Выбранные страницы */}
+                  {knowledge.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {knowledge.map(url => (
+                        <div
+                          key={url}
+                          className="flex items-center gap-2 rounded-[10px] border border-[#E4E4E7] px-3 h-10"
+                        >
+                          <span className="flex-1 truncate text-[15px] text-[#1A1A1A]" title={url}>
+                            {pathOf(url)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(url)}
+                            aria-label="Убрать страницу"
+                            className="shrink-0 text-[#B0AEBA] hover:text-[#FF4D4D] transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addItem}
-                    className="text-[14px] text-[#5951E5] text-left hover:underline"
-                  >
-                    + добавить раздел
-                  </button>
+                  )}
+
+                  {/* Кнопка-плюс + выпадающий список страниц */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setPickerOpen(o => !o)}
+                      className="text-[14px] text-[#5951E5] text-left hover:underline"
+                    >
+                      + добавить страницу
+                    </button>
+
+                    {pickerOpen && (
+                      <div className="mt-2 rounded-[12px] border border-[#E4E4E7] bg-white shadow-sm overflow-hidden">
+                        {!canLoadPages ? (
+                          <p className="px-3 py-3 text-[14px] text-[#9A9A9A]">
+                            Список страниц доступен в кабинете после сохранения чата.
+                          </p>
+                        ) : loadingPages ? (
+                          <p className="px-3 py-3 text-[14px] text-[#9A9A9A]">Загрузка страниц…</p>
+                        ) : pagesError ? (
+                          <p className="px-3 py-3 text-[14px] text-[#FF4D4D]">
+                            Не удалось загрузить страницы. Проверьте, что у проекта указан сайт.
+                          </p>
+                        ) : available.length === 0 ? (
+                          <p className="px-3 py-3 text-[14px] text-[#9A9A9A]">
+                            {pages && pages.length > 0
+                              ? 'Все найденные страницы уже добавлены.'
+                              : 'Внутренние страницы не найдены.'}
+                          </p>
+                        ) : (
+                          <ul className="max-h-64 overflow-y-auto">
+                            {available.map(p => (
+                              <li key={p.url}>
+                                <button
+                                  type="button"
+                                  onClick={() => addItem(p.url)}
+                                  className="w-full text-left px-3 py-2.5 hover:bg-[#F4F3FF] transition-colors flex flex-col"
+                                >
+                                  <span className="text-[15px] text-[#1A1A1A] truncate">{p.path}</span>
+                                  <span className="text-[12px] text-[#9A9A9A] truncate">{p.url}</span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>

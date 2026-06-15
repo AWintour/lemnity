@@ -12,6 +12,7 @@ import {
 } from '@nestjs/websockets'
 import type { Server, Socket } from 'socket.io'
 import { ChatService } from './chat.service'
+import { AiAgentService } from './ai-agent.service'
 import { ChatOperatorService } from '../chat-operator/chat-operator.service'
 import type { ChatActor } from './chat-actor.guard'
 import type { ChatMessageEntity } from './entities/chat-message.entity'
@@ -58,7 +59,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chat: ChatService,
     private readonly operators: ChatOperatorService,
     private readonly jwt: JwtService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly ai: AiAgentService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -237,6 +239,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         { id: data.conversationId, projectId: data.projectId },
         message
       )
+      // ИИ-агент: если включён у виджета и не исчерпана квота — отвечает на сообщение посетителя.
+      // Fire-and-forget: не задерживает ack визитёру; ошибки гасятся внутри maybeReply.
+      void this.ai.maybeReply(data.conversationId).then(aiMessage => {
+        if (aiMessage)
+          this.broadcastMessage(
+            { id: data.conversationId, projectId: data.projectId },
+            aiMessage
+          )
+      })
       return message
     }
 

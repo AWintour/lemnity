@@ -102,9 +102,29 @@ model ChatMessage {
   // userId продавца-автора (денормализация, чтобы список не зависел от Manager).
   senderUserId   String?  @map("sender_user_id")
 
+  // Ответ сгенерирован ИИ-агентом (sender='manager', но создан ботом).
+  // Используется для подсчёта месячной квоты и для пометки «ИИ» в кабинете оператора.
+  // ВАЖНО: посетителю этот флаг не отдаём — пометку видит только оператор.
+  aiGenerated    Boolean  @default(false) @map("ai_generated")
+
   readAt         DateTime? @map("read_at")
   createdAt      DateTime  @default(now()) @map("created_at")
 
   @@index([conversationId, createdAt])
+  // Подсчёт месячной квоты ИИ по виджету (через join conversation.widgetId).
+  @@index([aiGenerated, createdAt])
   @@map("chat_messages")
+}
+
+// Кэш текстового «знания» о сайте/продукте клиента для ИИ-агента (MVP-grounding).
+// Один на проект (ключ — projectId). Обновляется лениво (см. SiteKnowledgeService).
+model AiSiteKnowledge {
+  projectId String   @id @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  sourceUrl String   @map("source_url")
+  content   String                            // извлечённый текст (урезанный)
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+
+  @@map("ai_site_knowledge")
 }

@@ -224,3 +224,28 @@ export async function updateConversationFields(id: string, dto: UpdateConversati
   const res = await http.patch(API.CHAT.CONVERSATION(id), dto)
   return res.data
 }
+
+/* ============ ИИ-агент: месячная квота сообщений по чат-виджету ============ */
+
+export type AiUsage = {
+  limit: number
+  used: number
+  remaining: number
+  resetAt: string
+  dailyLimit: number
+  dailyUsed: number
+  dailyRemaining: number
+  dailyResetAt: string
+}
+
+export async function getAiUsage(widgetId: string) {
+  const res = await http.get<AiUsage>(API.CHAT.AI_USAGE(widgetId))
+  return res.data
+}
+
+export type AiPage = { url: string; path: string }
+
+export async function getAiPages(widgetId: string) {
+  const res = await http.get<{ pages: AiPage[] }>(API.CHAT.AI_PAGES(widgetId))
+  return res.data.pages
+}

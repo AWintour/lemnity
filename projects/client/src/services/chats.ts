@@ -54,6 +54,9 @@ export type ChatMessage = {
   attachmentName?: string | null
   attachments?: MessageAttachment[] | null
   senderUserId?: string | null
+  // Ответ сгенерирован ИИ-агентом. Приходит только оператору (визиторский REST флаг скрывает);
+  // используется для пометки «ИИ» в кабинете.
+  aiGenerated?: boolean
   readAt?: string | null
   createdAt: string
 }
