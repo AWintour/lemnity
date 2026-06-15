@@ -173,6 +173,15 @@ services:
       MANGO_VPBX_API_KEY: ${MANGO_VPBX_API_KEY}
       MANGO_VPBX_API_SALT: ${MANGO_VPBX_API_SALT}
       MANGO_VPBX_LINE_NUMBER: ${MANGO_VPBX_LINE_NUMBER}
+      # ИИ-агент чата (OpenRouter). Без OPENROUTER_API_KEY агент молчит — чат работает как раньше.
+      # Сам ключ задаётся в .env на проде (секрет, не в git). Остальное имеет дефолты.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      AI_AGENT_MODEL: ${AI_AGENT_MODEL:-openai/gpt-oss-120b:free}
+      AI_AGENT_SITE_URL: ${AI_AGENT_SITE_URL:-https://lemnity.com}
+      AI_AGENT_SITE_NAME: ${AI_AGENT_SITE_NAME:-Lemnity}
+      AI_AGENT_DAILY_LIMIT: ${AI_AGENT_DAILY_LIMIT:-40}
+      AI_AGENT_MONTHLY_LIMIT: ${AI_AGENT_MONTHLY_LIMIT:-1000}
     depends_on:
       postgres:
         condition: service_healthy
