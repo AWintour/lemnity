@@ -1038,8 +1038,9 @@ const Widget = (props: WidgetProps) => {
               {/* Бот «печатает…» перед авто-переходом к следующему шагу. */}
               {props.view === 'chat' && props.typing && <TypingBubble />}
 
-            {/* Кнопки сценария — ТОЛЬКО на главном экране (в чате их нет) */}
-            {props.view === 'home' && showQuickReplies && (() => {
+            {/* Кнопки сценария: на главном экране (меню) и в переписке под сообщениями.
+                В режиме живого оператора (chatActive) кнопки бота не показываем. */}
+            {(props.view === 'home' || (props.view === 'chat' && !props.chatActive)) && showQuickReplies && (() => {
               const regular = props.quickReplies.filter(q => !q.isHandoff)
               const handoff = props.quickReplies.filter(q => q.isHandoff)
               const btnDisabled = props.disabled || props.chatActive
