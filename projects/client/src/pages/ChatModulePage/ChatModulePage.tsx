@@ -1105,7 +1105,8 @@ const OperatorsSection = ({
             .filter(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT))
             .map(p => {
               const w = p.widgets.find(x => x.type === WidgetTypeEnum.CHAT)!
-              return { widgetId: w.id, label: w.name?.trim() || p.name?.trim() || 'Чат' }
+              // Единое правило подписи чата (config.title → имя проекта → …), как во всех селекторах.
+              return { widgetId: w.id, label: chatLabel(w, p.name) }
             }),
     [allProjects, preview]
   )
