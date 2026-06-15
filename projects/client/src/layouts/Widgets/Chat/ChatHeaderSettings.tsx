@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
+import ResizableTextarea from '@/components/ResizableTextarea'
 import CustomSwitch from '@/components/CustomSwitch'
 import ColorPicker from '@/components/ColorPicker'
 import NumberStepper from '@/components/NumberStepper'
@@ -70,7 +71,7 @@ const ChatHeaderSettings = () => {
       <BorderedContainer>
         <div className="w-full flex flex-col gap-4">
           <span className="text-[20px] leading-6 font-semibold text-[#1A1A1A]">Оператор</span>
-          <input
+          <ResizableTextarea
             value={operatorName}
             onChange={e => setChatPatch({ operatorName: e.target.value })}
             placeholder="Имя оператора"
@@ -80,7 +81,7 @@ const ChatHeaderSettings = () => {
               'text-[18px] leading-6 text-[#1A1A1A] outline-none focus:border-[#5951E5]',
             )}
           />
-          <input
+          <ResizableTextarea
             value={operatorSubtitle}
             onChange={e => setChatPatch({ operatorSubtitle: e.target.value })}
             placeholder="Подзаголовок (например: Супер гид города)"

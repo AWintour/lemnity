@@ -16,13 +16,16 @@ type FloatingPreviewProps = {
 const ChatFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   const [mounted, setMounted] = useState(false)
 
-  const triggerPosition = useWidgetSettingsStore(
+  const { triggerPosition, windowFormat } = useWidgetSettingsStore(
     useShallow(s => {
       const settings = (s.settings?.widget as ChatWidgetType)
-      return settings.triggerPosition
-          ?? defaults.triggerPosition
+      return {
+        triggerPosition: settings.triggerPosition ?? defaults.triggerPosition,
+        windowFormat: settings.windowFormat ?? defaults.windowFormat,
+      }
     })
   )
+  const isSidebar = windowFormat === 'sidebar'
 
   useEffect(() => {
     setMounted(true)
@@ -45,7 +48,8 @@ const ChatFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
         Закрыть
       </button>
       <div className={cn(
-        'mt-auto mb-6',
+        // Боковая панель — на всю высоту у края; модальное окно — снизу с отступом.
+        isSidebar ? 'h-full' : 'mt-auto mb-6',
         triggerPosition === 'bottom-right'
           ? 'ml-auto mr-0'
           : 'mr-auto ml-0',

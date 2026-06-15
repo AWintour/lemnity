@@ -52,6 +52,9 @@ const scrollPercent = (w: Window): number => {
   return Math.min(100, (scrollTop / max) * 100)
 }
 
+// Пауза перед авто-переходом шага без кнопок (имитация набора оператором).
+const AUTO_ADVANCE_MS = 1500
+
 type ChatEmbedRuntimeProps = {
   preview?: boolean
 }
@@ -150,6 +153,11 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   const [messages, setMessages] = useState<ChatUiMessage[]>([])
   const [currentStepId, setCurrentStepId] = useState<string | null>(null)
   const [mode, setMode] = useState<'bot' | 'operator'>('bot')
+  // Индикатор «печатает…» во время паузы авто-перехода между шагами без кнопок.
+  const [typing, setTyping] = useState(false)
+  // id шагов, уже пройденных авто-переходом в текущей цепочке — защита от зацикливания
+  // (шаги-«next» по кругу). Сбрасывается при ручном действии и сбросе диалога.
+  const autoChainRef = useRef<Set<string>>(new Set())
   // Офлайн-сообщение отправлено (показываем подтверждение вместо поля).
   const [offlineSent, setOfflineSent] = useState(false)
   // Диалог завершён оператором — показываем кнопку «Начать беседу» вместо поля ввода.
@@ -281,6 +289,8 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   // отдельным сообщением сразу в переписке. Используется для сида и «Завершить диалог».
   const resetConversation = useCallback(() => {
     historyRef.current = []
+    autoChainRef.current = new Set()
+    setTyping(false)
     if (scenario.enabled) {
       const start = stepById.get(scenario.startStepId)
       setMessages([])
@@ -365,6 +375,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     const step = currentStepId ? stepById.get(currentStepId) : undefined
     const button = step?.buttons.find(b => b.id === buttonId)
     if (!button) return
+    // Ручной выбор — начинаем новую цепочку авто-переходов с чистого листа.
+    autoChainRef.current = new Set()
+    setTyping(false)
 
     if (button.next === null) {
       // Хэндоф к живому оператору. Если включён сбор контактов — сначала форма.
@@ -393,6 +406,45 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       append({ id: `step-${nextStep.id}-${uuidv4().slice(0, 6)}`, sender: 'manager', body: nextStep.message, image: nextStep.image, createdAt: nowIso() })
     }
   }, [currentStepId, stepById, append, sendToOperator, contacts])
+
+  // Авто-переход: шаг БЕЗ кнопок с заданным next бот продолжает сам после паузы (с «печатает…»).
+  // Перезапускается при смене шага → получается цепочка сообщений. Защита от циклов — autoChainRef.
+  useEffect(() => {
+    const canAuto =
+      scenario.enabled &&
+      mode === 'bot' &&
+      !!currentStepId &&
+      (view === 'home' || view === 'chat')
+    if (!canAuto) { setTyping(false); return }
+
+    const step = stepById.get(currentStepId)
+    if (!step || step.buttons.length > 0 || !step.next) { setTyping(false); return }
+
+    const nextId = step.next
+    const nextStep = stepById.get(nextId)
+    if (!nextStep || autoChainRef.current.has(nextId)) { setTyping(false); return }
+
+    setTyping(true)
+    const timer = setTimeout(() => {
+      autoChainRef.current.add(nextId)
+      setTyping(false)
+      // Лента сообщений видна только на экране чата — переводим с первого экрана.
+      setView(v => (v === 'home' ? 'chat' : v))
+      if (nextStep.message.trim() || nextStep.image) {
+        append({
+          id: `step-${nextStep.id}-${uuidv4().slice(0, 6)}`,
+          sender: 'manager',
+          body: nextStep.message,
+          image: nextStep.image,
+          createdAt: nowIso(),
+        })
+      }
+      setCurrentStepId(nextId)
+    }, AUTO_ADVANCE_MS)
+
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenario.enabled, mode, currentStepId, view, stepById, append])
 
   // Онлайн: «Войти в чат» — открываем переписку с живым оператором.
   const handleEnterChat = useCallback(() => {
@@ -531,13 +583,17 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     if (!containerRef.current || !triggerRef.current) return
     const isBottomRight = triggerPosition === 'bottom-right'
     const offset = 24
+    // Боковая панель докована: кнопка закрытия вынесена за внутренний край (~48px) —
+    // расширяем кликабельную зону iframe с внутренней стороны, иначе клик «провалится» на сайт.
+    const sidebarDockedNow = windowFormat === 'sidebar' && open && !isMobileViewport && !props.preview
+    const innerPad = sidebarDockedNow ? 64 : offset
     const boundingRect = containerRef.current.getBoundingClientRect()
     const triggerWidth = triggerRef.current.clientWidth
     const triggerHeight = triggerRef.current.clientHeight
     let left: number
     let top: number
     if (open) {
-      left = isBottomRight ? window.innerWidth - boundingRect.width - offset : 0
+      left = isBottomRight ? window.innerWidth - boundingRect.width - innerPad : 0
       top = window.innerHeight - boundingRect.height - offset
     } else {
       const width = clipOnlyTrigger ? triggerWidth + 8 + offset : 233 + offset
@@ -551,11 +607,11 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       rect: {
         left,
         top,
-        width: open ? boundingRect.width + offset : clipOnlyTrigger ? triggerWidth + 8 : 233,
+        width: open ? boundingRect.width + innerPad : clipOnlyTrigger ? triggerWidth + 8 : 233,
         height: open ? boundingRect.height + offset : triggerHeight + 10,
       },
     })
-  }, [open, triggerPosition])
+  }, [open, triggerPosition, windowFormat, isMobileViewport, props.preview])
 
   const toggleOpen = () => {
     setOpen(prev => {
@@ -622,7 +678,10 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     welcomeTitleAlign,
     messages,
     quickReplies,
+    typing,
     brandingEnabled,
+    // Сторона дока боковой панели (для кнопки закрытия, выступающей за внутренний край).
+    sidebarSide: triggerPosition === 'bottom-left' ? ('left' as const) : ('right' as const),
     view,
     contacts,
     contactsTab,
@@ -651,8 +710,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     onClose: toggleOpen,
   }
 
-  // Боковая панель в открытом виде докуется к краю экрана на всю высоту (только desktop-embed).
-  const sidebarDocked = windowFormat === 'sidebar' && open && !isMobileViewport && !props.preview
+  // Боковая панель: формат «панель на всю высоту» (только desktop).
+  const isSidebarFmt = windowFormat === 'sidebar' && !isMobileViewport
+  // В live докуется к краю экрана на всю высоту; в preview заполняет область превью.
+  const sidebarDocked = isSidebarFmt && open && !props.preview
+  // В боковой панели закрытие — кнопкой НА панели (слева), поэтому круглый баббл-триггер прячем.
+  const hideTrigger = isSidebarFmt && open
 
   return (
     <div
@@ -662,9 +725,16 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       className={cn(
         'flex flex-col gap-3',
         props.preview
-          ? 'relative'
+          ? isSidebarFmt
+            ? cn(
+                'relative h-full justify-end',
+                triggerPosition === 'bottom-right' ? 'items-end' : 'items-start',
+                // Закрытый баббл-триггер не прижимаем к краям — отступ как у модального формата.
+                !open && (triggerPosition === 'bottom-right' ? 'pb-3 pr-3' : 'pb-3 pl-3'),
+              )
+            : 'relative'
           : sidebarDocked
-            ? cn('fixed top-0 bottom-0 justify-end pb-3', triggerPosition === 'bottom-right' ? 'right-0' : 'left-0')
+            ? cn('fixed top-0 bottom-0', triggerPosition === 'bottom-right' ? 'right-0' : 'left-0')
             : cn('fixed bottom-3', triggerPosition === 'bottom-right' ? 'right-3' : 'left-3'),
       )}
     >
@@ -681,6 +751,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
           </MobileWidgetTrigger>
         : <DesktopWidgetTrigger
             ref={triggerRef}
+            hideTrigger={hideTrigger}
             closeIconStyle={closeIconStyle}
             unreadCount={unreadCount}
             onMouseEnter={handleTriggerMouseEnter}

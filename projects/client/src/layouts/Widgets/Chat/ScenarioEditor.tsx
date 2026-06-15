@@ -18,6 +18,7 @@ import '@xyflow/react/dist/style.css'
 
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
 import EmojiPicker from '@/components/EmojiPicker'
+import ResizableTextarea from '@/components/ResizableTextarea'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useProjectsStore } from '@/stores/projectsStore'
 import * as chatModule from '@/services/chatModule'
@@ -162,15 +163,14 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
       </div>
 
       <div className="p-3 flex flex-col gap-2">
-        <textarea
+        <ResizableTextarea
           value={msg}
           onChange={e => {
             setMsg(e.target.value)
             data.onMessage(step.id, e.target.value)
           }}
-          rows={2}
           placeholder="Сообщение бота…"
-          className="nodrag resize-none w-full text-[13px] leading-4 rounded-[8px] border border-[#E3E3E8] px-2 py-1.5 outline-none focus:border-[#5951E5]"
+          className="nodrag w-full text-[13px] leading-4 rounded-[8px] border border-[#E3E3E8] px-2 py-1.5 outline-none focus:border-[#5951E5]"
         />
 
         {/* Изображение шага — показывается в окне чата */}
@@ -237,6 +237,17 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
           + кнопка
         </button>
       </div>
+
+      {/* Выход шага БЕЗ кнопок: авто-переход к следующему шагу (точка справа на ноде).
+          Появляется только когда кнопок нет — иначе связь ведут от кнопок. */}
+      {step.buttons.length === 0 && (
+        <Handle
+          type="source"
+          id="__next"
+          position={Position.Right}
+          className="!bg-[#5951E5]"
+        />
+      )}
     </div>
   )
 }
@@ -376,9 +387,10 @@ const ScenarioEditor = () => {
       ...s,
       steps: s.steps
         .filter(st => st.id !== stepId)
-        // отвязываем кнопки, ведущие на удалённый шаг
+        // отвязываем кнопки и авто-переход (next шага), ведущие на удалённый шаг
         .map(st => ({
           ...st,
+          next: st.next === stepId ? null : st.next,
           buttons: st.buttons.map(b => (b.next === stepId ? { ...b, next: null } : b)),
         })),
     }))
@@ -415,8 +427,8 @@ const ScenarioEditor = () => {
 
   const buildEdges = useCallback(
     (): Edge[] =>
-      scenario.steps.flatMap(step =>
-        step.buttons
+      scenario.steps.flatMap(step => {
+        const edges: Edge[] = step.buttons
           .filter(b => b.next)
           .map(b => ({
             id: `${step.id}:${b.id}`,
@@ -426,7 +438,19 @@ const ScenarioEditor = () => {
             animated: true,
             style: { stroke: '#5951E5' },
           }))
-      ),
+        // Ребро авто-перехода шага без кнопок (выход «__next» → следующий шаг).
+        if (step.buttons.length === 0 && step.next) {
+          edges.push({
+            id: `${step.id}:__next`,
+            source: step.id,
+            sourceHandle: '__next',
+            target: step.next,
+            animated: true,
+            style: { stroke: '#5951E5' },
+          })
+        }
+        return edges
+      }),
     [scenario]
   )
 
@@ -440,7 +464,7 @@ const ScenarioEditor = () => {
   const signature = useMemo(
     () =>
       JSON.stringify(
-        scenario.steps.map(s => [s.id, s.image, s.buttons.map(b => [b.id, b.emoji, b.next, b.department])])
+        scenario.steps.map(s => [s.id, s.image, s.next, s.buttons.map(b => [b.id, b.emoji, b.next, b.department])])
       ) + `|${scenario.startStepId}|${departments.length}`,
     [scenario, departments.length]
   )
@@ -477,6 +501,16 @@ const ScenarioEditor = () => {
   const onConnect = useCallback(
     (conn: Connection) => {
       if (!conn.source || !conn.target || !conn.sourceHandle) return
+      // Связь от выхода «__next» (шаг без кнопок) — пишем next на уровень шага.
+      if (conn.sourceHandle === '__next') {
+        commit(s => ({
+          ...s,
+          steps: s.steps.map(st =>
+            st.id === conn.source ? { ...st, next: conn.target } : st
+          ),
+        }))
+        return
+      }
       commit(s => ({
         ...s,
         steps: s.steps.map(st =>
@@ -501,6 +535,10 @@ const ScenarioEditor = () => {
         steps: s.steps.map(st => {
           const hit = deleted.find(e => e.source === st.id)
           if (!hit) return st
+          // Удаление ребра авто-перехода (выход «__next») — сбрасываем next шага.
+          if (hit.sourceHandle === '__next') {
+            return { ...st, next: null }
+          }
           return {
             ...st,
             buttons: st.buttons.map(b => (b.id === hit.sourceHandle ? { ...b, next: null } : b)),
@@ -566,6 +604,7 @@ const ScenarioEditor = () => {
 
         <p className="text-[12px] text-[#9A96A2]">
           Перетаскивайте шаги мышью. Тяните связь от кнопки (правый кружок) к другому шагу.
+          У шага без кнопок точка справа — авто-переход: бот сам продолжит к следующему шагу.
           Кнопка с иконкой 👤 — «передать менеджеру» (живой оператор).
         </p>
       </div>

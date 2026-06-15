@@ -32,6 +32,9 @@ const ScenarioStepSchema = z.object({
   // Опциональное изображение шага (data-URL или внешний URL); показывается в окне чата.
   image: z.string().optional(),
   buttons: z.array(ScenarioButtonSchema),
+  // Авто-переход: id следующего шага для шага БЕЗ кнопок (бот сам продолжает после паузы).
+  // Отсутствует/null = шаг конечный (без авто-перехода). Используется только когда buttons пуст.
+  next: z.string().nullable().optional(),
   // Координаты узла на canvas редактора.
   position: z.object({ x: z.number(), y: z.number() }),
 })

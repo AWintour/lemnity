@@ -21,6 +21,8 @@ type DesktopWidgetTriggerProps =
       triggerText: string
       triggerPosition: Position
       unreadCount: number
+      // Боковая панель открыта — круглый баббл-триггер не показываем (закрытие — кнопкой на панели).
+      hideTrigger?: boolean
       onMouseEnter: () => void
       onMouseLeave: () => void
       toggleOpen: () => void
@@ -33,7 +35,7 @@ const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
     <>
       {props.children}
 
-      <button
+      {props.hideTrigger ? null : <button
         ref={ref}
         type='button'
         onClick={props.toggleOpen}
@@ -74,7 +76,7 @@ const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
         )}
 
         {!props.open && <Badge badgeContent={props.unreadCount} />}
-      </button>
+      </button>}
     </>
   )
 }

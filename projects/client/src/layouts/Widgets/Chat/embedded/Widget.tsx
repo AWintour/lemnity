@@ -51,6 +51,10 @@ type WidgetProps = {
   welcomeTitleAlign: 'left' | 'center' | 'right'
   messages: ChatUiMessage[]
   quickReplies: QuickReply[]
+  // Бот «печатает…» — пауза перед авто-переходом шага сценария (показываем анимированные точки).
+  typing?: boolean
+  // Сторона, к которой докуется боковая панель (определяет, с какого края торчит кнопка закрытия).
+  sidebarSide?: 'left' | 'right'
   brandingEnabled: boolean
   view: 'home' | 'chat' | 'form' | 'contacts' | 'callback'
   contacts: ContactsCfg
@@ -548,6 +552,21 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
   )
 }
 
+// Пузырь «печатает…»: три точки с лёгкой волной (имитация набора оператором).
+const TypingBubble = () => (
+  <div className="w-full flex items-start">
+    <div className="bg-[#F4F2FC] rounded-[16px] rounded-bl-[6px] px-4 py-3.5 flex items-center gap-1.5">
+      {[0, 1, 2].map(i => (
+        <span
+          key={i}
+          className="w-2 h-2 rounded-full bg-[#B0AEBA] animate-bounce"
+          style={{ animationDelay: `${i * 0.15}s`, animationDuration: '1s' }}
+        />
+      ))}
+    </div>
+  </div>
+)
+
 const FORM_GREEN = '#56B65C'
 
 const ContactForm = ({
@@ -814,7 +833,7 @@ const Widget = (props: WidgetProps) => {
     if (props.view !== 'chat') return
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [props.messages, props.open, props.view])
+  }, [props.messages, props.open, props.view, props.typing])
 
   const submit = (body: string) => {
     const text = body.trim()
@@ -854,10 +873,31 @@ const Widget = (props: WidgetProps) => {
     ? { maxHeight: window.innerHeight - 96, width: 'min(380px, 94vw)' }
     : undefined
 
+  const sidebarSide = props.sidebarSide ?? 'right'
+
   return (
     <AnimatePresence>
       {props.open && (
-        <div style={mobileStyle} className={cn(isSidebar && 'h-[100dvh]')}>
+        <div style={mobileStyle} className={cn('relative', isSidebar && 'h-full')}>
+          {/* Боковая панель: круглая кнопка закрытия, выступающая за внутренний край блока. */}
+          {isSidebar && (
+            <button
+              type="button"
+              onClick={props.onClose}
+              aria-label="Закрыть чат"
+              className={cn(
+                'absolute top-4 z-20 w-10 h-10 rounded-full flex items-center justify-center',
+                'text-white shadow-[0px_4px_14px_rgba(0,0,0,0.25)] hover:opacity-90 transition-opacity',
+                // Полностью за блоком: ширина 40px + зазор 8px → 48px наружу.
+                sidebarSide === 'right' ? '-left-12' : '-right-12',
+              )}
+              style={{ backgroundColor: accent }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          )}
           <motion.div
             initial={motionInitial}
             animate={motionAnimate}
@@ -865,7 +905,7 @@ const Widget = (props: WidgetProps) => {
             transition={motionTransition}
             className={cn(
               'w-[380px] max-w-[94vw] shrink-0 flex flex-col overflow-hidden',
-              isSidebar ? 'h-[100dvh] max-h-[100dvh]' : 'h-[620px] max-h-[78vh]',
+              isSidebar ? 'h-full max-h-full' : 'h-[620px] max-h-[78vh]',
               'shadow-[0px_8px_24px_rgba(0,0,0,0.10)]',
             )}
             style={{
@@ -882,18 +922,6 @@ const Widget = (props: WidgetProps) => {
                   className="relative rounded-[18px] px-5 pt-4 pb-4 flex flex-col gap-2.5"
                   style={{ backgroundColor: accent }}
                 >
-                  {isSidebar && (
-                    <button
-                      type="button"
-                      onClick={props.onClose}
-                      aria-label="Закрыть чат"
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 6l12 12M18 6 6 18" />
-                      </svg>
-                    </button>
-                  )}
                   {/* Логотип слева, аватары операторов на одном уровне справа. */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="h-9 flex items-center">
@@ -939,7 +967,7 @@ const Widget = (props: WidgetProps) => {
                   avatarInitial={headerAvatarInitial}
                   operatorOnline={props.operatorOnline}
                   canGoBack={props.canGoBack}
-                  showClose={isSidebar}
+                  showClose={false}
                   onBack={props.onBack}
                   onClose={props.onClose}
                   onEndDialog={props.onEndDialog}
@@ -1006,6 +1034,9 @@ const Widget = (props: WidgetProps) => {
               {props.view === 'chat' && props.messages.map(message => (
                 <MessageBubble key={message.id} message={message} clientColor={props.clientColor} />
               ))}
+
+              {/* Бот «печатает…» перед авто-переходом к следующему шагу. */}
+              {props.view === 'chat' && props.typing && <TypingBubble />}
 
             {/* Кнопки сценария — ТОЛЬКО на главном экране (в чате их нет) */}
             {props.view === 'home' && showQuickReplies && (() => {
