@@ -1179,7 +1179,7 @@ const OperatorsSection = ({
     if (real && projectId) {
       void (async () => {
         try {
-          await chatModule.updateOperator(projectId, next.id, {
+          const saved = await chatModule.updateOperator(projectId, next.id, {
             name: next.name,
             email: next.email,
             // Постоянная ссылка или '' (стирает битый blob на сервере). undefined не шлём, чтобы очистка сработала.
@@ -1189,8 +1189,15 @@ const OperatorsSection = ({
             loginEmail: sEmail.trim() || undefined,
             password: sPass || undefined,
           })
+          // Синхронизируем локально серверным значением (в т.ч. avatarUrl), чтобы UI = БД.
+          rawOpsRef.current[saved.id] = saved
+          setOperators(prev => prev.map(o => (o.id === saved.id ? mapOp(saved, deptNameById) : o)))
+          setArchiveOf(prev => (prev && prev.id === saved.id ? mapOp(saved, deptNameById) : prev))
         } catch (e) {
+          const resp = (e as { response?: { data?: { message?: unknown } } })?.response?.data?.message
+          const msg = typeof resp === 'string' ? resp : (e as Error)?.message ?? 'неизвестная ошибка'
           console.error('updateOperator failed', e)
+          alert('Не удалось сохранить оператора: ' + msg)
         }
       })()
     }
