@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger'
 
 // Статистика месячной квоты ИИ-агента по чат-виджету.
 export class AiUsageEntity {
+  @ApiProperty({ description: 'Задан ли ключ OpenRouter на сервере (иначе агент молчит)' })
+  configured!: boolean
+
   @ApiProperty({ description: 'Лимит ответов ИИ в месяц на виджет' })
   limit!: number
 

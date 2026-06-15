@@ -2472,6 +2472,7 @@ const AssistantSection = ({
     setUsageErr(false)
     if (preview) {
       setUsage({
+        configured: true,
         limit: 1000,
         used: 137,
         remaining: 863,
@@ -2501,6 +2502,19 @@ const AssistantSection = ({
   const resetLabel = usage?.resetAt
     ? new Date(usage.resetAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     : null
+
+  // Статус агента для кабинета (без захода в логи).
+  const status = !usage
+    ? null
+    : !usage.configured
+      ? { label: 'Не подключён', cls: 'bg-[#FFE9E9] text-[#D33]' }
+      : !enabled
+        ? { label: 'Выключен', cls: 'bg-[#EEEEF2] text-[#9A9A9A]' }
+        : usage.remaining <= 0
+          ? { label: 'Месячный лимит', cls: 'bg-[#FFE9E9] text-[#D33]' }
+          : usage.dailyRemaining <= 0
+            ? { label: 'Лимит на сегодня', cls: 'bg-[#FFF3E0] text-[#B26A00]' }
+            : { label: 'Активен', cls: 'bg-[#E7F8EF] text-[#1B9E5E]' }
 
   return (
     <div className="flex-1 overflow-y-auto border-l border-default-200 p-6">
@@ -2543,12 +2557,24 @@ const AssistantSection = ({
             <div className="rounded-[14px] border border-[#E4E4E7] p-5 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[18px] leading-6 font-semibold text-[#1A1A1A]">
-                    ИИ-агент
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[18px] leading-6 font-semibold text-[#1A1A1A]">
+                      ИИ-агент
+                    </span>
+                    {status && (
+                      <span className={cn('text-[12px] px-2 py-0.5 rounded-full font-medium', status.cls)}>
+                        {status.label}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[14px] leading-5 text-[#9A9A9A]">
                     Отвечает посетителям на их языке на основе вашего сайта и продукта.
                   </span>
+                  {usage && !usage.configured && (
+                    <span className="text-[13px] text-[#D33]">
+                      Ключ OpenRouter не задан на сервере — агент не отвечает. Добавьте OPENROUTER_API_KEY.
+                    </span>
+                  )}
                 </div>
                 <CustomSwitch
                   size="sm"

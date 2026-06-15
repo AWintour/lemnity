@@ -228,6 +228,7 @@ export async function updateConversationFields(id: string, dto: UpdateConversati
 /* ============ ИИ-агент: месячная квота сообщений по чат-виджету ============ */
 
 export type AiUsage = {
+  configured: boolean
   limit: number
   used: number
   remaining: number

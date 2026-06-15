@@ -18,6 +18,8 @@ const HISTORY_LIMIT = 20
 const isRecord = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object'
 
 export type AiUsage = {
+  // Задан ли OPENROUTER_API_KEY на сервере (без него агент молчит, даже если включён в настройках).
+  configured: boolean
   limit: number
   used: number
   remaining: number
@@ -69,6 +71,7 @@ export class AiAgentService {
     const resetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
     const dailyResetAt = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
     return {
+      configured: !!this.config.get<string>('OPENROUTER_API_KEY'),
       limit,
       used,
       remaining: Math.max(0, limit - used),
