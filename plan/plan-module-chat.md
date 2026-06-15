@@ -244,6 +244,12 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
 анонимной политики бакета. Защита от `..`-traversal. Файлы: `storage/s3.service.ts` (+`getObject`),
 `files/public-uploads.controller.ts`, `files/files.module.ts`, `projects/nginx/nginx.conf`.
 
+**Битый аватар оператора = `blob:`-URL в БД.** Отдельно нашлось: у оператора в `avatarUrl` лежал
+`blob:https://…` (временная браузерная ссылка из старой сборки) — он не грузится нигде → инициал.
+Защита: `chat-operator.service.sanitizeAvatarUrl` (только `http(s)://`/`/…`; `blob:`/`data:`/пустое →
+`null`, очищает битое) в create/update; клиент (`saveSettings`) шлёт постоянную ссылку или `''`
+(стирает). Существующий битый аватар нужно **перезагрузить** (исходный blob уже недоступен).
+
 ## Картинки → персональное хранилище (правило по умолчанию)
 
 Аватар оператора (и картинки шага сценария, логотип компании) грузятся через

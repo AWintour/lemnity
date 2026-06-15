@@ -6,6 +6,16 @@ import type { CreateChatOperatorDto } from './dto/create-chat-operator.dto'
 import type { UpdateChatOperatorDto } from './dto/update-chat-operator.dto'
 import type { ChatOperatorEntity } from './entities/chat-operator.entity'
 
+// Аватар храним ТОЛЬКО как постоянную ссылку (S3 `http(s)://…` или относительную `/uploads/…`).
+// `blob:`/`data:`-URL — временные браузерные ссылки, в БД они бесполезны (не грузятся нигде).
+// undefined → не трогаем поле; null → очищаем (в т.ч. чистим ранее сохранённый битый blob).
+const sanitizeAvatarUrl = (value: unknown): string | null | undefined => {
+  if (typeof value !== 'string') return undefined
+  const s = value.trim()
+  if (!s) return null
+  return /^(https?:\/\/|\/)/i.test(s) ? s : null
+}
+
 type ChatOperatorRow = {
   id: string
   projectId: string
@@ -152,7 +162,7 @@ export class ChatOperatorService {
           name: dto.name,
           email: dto.email,
           role: dto.role,
-          avatarUrl: dto.avatarUrl,
+          avatarUrl: sanitizeAvatarUrl(dto.avatarUrl) ?? null,
           departmentId: dto.departmentId,
           widgetId,
           status: dto.status,
@@ -177,6 +187,10 @@ export class ChatOperatorService {
     delete data.active
     delete data.widgetId
     if (widgetId !== undefined) data.widgetId = widgetId
+    // Аватар: undefined — не трогаем; иначе нормализуем (blob:/data: → null, очищаем битое).
+    const avatar = sanitizeAvatarUrl(dto.avatarUrl)
+    if (avatar === undefined) delete data.avatarUrl
+    else data.avatarUrl = avatar
     Object.assign(data, await this.credentialData(dto))
     try {
       const row = await this.prisma.chatOperator.update({

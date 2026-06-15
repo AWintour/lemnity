@@ -1160,11 +1160,14 @@ const OperatorsSection = ({
   }
   const saveSettings = () => {
     if (!archiveOf) return
+    // Аватар сохраняем только как постоянную ссылку (S3/относительную). blob:/data: — временные
+    // браузерные URL, в БД бесполезны; такое значение очищаем (→ инициал), чтобы не плодить битое.
+    const persistAvatar = sAvatar && /^(https?:\/\/|\/)/i.test(sAvatar) ? sAvatar : null
     const next = {
       ...archiveOf,
       name: sName.trim() || archiveOf.name,
       email: sEmail.trim(),
-      avatar: sAvatar,
+      avatar: persistAvatar ?? undefined,
       active: sActive,
       hasLogin: archiveOf.hasLogin || !!sPass,
     }
@@ -1177,7 +1180,8 @@ const OperatorsSection = ({
           await chatModule.updateOperator(projectId, next.id, {
             name: next.name,
             email: next.email,
-            avatarUrl: next.avatar,
+            // Постоянная ссылка или '' (стирает битый blob на сервере). undefined не шлём, чтобы очистка сработала.
+            avatarUrl: persistAvatar ?? '',
             active: sActive,
             // Учётка: email = логин; пароль обновляем только если введён новый.
             loginEmail: sEmail.trim() || undefined,
