@@ -1144,6 +1144,8 @@ const OperatorsSection = ({
   const [sActive, setSActive] = useState(true)
   const [sAvatar, setSAvatar] = useState<string | undefined>(undefined)
   const [avatarError, setAvatarError] = useState('')
+  // Идёт загрузка аватара в хранилище — пока не завершится, не даём сохранить (иначе уйдёт старое/битое).
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [sMsgr, setSMsgr] = useState<'telegram' | 'vk' | 'max'>('telegram')
   const [sMsgrHandle, setSMsgrHandle] = useState('')
   const avatarRef = useRef<HTMLInputElement | null>(null)
@@ -1457,8 +1459,8 @@ const OperatorsSection = ({
               <div className="flex items-center gap-4">
                 <Avatar name={sName || op.name} size={64} url={sAvatar} />
                 <div className="flex flex-col gap-1">
-                  <button type="button" onClick={() => avatarRef.current?.click()} className="h-9 px-4 rounded-[10px] border border-default-200 text-[14px]">
-                    Загрузить аватар
+                  <button type="button" disabled={avatarUploading} onClick={() => avatarRef.current?.click()} className="h-9 px-4 rounded-[10px] border border-default-200 text-[14px] disabled:opacity-50">
+                    {avatarUploading ? 'Загрузка…' : 'Загрузить аватар'}
                   </button>
                   {avatarError && <span className="text-[12px] text-[#E5484D]">{avatarError}</span>}
                 </div>
@@ -1471,10 +1473,12 @@ const OperatorsSection = ({
                     return
                   }
                   setAvatarError('')
-                  // Грузим в персональное хранилище → URL (не data-URL в БД).
+                  // Грузим в персональное хранилище → постоянный URL (не data-URL/blob в БД).
+                  setAvatarUploading(true)
                   uploadImage(f)
                     .then(({ url }) => setSAvatar(url))
                     .catch(() => setAvatarError('Не удалось загрузить. ' + IMAGE_TOO_LARGE_MESSAGE))
+                    .finally(() => setAvatarUploading(false))
                 }} />
               </div>
 
@@ -1510,7 +1514,9 @@ const OperatorsSection = ({
 
               <div className="flex items-center justify-end gap-2 mt-1">
                 <button type="button" onClick={() => setSettingsOpen(false)} className="h-10 px-4 rounded-[10px] border border-default-200 text-[15px]">Отмена</button>
-                <button type="button" onClick={saveSettings} className="h-10 px-5 rounded-[10px] bg-primary text-white text-[15px]">Сохранить</button>
+                <button type="button" onClick={saveSettings} disabled={avatarUploading} className="h-10 px-5 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50">
+                  {avatarUploading ? 'Загрузка фото…' : 'Сохранить'}
+                </button>
               </div>
             </div>
           </div>
