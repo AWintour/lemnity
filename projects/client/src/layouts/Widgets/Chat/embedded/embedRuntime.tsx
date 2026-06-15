@@ -17,7 +17,8 @@ import { useChatConnection } from './useChatConnection'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { uuidv4 } from '@/common/utils/uuidv4'
-import { uploadImage, MAX_IMAGE_BYTES } from '@/api/upload'
+import { MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE, classifyAttachment } from '@/api/upload'
+import { uploadPublicChatFile } from '@/common/api/publicApi'
 import messageSoundUrl from '@/assets/zvuk-chat.mp3'
 
 import type { ChatWidgetType, Scenario } from '@lemnity/widget-config/widgets/chat'
@@ -599,19 +600,38 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     sendToOperator(text)
   }, [append, sendToOperator, props.preview])
 
-  // Вложение из живого чата: грузим картинку в хранилище → оптимистично показываем у себя →
-  // отправляем оператору с вложением (сервер сохранит и разошлёт в комнату диалога).
+  // Вложение посетителя (картинка/файл): грузим через ПУБЛИЧНЫЙ эндпоинт (визитёр не авторизован) →
+  // оптимистично показываем у себя → отправляем оператору (сервер сохранит и разошлёт в комнату).
   const handleAttach = useCallback((file: File) => {
     if (props.preview) return
-    if (file.size > MAX_IMAGE_BYTES) return
+    if (file.size > MAX_IMAGE_BYTES) {
+      append({ id: uuidv4(), sender: 'system', body: IMAGE_TOO_LARGE_MESSAGE, createdAt: nowIso() })
+      return
+    }
+    const widgetId = useWidgetSettingsStore.getState().settings?.id
+    if (!widgetId) return
+    navigate('chat')
     setMode('operator')
-    void uploadImage(file)
-      .then(({ url }) => {
-        append({ id: uuidv4(), sender: 'visitor', image: url, body: '', createdAt: nowIso(), pending: true })
-        sendAttachment({ attachmentUrl: url, attachmentType: 'image', attachmentName: file.name })
+    void uploadPublicChatFile(file, widgetId).then(res => {
+      if (!res) {
+        append({ id: uuidv4(), sender: 'system', body: 'Не удалось загрузить файл. Попробуйте ещё раз.', createdAt: nowIso() })
+        return
+      }
+      const type = classifyAttachment(res.contentType || file.type)
+      const isImg = type === 'image'
+      append({
+        id: uuidv4(),
+        sender: 'visitor',
+        body: '',
+        ...(isImg
+          ? { image: res.url }
+          : { attachmentUrl: res.url, attachmentType: type, attachmentName: res.name }),
+        createdAt: nowIso(),
+        pending: true,
       })
-      .catch(() => {})
-  }, [props.preview, append, sendAttachment])
+      sendAttachment({ attachmentUrl: res.url, attachmentType: type, attachmentName: res.name })
+    })
+  }, [props.preview, append, navigate, sendAttachment])
 
   // «Начать беседу» после завершения оператором — сброс на главный экран (новый диалог).
   // Следующее сообщение переоткроет диалог на сервере (appendMessage ставит status: 'open').

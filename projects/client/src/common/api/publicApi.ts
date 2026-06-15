@@ -185,6 +185,28 @@ export async function sendCallbackRequest(
   }
 }
 
+export type PublicChatUpload = { key: string; url: string; contentType: string; name: string }
+
+/**
+ * Публичная загрузка вложения посетителя чата (картинка/файл) — без авторизации.
+ * Origin проверяется сервером по widgetId. Возвращает постоянный URL или null при ошибке.
+ */
+export async function uploadPublicChatFile(
+  file: File,
+  widgetId: string
+): Promise<PublicChatUpload | null> {
+  const endpoint = `${getDefaultApiOrigin()}/api/public/chat/uploads?widgetId=${encodeURIComponent(widgetId)}`
+  const form = new FormData()
+  form.append('file', file)
+  try {
+    const res = await fetch(endpoint, { method: 'POST', body: form, credentials: 'omit' })
+    if (!res.ok) return null
+    return (await res.json()) as PublicChatUpload
+  } catch {
+    return null
+  }
+}
+
 export async function fetchPublicWheelSpinResult(
   widgetId: string,
   sessionId: string
