@@ -42,6 +42,8 @@ type UseChatSocketResult = {
     attachments?: MessageAttachment[]
   ) => void
   markRead: (conversationId: string) => void
+  // Сообщает посетителю, что оператор набирает/перестал набирать текст.
+  sendTyping: (conversationId: string, typing: boolean) => void
 }
 
 /**
@@ -134,5 +136,9 @@ export const useChatSocket = (handlers: UseChatSocketHandlers): UseChatSocketRes
     socketRef.current?.emit('conversation:read', { conversationId })
   }, [])
 
-  return { connected, subscribe, sendMessage, markRead }
+  const sendTyping = useCallback((conversationId: string, typing: boolean) => {
+    socketRef.current?.emit('operator:typing', { conversationId, typing })
+  }, [])
+
+  return { connected, subscribe, sendMessage, markRead, sendTyping }
 }

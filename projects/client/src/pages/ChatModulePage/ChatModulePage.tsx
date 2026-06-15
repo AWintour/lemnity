@@ -31,6 +31,8 @@ import {
   IMAGE_TOO_LARGE_MESSAGE
 } from '@/api/upload'
 import type { ChatConversation, ChatMessage } from '@/services/chats'
+import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover'
+import FeedbackPopover from '@/components/FeedbackPopover/FeedbackPopover'
 
 const ACCENT = '#1A52DB' // primary платформы
 
@@ -355,26 +357,37 @@ const NavItem = ({
   active,
   badge,
   onClick,
+  collapsed,
 }: {
   icon: ReactNode
   label: string
   active?: boolean
   badge?: number
   onClick?: () => void
+  collapsed?: boolean
 }) => (
   <button
     type="button"
     onClick={onClick}
+    title={collapsed ? label : undefined}
+    aria-label={collapsed ? label : undefined}
     className={cn(
-      'w-full h-11 px-3 rounded-[10px] flex items-center gap-3 text-[16px] transition-colors',
+      'w-full h-11 rounded-[10px] flex items-center text-[16px] transition-colors relative',
+      collapsed ? 'justify-center px-0' : 'px-3 gap-3',
       active
         ? 'bg-white shadow-[0_2px_8px_rgba(26,82,219,0.12)] ring-1 ring-primary/30 text-primary font-medium'
         : 'text-[#3D3D3B] hover:bg-white hover:text-[#1A1A1A]',
     )}
   >
-    <span className={active ? 'text-primary' : 'text-[#3D3D3B]'}>{icon}</span>
-    <span className="flex-1 text-left">{label}</span>
-    {badge ? (
+    <span className={cn('relative', active ? 'text-primary' : 'text-[#3D3D3B]')}>
+      {icon}
+      {/* В свёрнутом режиме бейдж — точкой на иконке. */}
+      {collapsed && badge ? (
+        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#3BB240]" />
+      ) : null}
+    </span>
+    {!collapsed && <span className="flex-1 text-left">{label}</span>}
+    {!collapsed && badge ? (
       <span className="bg-[#3BB240] text-white text-[12px] px-2 py-0.5 rounded-full">+ {badge}</span>
     ) : null}
   </button>
@@ -443,6 +456,34 @@ const SidebarChatSelect = ({
   )
 }
 
+// Карточка техподдержки: «Написать» открывает попап обратной связи (как «идеи и
+// предложения» в шапке ЛК), а не почтовый клиент. Своё состояние попапа.
+const SupportWriteButton = () => {
+  const [open, setOpen] = useState(false)
+  const [nonce, setNonce] = useState(0)
+  return (
+    <div className="rounded-[10px] border border-default-200 bg-white p-3 flex flex-col items-center gap-2">
+      <span className="text-[14px] text-[#1A1A1A] text-center">Техническая поддержка</span>
+      <Popover
+        placement="top"
+        offset={12}
+        isOpen={open}
+        onOpenChange={v => { setOpen(v); if (v) setNonce(n => n + 1) }}
+      >
+        <PopoverTrigger>
+          <button type="button" className="w-full h-9 rounded-[6px] bg-[#E7E8EA] text-[15px] flex items-center justify-center hover:bg-[#DCDDE0] transition-colors">
+            Написать
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 rounded-2xl">
+          <FeedbackPopover key={nonce} onSent={() => setTimeout(() => setOpen(false), 1500)} />
+        </PopoverContent>
+      </Popover>
+      <a href="mailto:support@lemnity.ru" className="text-[13px] underline text-[#292D32]">support@lemnity.ru</a>
+    </div>
+  )
+}
+
 const ModuleSidebar = ({
   section,
   onSection,
@@ -452,6 +493,8 @@ const ModuleSidebar = ({
   dialogChat,
   onDialogChat,
   isOperator,
+  collapsed,
+  onToggleCollapsed,
 }: {
   section: Section
   onSection: (s: Section) => void
@@ -461,51 +504,78 @@ const ModuleSidebar = ({
   dialogChat: 'all' | string
   onDialogChat: (v: 'all' | string) => void
   isOperator?: boolean
+  collapsed?: boolean
+  onToggleCollapsed?: () => void
 }) => (
-  <aside className="w-60 shrink-0 sidebar-bg flex flex-col p-4 gap-1.5">
-    <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pt-1">
-      Модуль "Чат"
-    </h1>
+  <aside className={cn(
+    'shrink-0 sidebar-bg flex flex-col p-4 gap-1.5 transition-[width] duration-200',
+    collapsed ? 'w-[72px] items-center' : 'w-60',
+  )}>
+    <div className={cn('flex items-center', collapsed ? 'justify-center w-full' : 'justify-between')}>
+      {!collapsed && (
+        <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pt-1">
+          Модуль "Чат"
+        </h1>
+      )}
+      <button
+        type="button"
+        onClick={onToggleCollapsed}
+        aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
+        title={collapsed ? 'Развернуть' : 'Свернуть'}
+        className="w-9 h-9 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-white hover:text-primary transition-colors"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform', collapsed && 'rotate-180')}>
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+    </div>
     <button
       type="button"
       onClick={onExit}
-      className="flex items-center gap-2 text-[14px] text-[#3D3D3B] hover:text-primary px-2 pb-3 mb-1 border-b border-default-200"
+      title={isOperator ? 'Выйти' : 'Личный кабинет'}
+      className={cn(
+        'flex items-center gap-2 text-[14px] text-[#3D3D3B] hover:text-primary pb-3 mb-1 border-b border-default-200',
+        collapsed ? 'justify-center w-full' : 'px-2',
+      )}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-      {isOperator ? 'Выйти' : 'Личный кабинет'}
+      {!collapsed && (isOperator ? 'Выйти' : 'Личный кабинет')}
     </button>
     {/* Оператору селектор чата не нужен — доступ уже ограничен сервером. */}
-    {!isOperator && chats.length > 0 && (
+    {!isOperator && !collapsed && chats.length > 0 && (
       <SidebarChatSelect chats={chats} value={dialogChat} onChange={onDialogChat} />
     )}
-    <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} />
-    <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} />
+    <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} collapsed={collapsed} />
+    <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} collapsed={collapsed} />
     {/* Owner-разделы скрыты для оператора. */}
     {!isOperator && (
       <>
-        <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} />
-        <div className="h-px bg-default-200 my-2" />
-        <NavItem icon={<IconPlanet />} label="Асистент" active={section === 'assistant'} onClick={() => onSection('assistant')} />
-        <NavItem icon={<IconUser />} label="Операторы" active={section === 'operators'} onClick={() => onSection('operators')} />
-        <NavItem icon={<IconUsers />} label="Отделы" active={section === 'departments'} onClick={() => onSection('departments')} />
+        <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} collapsed={collapsed} />
+        <div className="h-px bg-default-200 my-2 w-full" />
+        <NavItem icon={<IconPlanet />} label="Асистент" active={section === 'assistant'} onClick={() => onSection('assistant')} collapsed={collapsed} />
+        <NavItem icon={<IconUser />} label="Операторы" active={section === 'operators'} onClick={() => onSection('operators')} collapsed={collapsed} />
+        <NavItem icon={<IconUsers />} label="Отделы" active={section === 'departments'} onClick={() => onSection('departments')} collapsed={collapsed} />
         <NavItem
           icon={<Ic d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z|M19.4 13a1.7 1.7 0 0 0 .3 1.9 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 13a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.5-2.9 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11.8 4 2 2 0 1 1 15.8 4a1.7 1.7 0 0 0 2.9 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 1Z" size={22} stroke={1.6} />}
           label="Настройки"
           active={section === 'settings'}
           onClick={() => onSection('settings')}
+          collapsed={collapsed}
         />
       </>
     )}
 
-    <div className="mt-auto flex flex-col gap-3">
-      <a href="https://help.lemnity.ru" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[15px] text-[#3D3D3B] px-2 hover:text-[#1A1A1A]">
-        <IconDoc /> Документация
+    <div className={cn('mt-auto flex flex-col gap-3', collapsed && 'items-center')}>
+      <a
+        href="https://help.lemnity.ru"
+        target="_blank"
+        rel="noreferrer"
+        title="Документация"
+        className={cn('flex items-center gap-2 text-[15px] text-[#3D3D3B] hover:text-[#1A1A1A]', collapsed ? 'justify-center' : 'px-2')}
+      >
+        <IconDoc /> {!collapsed && 'Документация'}
       </a>
-      <div className="rounded-[10px] border border-default-200 bg-white p-3 flex flex-col items-center gap-2">
-        <span className="text-[14px] text-[#1A1A1A] text-center">Техническая поддержка</span>
-        <a href="mailto:support@lemnity.ru" className="w-full h-9 rounded-[6px] bg-[#E7E8EA] text-[15px] flex items-center justify-center">Написать</a>
-        <a href="mailto:support@lemnity.ru" className="text-[13px] underline text-[#292D32]">support@lemnity.ru</a>
-      </div>
+      {!collapsed && <SupportWriteButton />}
     </div>
   </aside>
 )
@@ -2588,6 +2658,8 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   }, [projects, preview, labelOf])
   // 'all' — диалоги всех активных чатов; иначе widgetId конкретного чата.
   const [dialogChat, setDialogChat] = useState<'all' | string>('all')
+  // Свёрнутый сайдбар чат-модуля (иконки без подписей).
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   useEffect(() => {
     if (dialogChat !== 'all' && !dialogChats.some(c => c.widgetId === dialogChat)) {
       setDialogChat('all')
@@ -2653,7 +2725,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     return () => { alive = false }
   }, [preview, activeProjectId])
 
-  const { subscribe, sendMessage, markRead } = useChatSocket({
+  const { subscribe, sendMessage, markRead, sendTyping } = useChatSocket({
     onMessage: useCallback((msg: ChatMessage) => {
       if (msg.conversationId === selectedIdRef.current) {
         setMessages(prev => (prev.some(m => m.id === msg.id) ? prev : [...prev, msg]))
@@ -2661,6 +2733,32 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     }, []),
     onConversationUpdated: useCallback(() => void loadConversations(), [loadConversations]),
   })
+
+  // Индикатор «оператор печатает» для посетителя: шлём typing=true при наборе,
+  // а через паузу 2с без ввода (или при отправке) — typing=false. Дебаунс, чтобы не спамить.
+  const typingActiveRef = useRef(false)
+  const typingStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stopTyping = useCallback(() => {
+    if (typingStopTimerRef.current) {
+      clearTimeout(typingStopTimerRef.current)
+      typingStopTimerRef.current = null
+    }
+    if (typingActiveRef.current) {
+      typingActiveRef.current = false
+      const id = selectedIdRef.current
+      if (id && !preview) sendTyping(id, false)
+    }
+  }, [preview, sendTyping])
+  const notifyTyping = useCallback(() => {
+    const id = selectedIdRef.current
+    if (!id || preview) return
+    if (!typingActiveRef.current) {
+      typingActiveRef.current = true
+      sendTyping(id, true)
+    }
+    if (typingStopTimerRef.current) clearTimeout(typingStopTimerRef.current)
+    typingStopTimerRef.current = setTimeout(stopTyping, 2000)
+  }, [preview, sendTyping, stopTyping])
 
   const select = useCallback(
     async (id: string) => {
@@ -2704,11 +2802,12 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         setStaged([])
         return
       }
+      stopTyping()
       sendMessage(selectedId, body, undefined, gallery.length ? gallery : undefined)
       setDraft('')
       setStaged([])
     },
-    [draft, staged, selectedId, sendMessage, preview]
+    [draft, staged, selectedId, sendMessage, preview, stopTyping]
   )
 
   const handleComplete = useCallback(async () => {
@@ -2948,6 +3047,8 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         dialogChat={dialogChat}
         onDialogChat={setDialogChat}
         isOperator={isOperator}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
       />
 
       {section === 'dialogs' ? (
@@ -3274,7 +3375,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                 )}
                 <textarea
                   value={draft}
-                  onChange={e => setDraft(e.target.value)}
+                  onChange={e => { setDraft(e.target.value); notifyTyping() }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault()

@@ -272,6 +272,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return { ok: true }
   }
 
+  // Оператор/владелец печатает — ретранслируем в комнату диалога (посетитель покажет
+  // «Оператор набирает текст…»). Эфемерное событие: в БД ничего не пишем.
+  @SubscribeMessage('operator:typing')
+  async onOperatorTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { conversationId?: string; typing?: boolean }
+  ) {
+    const data = client.data as SocketData | undefined
+    const conversationId = typeof payload?.conversationId === 'string' ? payload.conversationId : ''
+    if (!data || data.role === 'visitor' || !conversationId) return
+    await this.chat.assertManagerOwns(data.actor, conversationId)
+    // broadcast: всем в комнате, кроме самого отправителя.
+    client.to(convRoom(conversationId)).emit('operator:typing', {
+      conversationId,
+      typing: Boolean(payload?.typing)
+    })
+  }
+
   @SubscribeMessage('conversation:read')
   async onRead(
     @ConnectedSocket() client: Socket,

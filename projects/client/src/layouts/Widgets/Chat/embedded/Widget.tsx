@@ -53,6 +53,8 @@ type WidgetProps = {
   quickReplies: QuickReply[]
   // Бот «печатает…» — пауза перед авто-переходом шага сценария (показываем анимированные точки).
   typing?: boolean
+  // Живой оператор набирает текст — показываем «Оператор набирает текст…» с точками.
+  operatorTyping?: boolean
   // Сторона, к которой докуется боковая панель (определяет, с какого края торчит кнопка закрытия).
   sidebarSide?: 'left' | 'right'
   brandingEnabled: boolean
@@ -567,6 +569,24 @@ const TypingBubble = () => (
   </div>
 )
 
+// Индикатор живого набора оператором: подпись «Оператор набирает текст…» + три точки.
+const OperatorTypingBubble = () => (
+  <div className="w-full flex items-start">
+    <div className="bg-[#F4F2FC] rounded-[16px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2">
+      <span className="text-[13px] text-[#7A7785]">Оператор набирает текст</span>
+      <span className="flex items-center gap-1">
+        {[0, 1, 2].map(i => (
+          <span
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-[#B0AEBA] animate-bounce"
+            style={{ animationDelay: `${i * 0.15}s`, animationDuration: '1s' }}
+          />
+        ))}
+      </span>
+    </div>
+  </div>
+)
+
 const FORM_GREEN = '#56B65C'
 
 const ContactForm = ({
@@ -833,7 +853,7 @@ const Widget = (props: WidgetProps) => {
     if (props.view !== 'chat') return
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [props.messages, props.open, props.view, props.typing])
+  }, [props.messages, props.open, props.view, props.typing, props.operatorTyping])
 
   const submit = (body: string) => {
     const text = body.trim()
@@ -1037,6 +1057,9 @@ const Widget = (props: WidgetProps) => {
 
               {/* Бот «печатает…» перед авто-переходом к следующему шагу. */}
               {props.view === 'chat' && props.typing && <TypingBubble />}
+
+              {/* Живой оператор набирает текст. */}
+              {props.view === 'chat' && props.operatorTyping && <OperatorTypingBubble />}
 
             {/* Кнопки сценария: на главном экране (меню) и в переписке под сообщениями.
                 В режиме живого оператора (chatActive) кнопки бота не показываем. */}

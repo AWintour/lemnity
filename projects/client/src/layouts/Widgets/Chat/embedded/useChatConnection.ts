@@ -44,6 +44,8 @@ type UseChatConnectionArgs = {
   onIncoming: (message: ChatUiMessage) => void
   // Вызывается, когда диалог закрыт оператором (сервер шлёт `conversation:closed`).
   onClosed?: () => void
+  // Оператор начал/прекратил набор текста (сервер шлёт `operator:typing`).
+  onOperatorTyping?: (typing: boolean) => void
 }
 
 export type OutgoingAttachment = {
@@ -110,6 +112,8 @@ export const useChatConnection = (
   onIncomingRef.current = args.onIncoming
   const onClosedRef = useRef(args.onClosed)
   onClosedRef.current = args.onClosed
+  const onOperatorTypingRef = useRef(args.onOperatorTyping)
+  onOperatorTypingRef.current = args.onOperatorTyping
 
   useEffect(() => {
     if (args.preview) {
@@ -176,6 +180,9 @@ export const useChatConnection = (
         setOperatorOnline(Boolean(p?.online))
       )
       socket.on('conversation:closed', () => onClosedRef.current?.())
+      socket.on('operator:typing', (p: { typing?: boolean }) =>
+        onOperatorTypingRef.current?.(Boolean(p?.typing))
+      )
     }
 
     void start()

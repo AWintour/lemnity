@@ -156,6 +156,8 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   const [mode, setMode] = useState<'bot' | 'operator'>('bot')
   // Индикатор «печатает…» во время паузы авто-перехода между шагами без кнопок.
   const [typing, setTyping] = useState(false)
+  // Живой оператор набирает текст (сервер шлёт `operator:typing`) — отдельно от бота.
+  const [operatorTyping, setOperatorTyping] = useState(false)
   // id шагов, уже пройденных авто-переходом в текущей цепочке — защита от зацикливания
   // (шаги-«next» по кругу). Сбрасывается при ручном действии и сбросе диалога.
   const autoChainRef = useRef<Set<string>>(new Set())
@@ -318,11 +320,22 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     })
   }, [append])
 
+  // Авто-сброс индикатора набора оператора, если «стоп»-событие не пришло (страховка).
+  const opTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleOperatorTyping = useCallback((isTyping: boolean) => {
+    if (opTypingTimerRef.current) clearTimeout(opTypingTimerRef.current)
+    setOperatorTyping(isTyping)
+    if (isTyping) {
+      opTypingTimerRef.current = setTimeout(() => setOperatorTyping(false), 6000)
+    }
+  }, [])
+
   const { operatorOnline, operators, sendToOperator, sendAttachment, markRead, updateContact, closeConversation } = useChatConnection({
     widgetId: useWidgetSettingsStore.getState().settings?.id,
     preview: props.preview,
     onIncoming: append,
     onClosed: handleClosed,
+    onOperatorTyping: handleOperatorTyping,
   })
 
   // Сброс к первому экрану: при включённом сценарии лента пустая (приветствие — крупным
@@ -739,6 +752,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     messages,
     quickReplies,
     typing,
+    operatorTyping,
     brandingEnabled,
     // Сторона дока боковой панели (для кнопки закрытия, выступающей за внутренний край).
     sidebarSide: triggerPosition === 'bottom-left' ? ('left' as const) : ('right' as const),
