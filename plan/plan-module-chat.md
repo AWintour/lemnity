@@ -316,8 +316,15 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   сообщества + опц. ID группы), статус «Подключено» + имя аккаунта, «Отключить». Сервис `chatModule`:
   `connectIntegration`/`disconnectIntegration`.
 
-**Требования окружения**: `API_URL` — публичный **HTTPS** (мессенджеры не достучатся до localhost → ngrok для
-локального теста; на проде — `app.lemnity.ru`); `INTEGRATION_ENC_KEY` (уже нужен для mango).
+**Требования окружения**:
+- URL вебхука — публичный **HTTPS**. Базу берём из `API_URL`, иначе фолбэк `FRONTEND_URL + /api`
+  (на сервере `API_URL` обычно не задан → используется `FRONTEND_URL`). Локально мессенджеры не достучатся
+  до localhost → нужен ngrok.
+- `INTEGRATION_ENC_KEY` — шифрование токенов (уже нужен для mango).
+- ⚠️ **Telegram egress**: `api.telegram.org` часто заблокирован с РФ-хостинга. Прочие исходящие на сервере
+  (коллектор/notisend/feedback) тоже на `fetch` и работают — проблема именно с Telegram. Если привязка даёт
+  «Не удалось связаться с Telegram», задайте `TELEGRAM_API_BASE` (прокси/self-hosted Bot API). VK/MAX
+  (российские) доступны напрямую. Все адаптеры — с таймаутом 10с и понятными сетевыми ошибками.
 
 ⚠️ Точные формы API VK (Callback) и MAX (Bot API) проверяются только на боевых вебхуках/реальном боте —
 структуры `parseInbound`/`sendOutbound` могут потребовать донастройки против живых ответов.

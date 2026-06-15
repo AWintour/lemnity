@@ -19,11 +19,17 @@ const callMax = async <T>(
 ): Promise<T> => {
   const qs = new URLSearchParams({ access_token: token })
   for (const [k, v] of Object.entries(params ?? {})) qs.set(k, String(v))
-  const res = await fetch(`${MAX_API}${path}?${qs.toString()}`, {
-    method,
-    headers: payload ? { 'content-type': 'application/json' } : undefined,
-    body: payload ? JSON.stringify(payload) : undefined
-  })
+  let res: Response
+  try {
+    res = await fetch(`${MAX_API}${path}?${qs.toString()}`, {
+      method,
+      headers: payload ? { 'content-type': 'application/json' } : undefined,
+      body: payload ? JSON.stringify(payload) : undefined,
+      signal: AbortSignal.timeout(10_000)
+    })
+  } catch {
+    throw new Error('Не удалось связаться с MAX (botapi.max.ru). Проверьте доступ сервера.')
+  }
   const data = (await res.json().catch(() => ({}))) as T & { code?: string; message?: string }
   if (!res.ok || (data as { code?: string }).code) {
     throw new Error((data as { message?: string }).message || `MAX ${path} failed`)

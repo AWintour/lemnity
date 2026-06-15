@@ -16,8 +16,16 @@ const callVk = async <T>(
 ): Promise<T> => {
   const qs = new URLSearchParams({ access_token: token, v: VK_VERSION })
   for (const [k, v] of Object.entries(params)) qs.set(k, String(v))
-  const res = await fetch(`${VK_API}/${method}?${qs.toString()}`, { method: 'POST' })
-  const data = (await res.json()) as { response?: T; error?: { error_msg?: string } }
+  let res: Response
+  try {
+    res = await fetch(`${VK_API}/${method}?${qs.toString()}`, {
+      method: 'POST',
+      signal: AbortSignal.timeout(10_000)
+    })
+  } catch {
+    throw new Error('Не удалось связаться с ВКонтакте (api.vk.com). Проверьте доступ сервера.')
+  }
+  const data = (await res.json().catch(() => ({}))) as { response?: T; error?: { error_msg?: string } }
   if (data.error) throw new Error(data.error.error_msg || `VK ${method} failed`)
   return data.response as T
 }

@@ -149,6 +149,8 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       # Публичная база API для URL вебхуков соцсетей (опц.; по умолчанию = FRONTEND_URL + /api).
       API_URL: ${API_URL:-}
+      # Прокси/self-hosted Bot API для Telegram, если прямой доступ к api.telegram.org заблокирован (опц.).
+      TELEGRAM_API_BASE: ${TELEGRAM_API_BASE:-}
       S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL}
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_REGION: ${S3_REGION}

@@ -6,16 +6,29 @@ import type {
   ValidateResult
 } from './channel-adapter'
 
-const API = (token: string, method: string) => `https://api.telegram.org/bot${token}/${method}`
+// Базовый хост Bot API можно переопределить (прокси / self-hosted Bot API), если прямой доступ
+// к api.telegram.org с сервера заблокирован (частая ситуация для РФ-хостинга).
+const TG_BASE = (process.env.TELEGRAM_API_BASE || 'https://api.telegram.org').replace(/\/+$/, '')
+const API = (token: string, method: string) => `${TG_BASE}/bot${token}/${method}`
 
 const callTg = async <T>(token: string, method: string, payload?: unknown): Promise<T> => {
-  const res = await fetch(API(token, method), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload ?? {})
-  })
-  const data = (await res.json()) as { ok: boolean; result?: T; description?: string }
-  if (!data.ok) throw new Error(data.description || `Telegram ${method} failed`)
+  let res: Response
+  try {
+    res = await fetch(API(token, method), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload ?? {}),
+      signal: AbortSignal.timeout(10_000)
+    })
+  } catch {
+    // Сетевая ошибка/таймаут — сервер не достучался до Telegram.
+    throw new Error(
+      'Не удалось связаться с Telegram. Проверьте доступ сервера к api.telegram.org ' +
+        '(возможна блокировка — задайте TELEGRAM_API_BASE с прокси).'
+    )
+  }
+  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; result?: T; description?: string }
+  if (!data.ok) throw new Error(data.description || `Telegram ${method} failed (HTTP ${res.status})`)
   return data.result as T
 }
 
