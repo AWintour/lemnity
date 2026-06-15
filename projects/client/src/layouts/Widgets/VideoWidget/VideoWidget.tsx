@@ -23,7 +23,7 @@ import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widge
 import type { Icon } from '@lemnity/widget-config/widgets/base'
 import { videoWidgetDefaults } from './defaults'
 import crossIcon from '@/assets/icons/cross.svg'
-import lemnityBlackLogo from '@/assets/logos/lemnity-black-logo.svg'
+import lemnityBlackLogo from '@/assets/logos/lemnity.svg'
 
 // Kept for compatibility with embedded wrappers (single-screen widget)
 export type VideoWidgetVariant = 'announcement' | 'reward'

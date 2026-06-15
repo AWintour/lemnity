@@ -10,7 +10,6 @@ import SvgIcon from '@/components/SvgIcon'
 import FeedbackPopover from '@/components/FeedbackPopover/FeedbackPopover'
 import iconMenuOpened from '@/assets/icons/menu-opened.svg'
 import iconMenuClosed from '@/assets/icons/menu-closed.svg'
-import { cn } from '@heroui/theme'
 
 const Header = () => {
   const { isVisible, toggle } = useSidebarStore()
@@ -44,14 +43,6 @@ const Header = () => {
             <SvgIcon src={lemnityLogo} alt="Lemnity" />
           </div>
         </a>
-        <div
-          className={cn(
-            'w-14.5 h-5.75 flex items-center justify-center',
-            'text-black text-[12px] leading-3.5 bg-[#D1CECE] rounded-[3px]'
-          )}
-        >
-          βeta
-        </div>
       </div>
 
       <div className="flex items-center space-x-4">

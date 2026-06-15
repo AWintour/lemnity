@@ -10,7 +10,7 @@ import background from '@/assets/backgrounds/login-background.webp'
 import SvgIcon from '@/components/SvgIcon'
 import iconEye from '@/assets/icons/eye.svg'
 import iconEyeOff from '@/assets/icons/eye-off.svg'
-import lemnityLogo from '@/assets/logos/lemnity-logo.svg'
+import lemnityLogo from '@/assets/logos/lemnity.svg'
 
 const schema = z
   .object({

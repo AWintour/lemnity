@@ -10,7 +10,7 @@ import SvgIcon from '@/components/SvgIcon'
 import FreePlanBrandingLink from '@/components/FreePlanBrandingLink'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widget'
-import lemnityBlackLogo from '@/assets/logos/lemnity-black-logo.svg'
+import lemnityBlackLogo from '@/assets/logos/lemnity.svg'
 
 export type VideoLeadFormValues = {
   phone?: string

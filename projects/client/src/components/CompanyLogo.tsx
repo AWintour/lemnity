@@ -1,7 +1,7 @@
 import { cn } from '@heroui/theme'
 
 import SvgIcon from '@/components/SvgIcon'
-import lemnityBlackLogo from '@/assets/logos/lemnity-black-logo.svg'
+import lemnityBlackLogo from '@/assets/logos/lemnity.svg'
 
 type CompanyLogoProps = {
   black?: boolean,

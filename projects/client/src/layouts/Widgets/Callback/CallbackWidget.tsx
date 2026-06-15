@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties, type Ref } from 'react
 import { AnimatePresence, motion } from 'framer-motion'
 import { useShallow } from 'zustand/react/shallow'
 
-import lemnityLogo from '@/assets/logos/lemnity-black-logo.svg'
+import lemnityLogo from '@/assets/logos/lemnity.svg'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { sendCallbackRequest } from '@/common/api/publicApi'
 import { callbackExtraDefaults, callbackWidgetDefaults, type CallbackWidgetType } from './defaults'
