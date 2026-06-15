@@ -1,5 +1,10 @@
 const FALLBACK_PATH = '/embed.js'
 
+// Ссылки на плагин Lemnity в каталоге WordPress.org (используются на вкладке «Интеграция»).
+export const WORDPRESS_PLUGIN_DOWNLOAD_URL = 'https://downloads.wordpress.org/plugin/lemnity.zip'
+export const WORDPRESS_PLUGIN_PAGE_URL = 'https://wordpress.org/plugins/lemnity/'
+export const WORDPRESS_PLUGIN_INSTRUCTION_URL = 'https://wordpress.org/plugins/lemnity/#installation'
+
 const getWindowOrigin = () => {
   if (typeof window === 'undefined') return ''
   return window.location.origin
