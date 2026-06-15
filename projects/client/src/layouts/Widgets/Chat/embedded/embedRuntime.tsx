@@ -225,26 +225,65 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
 
   // Звук нового сообщения (играет только если включён в настройках «Звук сообщений»).
   const messageAudioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUnlockedRef = useRef(false)
   const soundEnabledRef = useRef(soundEnabled)
   soundEnabledRef.current = soundEnabled
+
+  const ensureAudio = useCallback(() => {
+    if (!messageAudioRef.current) {
+      const audio = new Audio(messageSoundUrl)
+      audio.volume = 0.6
+      audio.preload = 'auto'
+      messageAudioRef.current = audio
+    }
+    return messageAudioRef.current
+  }, [])
+
   const playMessageSound = useCallback(() => {
     if (!soundEnabledRef.current) return
     try {
-      let audio = messageAudioRef.current
-      if (!audio) {
-        audio = new Audio(messageSoundUrl)
-        audio.volume = 0.6
-        messageAudioRef.current = audio
-      }
+      const audio = ensureAudio()
       audio.currentTime = 0
       void audio.play().catch(() => {})
     } catch {
       /* autoplay/политика браузера — игнорируем */
     }
-  }, [])
+  }, [ensureAudio])
+
+  // Разблокировка аудио на первом жесте пользователя в окне виджета: браузеры (Safari/Chrome)
+  // глушат программный play() без предшествующего взаимодействия. Один раз «прогреваем» элемент,
+  // после чего последующие play() при приходе сообщений срабатывают.
+  useEffect(() => {
+    const unlock = () => {
+      if (audioUnlockedRef.current) return
+      audioUnlockedRef.current = true
+      const audio = ensureAudio()
+      const prevMuted = audio.muted
+      audio.muted = true
+      void audio
+        .play()
+        .then(() => {
+          audio.pause()
+          audio.currentTime = 0
+          audio.muted = prevMuted
+        })
+        .catch(() => {
+          audio.muted = prevMuted
+        })
+    }
+    document.addEventListener('pointerdown', unlock)
+    document.addEventListener('keydown', unlock)
+    return () => {
+      document.removeEventListener('pointerdown', unlock)
+      document.removeEventListener('keydown', unlock)
+    }
+  }, [ensureAudio])
 
   // Добавление сообщения с дедупликацией и сведе́нием optimistic-сообщений посетителя.
   const append = useCallback((incoming: ChatUiMessage) => {
+    // Побочные эффекты (звук, счётчик непрочитанных) держим ВНЕ updater'а — он должен быть чистым
+    // (иначе в StrictMode-превью эффекты дублируются). Флаг выставляем только для нового manager-сообщения.
+    let isNewManagerMessage = false
     setMessages(prev => {
       if (prev.some(m => m.id === incoming.id)) return prev
       if (incoming.sender === 'visitor') {
@@ -257,12 +296,13 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
           return next
         }
       }
-      if (incoming.sender === 'manager') {
-        if (!openRef.current) setUnreadCount(c => c + 1)
-        playMessageSound()
-      }
+      if (incoming.sender === 'manager') isNewManagerMessage = true
       return [...prev, incoming]
     })
+    if (isNewManagerMessage) {
+      if (!openRef.current) setUnreadCount(c => c + 1)
+      playMessageSound()
+    }
   }, [playMessageSound])
 
   // Диалог закрыт оператором: системное сообщение в ленте + режим «завершён» (кнопка «Начать беседу»).

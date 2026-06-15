@@ -2463,12 +2463,19 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   }, [dialogChat, projects, firstChatProjectId])
 
   const loadConversations = useCallback(async () => {
+    // Новые сообщения/диалоги — в начале списка: сортируем по последней активности убыванием.
+    const byRecency = (list: ChatConversation[]) =>
+      [...list].sort(
+        (a, b) =>
+          new Date(b.lastMessageAt ?? b.createdAt).getTime() -
+          new Date(a.lastMessageAt ?? a.createdAt).getTime(),
+      )
     if (preview) {
-      setConversations(MOCK_CONVERSATIONS)
+      setConversations(byRecency(MOCK_CONVERSATIONS))
       return
     }
     const res = await chatsService.listConversations({ period: 'all' })
-    setConversations(res.conversations)
+    setConversations(byRecency(res.conversations))
   }, [preview])
 
   useEffect(() => {
