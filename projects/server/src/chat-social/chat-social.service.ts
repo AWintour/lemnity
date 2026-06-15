@@ -29,10 +29,19 @@ const toEntity = (row: IntegrationRow): ChatIntegrationEntity => ({
   config: publicConfig(row.config)
 })
 
-/** База API из env (в swagger fallback `/api`); вебхук строится относительно неё. */
+/**
+ * Публичная база API для URL вебхуков. Берём API_URL, иначе выводим из FRONTEND_URL (тот же хост,
+ * API под /api через nginx). Гарантируем суффикс `/api` ровно один раз.
+ */
 const apiBase = (): string => {
   let base = (process.env.API_URL || '').replace(/\/+$/, '')
-  if (!base) throw new Error('API_URL is not configured (needed for social webhook URLs)')
+  if (!base) {
+    const fe = (process.env.FRONTEND_URL || '').replace(/\/+$/, '')
+    if (fe) base = `${fe}/api`
+  }
+  if (!base) {
+    throw new Error('API_URL/FRONTEND_URL is not configured (needed for social webhook URLs)')
+  }
   if (!/\/api$/.test(base)) base = `${base}/api`
   return base
 }
