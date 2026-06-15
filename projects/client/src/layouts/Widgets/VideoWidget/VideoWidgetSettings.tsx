@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Input } from '@heroui/input'
 import { cn } from '@heroui/theme'
@@ -25,6 +25,9 @@ import type {
 import { videoWidgetDefaults } from './defaults'
 
 const MAX_VIDEOS = 3
+const MAX_VIDEO_SIZE_MB = 20
+// Видео считаем «большим», когда оно близко к лимиту и может грузиться долго
+const LARGE_VIDEO_MB = 15
 
 const urlInputClassNames = {
   base: 'min-w-76 flex-1',
@@ -47,22 +50,55 @@ const CloseIcon = () => (
   </svg>
 )
 
+const SpinnerIcon = () => (
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" className="animate-spin">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.3" strokeWidth="3" />
+    <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+)
+
 type VideoUploaderProps = {
   videos: string[]
   onAdd: (url: string) => void
   onRemove: (index: number) => void
 }
 
+type PendingUpload = {
+  previewUrl: string
+  sizeMb: number
+  isLarge: boolean
+}
+
 const VideoUploader = ({ videos, onAdd, onRemove }: VideoUploaderProps) => {
   const inputId = useId()
+  const [pending, setPending] = useState<PendingUpload | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+
+    setError(null)
+    const sizeMb = file.size / (1024 * 1024)
+
+    if (sizeMb > MAX_VIDEO_SIZE_MB) {
+      setError(
+        `Файл слишком большой — ${sizeMb.toFixed(1)} Мб. Максимум ${MAX_VIDEO_SIZE_MB} Мб.`,
+      )
+      return
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setPending({ previewUrl, sizeMb, isLarge: sizeMb >= LARGE_VIDEO_MB })
+
     uploadVideo(file)
       .then(({ url }) => onAdd(url))
-      .catch(() => {/* TODO: показать ошибку */})
+      .catch(() => setError('Не удалось загрузить видео. Попробуйте ещё раз.'))
+      .finally(() => {
+        URL.revokeObjectURL(previewUrl)
+        setPending(null)
+      })
   }
 
   return (
@@ -74,7 +110,7 @@ const VideoUploader = ({ videos, onAdd, onRemove }: VideoUploaderProps) => {
         <span className="text-[#AAAAAA] text-base">Максимум {MAX_VIDEOS}</span>
       </div>
 
-      {videos.length < MAX_VIDEOS && (
+      {videos.length < MAX_VIDEOS && !pending && (
         <div className="flex flex-row gap-3 w-full min-w-0 items-center">
           <label
             htmlFor={inputId}
@@ -106,8 +142,40 @@ const VideoUploader = ({ videos, onAdd, onRemove }: VideoUploaderProps) => {
         </div>
       )}
 
-      {videos.length > 0 && (
+      {error && (
+        <span className="text-sm text-[#E5484D] leading-tight">{error}</span>
+      )}
+
+      {(videos.length > 0 || pending) && (
         <div className="flex flex-row flex-wrap gap-3">
+          {pending && (
+            <div className="relative w-36 aspect-[9/16] rounded-2xl overflow-hidden bg-black">
+              <video
+                src={pending.previewUrl}
+                className="w-full h-full object-cover opacity-60"
+                muted
+                playsInline
+                preload="metadata"
+              />
+              {/* Индикатор загрузки поверх превью */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white">
+                <SpinnerIcon />
+                <span className="text-xs drop-shadow">Загрузка…</span>
+              </div>
+              {/* Подсказка «Большое» для тяжёлого видео */}
+              {pending.isLarge && (
+                <span
+                  className={cn(
+                    'absolute top-2 left-2 px-2 py-0.5 rounded-full',
+                    'bg-[#F5A623] text-white text-[11px] font-medium drop-shadow',
+                  )}
+                  title={`${pending.sizeMb.toFixed(1)} Мб — большое видео, загрузка может занять время`}
+                >
+                  Большое · {pending.sizeMb.toFixed(1)} Мб
+                </span>
+              )}
+            </div>
+          )}
           {videos.map((url, i) => (
             <div
               key={`${url}-${i}`}
