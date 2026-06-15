@@ -468,7 +468,12 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
   }
 
   return (
-    <div className={cn('w-full flex flex-col', isVisitor ? 'items-end' : 'items-start')}>
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className={cn('w-full flex flex-col', isVisitor ? 'items-end' : 'items-start')}
+    >
       <div
         className={cn(
           'max-w-[85%] px-4 py-3 text-[16px] leading-[1.35]',
@@ -550,7 +555,7 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 

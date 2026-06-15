@@ -148,7 +148,7 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
 
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#EEE] rounded-t-[12px] bg-[#F6F5FB]">
         <span className="text-[12px] font-medium text-[#5951E5]">
-          {isStart ? '★ Старт' : 'Шаг'} · {step.id}
+          {step.agent ? '🤖 Аи агент' : isStart ? '★ Старт' : 'Шаг'} · {step.id}
         </span>
         {!isStart && (
           <button
@@ -162,6 +162,23 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
         )}
       </div>
 
+      {step.agent ? (
+        <div className="p-3 flex flex-col gap-2">
+          <p className="text-[12px] leading-4 text-[#5A5A5A]">
+            Передаёт диалог ИИ-ассистенту — он отвечает по вашему сайту. Работает при включённом
+            ИИ-агенте (раздел «Ассистент»).
+          </p>
+          <ResizableTextarea
+            value={msg}
+            onChange={e => {
+              setMsg(e.target.value)
+              data.onMessage(step.id, e.target.value)
+            }}
+            placeholder="Приветствие ИИ (необязательно)…"
+            className="nodrag w-full text-[13px] leading-4 rounded-[8px] border border-[#E3E3E8] px-2 py-1.5 outline-none focus:border-[#5951E5]"
+          />
+        </div>
+      ) : (
       <div className="p-3 flex flex-col gap-2">
         <ResizableTextarea
           value={msg}
@@ -237,9 +254,10 @@ const StepNode = ({ data }: NodeProps<Node<StepNodeData>>) => {
           + кнопка
         </button>
       </div>
+      )}
 
-      {/* Выход шага БЕЗ кнопок: авто-переход к следующему шагу (точка справа на ноде).
-          Появляется только когда кнопок нет — иначе связь ведут от кнопок. */}
+      {/* Выход шага: точка справа на ноде. У AI-узла и у шага без кнопок — есть (связь с двух сторон);
+          у шага с кнопками связь ведут от кнопок. */}
       {step.buttons.length === 0 && (
         <Handle
           type="source"
@@ -267,6 +285,9 @@ const ScenarioEditor = () => {
       return w?.scenario ?? defaults.scenario
     })
   )
+
+  // Меню кнопки «+ Шаг» (обычный шаг / Аи агент).
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
 
   // Отделы проекта — для маршрутизации кнопок-хэндофов. Грузим по реальному projectId стора.
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([])
@@ -396,17 +417,21 @@ const ScenarioEditor = () => {
     }))
   }, [commit])
 
-  const onAddStep = useCallback(() => {
-    commit(s => {
-      const id = `step-${uuidv4().slice(0, 6)}`
-      const last = s.steps[s.steps.length - 1]
-      const position = { x: (last?.position.x ?? 0) + 320, y: (last?.position.y ?? 0) }
-      return {
-        ...s,
-        steps: [...s.steps, { id, message: 'Новое сообщение', buttons: [], position }],
-      }
-    })
-  }, [commit])
+  const onAddStep = useCallback(
+    (kind: 'message' | 'agent' = 'message') => {
+      commit(s => {
+        const id = `step-${uuidv4().slice(0, 6)}`
+        const last = s.steps[s.steps.length - 1]
+        const position = { x: (last?.position.x ?? 0) + 320, y: (last?.position.y ?? 0) }
+        const step =
+          kind === 'agent'
+            ? { id, message: '', buttons: [], agent: true, position }
+            : { id, message: 'Новое сообщение', buttons: [], position }
+        return { ...s, steps: [...s.steps, step] }
+      })
+    },
+    [commit]
+  )
 
   /* --- граф react-flow --- */
   const handlers = useMemo(
@@ -565,13 +590,33 @@ const ScenarioEditor = () => {
               />
               Включён
             </label>
-            <button
-              type="button"
-              onClick={onAddStep}
-              className="text-[13px] px-2.5 py-1 rounded-[6px] bg-[#5951E5] text-white"
-            >
-              + Шаг
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setAddMenuOpen(o => !o)}
+                className="text-[13px] px-2.5 py-1 rounded-[6px] bg-[#5951E5] text-white"
+              >
+                + Шаг ▾
+              </button>
+              {addMenuOpen && (
+                <div className="absolute right-0 z-10 mt-1 w-44 rounded-[10px] border border-[#E3E3E8] bg-white shadow-md overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => { onAddStep('message'); setAddMenuOpen(false) }}
+                    className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#F4F3FF]"
+                  >
+                    💬 Шаг
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { onAddStep('agent'); setAddMenuOpen(false) }}
+                    className="w-full text-left px-3 py-2 text-[13px] hover:bg-[#F4F3FF]"
+                  >
+                    🤖 Аи агент
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => void handleSave()}

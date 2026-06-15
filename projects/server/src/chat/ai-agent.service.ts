@@ -88,7 +88,10 @@ export class AiAgentService {
    * посетителя и сохраняет его (sender='manager', aiGenerated=true). Возвращает сообщение или null.
    * Best-effort: любые ошибки гасятся, на работу чата не влияют.
    */
-  async maybeReply(conversationId: string): Promise<ChatMessageEntity | null> {
+  async maybeReply(
+    conversationId: string,
+    onTyping?: (typing: boolean) => void
+  ): Promise<ChatMessageEntity | null> {
     const apiKey = this.config.get<string>('OPENROUTER_API_KEY')
     if (!apiKey) return null
     if (this.inFlight.has(conversationId)) return null
@@ -144,7 +147,16 @@ export class AiAgentService {
           }))
       ]
 
-      const answer = await this.callOpenRouter(apiKey, messages)
+      // Имитация живого человека: показываем «печатает…» на время генерации ответа.
+      onTyping?.(true)
+      let answer: string | null
+      try {
+        answer = await this.callOpenRouter(apiKey, messages)
+        // Небольшая «человеческая» пауза, чтобы статус набора был заметен даже при быстром ответе.
+        if (answer) await this.humanDelay(answer)
+      } finally {
+        onTyping?.(false)
+      }
       if (!answer) return null
 
       return this.chat.appendMessage({
@@ -184,6 +196,12 @@ export class AiAgentService {
     } catch {
       return null
     }
+  }
+
+  /** «Человеческая» пауза набора: ~12мс/символ, 0.5–2.5с — чтобы статус «печатает…» был виден. */
+  private humanDelay(answer: string): Promise<void> {
+    const ms = Math.min(2500, 500 + answer.length * 12)
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   private buildSystemPrompt(name: string, site: string): string {

@@ -241,12 +241,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       )
       // ИИ-агент: если включён у виджета и не исчерпана квота — отвечает на сообщение посетителя.
       // Fire-and-forget: не задерживает ack визитёру; ошибки гасятся внутри maybeReply.
-      void this.ai.maybeReply(data.conversationId).then(aiMessage => {
+      // onTyping → статус «печатает…» у посетителя на время генерации (имитация живого человека).
+      const convId = data.conversationId
+      const emitTyping = (typing: boolean) =>
+        this.server.to(convRoom(convId)).emit('operator:typing', { typing })
+      void this.ai.maybeReply(convId, emitTyping).then(aiMessage => {
         if (aiMessage)
-          this.broadcastMessage(
-            { id: data.conversationId, projectId: data.projectId },
-            aiMessage
-          )
+          this.broadcastMessage({ id: convId, projectId: data.projectId }, aiMessage)
       })
       return message
     }

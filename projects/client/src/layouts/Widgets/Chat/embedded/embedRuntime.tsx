@@ -500,6 +500,21 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenario.enabled, mode, currentStepId, view, stepById, append])
 
+  // Шаг «Аи агент»: при достижении передаём диалог ИИ-ассистенту — переключаемся в free-text,
+  // дальше сообщения посетителя уходят на сервер, где отвечает ИИ-агент (как с оператором).
+  useEffect(() => {
+    if (!scenario.enabled || mode !== 'bot' || !currentStepId) return
+    const step = stepById.get(currentStepId)
+    if (!step?.agent) return
+    setTyping(false)
+    navigate('chat')
+    setMode('operator')
+    const greeting =
+      step.message?.trim() || `Здравствуйте! Я ${aiAgentName || 'ИИ-агент'}. Чем могу помочь?`
+    append({ id: `ai-${step.id}-${uuidv4().slice(0, 6)}`, sender: 'manager', body: greeting, createdAt: nowIso() })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenario.enabled, mode, currentStepId, stepById, aiAgentName, append])
+
   // Онлайн: «Войти в чат» — открываем переписку с живым оператором.
   const handleEnterChat = useCallback(() => {
     navigate('chat')
