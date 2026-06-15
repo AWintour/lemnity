@@ -1312,6 +1312,7 @@ const OperatorsSection = ({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
+  const [showPass, setShowPass] = useState(false)
   const [role, setRole] = useState('Оператор')
   const [dept, setDept] = useState(DEPARTMENT_NAMES[0])
   // '' = все чаты владельца; иначе widgetId конкретного чата.
@@ -1322,6 +1323,7 @@ const OperatorsSection = ({
     setName('')
     setEmail('')
     setPass('')
+    setShowPass(false)
     setRole('Оператор')
     setDept(deptNames[0] ?? '')
     setChatSel('')
@@ -1660,7 +1662,29 @@ const OperatorsSection = ({
           <div className="rounded-[14px] border border-default-200 p-4 flex flex-wrap items-center gap-3">
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Имя оператора" className="flex-1 min-w-[160px] h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
             <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email (логин)" className="flex-1 min-w-[160px] h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
-            <input value={pass} onChange={e => setPass(e.target.value)} type="password" placeholder="Пароль для входа" className="flex-1 min-w-[150px] h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
+            <div className="relative flex-1 min-w-[150px]">
+              <input value={pass} onChange={e => setPass(e.target.value)} type={showPass ? 'text' : 'password'} placeholder="Пароль для входа" className="w-full h-11 pl-3 pr-10 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary" />
+              <button
+                type="button"
+                onClick={() => setShowPass(v => !v)}
+                aria-label={showPass ? 'Скрыть пароль' : 'Показать пароль'}
+                title={showPass ? 'Скрыть пароль' : 'Показать пароль'}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-default-400 hover:text-default-600"
+              >
+                {showPass ? (
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <path d="M6.1 6.1A18.5 18.5 0 0 0 2 12s3 8 10 8a9.12 9.12 0 0 0 5.9-2.1" />
+                    <path d="M2 2l20 20" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
             <select value={role} onChange={e => setRole(e.target.value)} className="w-[150px] shrink-0 h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none bg-white">
               <option>Оператор</option>
               <option>Администратор</option>
@@ -1685,9 +1709,22 @@ const OperatorsSection = ({
             </select>
             <button type="button" onClick={reset} className="shrink-0 h-11 px-4 rounded-[10px] border border-default-200 text-[15px]">Отмена</button>
             <button type="button" onClick={add} disabled={!name.trim()} className="shrink-0 h-11 px-5 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50">Добавить</button>
-            <div className="w-full basis-full flex items-center gap-3">
-              {addError && <span className="text-[13px] text-[#E5484D]">{addError}</span>}
-              <span className="text-[12px] text-default-400">Пароль задаёт вход оператора. Без пароля — обычная запись без входа.</span>
+            <div className="w-full basis-full flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                {addError && <span className="text-[13px] text-[#E5484D]">{addError}</span>}
+                <span className="text-[12px] text-default-400">Пароль задаёт вход оператора. Без пароля — обычная запись без входа.</span>
+              </div>
+              <span className="text-[12px] text-default-400">
+                Ссылка для входа операторов:{' '}
+                <a
+                  href="https://app.lemnity.ru/operator"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  app.lemnity.ru/operator
+                </a>
+              </span>
             </div>
           </div>
         )}
