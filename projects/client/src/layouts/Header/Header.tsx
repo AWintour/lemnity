@@ -4,7 +4,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover'
 import ProfileButton from '../ProfileButton/ProfileButton'
 import './Header.css'
 import iconLight from '../../assets/icons/light.svg'
-import lemnityBlackLogo from '@/assets/logos/lemnity-black-logo.svg'
+import lemnityLogo from '@/assets/logos/lemnity.svg'
 import { useSidebarStore } from '@/stores/sidebarStore'
 import SvgIcon from '@/components/SvgIcon'
 import FeedbackPopover from '@/components/FeedbackPopover/FeedbackPopover'
@@ -41,7 +41,7 @@ const Header = () => {
 
         <a href="/" className="flex items-center">
           <div className="w-42 h-9.5">
-            <SvgIcon src={lemnityBlackLogo} alt="Lemnity" />
+            <SvgIcon src={lemnityLogo} alt="Lemnity" />
           </div>
         </a>
         <div

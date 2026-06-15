@@ -4,7 +4,6 @@ import RightPanel from './RightPanel'
 import type { PropsWithChildren, ReactElement, ReactNode } from 'react'
 import { useSidebarStore } from '@/stores/sidebarStore'
 import { memo } from 'react'
-import TechnicalDisclaimer from '@/components/TechnicalDisclaimer'
 
 type DashboardLayoutProps = PropsWithChildren<{
   rightPanel?: ReactNode
@@ -29,7 +28,6 @@ const DashboardLayout = ({
       </div>
       <MainContent>{children}</MainContent>
       <RightPanel widthClassName={rightPanelWidthClassName}>{rightPanel}</RightPanel>
-      <TechnicalDisclaimer />
     </div>
   )
 }
