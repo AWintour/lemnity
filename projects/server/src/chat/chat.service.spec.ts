@@ -6,7 +6,13 @@ import type { PrismaService } from '../prisma.service'
 function make() {
   const prisma = {
     chatMessage: { create: jest.fn().mockResolvedValue({}) },
-    chatConversation: { update: jest.fn().mockResolvedValue({}) },
+    chatConversation: {
+      update: jest.fn().mockResolvedValue({}),
+      // firstVisitorAt/firstManagerAt — денормализация времени реакции.
+      updateMany: jest.fn().mockResolvedValue({}),
+      // outbound-хук соцсетей читает диалог (null → не соцсеть, ничего не шлём).
+      findUnique: jest.fn().mockResolvedValue(null)
+    },
     // $transaction получает массив промисов и резолвит их по порядку.
     $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops))
   }

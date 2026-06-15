@@ -896,6 +896,13 @@ const SOCIALS: { key: 'telegram' | 'max' | 'vk'; name: string; desc: string }[] 
   { key: 'vk', name: 'ВКонтакте', desc: 'Сообщения из сообщества ВКонтакте — прямо в чате.' },
 ]
 
+// Подсказки по токену для каждой платформы (что и где взять).
+const SOCIAL_HELP: Record<chatModule.SocialType, { tokenLabel: string; tokenHint: string; needGroup?: boolean }> = {
+  telegram: { tokenLabel: 'Токен бота', tokenHint: 'Создайте бота у @BotFather и вставьте его токен.' },
+  max: { tokenLabel: 'Токен бота', tokenHint: 'Токен бота MAX (раздел разработчика dev.max.ru).' },
+  vk: { tokenLabel: 'Токен сообщества', tokenHint: 'Управление сообществом → Работа с API → Ключ доступа (с правами на сообщения).', needGroup: true },
+}
+
 const SocialSection = ({
   preview,
   projectId,
@@ -904,6 +911,13 @@ const SocialSection = ({
   projectId?: string | null
 }) => {
   const [connected, setConnected] = useState<Record<string, boolean>>({ vk: false, telegram: false, max: false })
+  const [accountName, setAccountName] = useState<Record<string, string | undefined>>({})
+  // Модалка подключения: какая платформа открыта + поля ввода + статус.
+  const [modalKey, setModalKey] = useState<chatModule.SocialType | null>(null)
+  const [token, setToken] = useState('')
+  const [groupId, setGroupId] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (preview || !projectId) return
@@ -912,9 +926,11 @@ const SocialSection = ({
       try {
         const res = await chatModule.listIntegrations(projectId)
         if (!alive) return
-        const next: Record<string, boolean> = { vk: false, telegram: false, max: false }
-        res.integrations.forEach(i => { next[i.type] = i.connected })
-        setConnected(next)
+        const nextOn: Record<string, boolean> = { vk: false, telegram: false, max: false }
+        const nextName: Record<string, string | undefined> = {}
+        res.integrations.forEach(i => { nextOn[i.type] = i.connected; nextName[i.type] = i.config?.accountName })
+        setConnected(nextOn)
+        setAccountName(nextName)
       } catch (e) {
         console.error('listIntegrations failed', e)
       }
@@ -922,20 +938,48 @@ const SocialSection = ({
     return () => { alive = false }
   }, [preview, projectId])
 
-  const toggle = (k: string) => {
-    const nextOn = !connected[k]
-    setConnected(p => ({ ...p, [k]: nextOn }))
-    if (!preview && projectId) {
-      void (async () => {
-        try {
-          await chatModule.updateIntegration(projectId, k as chatModule.SocialType, { connected: nextOn })
-        } catch (e) {
-          console.error('updateIntegration failed', e)
-          setConnected(p => ({ ...p, [k]: !nextOn }))
-        }
-      })()
-    }
+  const openConnect = (k: chatModule.SocialType) => {
+    setModalKey(k)
+    setToken('')
+    setGroupId('')
+    setError('')
   }
+
+  const submitConnect = () => {
+    if (!modalKey || !projectId || busy) return
+    if (!token.trim()) { setError('Введите токен'); return }
+    setBusy(true)
+    setError('')
+    void (async () => {
+      try {
+        const res = await chatModule.connectIntegration(projectId, modalKey, {
+          token: token.trim(),
+          groupId: groupId.trim() || undefined,
+        })
+        setConnected(p => ({ ...p, [modalKey]: res.connected }))
+        setAccountName(p => ({ ...p, [modalKey]: res.config?.accountName }))
+        setModalKey(null)
+      } catch (e) {
+        const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+        setError(msg || 'Не удалось подключить. Проверьте токен.')
+      } finally {
+        setBusy(false)
+      }
+    })()
+  }
+
+  const disconnect = (k: chatModule.SocialType) => {
+    if (!projectId) return
+    setConnected(p => ({ ...p, [k]: false }))
+    setAccountName(p => ({ ...p, [k]: undefined }))
+    void chatModule.disconnectIntegration(projectId, k).catch(e => {
+      console.error('disconnectIntegration failed', e)
+      setConnected(p => ({ ...p, [k]: true }))
+    })
+  }
+
+  const help = modalKey ? SOCIAL_HELP[modalKey] : null
+  const modalName = modalKey ? SOCIALS.find(s => s.key === modalKey)?.name : ''
 
   return (
     <div className="flex-1 min-w-0 flex flex-col border-l border-default-200 overflow-y-auto">
@@ -954,7 +998,9 @@ const SocialSection = ({
               <SocialTile kind={s.key} />
               <div className="flex-1 min-w-0">
                 <div className="text-[17px] font-medium text-[#1A1A1A]">{s.name}</div>
-                <div className="text-[14px] text-default-400">{s.desc}</div>
+                <div className="text-[14px] text-default-400">
+                  {on && accountName[s.key] ? `Подключён аккаунт: ${accountName[s.key]}` : s.desc}
+                </div>
               </div>
               {on && (
                 <span className="flex items-center gap-1.5 text-[14px] text-[#3BB240]">
@@ -963,9 +1009,10 @@ const SocialSection = ({
               )}
               <button
                 type="button"
-                onClick={() => toggle(s.key)}
+                onClick={() => (on ? disconnect(s.key) : openConnect(s.key))}
+                disabled={preview}
                 className={cn(
-                  'h-10 px-5 rounded-[10px] text-[15px] shrink-0',
+                  'h-10 px-5 rounded-[10px] text-[15px] shrink-0 disabled:opacity-50',
                   on ? 'border border-default-200 text-[#1A1A1A]' : 'bg-primary text-white',
                 )}
               >
@@ -975,6 +1022,62 @@ const SocialSection = ({
           )
         })}
       </div>
+
+      {/* Модалка подключения */}
+      {modalKey && help && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => !busy && setModalKey(null)}>
+          <div className="w-full max-w-[460px] rounded-[16px] bg-white p-6 flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <SocialTile kind={modalKey} />
+              <h3 className="text-[18px] font-semibold text-[#1A1A1A]">Подключить {modalName}</h3>
+            </div>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[14px] text-[#1A1A1A]">{help.tokenLabel}</span>
+              <input
+                value={token}
+                onChange={e => setToken(e.target.value)}
+                placeholder="Вставьте токен"
+                className="h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary"
+              />
+              <span className="text-[13px] text-default-400">{help.tokenHint}</span>
+            </label>
+
+            {help.needGroup && (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[14px] text-[#1A1A1A]">ID сообщества (необязательно)</span>
+                <input
+                  value={groupId}
+                  onChange={e => setGroupId(e.target.value)}
+                  placeholder="Определится автоматически из токена"
+                  className="h-11 px-3 rounded-[10px] border border-default-200 text-[15px] outline-none focus:border-primary"
+                />
+              </label>
+            )}
+
+            {error && <div className="text-[14px] text-[#E5484D]">{error}</div>}
+
+            <div className="flex justify-end gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => setModalKey(null)}
+                disabled={busy}
+                className="h-10 px-5 rounded-[10px] border border-default-200 text-[15px] text-[#1A1A1A] disabled:opacity-50"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={submitConnect}
+                disabled={busy}
+                className="h-10 px-5 rounded-[10px] bg-primary text-white text-[15px] disabled:opacity-50"
+              >
+                {busy ? 'Подключение…' : 'Подключить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -13,6 +13,8 @@ import { S3Service } from '../storage/s3.service'
 @Module({
   imports: [ConfigModule, JwtModule.register({}), ChatOperatorModule],
   controllers: [ChatController, PublicChatController],
-  providers: [ChatService, ChatGateway, ChatActorGuard, PrismaService, S3Service]
+  providers: [ChatService, ChatGateway, ChatActorGuard, PrismaService, S3Service],
+  // Экспортируем для ChatSocialModule (входящие из соцсетей → диалоги + realtime).
+  exports: [ChatService, ChatGateway]
 })
 export class ChatModule {}

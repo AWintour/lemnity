@@ -38,6 +38,11 @@ model ChatConversation {
   category           String?       // «Первичный контакт» | «В работе» | «Завершен с успехом» | ...
   note               String?       // внутренняя заметка оператора
 
+  // Соцсети (telegram|vk|max): идентификаторы собеседника на платформе — для маршрутизации
+  // входящих в один диалог и отправки ответов оператора обратно в мессенджер.
+  externalUserId String? @map("external_user_id") // id пользователя (TG from.id / VK user_id / MAX user)
+  externalChatId String? @map("external_chat_id") // peer/chat id для ответа (TG chat.id / VK peer_id / MAX chat)
+
   // Расширенная аналитика посетителя (захват при создании беседы; см. common/visitor-meta.ts).
   ip         String? @map("ip")
   userAgent  String? @map("user_agent")
@@ -66,11 +71,14 @@ model ChatConversation {
   updatedAt DateTime @updatedAt      @map("updated_at")
 
   @@unique([widgetId, sessionId])
+  // Маршрутизация входящих из соцсетей: один диалог на (проект, канал, внешний пользователь).
+  @@unique([projectId, channel, externalUserId])
   @@index([projectId])
   @@index([widgetId])
   @@index([status])
   @@index([lastMessageAt])
   @@index([assignedOperatorId])
+  @@index([projectId, channel])
   @@map("chat_conversations")
 }
 

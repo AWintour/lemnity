@@ -20,6 +20,7 @@ import type {
   ChatMessagesResponse
 } from './entities/chat-conversation.entity'
 import type { ChatMessageEntity } from './entities/chat-message.entity'
+import { sendOutboundForConversation } from '../chat-social/outbound'
 
 const buildConversationNumber = (seq: number) => `${String(seq).padStart(4, '0')}`
 
@@ -184,6 +185,48 @@ export class ChatService {
   }
 
   /**
+   * Диалог из соцсети (telegram|vk|max): один на (проект, канал, внешний пользователь).
+   * Привязываем к CHAT-виджету проекта (первый), синтезируем sessionId `${channel}:${userId}`.
+   */
+  async getOrCreateExternalConversation(args: {
+    projectId: string
+    channel: 'telegram' | 'vk' | 'max'
+    externalUserId: string
+    externalChatId: string
+    displayName?: string
+  }): Promise<ChatConversation> {
+    const widget = await this.prisma.widget.findFirst({
+      where: { projectId: args.projectId, type: 'CHAT' },
+      select: { id: true },
+      orderBy: { createdAt: 'asc' }
+    })
+    if (!widget) throw new NotFoundException('CHAT widget not found for project')
+
+    return this.prisma.chatConversation.upsert({
+      where: {
+        projectId_channel_externalUserId: {
+          projectId: args.projectId,
+          channel: args.channel,
+          externalUserId: args.externalUserId
+        }
+      },
+      update: {
+        externalChatId: args.externalChatId,
+        ...(args.displayName ? { visitorName: sanitize(args.displayName) } : {})
+      },
+      create: {
+        widget: { connect: { id: widget.id } },
+        project: { connect: { id: args.projectId } },
+        sessionId: `${args.channel}:${args.externalUserId}`,
+        channel: args.channel,
+        externalUserId: args.externalUserId,
+        externalChatId: args.externalChatId,
+        visitorName: sanitize(args.displayName)
+      }
+    })
+  }
+
+  /**
    * Сохраняет сообщение и обновляет денормализованные поля диалога
    * (lastMessage*, счётчик непрочитанных для противоположной стороны).
    */
@@ -259,6 +302,18 @@ export class ChatService {
       await this.prisma.chatConversation.updateMany({
         where: { id: args.conversationId, firstManagerAt: null },
         data: { firstManagerAt: now }
+      })
+    }
+
+    // Соцсети: ответ оператора/системы уходит обратно в мессенджер, если диалог пришёл из соцсети.
+    // Best-effort, fire-and-forget — не блокирует и не валит персист (см. outbound.ts).
+    if (args.sender !== 'visitor') {
+      void sendOutboundForConversation(this.prisma, args.conversationId, {
+        body,
+        attachmentUrl,
+        attachmentType,
+        attachmentName,
+        attachments: gallery.length ? gallery : null
       })
     }
 

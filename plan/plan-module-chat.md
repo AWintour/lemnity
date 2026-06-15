@@ -136,7 +136,7 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   операторов (модель есть — `online`/`status`, не агрегируется/не транслируется).
 - **Применение** правил автораспределения к входящим (модель/настройки есть; авто-назначение
   нового диалога по очереди/нагрузке — не выполняется на appendMessage).
-- Приём сообщений соцсетей (Telegram/MAX/VK) в единую ленту (хранится только флаг `connected`/config).
+- ~~Приём сообщений соцсетей (Telegram/MAX/VK) в единую ленту~~ — **реализовано 2026-06-15** (см. секцию «Соцсети» ниже).
 - Канал/время-реакции на уровне диалога (поле `channel` есть; `MOCK_DIALOG_META` в «Диалогах` ещё мок).
 - Realtime для групп-чата/назначений (сейчас REST; socket-события не добавлены).
 - Загрузка файлов оператором + архив медиа группового чата.
@@ -285,6 +285,42 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   (`ScenarioEditor.tsx`) и поля «Оператор» имя/подзаголовок (`ChatHeaderSettings.tsx`) — ручной
   угловой ресайзер по высоте до 350px, дальше скролл (`resize-y` + `max-height` + `overflow-y-auto`).
 - Спецификация авто-перехода: `docs/superpowers/specs/2026-06-15-scenario-step-autoadvance-design.md`.
+
+## Соцсети — реальная двусторонняя интеграция (2026-06-15)
+
+Раздел «Соцсети» теперь не флаг, а живое подключение Telegram/MAX/ВКонтакте с двусторонней перепиской.
+
+**Архитектура** (`projects/server/src/chat-social/`):
+- **Адаптеры** `adapters/` (обычные TS, без Nest DI — чтобы не плодить цикл модулей): `ChannelAdapter`
+  (`validateCredentials`, `setupWebhook`, `removeWebhook`, `parseInbound`, `sendOutbound`) + реализации
+  `telegram.adapter` (Bot API), `vk.adapter` (Callback API), `max.adapter` (Bot API, наследник TamTam).
+  Реестр в `adapters/index.ts`.
+- **Креды** шифруются (`common/crypto/secret-cipher`, `INTEGRATION_ENC_KEY`) и лежат в
+  `ChatSocialIntegration.config = { tokenEnc, groupId?, webhookSecret, accountId, accountName, vkConfirmation? }`.
+  Токен на клиент НЕ отдаётся (только `accountName` через `publicConfig`).
+- **connect/disconnect** (`ChatSocialService`): валидация токена → `setupWebhook(url=${API_URL}/api/public/chat/webhooks/{type}/{secret})`
+  → шифрованное сохранение; disconnect снимает вебхук и чистит config. Эндпоинты:
+  `POST /projects/:projectId/chat/integrations/:type/connect|disconnect` (@Auth, owner-check).
+- **Входящие** — публичный `SocialWebhooksController` (`POST /api/public/chat/webhooks/:type/:secret`, без @Auth,
+  всегда быстрый ответ): резолв интеграции по секрету → `parseInbound` → `ChatService.getOrCreateExternalConversation`
+  → `appendMessage(sender:'visitor')` → `ChatGateway.broadcastMessage` (live в модуле). VK confirmation и поле
+  `secret`, Telegram заголовок `X-Telegram-Bot-Api-Secret-Token` — проверяются.
+- **Исходящие** — хук в конце `ChatService.appendMessage` (`sender!=='visitor'`): `sendOutboundForConversation`
+  (`chat-social/outbound.ts`, best-effort, не валит персист) шлёт ответ оператора в мессенджер по `channel`/`externalChatId`.
+- **БД** (`chat.prisma`): в `ChatConversation` добавлены `externalUserId`/`externalChatId`,
+  `@@unique([projectId, channel, externalUserId])` (ключ апсерта входящих) + `@@index([projectId, channel])`.
+  Для мессенджер-диалогов синтезируется `sessionId = "${channel}:${externalUserId}"`, привязка к CHAT-виджету проекта.
+- **Модули**: `ChatModule` экспортирует `ChatService`/`ChatGateway`; `ChatSocialModule` импортирует `ChatModule`
+  (одностороннее, без forwardRef).
+- **Фронт**: `SocialSection` (`ChatModulePage.tsx`) — модалка подключения (TG/MAX — токен бота; VK — токен
+  сообщества + опц. ID группы), статус «Подключено» + имя аккаунта, «Отключить». Сервис `chatModule`:
+  `connectIntegration`/`disconnectIntegration`.
+
+**Требования окружения**: `API_URL` — публичный **HTTPS** (мессенджеры не достучатся до localhost → ngrok для
+локального теста; на проде — `app.lemnity.ru`); `INTEGRATION_ENC_KEY` (уже нужен для mango).
+
+⚠️ Точные формы API VK (Callback) и MAX (Bot API) проверяются только на боевых вебхуках/реальном боте —
+структуры `parseInbound`/`sendOutbound` могут потребовать донастройки против живых ответов.
 
 ## Деплой
 

@@ -1,7 +1,17 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common'
+import { randomUUID } from 'node:crypto'
 import { PrismaService } from '../prisma.service'
 import type { UpdateIntegrationDto } from './dto/update-integration.dto'
+import type { ConnectIntegrationDto } from './dto/connect-integration.dto'
 import type { ChatIntegrationEntity } from './entities/chat-integration.entity'
+import { getAdapter, isSocialType, type ChannelCredentials, type SocialType } from './adapters'
+import {
+  credsFromConfig,
+  encryptToken,
+  publicConfig,
+  readConfig,
+  type SocialConfig
+} from './integration-config'
 
 /** Известные типы социальных интеграций чат-виджета. */
 const TYPES = ['telegram', 'max', 'vk'] as const
@@ -12,16 +22,28 @@ type IntegrationRow = {
   config: unknown
 }
 
+// Безопасный срез (без секретов) — то, что отдаём на клиент.
 const toEntity = (row: IntegrationRow): ChatIntegrationEntity => ({
   type: row.type,
   connected: row.connected,
-  config: row.config ?? null
+  config: publicConfig(row.config)
 })
 
+/** База API из env (в swagger fallback `/api`); вебхук строится относительно неё. */
+const apiBase = (): string => {
+  let base = (process.env.API_URL || '').replace(/\/+$/, '')
+  if (!base) throw new Error('API_URL is not configured (needed for social webhook URLs)')
+  if (!/\/api$/.test(base)) base = `${base}/api`
+  return base
+}
+
+const buildWebhookUrl = (type: SocialType, secret: string): string =>
+  `${apiBase()}/public/chat/webhooks/${type}/${secret}`
+
 /**
- * Социальные интеграции чат-виджета (Telegram, MAX, VK). Проверка владения проектом —
- * паттерн `ManagerService.assertOwnsProject`. `list` всегда возвращает все 3 TYPES
- * (отсутствующие — как не подключённые), `upsert` создаёт/обновляет одну запись.
+ * Социальные интеграции чат-виджета (Telegram, MAX, VK): реальное двустороннее подключение.
+ * connect — валидация токена + установка вебхука + шифрованное хранение креды; disconnect — снятие
+ * вебхука + очистка. Входящие резолвятся по webhookSecret. Токен на клиент не отдаётся.
  */
 @Injectable()
 export class ChatSocialService {
@@ -46,6 +68,102 @@ export class ChatSocialService {
     return { integrations }
   }
 
+  /** Подключение соцсети: валидируем креды, ставим вебхук, сохраняем зашифрованный токен. */
+  async connect(
+    userId: string,
+    projectId: string,
+    type: string,
+    dto: ConnectIntegrationDto
+  ): Promise<ChatIntegrationEntity> {
+    await this.assertOwnsProject(userId, projectId)
+    if (!isSocialType(type)) throw new BadRequestException('Unknown integration type')
+
+    const adapter = getAdapter(type)
+    const creds: ChannelCredentials = { token: dto.token.trim(), groupId: dto.groupId?.trim() }
+
+    const validation = await adapter.validateCredentials(creds)
+    if (!validation.ok) {
+      throw new BadRequestException(validation.error || 'Неверный токен')
+    }
+    // VK: id сообщества автоопределяется из токена, если не задан вручную.
+    const effectiveCreds: ChannelCredentials = {
+      ...creds,
+      groupId: creds.groupId || (type === 'vk' ? validation.accountId : undefined)
+    }
+
+    const webhookSecret = randomUUID().replace(/-/g, '')
+    const webhookUrl = buildWebhookUrl(type, webhookSecret)
+    let confirmation: string | undefined
+    try {
+      const r = await adapter.setupWebhook(effectiveCreds, webhookUrl, webhookSecret)
+      confirmation = r.confirmation
+    } catch (e) {
+      throw new BadRequestException(
+        'Не удалось настроить вебхук: ' + (e instanceof Error ? e.message : 'ошибка')
+      )
+    }
+
+    const config: SocialConfig = {
+      tokenEnc: encryptToken(creds.token),
+      groupId: effectiveCreds.groupId,
+      webhookSecret,
+      accountId: validation.accountId,
+      accountName: validation.accountName,
+      vkConfirmation: confirmation
+    }
+    // round-trip убирает undefined (Prisma Json не любит undefined в значениях).
+    const configJson = JSON.parse(JSON.stringify(config)) as Record<string, unknown>
+
+    const row = await this.prisma.chatSocialIntegration.upsert({
+      where: { projectId_type: { projectId, type } },
+      create: { projectId, type, connected: true, config: configJson },
+      update: { connected: true, config: configJson }
+    })
+    return toEntity(row)
+  }
+
+  /** Отключение: снимаем вебхук (best-effort) и чистим config. */
+  async disconnect(userId: string, projectId: string, type: string): Promise<ChatIntegrationEntity> {
+    await this.assertOwnsProject(userId, projectId)
+    if (!isSocialType(type)) throw new BadRequestException('Unknown integration type')
+
+    const row = await this.prisma.chatSocialIntegration.findUnique({
+      where: { projectId_type: { projectId, type } }
+    })
+    const config = readConfig(row?.config)
+    if (config) {
+      try {
+        await getAdapter(type).removeWebhook(
+          credsFromConfig(config),
+          buildWebhookUrl(type, config.webhookSecret)
+        )
+      } catch {
+        /* best-effort */
+      }
+    }
+
+    const updated = await this.prisma.chatSocialIntegration.upsert({
+      where: { projectId_type: { projectId, type } },
+      create: { projectId, type, connected: false, config: {} },
+      update: { connected: false, config: {} }
+    })
+    return toEntity(updated)
+  }
+
+  /** Резолв интеграции по секрету из URL вебхука (для публичного контроллера, без auth). */
+  async resolveByWebhookSecret(
+    type: SocialType,
+    secret: string
+  ): Promise<{ projectId: string; config: SocialConfig } | null> {
+    const row = await this.prisma.chatSocialIntegration.findFirst({
+      where: { type, connected: true, config: { path: ['webhookSecret'], equals: secret } }
+    })
+    const config = readConfig(row?.config)
+    if (!row || !config) return null
+    return { projectId: row.projectId, config }
+  }
+
+  /** Legacy: булев тумблер (оставлен для обратной совместимости PATCH). */
   async upsert(
     userId: string,
     projectId: string,
@@ -58,16 +176,8 @@ export class ChatSocialService {
     }
     const row = await this.prisma.chatSocialIntegration.upsert({
       where: { projectId_type: { projectId, type } },
-      create: {
-        projectId,
-        type,
-        connected: dto.connected ?? false,
-        config: dto.config ?? undefined
-      },
-      update: {
-        connected: dto.connected,
-        config: dto.config ?? undefined
-      }
+      create: { projectId, type, connected: dto.connected ?? false, config: dto.config ?? undefined },
+      update: { connected: dto.connected, config: dto.config ?? undefined }
     })
     return toEntity(row)
   }

@@ -59,6 +59,8 @@ export const API = {
     DISTRIBUTION: (projectId: string) => `/projects/${projectId}/chat/distribution` as const,
     INTEGRATIONS: (projectId: string) => `/projects/${projectId}/chat/integrations` as const,
     INTEGRATION: (projectId: string, type: string) => `/projects/${projectId}/chat/integrations/${type}` as const,
+    INTEGRATION_CONNECT: (projectId: string, type: string) => `/projects/${projectId}/chat/integrations/${type}/connect` as const,
+    INTEGRATION_DISCONNECT: (projectId: string, type: string) => `/projects/${projectId}/chat/integrations/${type}/disconnect` as const,
     GROUP_MESSAGES: (projectId: string) => `/projects/${projectId}/chat/group-messages` as const
   },
   FEEDBACK: {

@@ -127,10 +127,13 @@ export async function saveDistribution(projectId: string, dto: DistributionSetti
 
 export type SocialType = 'telegram' | 'max' | 'vk'
 
+// Несекретный срез конфига интеграции (токен на клиент не приходит).
+export type ChatIntegrationConfig = { accountName?: string } | null
+
 export type ChatIntegration = {
   type: SocialType
   connected: boolean
-  config: unknown
+  config: ChatIntegrationConfig
 }
 
 export async function listIntegrations(projectId: string) {
@@ -146,6 +149,27 @@ export async function updateIntegration(
   dto: { connected: boolean; config?: Record<string, unknown> }
 ) {
   const res = await http.patch<ChatIntegration>(API.CHAT_OPS.INTEGRATION(projectId, type), dto)
+  return res.data
+}
+
+/** Реальное подключение соцсети: токен (TG/MAX — бот; VK — токен сообщества) + groupId (VK, опц.). */
+export async function connectIntegration(
+  projectId: string,
+  type: SocialType,
+  creds: { token: string; groupId?: string }
+) {
+  const res = await http.post<ChatIntegration>(
+    API.CHAT_OPS.INTEGRATION_CONNECT(projectId, type),
+    creds
+  )
+  return res.data
+}
+
+export async function disconnectIntegration(projectId: string, type: SocialType) {
+  const res = await http.post<ChatIntegration>(
+    API.CHAT_OPS.INTEGRATION_DISCONNECT(projectId, type),
+    {}
+  )
   return res.data
 }
 
