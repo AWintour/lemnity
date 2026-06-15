@@ -112,14 +112,17 @@ const dayLabel = (iso: string) => {
 }
 const convName = (c: ChatConversation) => c.visitorName || `Клиент #${c.number}`
 
-// Название чата для модуля: сначала «Название чата» из конфига виджета (config.title),
-// затем имя виджета, имя проекта и в крайнем случае — «Чат».
+// Название чата для модуля: сначала «Название чата» из конфига виджета (config.title), затем имя
+// проекта (осмысленное, различает чаты), затем имя виджета и в крайнем случае — «Чат».
 const chatLabel = (
   widget?: { name?: string; config?: object | null },
   projectName?: string,
 ): string => {
   const cfgTitle = (widget?.config as { title?: string } | null | undefined)?.title?.trim()
-  return cfgTitle || widget?.name?.trim() || projectName?.trim() || 'Чат'
+  const widgetName = widget?.name?.trim()
+  // «Чат» — дефолтное имя виджета; как имя не используем (берём имя проекта).
+  const meaningfulWidgetName = widgetName && widgetName.toLowerCase() !== 'чат' ? widgetName : undefined
+  return cfgTitle || projectName?.trim() || meaningfulWidgetName || 'Чат'
 }
 
 /* ----------------------------- mock (preview) --------------------------- */
@@ -2393,7 +2396,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     if (!preview && !isOperator) void loadProjects()
   }, [preview, isOperator, loadProjects])
 
-  const activeProjectId = useMemo(
+  const firstChatProjectId = useMemo(
     () =>
       projects.find(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled))?.id ??
       projects[0]?.id ??
@@ -2449,6 +2452,14 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       setDialogChat('all')
     }
   }, [dialogChats, dialogChat])
+
+  // Проект, которым управляем в модуле (Операторы/Отделы/Соцсети/Настройки/групп-чат): из выбранного
+  // в сайдбаре чата (dialogChat); «Все чаты» → первый проект. Позволяет добавлять операторов/отделы
+  // в НУЖНЫЙ проект (в т.ч. новый), а не только в первый.
+  const activeProjectId = useMemo(() => {
+    if (dialogChat === 'all') return firstChatProjectId
+    return projects.find(p => p.widgets.some(w => w.id === dialogChat))?.id ?? firstChatProjectId
+  }, [dialogChat, projects, firstChatProjectId])
 
   const loadConversations = useCallback(async () => {
     if (preview) {
