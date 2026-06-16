@@ -12,6 +12,8 @@ import {
   readConfig,
   type SocialConfig
 } from './integration-config'
+import { ChatSubscriptionService } from '../lemnity/chat-subscription.service'
+import { chatPlanFeatures } from '../lemnity/chat-entitlement'
 
 /** Известные типы социальных интеграций чат-виджета. */
 const TYPES = ['telegram', 'max', 'vk'] as const
@@ -56,7 +58,10 @@ const buildWebhookUrl = (type: SocialType, secret: string): string =>
  */
 @Injectable()
 export class ChatSocialService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly chatSub: ChatSubscriptionService
+  ) {}
 
   private async assertOwnsProject(userId: string, projectId: string) {
     const owned = await this.prisma.project.findFirst({
@@ -86,6 +91,19 @@ export class ChatSocialService {
   ): Promise<ChatIntegrationEntity> {
     await this.assertOwnsProject(userId, projectId)
     if (!isSocialType(type)) throw new BadRequestException('Unknown integration type')
+
+    // Тарифный гейт: Telegram доступен всегда; MAX/VK — только с тарифа Start+ (allChannels).
+    if (type !== 'telegram') {
+      const ent = await this.chatSub.getActiveEntitlementByUserId(userId)
+      const features = chatPlanFeatures(ent.planTier)
+      if (!features.allChannels) {
+        throw new ForbiddenException({
+          message: 'Канал «' + type + '» доступен с тарифа Start. Улучшите тариф.',
+          code: 'channel_not_in_plan',
+          planTier: ent.planTier
+        })
+      }
+    }
 
     const adapter = getAdapter(type)
     const creds: ChannelCredentials = { token: dto.token.trim(), groupId: dto.groupId?.trim() }
