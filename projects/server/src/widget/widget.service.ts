@@ -15,12 +15,15 @@ import {
   isDevOriginHostAllowed,
   isHostAllowedByWebsiteHosts
 } from '../common/origin'
+import { ChatSubscriptionService } from '../lemnity/chat-subscription.service'
+import { chatPlanFeatures } from '../lemnity/chat-entitlement'
 
 @Injectable()
 export class WidgetService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly chatSub: ChatSubscriptionService
   ) {}
 
   async spinWheelPublic(
@@ -280,7 +283,8 @@ export class WidgetService {
         createWidgetDto.config as unknown
       )
 
-      data.config = canonical as Prisma.InputJsonValue
+      const gated = await this.enforceChatBranding(canonical, createWidgetDto.type, userId)
+      data.config = gated as Prisma.InputJsonValue
       ;(data as { configVersion?: number | null }).configVersion = version
     }
 
@@ -456,6 +460,30 @@ export class WidgetService {
     }
   }
 
+  // White-label gating: на бесплатном тарифе «Сделано на Lemnity» нельзя убрать.
+  // Серверный энфорсмент — при сохранении CHAT-виджета владельцем без white-label
+  // принудительно ставим brandingEnabled=true в каноничном конфиге (canonical.widget.brandingEnabled),
+  // независимо от того, что прислал клиент. Платные тарифы (Start+) не затрагиваются.
+  private async enforceChatBranding(
+    canonical: unknown,
+    type: string,
+    userId: string
+  ): Promise<unknown> {
+    if (type !== 'CHAT') return canonical
+    const isRecord = (value: unknown): value is Record<string, unknown> =>
+      typeof value === 'object' && value !== null && !Array.isArray(value)
+
+    const ent = await this.chatSub.getActiveEntitlementByUserId(userId)
+    const features = chatPlanFeatures(ent.planTier)
+    if (features.whiteLabel) return canonical
+
+    if (!isRecord(canonical)) return canonical
+    const widget = canonical.widget
+    if (!isRecord(widget)) return canonical
+    widget.brandingEnabled = true
+    return canonical
+  }
+
   async update(id: string, updateWidgetDto: UpdateWidgetDto, userId: string) {
     // First verify access
     const existing = await this.findOne(id, userId)
@@ -473,7 +501,8 @@ export class WidgetService {
       const { data: canonicalConfig, version } = this.configService.validateAndCanonicalize(
         updateWidgetDto.config as unknown
       )
-      data.config = canonicalConfig as Prisma.InputJsonValue
+      const gated = await this.enforceChatBranding(canonicalConfig, existing.type, userId)
+      data.config = gated as Prisma.InputJsonValue
       ;(data as { configVersion?: number | null }).configVersion = version
     }
 

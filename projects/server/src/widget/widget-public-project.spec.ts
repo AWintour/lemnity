@@ -12,6 +12,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 import { WidgetService } from './widget.service'
 import type { PrismaService } from '../prisma.service'
 import type { ConfigService } from '../config/config.service'
+import type { ChatSubscriptionService } from '../lemnity/chat-subscription.service'
 
 type WidgetRow = {
   id: string
@@ -38,7 +39,8 @@ function make(prismaWidget: Record<string, jest.Mock>) {
   const prisma = { widget: prismaWidget }
   const svc = new WidgetService(
     prisma as unknown as PrismaService,
-    {} as ConfigService
+    {} as ConfigService,
+    {} as ChatSubscriptionService
   )
   return { svc, prisma }
 }
