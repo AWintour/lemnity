@@ -7,6 +7,7 @@ import { ChatOperatorService } from './chat-operator.service'
 import { ChatOperatorController } from './chat-operator.controller'
 import { OperatorAuthController } from './operator-auth.controller'
 import { AuthModule } from '../auth/auth.module'
+import { LemnityModule } from '../lemnity/lemnity.module'
 
 /**
  * Операторы чата проекта (Chat Widget). CRUD в ЛК с проверкой владения проектом.
@@ -15,6 +16,7 @@ import { AuthModule } from '../auth/auth.module'
 @Module({
   imports: [
     AuthModule,
+    LemnityModule,
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

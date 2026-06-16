@@ -3,8 +3,10 @@ jest.mock('../prisma.service', () => ({ PrismaService: class PrismaService {} })
 import { ForbiddenException } from '@nestjs/common'
 import { FeatureAccessService } from './feature-access.service'
 import type { CallbackSubscriptionService } from './callback-subscription.service'
+import type { ChatSubscriptionService } from './chat-subscription.service'
 import type { PrismaService } from '../prisma.service'
 import type { CallbackEntitlement } from './callback-entitlement'
+import { FREE_CHAT_ENTITLEMENT, type ChatEntitlement } from './chat-entitlement'
 
 const NOW = new Date('2026-06-11T00:00:00.000Z')
 const ENT: CallbackEntitlement = {
@@ -14,17 +16,24 @@ const ENT: CallbackEntitlement = {
   paidUntil: new Date('2026-07-01T00:00:00.000Z')
 }
 
-function make(ent: CallbackEntitlement | null, counts: { projects?: number; requests?: number } = {}) {
+function make(
+  ent: CallbackEntitlement | null,
+  counts: { projects?: number; requests?: number; operators?: number } = {},
+  chatEnt: ChatEntitlement = FREE_CHAT_ENTITLEMENT
+) {
   const callbackSub = { getActiveEntitlementByUserId: jest.fn().mockResolvedValue(ent) }
+  const chatSub = { getActiveEntitlementByUserId: jest.fn().mockResolvedValue(chatEnt) }
   const prisma = {
     project: { count: jest.fn().mockResolvedValue(counts.projects ?? 0) },
-    request: { count: jest.fn().mockResolvedValue(counts.requests ?? 0) }
+    request: { count: jest.fn().mockResolvedValue(counts.requests ?? 0) },
+    chatOperator: { count: jest.fn().mockResolvedValue(counts.operators ?? 0) }
   }
   const svc = new FeatureAccessService(
     callbackSub as unknown as CallbackSubscriptionService,
+    chatSub as unknown as ChatSubscriptionService,
     prisma as unknown as PrismaService
   )
-  return { svc, callbackSub, prisma }
+  return { svc, callbackSub, chatSub, prisma }
 }
 
 describe('FeatureAccessService.canUseCallbackModule', () => {
@@ -80,5 +89,32 @@ describe('FeatureAccessService.assertCanAcceptCallback', () => {
     const arg = prisma.request.count.mock.calls[0][0]
     expect(arg.where.project.userId).toBe('owner1')
     expect(arg.where.createdAt.gte).toEqual(new Date('2026-06-01T00:00:00.000Z'))
+  })
+})
+
+describe('FeatureAccessService.assertCanAddOperator', () => {
+  it('throws manager_limit_reached on Free (managerLimit 1) with 1 existing operator', async () => {
+    const { svc, prisma } = make(null, { operators: 1 })
+    await expect(svc.assertCanAddOperator('u1', 'p1', NOW)).rejects.toMatchObject({
+      response: { code: 'manager_limit_reached', limit: 1 }
+    })
+    // Счёт операторов — по проекту (включает строку владельца).
+    expect(prisma.chatOperator.count.mock.calls[0][0]).toEqual({ where: { projectId: 'p1' } })
+  })
+
+  it('throws ForbiddenException at the manager limit', async () => {
+    const { svc } = make(null, { operators: 1 })
+    await expect(svc.assertCanAddOperator('u1', 'p1', NOW)).rejects.toBeInstanceOf(ForbiddenException)
+  })
+
+  it('passes when below the manager limit (Free, owner only)', async () => {
+    const { svc } = make(null, { operators: 0 })
+    await expect(svc.assertCanAddOperator('u1', 'p1', NOW)).resolves.toBeUndefined()
+  })
+
+  it('respects a higher managerLimit from the entitlement', async () => {
+    const paid: ChatEntitlement = { ...FREE_CHAT_ENTITLEMENT, planTier: 'pro', managerLimit: 5 }
+    const { svc } = make(null, { operators: 4 }, paid)
+    await expect(svc.assertCanAddOperator('u1', 'p1', NOW)).resolves.toBeUndefined()
   })
 })

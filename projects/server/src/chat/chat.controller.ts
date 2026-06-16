@@ -14,6 +14,9 @@ import {
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ChatService } from './chat.service'
 import { AiAgentService } from './ai-agent.service'
+import { ChatSubscriptionService } from '../lemnity/chat-subscription.service'
+import { chatPlanFeatures } from '../lemnity/chat-entitlement'
+import { ChatSubscriptionEntity } from './entities/chat-subscription.entity'
 import { ChatGateway } from './chat.gateway'
 import { ChatActorGuard, ChatActorParam, type ChatActor } from './chat-actor.guard'
 import { ListConversationsDto } from './dto/list-conversations.dto'
@@ -37,6 +40,7 @@ export class ChatController {
   constructor(
     private readonly chat: ChatService,
     private readonly ai: AiAgentService,
+    private readonly chatSub: ChatSubscriptionService,
     private readonly gateway: ChatGateway
   ) {}
 
@@ -50,6 +54,27 @@ export class ChatController {
     if (!widgetId) throw new BadRequestException('widgetId is required')
     await this.chat.assertActorOwnsWidget(actor, widgetId)
     return this.ai.getUsage(widgetId)
+  }
+
+  // Тариф (entitlement) аккаунта-владельца чат-виджета — для раздела тарифов в редакторе.
+  @Get('subscription')
+  @ApiResponse({ status: 200, type: ChatSubscriptionEntity })
+  async subscription(
+    @ChatActorParam() actor: ChatActor,
+    @Query('widgetId') widgetId: string
+  ): Promise<ChatSubscriptionEntity> {
+    if (!widgetId) throw new BadRequestException('widgetId is required')
+    await this.chat.assertActorOwnsWidget(actor, widgetId)
+    const ownerUserId = actor.kind === 'owner' ? actor.userId : actor.ownerUserId
+    const ent = await this.chatSub.getActiveEntitlementByUserId(ownerUserId)
+    return {
+      planTier: ent.planTier,
+      managerLimit: ent.managerLimit,
+      siteLimit: ent.siteLimit,
+      aiDailyLimit: ent.aiDailyLimit,
+      paidUntil: ent.paidUntil ? ent.paidUntil.toISOString() : null,
+      features: chatPlanFeatures(ent.planTier)
+    }
   }
 
   // Список внутренних страниц сайта проекта — для выбора в «Разделы для изучения».

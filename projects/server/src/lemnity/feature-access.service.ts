@@ -1,7 +1,9 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma.service'
 import { CallbackSubscriptionService, monthStart } from './callback-subscription.service'
+import { ChatSubscriptionService } from './chat-subscription.service'
 import { canUseModule, isWithinCallbackLimit, isWithinSiteLimit } from './callback-entitlement'
+import { isWithinManagerLimit } from './chat-entitlement'
 
 /**
  * Централизованный доступ к функциям и лимитам по подписке Callback Widget — **по доступности
@@ -12,6 +14,7 @@ import { canUseModule, isWithinCallbackLimit, isWithinSiteLimit } from './callba
 export class FeatureAccessService {
   constructor(
     private readonly callbackSub: CallbackSubscriptionService,
+    private readonly chatSub: ChatSubscriptionService,
     private readonly prisma: PrismaService
   ) {}
 
@@ -51,6 +54,25 @@ export class FeatureAccessService {
         message: `Достигнут месячный лимит заявок (${ent.callbackLimit}). Подключите модуль «Дополнительные заявки».`,
         code: 'callback_limit_reached',
         limit: ent.callbackLimit
+      })
+    }
+  }
+
+  /**
+   * Бросает Forbidden, если в проекте достигнут лимит операторов тарифа Чата.
+   * В отличие от Callback-методов, энфорсмент применяется ВСЕГДА: Free — настоящий тариф
+   * (managerLimit 1), а `getActiveEntitlementByUserId` никогда не возвращает null.
+   * Счёт операторов — по проекту (включает строку владельца), поэтому метод нужно вызывать
+   * ПОСЛЕ авто-создания владельца (`ensureOwnerOperator`), чтобы место владельца было учтено.
+   */
+  async assertCanAddOperator(userId: string, projectId: string, now: Date = new Date()): Promise<void> {
+    const ent = await this.chatSub.getActiveEntitlementByUserId(userId, now)
+    const used = await this.prisma.chatOperator.count({ where: { projectId } })
+    if (!isWithinManagerLimit(ent, used)) {
+      throw new ForbiddenException({
+        message: `Достигнут лимит операторов тарифа (${ent.managerLimit}). Улучшите тариф.`,
+        code: 'manager_limit_reached',
+        limit: ent.managerLimit
       })
     }
   }

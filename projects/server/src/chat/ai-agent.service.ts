@@ -3,12 +3,14 @@ import { ConfigService } from '@nestjs/config'
 import { migrateToCurrent } from '@lemnity/widget-config'
 import { PrismaService } from '../prisma.service'
 import { monthStart } from '../lemnity/callback-subscription.service'
+import { ChatSubscriptionService } from '../lemnity/chat-subscription.service'
 import { ChatService } from './chat.service'
 import { SiteKnowledgeService } from './site-knowledge.service'
 import type { ChatMessageEntity } from './entities/chat-message.entity'
 
 const DEFAULT_LIMIT = 1000
-const DEFAULT_DAILY_LIMIT = 40 // под free-tier OpenRouter (~50/день на аккаунт), с запасом
+// Дневной лимит теперь приходит из тарифа аккаунта (ChatEntitlement.aiDailyLimit, Free=50).
+// env AI_AGENT_DAILY_LIMIT остаётся как override (если задан — побеждает).
 // Бесплатного DeepSeek на OpenRouter больше нет — дефолт на рабочую бесплатную модель.
 // Переопределяется через env AI_AGENT_MODEL.
 const DEFAULT_MODEL = 'openai/gpt-oss-120b:free'
@@ -48,7 +50,8 @@ export class AiAgentService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly chat: ChatService,
-    private readonly siteKnowledge: SiteKnowledgeService
+    private readonly siteKnowledge: SiteKnowledgeService,
+    private readonly chatSub: ChatSubscriptionService
   ) {}
 
   private get monthlyLimit(): number {
@@ -56,25 +59,32 @@ export class AiAgentService {
     return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_LIMIT
   }
 
-  private get dailyLimit(): number {
+  /** Дневной лимит ответов ИИ: env-override (если задан) → иначе тариф аккаунта-владельца. */
+  private async resolveDailyLimit(widgetId: string, now: Date): Promise<number> {
     const raw = Number(this.config.get<string>('AI_AGENT_DAILY_LIMIT'))
-    return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_DAILY_LIMIT
+    if (Number.isFinite(raw) && raw > 0) return Math.floor(raw)
+    const w = await this.prisma.widget.findUnique({
+      where: { id: widgetId },
+      select: { project: { select: { userId: true } } }
+    })
+    const ent = await this.chatSub.getActiveEntitlementByUserId(w?.project?.userId ?? '', now)
+    return ent.aiDailyLimit
   }
 
   /** Квота ИИ по чат-виджету: за текущий календарный месяц И за текущие сутки (UTC). */
   async getUsage(widgetId: string): Promise<AiUsage> {
     const now = new Date()
     const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-    const [used, dailyUsed] = await Promise.all([
+    const [used, dailyUsed, dailyLimit] = await Promise.all([
       this.prisma.chatMessage.count({
         where: { aiGenerated: true, createdAt: { gte: monthStart(now) }, conversation: { widgetId } }
       }),
       this.prisma.chatMessage.count({
         where: { aiGenerated: true, createdAt: { gte: dayStart }, conversation: { widgetId } }
-      })
+      }),
+      this.resolveDailyLimit(widgetId, now)
     ])
     const limit = this.monthlyLimit
-    const dailyLimit = this.dailyLimit
     const resetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
     const dailyResetAt = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
     return {

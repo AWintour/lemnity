@@ -109,6 +109,9 @@ export class ChatService {
    * Возвращает базовую инфу о виджете/проекте. Бросает Forbidden/NotFound при нарушении.
    */
   async assertVisitorAllowed(widgetId: string, originHost: string | null) {
+    // ВАЖНО: чат НИКОГДА не блокируется по оплате/`paidUntil`. Free — настоящий тариф
+    // (бессрочный), а энфорсмент монетизации идёт через лимиты тарифа (операторы/ИИ-квота),
+    // а не отключением чата. Поэтому здесь нет проверки подписки — только origin/enabled.
     const id = sanitize(widgetId)
     if (!id) throw new BadRequestException('widgetId is required')
 

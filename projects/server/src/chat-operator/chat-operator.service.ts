@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { hash, verify } from 'argon2'
 import { Prisma } from '@lemnity/database'
 import { PrismaService } from '../prisma.service'
+import { FeatureAccessService } from '../lemnity/feature-access.service'
 import type { CreateChatOperatorDto } from './dto/create-chat-operator.dto'
 import type { UpdateChatOperatorDto } from './dto/update-chat-operator.dto'
 import type { ChatOperatorEntity } from './entities/chat-operator.entity'
@@ -59,7 +60,10 @@ const toEntity = (o: ChatOperatorRow): ChatOperatorEntity => ({
  */
 @Injectable()
 export class ChatOperatorService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly featureAccess: FeatureAccessService
+  ) {}
 
   private async assertOwnsProject(userId: string, projectId: string) {
     const owned = await this.prisma.project.findFirst({
@@ -153,6 +157,10 @@ export class ChatOperatorService {
 
   async create(userId: string, projectId: string, dto: CreateChatOperatorDto): Promise<ChatOperatorEntity> {
     await this.assertOwnsProject(userId, projectId)
+    // Гарантируем строку владельца до подсчёта мест, затем энфорсим лимит операторов тарифа.
+    // (Авто-создание владельца НЕ проходит через этот gate — гейтится только явное добавление.)
+    await this.ensureOwnerOperator(userId, projectId)
+    await this.featureAccess.assertCanAddOperator(userId, projectId)
     const widgetId = (await this.resolveWidgetScope(userId, dto.widgetId)) ?? null
     const creds = await this.credentialData(dto)
     try {

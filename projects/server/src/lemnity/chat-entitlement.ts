@@ -38,6 +38,38 @@ export const FREE_CHAT_ENTITLEMENT: ChatEntitlement = {
   paidUntil: null
 }
 
+/** Ранг тарифа: free=0, start=1, pro=2, business=3, agency=4. */
+const PLAN_RANK: Record<ChatPlanTier, number> = {
+  free: 0,
+  start: 1,
+  pro: 2,
+  business: 3,
+  agency: 4
+}
+
+/** Набор фич, доступных тарифу (по рангу). Используется для UI и энфорсмента. */
+export type ChatPlanFeatures = {
+  allChannels: boolean
+  whiteLabel: boolean
+  advancedAnalytics: boolean
+  departments: boolean
+  apiAccess: boolean
+  prioritySupport: boolean
+}
+
+/** Доступность фич по тарифу (по рангу тарифной лестницы). */
+export function chatPlanFeatures(planTier: ChatPlanTier): ChatPlanFeatures {
+  const rank = PLAN_RANK[planTier] ?? 0
+  return {
+    allChannels: rank >= 1,
+    whiteLabel: rank >= 1,
+    advancedAnalytics: rank >= 2,
+    departments: rank >= 2,
+    apiAccess: rank >= 3,
+    prioritySupport: rank >= 3
+  }
+}
+
 /** Можно завести ещё одного менеджера (оператора), пока использовано меньше лимита. */
 export function isWithinManagerLimit(ent: ChatEntitlement, usedOperators: number): boolean {
   return usedOperators < ent.managerLimit
