@@ -18,6 +18,11 @@ import type { FABMenuIconKey } from '@/layouts/Widgets/FABMenu/types'
 type Social = { id: string; icon: string; url: string }
 type Align = 'left' | 'center' | 'right'
 
+// Стабильная пустая ссылка: у старых конфигов companySocials отсутствует, и `?? []`
+// отдавал бы НОВЫЙ массив каждый рендер внутри useShallow → useSyncExternalStore не может
+// закешировать снапшот → бесконечный цикл (React #185). Один общий [] решает это.
+const EMPTY_SOCIALS: Social[] = []
+
 // Переиспользуем пресеты иконок из «Мультикнопки» — только мессенджеры и соцсети.
 const SOCIAL_PRESETS = FAB_MENU_BUTTON_PRESETS.filter(
   p => p.group === 'social' || p.group === 'messenger',
@@ -44,7 +49,7 @@ const ChatSocialLinksSettings = () => {
     useShallow(s => {
       const cfg = s.settings?.widget as ChatWidgetType
       return {
-        socials: (cfg?.companySocials ?? []) as Social[],
+        socials: (cfg?.companySocials ?? EMPTY_SOCIALS) as Social[],
         title: cfg?.socialsTitle ?? defaults.socialsTitle ?? '',
         size: cfg?.socialsTitleSize ?? defaults.socialsTitleSize ?? 20,
         weight: cfg?.socialsTitleWeight ?? defaults.socialsTitleWeight ?? 600,
