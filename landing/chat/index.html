@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lemnity Чат — онлайн-чат, Telegram, MAX и ВКонтакте в одном окне</title>
+<meta name="description" content="Онлайн-чат и операторский центр для сайта. Telegram, MAX и ВКонтакте в одном окне, AI-агент в каждом тарифе включая бесплатный. Российский сервис, данные в РФ. Старт бесплатно." />
+<meta property="og:title" content="Lemnity Чат — все каналы и AI в одном окне" />
+<meta property="og:description" content="Онлайн-чат для сайта с Telegram, MAX и ВКонтакте, AI-агентом и операторским модулем. Данные в РФ. Бесплатный тариф с AI." />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="ru_RU" />
+<link rel="icon" type="image/svg+xml" href="assets/lemnity.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a href="#top" class="logo" aria-label="Lemnity">
+      <img src="assets/lemnity.svg" alt="Lemnity" width="132" height="30" />
+    </a>
+    <nav class="nav" aria-label="Основная навигация">
+      <a href="#features">Возможности</a>
+      <a href="#ai">AI-агент</a>
+      <a href="#pricing">Тарифы</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a href="#" data-cta="register" class="btn btn-primary btn-sm">Начать бесплатно</a>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-grid container">
+    <div class="hero-copy">
+      <span class="badge reveal" data-reveal>🇷🇺 Данные в РФ</span>
+      <h1 class="reveal" data-reveal>
+        Чат для сайта, где<br>
+        <span class="hl">удобно общаться<br>с&nbsp;клиентами</span>
+      </h1>
+      <p class="hero-sub reveal" data-reveal>
+        Онлайн-чат и операторский центр: отвечайте посетителям прямо на сайте, а Telegram, MAX
+        и ВКонтакте держите в одном окне. AI-агент обучен на вашем сайте, данные хранятся в РФ.
+      </p>
+      <div class="hero-actions reveal" data-reveal>
+        <a href="#" data-cta="register" class="btn btn-primary">Попробовать бесплатно</a>
+        <a href="#features" class="btn btn-ghost">Преимущества</a>
+      </div>
+      <ul class="hero-points reveal" data-reveal>
+        <li><svg class="ico" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Без карты, бесплатно навсегда</li>
+        <li><svg class="ico" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> AI в каждом тарифе</li>
+        <li><svg class="ico" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Код на сайт за 5 минут</li>
+      </ul>
+    </div>
+
+    <!-- Widget mockup — точная копия чат-виджета Lemnity (макет 1:1 из lmntai) -->
+    <div class="hero-visual reveal" data-reveal>
+      <div class="mock-wrap">
+        <div class="cw" id="mock" role="img" aria-label="Чат-виджет Lemnity">
+          <div class="cw-head-pad">
+            <div class="cw-head">
+              <div class="cw-avas">
+                <span class="cw-ava on"><img src="assets/avatars/op1.jpg" alt="" /></span>
+                <span class="cw-ava"><img src="assets/avatars/op2.jpg" alt="" /></span>
+                <span class="cw-ava"><img src="assets/avatars/op3.jpg" alt="" /></span>
+              </div>
+              <p class="cw-status">Операторы онлайн
+Отвечаем в течение 3 мин.</p>
+              <p class="cw-welcome">Приветствуем! 👋<br>Умный чат Lemnity для удобной связи с вами</p>
+            </div>
+          </div>
+          <div class="cw-feed" id="chat">
+            <div class="bub them">Здравствуйте! Я ассистент Lemnity — подскажу по тарифам или позову оператора.</div>
+            <div class="bub me">Можно подключить Telegram и MAX?</div>
+            <div class="bub them">Да, оба нативно — плюс ВКонтакте и чат на сайте. Всё в одном окне 🙌</div>
+          </div>
+          <div class="cw-comp">
+            <div class="cw-input">
+              <span class="cw-ph">Напишите сообщение…</span>
+              <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+            </div>
+            <div class="cw-tools">
+              <span class="cw-plus">+</span>
+              <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+              <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </div>
+          </div>
+          <div class="cw-foot">Сделано на Lemnity</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TRUST STRIP ================= -->
+<section class="strip">
+  <div class="container strip-inner">
+    <span class="strip-label">Все каналы в одном инбоксе:</span>
+    <div class="strip-channels">
+      <span>Telegram</span><i>•</i><span>MAX</span><i>•</i><span>ВКонтакте</span><i>•</i><span>Чат на сайте</span>
+    </div>
+    <span class="strip-note">14 дней Pro бесплатно · без карты</span>
+  </div>
+</section>
+
+<!-- ================= PAIN ================= -->
+<section class="pain container section">
+  <h2 class="section-title reveal" data-reveal>Знакомо?</h2>
+  <div class="pain-grid">
+    <article class="pain-card reveal" data-reveal>
+      <span class="pain-num">01</span>
+      <h3>Зарубежные чаты — это риск</h3>
+      <p>Блокировки, данные клиентов на серверах за границей и ни слова про VK или MAX.</p>
+    </article>
+    <article class="pain-card reveal" data-reveal>
+      <span class="pain-num">02</span>
+      <h3>Платишь за каждого оператора</h3>
+      <p>Обычные сервисы тарифицируют каждое место — команда растёт, счёт растёт ещё быстрее.</p>
+    </article>
+    <article class="pain-card reveal" data-reveal>
+      <span class="pain-num">03</span>
+      <h3>Лиды теряются между мессенджерами</h3>
+      <p>Telegram в одной вкладке, ВКонтакте в другой, сайт в третьей. Заявки утекают.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="features container section" id="features">
+  <div class="section-head">
+    <span class="eyebrow reveal" data-reveal>Возможности</span>
+    <h2 class="section-title reveal" data-reveal>Один виджет — весь диалог с клиентом</h2>
+  </div>
+  <div class="feat-grid">
+    <article class="feat-card reveal" data-reveal>
+      <div class="feat-ico">📥</div>
+      <h3>Омниканальный инбокс</h3>
+      <p>Telegram, MAX, ВКонтакте и чат на сайте в одном окне оператора. Вся переписка — в одной ленте.</p>
+    </article>
+    <article class="feat-card reveal" data-reveal>
+      <div class="feat-ico">✦</div>
+      <h3>AI-агент на знаниях сайта</h3>
+      <p>Краулит ваш сайт и отвечает клиентам на их языке. Когда нужно — передаёт оператору.</p>
+    </article>
+    <article class="feat-card reveal" data-reveal>
+      <div class="feat-ico">🧩</div>
+      <h3>Сценарии-боты без кода</h3>
+      <p>Визуальный конструктор диалогов: кнопки, шаги, картинки и плавный хэндофф на живого оператора.</p>
+    </article>
+    <article class="feat-card reveal" data-reveal>
+      <div class="feat-ico">👥</div>
+      <h3>Команда и отделы</h3>
+      <p>Операторы, отделы и авто-распределение диалогов. Статистика по ответам и времени реакции.</p>
+    </article>
+    <article class="feat-card reveal" data-reveal>
+      <div class="feat-ico">⚡</div>
+      <h3>Статусы и присутствие</h3>
+      <p>Онлайн/офлайн операторов, индикатор печати, уведомления и мгновенная доставка сообщений.</p>
+    </article>
+    <article class="feat-card reveal" data-reveal>
+      <div class="feat-ico">📄</div>
+      <h3>Вложения, формат и PDF</h3>
+      <p>Файлы и картинки, форматирование сообщений и выгрузка истории диалога в PDF с кириллицей.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================= AI BLOCK ================= -->
+<section class="ai-block section" id="ai">
+  <div class="container ai-inner">
+    <div class="ai-copy">
+      <span class="eyebrow light reveal" data-reveal>AI-агент</span>
+      <h2 class="section-title light reveal" data-reveal>AI входит даже в бесплатный тариф</h2>
+      <p class="ai-lead reveal" data-reveal>
+        Пока на рынке AI — самая дорогая доплата с поминутной тарификацией, у нас он работает на всех тарифах.
+        Лимит понятный — по числу AI-ответов в день, без счёта-сюрприза в конце месяца.
+      </p>
+      <ol class="ai-steps reveal" data-reveal>
+        <li><span>1</span> Агент изучает ваш сайт и собирает базу знаний</li>
+        <li><span>2</span> Отвечает посетителю на его языке — мгновенно, 24/7</li>
+        <li><span>3</span> Передаёт диалог оператору, когда вопрос сложный</li>
+      </ol>
+    </div>
+    <aside class="ai-card reveal" data-reveal>
+      <div class="ai-card-row"><span>Старт</span><b>50 AI-ответов / день</b></div>
+      <div class="ai-card-row"><span>Старт +</span><b>150 / день</b></div>
+      <div class="ai-card-row hot"><span>Про ⭐</span><b>500 / день</b></div>
+      <div class="ai-card-row"><span>Бизнес</span><b>1 500 / день</b></div>
+      <p class="ai-card-note">Без оплаты за каждый ответ. Превышен лимит — агент мягко передаёт диалог оператору до полуночи.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= COMPARISON ================= -->
+<section class="compare container section" id="demo">
+  <div class="section-head">
+    <span class="eyebrow reveal" data-reveal>Сравнение</span>
+    <h2 class="section-title reveal" data-reveal>Lemnity и обычный онлайн-чат</h2>
+  </div>
+  <div class="compare-wrap reveal" data-reveal>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th class="c-feat">Что важно</th>
+          <th class="c-us">Lemnity</th>
+          <th class="c-them">Обычный онлайн-чат</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Нативный Telegram</td><td class="yes">✓</td><td class="meh">частично</td></tr>
+        <tr><td>Нативный MAX</td><td class="yes">✓</td><td class="no">обычно нет</td></tr>
+        <tr><td>ВКонтакте</td><td class="yes">✓</td><td class="no">обычно нет</td></tr>
+        <tr><td>Данные в РФ</td><td class="yes">✓</td><td class="no">чаще за рубежом</td></tr>
+        <tr><td>AI без поминутной оплаты</td><td class="yes">✓ <small>в т.ч. в Free</small></td><td class="no">дорогая доплата</td></tr>
+        <tr><td>Бесплатный тариф с AI</td><td class="yes">✓</td><td class="no">AI на free недоступен</td></tr>
+        <tr><td>Цена входа</td><td class="yes">0 ₽ Free / от 590 ₽</td><td class="meh">от ~$13–45 / мес</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="compare-fine">Сравнение с обобщённым решением на рынке, без конкретных брендов.</p>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section class="pricing container section" id="pricing">
+  <div class="section-head">
+    <span class="eyebrow reveal" data-reveal>Тарифы</span>
+    <h2 class="section-title reveal" data-reveal>Бесплатный старт и понятная лестница</h2>
+    <p class="section-sub reveal" data-reveal>Объём считаем по AI-ответам в день, а не по диалогам. AI — на всех тарифах.</p>
+  </div>
+
+  <div class="price-grid">
+    <article class="price-card reveal" data-reveal>
+      <h3>Старт</h3>
+      <div class="price"><b>0</b> ₽<span>/ мес</span></div>
+      <ul>
+        <li>1 сайт · 1 оператор</li>
+        <li>50 AI-ответов / день</li>
+        <li>Чат на сайте + Telegram</li>
+        <li>История 30 дней</li>
+      </ul>
+      <a href="#" data-cta="register" class="btn btn-outline btn-block">Начать</a>
+      <span class="extra">бесплатно навсегда</span>
+    </article>
+
+    <article class="price-card reveal" data-reveal>
+      <h3>Старт +</h3>
+      <div class="price"><b>590</b> ₽<span>/ мес</span></div>
+      <ul>
+        <li>1 сайт · 1 оператор</li>
+        <li>150 AI-ответов / день</li>
+        <li>Все каналы: VK / MAX / WhatsApp</li>
+        <li>White-label · история ∞</li>
+      </ul>
+      <a href="#" data-cta="register" class="btn btn-outline btn-block">Выбрать</a>
+      <span class="extra">доп. оператор +190 ₽</span>
+    </article>
+
+    <article class="price-card featured reveal" data-reveal>
+      <span class="ribbon">Популярный</span>
+      <h3>Про ⭐</h3>
+      <div class="price"><b>1 490</b> ₽<span>/ мес</span></div>
+      <ul>
+        <li>3 сайта · 3 оператора</li>
+        <li>500 AI-ответов / день</li>
+        <li>Все каналы + white-label</li>
+        <li>Отделы, маршрутизация, аналитика</li>
+      </ul>
+      <a href="#" data-cta="register" class="btn btn-primary btn-block">Попробовать 14 дней</a>
+      <span class="extra">доп. оператор +290 ₽</span>
+    </article>
+
+    <article class="price-card reveal" data-reveal>
+      <h3>Бизнес</h3>
+      <div class="price"><b>3 490</b> ₽<span>/ мес</span></div>
+      <ul>
+        <li>10 сайтов · 5 операторов</li>
+        <li>1 500 AI-ответов / день</li>
+        <li>API и CRM-интеграции</li>
+        <li>Приоритетная поддержка</li>
+      </ul>
+      <a href="#" data-cta="register" class="btn btn-outline btn-block">Выбрать</a>
+      <span class="extra">доп. оператор +390 ₽</span>
+    </article>
+  </div>
+  <p class="price-fine">Актуальные цены, состав тарифов и оплата — на <a href="#" data-cta="register">lemnity.ru</a>.</p>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="how container section">
+  <div class="section-head">
+    <span class="eyebrow reveal" data-reveal>Запуск</span>
+    <h2 class="section-title reveal" data-reveal>Подключение за 5 минут</h2>
+  </div>
+  <div class="how-grid">
+    <div class="how-step reveal" data-reveal>
+      <span class="how-num">1</span>
+      <h3>Зарегистрируйтесь</h3>
+      <p>Тариф «Старт» бесплатен навсегда и без карты. Создайте проект под ваш сайт.</p>
+    </div>
+    <div class="how-arrow" aria-hidden="true">→</div>
+    <div class="how-step reveal" data-reveal>
+      <span class="how-num">2</span>
+      <h3>Настройте чат</h3>
+      <p>Подключите каналы, соберите сценарий-бота и включите AI-агента.</p>
+    </div>
+    <div class="how-arrow" aria-hidden="true">→</div>
+    <div class="how-step reveal" data-reveal>
+      <span class="how-num">3</span>
+      <h3>Вставьте код</h3>
+      <p>Один скрипт на сайт — и виджет уже принимает заявки.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="faq container section" id="faq">
+  <div class="section-head">
+    <span class="eyebrow reveal" data-reveal>Вопросы</span>
+    <h2 class="section-title reveal" data-reveal>Коротко о главном</h2>
+  </div>
+  <div class="faq-list reveal" data-reveal>
+    <details class="faq-item">
+      <summary>Где хранятся данные клиентов?<span class="faq-x" aria-hidden="true"></span></summary>
+      <p>В РФ. Lemnity — российский сервис, поэтому переписка и заявки не уезжают на зарубежные серверы.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Чем отличается от обычных онлайн-чатов?<span class="faq-x" aria-hidden="true"></span></summary>
+      <p>Нативные Telegram, MAX и ВКонтакте в одном окне, AI-агент на всех тарифах (включая бесплатный) и оплата за тариф, а не за каждого оператора.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Правда ли AI работает в бесплатном тарифе?<span class="faq-x" aria-hidden="true"></span></summary>
+      <p>Да. На бесплатном тарифе «Старт» доступно 50 AI-ответов в день. На платных тарифах лимит выше — до 1 500 ответов в день на «Бизнес».</p>
+    </details>
+    <details class="faq-item">
+      <summary>Нужна ли карта, чтобы начать?<span class="faq-x" aria-hidden="true"></span></summary>
+      <p>Нет. Тариф «Старт» включается без карты и работает бессрочно. «Про» можно протестировать 14 дней бесплатно.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Что значит «лимит AI-ответов в день»?<span class="faq-x" aria-hidden="true"></span></summary>
+      <p>Объём считается по числу ответов AI-агента в сутки, а не по диалогам. Превышен лимит — агент мягко передаёт диалог оператору до полуночи. Никакой поминутной тарификации.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA ================= -->
+<section class="cta-final section">
+  <div class="container cta-inner reveal" data-reveal>
+    <h2>Запустите чат с AI на своём сайте сегодня</h2>
+    <p>Бесплатно навсегда, без карты. Все каналы и AI — из коробки.</p>
+    <a href="#" data-cta="register" class="btn btn-primary btn-lg">Начать бесплатно</a>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <img src="assets/lemnity.svg" alt="Lemnity" width="120" height="27" />
+      <p>Виджеты для сайта под конверсию и заявки. Данные в РФ.</p>
+    </div>
+    <div class="footer-legal">
+      <p>ООО «Лемнити»</p>
+      <p><a href="#" data-cta="policy">Политика конфиденциальности</a></p>
+      <p><a href="#" data-cta="offer">Договор-оферта</a></p>
+      <p class="muted">© <span id="year">2026</span> Lemnity. Все права защищены.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
