@@ -142,6 +142,13 @@ const IconSparkles = ({ color }: { color: string }) => (
   </svg>
 )
 
+// Кастомная иконка вкладки из svgexport-5 (5).svg.
+const IconShareNodes = ({ color }: { color: string }) => (
+  <svg width="22" height="22" viewBox="0 0 512 512" fill={color} xmlns="http://www.w3.org/2000/svg">
+    <path d="M362 212c-59.158 0-110.421 34.428-134.822 84.296l-78.233-27.833A75.083 75.083 0 0 0 150 256a74.568 74.568 0 0 0-12.81-41.878l77.417-76.619C226.479 145.391 240.709 150 256 150c41.355 0 75-33.645 75-75S297.355 0 256 0s-75 33.645-75 75c0 15.238 4.579 29.42 12.417 41.267l-77.638 76.838C104.031 185.461 90.031 181 75 181c-41.355 0-75 33.645-75 75s33.645 75 75 75c26.465 0 49.754-13.791 63.107-34.551l78.657 27.984A149.776 149.776 0 0 0 212 362c0 82.71 67.29 150 150 150s150-67.29 150-150-67.29-150-150-150zM256 30c24.813 0 45 20.187 45 45s-20.187 45-45 45-45-20.187-45-45 20.187-45 45-45zM75 301c-24.813 0-45-20.187-45-45s20.187-45 45-45 45 20.187 45 45-20.187 45-45 45zm287 181c-24.074 0-46.511-7.132-65.321-19.386C301.25 430.653 328.794 406 362 406s60.75 24.653 65.321 56.614C408.511 474.868 386.074 482 362 482zm-30-136c0-16.542 13.458-30 30-30s30 13.458 30 30-13.458 30-30 30-30-13.458-30-30zm120.687 94.505c-8.12-23.315-24.99-42.565-46.661-53.797C415.931 376.003 422 361.7 422 346c0-33.084-26.916-60-60-60s-60 26.916-60 60c0 15.7 6.069 30.003 15.974 40.708-21.671 11.232-38.541 30.482-46.661 53.797C253.059 419.446 242 391.99 242 362c0-66.168 53.832-120 120-120s120 53.832 120 120c0 29.99-11.059 57.446-29.313 78.505z" />
+  </svg>
+)
+
 const IconSend = ({ color }: { color: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
     <path d="M21 4 3 11l6 2.5L21 4Z" />
@@ -447,7 +454,7 @@ const TabBar = ({
     <button type="button" className="p-1" aria-label="Контакты" onClick={onContacts}>
       <IconDoc color={active === 'contacts' ? accent : '#1A1A1A'} />
     </button>
-    <button type="button" className="p-1" aria-label="Карта"><IconPin color="#1A1A1A" /></button>
+    <button type="button" className="p-1" aria-label="Карта"><IconShareNodes color="#1A1A1A" /></button>
     <button type="button" className="p-1" aria-label="ИИ-агент" onClick={onAi}>
       <IconSparkles color={accent} />
     </button>
