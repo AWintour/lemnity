@@ -4,6 +4,7 @@ import { PatternFormat } from 'react-number-format'
 import { cn } from '@heroui/theme'
 
 import EmojiPicker from '@/components/EmojiPicker'
+import { renderMarkdown } from '@/common/markdownLite'
 import type { ChatUiMessage } from './types'
 import type { OperatorInfo } from './useChatConnection'
 
@@ -543,7 +544,9 @@ const MessageBubble = ({ message, clientColor }: { message: ChatUiMessage; clien
             📎 {message.attachmentName ?? 'Файл'}
           </a>
         )}
-        {message.body}
+        {message.body && (
+          <span className="whitespace-pre-wrap break-words">{renderMarkdown(message.body)}</span>
+        )}
         {time && (
           <div
             className={cn(

@@ -35,6 +35,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover'
 import FeedbackPopover from '@/components/FeedbackPopover/FeedbackPopover'
 import CustomSwitch from '@/components/CustomSwitch'
 import ChatAiAgentSettings from '@/layouts/Widgets/Chat/ChatAiAgentSettings'
+import { renderMarkdown } from '@/common/markdownLite'
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 
 const ACCENT = '#1A52DB' // primary платформы
@@ -68,6 +69,11 @@ const IconSparkles = () => (
 )
 const IconDots = () => <Ic d="M12 6h.01M12 12h.01M12 18h.01" stroke={2.5} size={20} />
 const IconInfo = () => <Ic d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z|M12 11v5|M12 7.5h.01" size={18} stroke={1.8} />
+const IconChevronRight = () => <Ic d="M9 6l6 6-6 6" size={18} stroke={2} />
+const IconChevronLeft = () => <Ic d="M15 6l-6 6 6 6" size={18} stroke={2} />
+const IconLink = () => <Ic d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1|M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" size={18} />
+const IconListBullet = () => <Ic d="M8 6h12|M8 12h12|M8 18h12|M4 6h.01M4 12h.01M4 18h.01" size={18} stroke={2} />
+const IconListOrdered = () => <Ic d="M9 6h11|M9 12h11|M9 18h11|M4 5h1v4M3.7 9h1.6|M3.6 15.4h1.5v.5l-1.5 1.6h1.6" size={16} stroke={1.6} />
 const IconArchive = () => <Ic d="M3 7h18v3H3z|M5 10v9h14v-9|M9.5 13.5h5" size={18} stroke={1.8} />
 const IconClose = () => <Ic d="M6 6l12 12M18 6 6 18" size={18} stroke={2} />
 const IconSelectAll = () => <Ic d="M4 4h16v16H4z|M8.5 12l2.5 2.5 5-5.5" size={22} stroke={1.8} />
@@ -2871,6 +2877,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState('')
+  const draftRef = useRef<HTMLTextAreaElement>(null)
   const [opStatus, setOpStatus] = useState<string>('work')
   const [opMenuOpen, setOpMenuOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -3173,6 +3180,58 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       setArchiving(false)
     }
   }, [sel, preview, loadConversations])
+
+  // Форматирование текста оператора (вставка markdown в поле ввода по выделению).
+  const applyWrap = useCallback(
+    (before: string, after = before) => {
+      const ta = draftRef.current
+      if (!ta) return
+      const s = ta.selectionStart ?? draft.length
+      const e = ta.selectionEnd ?? draft.length
+      const sel = draft.slice(s, e)
+      setDraft(draft.slice(0, s) + before + sel + after + draft.slice(e))
+      requestAnimationFrame(() => {
+        ta.focus()
+        ta.setSelectionRange(s + before.length, s + before.length + sel.length)
+      })
+    },
+    [draft],
+  )
+  const applyLinePrefix = useCallback(
+    (prefix: (i: number) => string) => {
+      const ta = draftRef.current
+      if (!ta) return
+      const s = ta.selectionStart ?? 0
+      const e = ta.selectionEnd ?? 0
+      const lineStart = draft.lastIndexOf('\n', s - 1) + 1
+      const nl = draft.indexOf('\n', e)
+      const lineEnd = nl === -1 ? draft.length : nl
+      const out = draft
+        .slice(lineStart, lineEnd)
+        .split('\n')
+        .map((ln, i) => prefix(i) + ln)
+        .join('\n')
+      setDraft(draft.slice(0, lineStart) + out + draft.slice(lineEnd))
+      requestAnimationFrame(() => {
+        ta.focus()
+        ta.setSelectionRange(lineStart, lineStart + out.length)
+      })
+    },
+    [draft],
+  )
+  const insertLink = useCallback(() => {
+    const ta = draftRef.current
+    if (!ta) return
+    const s = ta.selectionStart ?? draft.length
+    const e = ta.selectionEnd ?? draft.length
+    const selText = draft.slice(s, e) || 'ссылка'
+    setDraft(draft.slice(0, s) + `[${selText}](url)` + draft.slice(e))
+    const urlStart = s + selText.length + 3 // после "]("
+    requestAnimationFrame(() => {
+      ta.focus()
+      ta.setSelectionRange(urlStart, urlStart + 3) // выделяем "url"
+    })
+  }, [draft])
 
   const handleAttach = useCallback(() => {
     if (fileRef.current) {
@@ -3624,7 +3683,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                 <div key={m.id} className={cn('w-full flex flex-col', m.me ? 'items-end' : 'items-start')}>
                   {!m.me && <span className="text-[12px] text-default-400 mb-0.5 px-1">{m.author}</span>}
                   <div className={cn('max-w-[60%] px-4 py-3 rounded-[14px] text-[15px] leading-5', m.me ? 'bg-primary/10 rounded-br-[4px]' : 'bg-default-100 rounded-bl-[4px]')}>
-                    {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
+                    {m.body && <div className="whitespace-pre-wrap break-words">{renderMarkdown(m.body)}</div>}
                     {m.attachmentUrl && (
                       <div className={cn(m.body && 'mt-2')}>
                         <AttachmentView url={m.attachmentUrl} type={m.attachmentType} name={m.attachmentName} />
@@ -3703,7 +3762,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                               ИИ
                             </div>
                           )}
-                          {m.body && <div className="whitespace-pre-wrap break-words">{m.body}</div>}
+                          {m.body && <div className="whitespace-pre-wrap break-words">{renderMarkdown(m.body)}</div>}
                           {(m.attachmentUrl || (m.attachments && m.attachments.length > 0)) && (
                             <div className={cn(m.body && 'mt-2')}>
                               <MessageAttachments message={m} />
@@ -3730,6 +3789,29 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             <form onSubmit={handleSend} className="shrink-0 p-4">
               {attachErr && <div className="mb-2 text-[13px] text-[#E5484D]">{attachErr}</div>}
               <div className="rounded-[14px] bg-default-100 px-4 py-3">
+                {/* Панель форматирования: markdown вставляется в поле по выделению. */}
+                <div className="flex items-center gap-0.5 -mt-0.5 mb-1.5 text-[#6E6E76] border-b border-default-200/70 pb-1.5">
+                  {([
+                    ['Жирный', () => applyWrap('**'), <b key="b">B</b>],
+                    ['Курсив', () => applyWrap('_'), <i key="i">I</i>],
+                    ['Зачёркнутый', () => applyWrap('~~'), <span key="s" className="line-through">S</span>],
+                    ['Ссылка', insertLink, <IconLink key="l" />],
+                    ['Маркированный список', () => applyLinePrefix(() => '- '), <IconListBullet key="ul" />],
+                    ['Нумерованный список', () => applyLinePrefix(i => `${i + 1}. `), <IconListOrdered key="ol" />],
+                  ] as const).map(([title, onClick, icon], idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      title={title}
+                      aria-label={title}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={onClick}
+                      className="w-8 h-8 rounded-[6px] hover:bg-default-200 flex items-center justify-center text-[15px]"
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
                 {(staged.length > 0 || uploadingCount > 0) && (
                   <div className="flex flex-wrap gap-2 mb-2">
                     {staged.map(s => (
@@ -3758,6 +3840,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                   </div>
                 )}
                 <textarea
+                  ref={draftRef}
                   value={draft}
                   onChange={e => { setDraft(e.target.value); notifyTyping() }}
                   onKeyDown={e => {
@@ -3825,20 +3908,35 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       {groupOpen ? (
       <GroupInfoPanel messages={groupMsgs} />
       ) : (
-      <aside className="w-[340px] shrink-0 border-l border-default-200 p-5 flex flex-col gap-5 overflow-y-auto">
-        <div className="flex items-center justify-between">
+      <aside
+        className={cn(
+          'shrink-0 border-l border-default-200 overflow-y-auto flex flex-col',
+          infoOpen ? 'w-[340px] p-5 gap-5' : 'w-12 py-4 items-center gap-3',
+        )}
+      >
+        {infoOpen ? (
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 text-[18px] font-medium">
+              <span className="text-default-400"><IconInfo /></span>
+              Информация:
+            </span>
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={handleRefresh} aria-label="Обновить" className="text-default-400 hover:text-[#1A1A1A]"><IconDots /></button>
+              <button type="button" onClick={() => setInfoOpen(false)} aria-label="Свернуть панель" title="Свернуть" className="text-default-400 hover:text-[#1A1A1A]"><IconChevronRight /></button>
+            </div>
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={() => setInfoOpen(v => !v)}
-            aria-expanded={infoOpen}
-            className="flex items-center gap-2 text-[18px] font-medium hover:text-[#1A1A1A]"
+            onClick={() => setInfoOpen(true)}
+            aria-label="Развернуть информацию"
+            title="Информация"
+            className="text-default-400 hover:text-[#1A1A1A] flex flex-col items-center gap-2"
           >
-            <span className="text-default-400"><IconInfo /></span>
-            Информация:
-            <span className={cn('text-default-400 transition-transform', infoOpen && 'rotate-180')}><IconChevron /></span>
+            <IconChevronLeft />
+            <IconInfo />
           </button>
-          <button type="button" onClick={handleRefresh} aria-label="Обновить" className="text-default-400 hover:text-[#1A1A1A]"><IconDots /></button>
-        </div>
+        )}
 
         {infoOpen && (<>
         <div className="flex items-center gap-2">
@@ -3982,9 +4080,11 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         </div>
         </>)}
 
-        <button type="button" onClick={() => navigate('/')} className="mt-auto text-[13px] text-default-400 text-left">
-          ← В кабинет
-        </button>
+        {infoOpen && (
+          <button type="button" onClick={() => navigate('/')} className="mt-auto text-[13px] text-default-400 text-left">
+            ← В кабинет
+          </button>
+        )}
       </aside>
       )}
       </>
