@@ -15,6 +15,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 import { useChatSocket } from '@/hooks/useChatSocket'
+import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { buildDefaults } from '@/stores/widgetSettings/defaults'
@@ -37,6 +38,9 @@ import CustomSwitch from '@/components/CustomSwitch'
 import ChatAiAgentSettings from '@/layouts/Widgets/Chat/ChatAiAgentSettings'
 import { renderMarkdown } from '@/common/markdownLite'
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
+// .sidebar-bg задаёт фон сайдбара/инбокса. Импортируем явно, иначе на роуте /chat-module
+// (без DashboardLayout) класс не подгружается и фон прозрачный — особенно заметно у мобильного drawer.
+import '@/layouts/DashboardLayout/NavigationSidebar.css'
 
 const ACCENT = '#1A52DB' // primary платформы
 
@@ -505,6 +509,9 @@ const ModuleSidebar = ({
   isOperator,
   collapsed,
   onToggleCollapsed,
+  isMobile,
+  mobileOpen,
+  onMobileClose,
 }: {
   section: Section
   onSection: (s: Section) => void
@@ -516,27 +523,46 @@ const ModuleSidebar = ({
   isOperator?: boolean
   collapsed?: boolean
   onToggleCollapsed?: () => void
-}) => (
+  isMobile?: boolean
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}) => {
+  // На мобильном сайдбар — это выезжающий drawer (никогда не «свёрнутый»).
+  const isCollapsed = !isMobile && !!collapsed
+  return (
+  <>
+  {isMobile && mobileOpen && (
+    <div className="fixed inset-0 z-40 bg-black/40" onClick={onMobileClose} aria-hidden="true" />
+  )}
   <aside className={cn(
-    'shrink-0 sidebar-bg flex flex-col p-4 gap-1.5 transition-[width] duration-200',
-    collapsed ? 'w-[72px] items-center' : 'w-60',
+    'sidebar-bg flex flex-col p-4 gap-1.5',
+    isMobile
+      ? cn(
+          'fixed inset-y-0 left-0 z-50 w-[82%] max-w-[300px] overflow-y-auto shadow-2xl transition-transform duration-200',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        )
+      : cn('shrink-0 transition-[width] duration-200', isCollapsed ? 'w-[72px] items-center' : 'w-60'),
   )}>
-    <div className={cn('flex items-center', collapsed ? 'justify-center w-full' : 'justify-between')}>
-      {!collapsed && (
+    <div className={cn('flex items-center', isCollapsed ? 'justify-center w-full' : 'justify-between')}>
+      {!isCollapsed && (
         <h1 className="text-[20px] font-semibold text-[#1A1A1A] px-2 pt-1">
           Модуль "Чат"
         </h1>
       )}
       <button
         type="button"
-        onClick={onToggleCollapsed}
-        aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
-        title={collapsed ? 'Развернуть' : 'Свернуть'}
+        onClick={isMobile ? onMobileClose : onToggleCollapsed}
+        aria-label={isMobile ? 'Закрыть меню' : isCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+        title={isMobile ? 'Закрыть' : isCollapsed ? 'Развернуть' : 'Свернуть'}
         className="w-9 h-9 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-white hover:text-primary transition-colors"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform', collapsed && 'rotate-180')}>
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
+        {isMobile ? (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform', isCollapsed && 'rotate-180')}>
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        )}
       </button>
     </div>
     <button
@@ -545,26 +571,26 @@ const ModuleSidebar = ({
       title={isOperator ? 'Выйти' : 'Личный кабинет'}
       className={cn(
         'flex items-center gap-2 text-[14px] text-[#3D3D3B] hover:text-primary pb-3 mb-1 border-b border-default-200',
-        collapsed ? 'justify-center w-full' : 'px-2',
+        isCollapsed ? 'justify-center w-full' : 'px-2',
       )}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-      {!collapsed && (isOperator ? 'Выйти' : 'Личный кабинет')}
+      {!isCollapsed && (isOperator ? 'Выйти' : 'Личный кабинет')}
     </button>
     {/* Оператору селектор чата не нужен — доступ уже ограничен сервером. */}
-    {!isOperator && !collapsed && chats.length > 0 && (
+    {!isOperator && !isCollapsed && chats.length > 0 && (
       <SidebarChatSelect chats={chats} value={dialogChat} onChange={onDialogChat} />
     )}
-    <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} collapsed={collapsed} />
-    <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} collapsed={collapsed} />
+    <NavItem icon={<IconInbox />} label="Входящие" active={section === 'inbox'} badge={inboxCount || undefined} onClick={() => onSection('inbox')} collapsed={isCollapsed} />
+    <NavItem icon={<IconMegaphone />} label="Диалоги" active={section === 'dialogs'} onClick={() => onSection('dialogs')} collapsed={isCollapsed} />
     {/* Owner-разделы скрыты для оператора. */}
     {!isOperator && (
       <>
-        <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} collapsed={collapsed} />
+        <NavItem icon={<IconBubble />} label="Соцсети" active={section === 'social'} onClick={() => onSection('social')} collapsed={isCollapsed} />
         <div className="h-px bg-default-200 my-2 w-full" />
-        <NavItem icon={<IconPlanet />} label="Асистент" active={section === 'assistant'} onClick={() => onSection('assistant')} collapsed={collapsed} />
-        <NavItem icon={<IconUser />} label="Операторы" active={section === 'operators'} onClick={() => onSection('operators')} collapsed={collapsed} />
-        <NavItem icon={<IconUsers />} label="Отделы" active={section === 'departments'} onClick={() => onSection('departments')} collapsed={collapsed} />
+        <NavItem icon={<IconPlanet />} label="Асистент" active={section === 'assistant'} onClick={() => onSection('assistant')} collapsed={isCollapsed} />
+        <NavItem icon={<IconUser />} label="Операторы" active={section === 'operators'} onClick={() => onSection('operators')} collapsed={isCollapsed} />
+        <NavItem icon={<IconUsers />} label="Отделы" active={section === 'departments'} onClick={() => onSection('departments')} collapsed={isCollapsed} />
         <NavItem
           icon={<Ic d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z|M19.4 13a1.7 1.7 0 0 0 .3 1.9 2 2 0 1 1-2.8 2.8 1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2 2 2 0 1 1-2.8-2.8A1.7 1.7 0 0 0 4.6 13a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.5-2.9 2 2 0 1 1 2.8-2.8A1.7 1.7 0 0 0 11.8 4 2 2 0 1 1 15.8 4a1.7 1.7 0 0 0 2.9 1.2 2 2 0 1 1 2.8 2.8A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 1Z" size={22} stroke={1.6} />}
           label="Настройки"
@@ -575,20 +601,22 @@ const ModuleSidebar = ({
       </>
     )}
 
-    <div className={cn('mt-auto flex flex-col gap-3', collapsed && 'items-center')}>
+    <div className={cn('mt-auto flex flex-col gap-3', isCollapsed && 'items-center')}>
       <a
         href="https://help.lemnity.ru"
         target="_blank"
         rel="noreferrer"
         title="Документация"
-        className={cn('flex items-center gap-2 text-[15px] text-[#3D3D3B] hover:text-[#1A1A1A]', collapsed ? 'justify-center' : 'px-2')}
+        className={cn('flex items-center gap-2 text-[15px] text-[#3D3D3B] hover:text-[#1A1A1A]', isCollapsed ? 'justify-center' : 'px-2')}
       >
-        <IconDoc /> {!collapsed && 'Документация'}
+        <IconDoc /> {!isCollapsed && 'Документация'}
       </a>
-      {!collapsed && <SupportWriteButton />}
+      {!isCollapsed && <SupportWriteButton />}
     </div>
   </aside>
-)
+  </>
+  )
+}
 
 /* ----------------------------- dialogs ---------------------------------- */
 
@@ -711,10 +739,10 @@ const DialogCard = ({
           </button>
         </div>
 
-        {/* Тело: 3 колонки */}
-        <div className="flex-1 min-h-0 flex">
+        {/* Тело: 3 колонки (на мобильном — вертикально, со скроллом всего тела) */}
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
           {/* Профиль */}
-          <aside className="w-[320px] shrink-0 border-r border-default-200 overflow-y-auto p-5 flex flex-col gap-4">
+          <aside className="w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-default-200 md:overflow-y-auto p-5 flex flex-col gap-4">
             <h3 className="text-[15px] font-semibold text-[#1A1A1A]">Профиль клиента</h3>
             <Field label="Имя" value={conv.visitorName} />
             <Field label="Email" value={conv.visitorEmail} />
@@ -726,7 +754,7 @@ const DialogCard = ({
           </aside>
 
           {/* История диалогов */}
-          <section className="flex-1 min-w-0 flex flex-col">
+          <section className="flex-1 min-w-0 flex flex-col min-h-[55vh] md:min-h-0">
             <div className="px-6 py-4 border-b border-default-200 shrink-0">
               <h3 className="text-[16px] font-semibold text-[#1A1A1A]">История диалогов</h3>
             </div>
@@ -765,7 +793,7 @@ const DialogCard = ({
           </section>
 
           {/* События пользователя */}
-          <aside className="w-[340px] shrink-0 border-l border-default-200 overflow-y-auto p-5 flex flex-col gap-5">
+          <aside className="w-full md:w-[340px] shrink-0 border-t md:border-t-0 md:border-l border-default-200 md:overflow-y-auto p-5 flex flex-col gap-5">
             <h3 className="text-[16px] font-semibold text-[#1A1A1A]">События пользователя</h3>
             <div className="flex flex-col gap-5">
               {conv.lastMessageAt && (
@@ -1837,12 +1865,12 @@ const OperatorsSection = ({
               </div>
               <div className="text-[14px] text-default-400 truncate">{o.email || '—'}</div>
             </div>
-            <span className="text-[14px] text-default-500 flex-1 min-w-0 truncate">{o.dept}</span>
-            <span className="text-[14px] text-default-500 w-[150px] shrink-0 truncate" title="Доступный чат">
+            <span className="hidden md:block text-[14px] text-default-500 flex-1 min-w-0 truncate">{o.dept}</span>
+            <span className="hidden md:block text-[14px] text-default-500 w-[150px] shrink-0 truncate" title="Доступный чат">
               {o.isOwner ? 'Все чаты' : o.widgetId ? (chatLabelById[o.widgetId] ?? 'Чат') : 'Все чаты'}
             </span>
-            <span className="text-[14px] text-default-500 w-[120px] shrink-0">{o.role}</span>
-            <span className="text-[14px] text-default-400 w-[80px] shrink-0">{o.online ? 'Онлайн' : 'Офлайн'}</span>
+            <span className="hidden md:block text-[14px] text-default-500 w-[120px] shrink-0">{o.role}</span>
+            <span className="hidden md:block text-[14px] text-default-400 w-[80px] shrink-0">{o.online ? 'Онлайн' : 'Офлайн'}</span>
             {o.isOwner ? (
               <span className="w-9 h-9 shrink-0" />
             ) : (
@@ -2040,7 +2068,7 @@ const DepartmentsSection = ({
 /* --------------------- групповой чат: архив вложений -------------------- */
 
 // Архив вложений общего чата операторов — собирается из реальных сообщений группы.
-const GroupInfoPanel = ({ messages }: { messages: GroupMsg[] }) => {
+const GroupInfoPanel = ({ messages, isMobile, onBack }: { messages: GroupMsg[]; isMobile?: boolean; onBack?: () => void }) => {
   const [tab, setTab] = useState<'photos' | 'media' | 'docs'>('photos')
   const atts = useMemo(() => messages.filter(m => m.attachmentUrl), [messages])
   const photos = useMemo(() => atts.filter(m => m.attachmentType === 'image'), [atts])
@@ -2055,8 +2083,17 @@ const GroupInfoPanel = ({ messages }: { messages: GroupMsg[] }) => {
     { key: 'docs', label: 'Документы', count: docs.length },
   ]
   return (
-    <aside className="w-[340px] shrink-0 border-l border-default-200 p-5 flex flex-col gap-4 overflow-y-auto">
-      <span className="text-[18px] font-medium">Информация:</span>
+    <aside className={cn('border-l border-default-200 p-5 flex flex-col gap-4 overflow-y-auto', isMobile ? 'w-full' : 'w-[340px] shrink-0')}>
+      {isMobile ? (
+        <span className="flex items-center gap-2">
+          <button type="button" onClick={onBack} aria-label="Назад" className="w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+          <span className="text-[18px] font-medium">Информация:</span>
+        </span>
+      ) : (
+        <span className="text-[18px] font-medium">Информация:</span>
+      )}
       <p className="text-[14px] text-default-400">Архив вложений общего чата операторов</p>
 
       <div className="flex gap-2">
@@ -2801,9 +2838,9 @@ const SettingsSection = ({
   )
 
   return (
-    <div className="flex-1 min-w-0 flex border-l border-default-200">
+    <div className="flex-1 min-w-0 flex flex-col md:flex-row border-l border-default-200 overflow-y-auto md:overflow-hidden">
       {/* Левый блок: выбор чата + кнопки */}
-      <div className="w-60 shrink-0 border-r border-default-200 p-4 flex flex-col gap-4">
+      <div className="w-full md:w-60 shrink-0 border-b md:border-b-0 md:border-r border-default-200 p-4 flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] text-default-400">Чат</span>
           <div className="relative">
@@ -2840,7 +2877,7 @@ const SettingsSection = ({
       </div>
 
       {/* Центр */}
-      <div className="flex-1 min-w-0 overflow-y-auto">
+      <div className="flex-1 min-w-0 md:overflow-y-auto">
         {!ready ? (
           <div className="p-6 text-[15px] text-default-400">Загрузка…</div>
         ) : subview === 'autodist' ? (
@@ -2987,6 +3024,13 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   const [dialogChat, setDialogChat] = useState<'all' | string>('all')
   // Свёрнутый сайдбар чат-модуля (иконки без подписей).
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // Адаптив: на телефоне показываем одну панель за раз (список → переписка → инфо),
+  // а навигацию модуля прячем в выезжающий слева drawer.
+  const isMobile = useIsMobileViewport(768)
+  const [mobilePane, setMobilePane] = useState<'inbox' | 'thread' | 'info'>('inbox')
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  // На мобильном инфо-панель — отдельный экран, всегда развёрнут (свернуть в «полоску» нельзя).
+  const infoExpanded = isMobile || infoOpen
   useEffect(() => {
     if (dialogChat !== 'all' && !dialogChats.some(c => c.widgetId === dialogChat)) {
       setDialogChat('all')
@@ -3091,6 +3135,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     async (id: string) => {
       setGroupOpen(false)
       setSelectedId(id)
+      setMobilePane('thread')
       setConversations(prev => prev.map(c => (c.id === id ? { ...c, unreadForManager: 0 } : c)))
       if (preview) {
         setMessages(MOCK_MESSAGES[id] ?? [])
@@ -3139,6 +3184,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
 
   const handleComplete = useCallback(async () => {
     if (!selectedId) return
+    setMobilePane('inbox')
     if (preview) {
       setConversations(prev => prev.filter(c => c.id !== selectedId))
       setSelectedId(null)
@@ -3449,7 +3495,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     <div className="h-screen w-full flex bg-white text-[#1A1A1A] overflow-hidden">
       <ModuleSidebar
         section={section}
-        onSection={go}
+        onSection={s => { go(s); setMobileNavOpen(false); setMobilePane('inbox') }}
         inboxCount={preview ? 13 : inboxCount}
         onExit={isOperator ? () => { operatorLogout(); navigate('/operator') } : () => navigate('/')}
         chats={dialogChats}
@@ -3458,8 +3504,28 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         isOperator={isOperator}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
+        isMobile={isMobile}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
       />
 
+      <div className="flex-1 min-w-0 flex flex-col">
+      {/* Мобильная шапка с «бургером» для разделов без собственной навигации.
+          В «Входящих» бургер встроен в шапку списка диалогов. */}
+      {isMobile && section !== 'inbox' && (
+        <div className="h-14 shrink-0 flex items-center gap-2 px-3 border-b border-default-200 bg-white">
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Открыть меню"
+            className="w-10 h-10 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+          </button>
+          <span className="text-[17px] font-medium truncate">{SECTION_TITLES[section]}</span>
+        </div>
+      )}
+      <div className="flex-1 min-h-0 flex">
       {section === 'dialogs' ? (
         <DialogsSection
           conversations={dialogScoped}
@@ -3495,9 +3561,24 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       ) : (
       <>
       {/* Входящие */}
-      <div className="w-[360px] shrink-0 sidebar-bg border-l border-default-200 flex flex-col">
-        <div className="p-4 flex items-center justify-between">
-          <span className="text-[18px] font-medium">Мои входящие</span>
+      <div className={cn(
+        'sidebar-bg border-l border-default-200 flex flex-col',
+        isMobile ? (mobilePane === 'inbox' ? 'w-full' : 'hidden') : 'w-[360px] shrink-0',
+      )}>
+        <div className="p-4 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2 min-w-0">
+            {isMobile && (
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Открыть меню"
+                className="w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+              </button>
+            )}
+            <span className="text-[18px] font-medium truncate">Мои входящие</span>
+          </span>
           <div className="relative">
             <button
               type="button"
@@ -3546,7 +3627,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         {/* Групповой чат — внутренний чат сотрудников, клиентам не виден */}
         <button
           type="button"
-          onClick={() => { setGroupOpen(true); setSelectedId(null) }}
+          onClick={() => { setGroupOpen(true); setSelectedId(null); setMobilePane('thread') }}
           className={cn(
             'mx-4 mb-3 rounded-[12px] bg-white border p-3 text-left transition-colors hover:bg-default-50',
             groupOpen ? 'border-primary' : 'border-default-200',
@@ -3669,12 +3750,20 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       </div>
 
       {/* Переписка */}
-      <div className="flex-1 min-w-0 flex flex-col border-l border-default-200">
+      <div className={cn(
+        'flex-1 min-w-0 flex flex-col border-l border-default-200',
+        isMobile && mobilePane !== 'thread' && 'hidden',
+      )}>
         {groupOpen ? (
           <>
-            <div className="h-16 shrink-0 px-6 flex items-center gap-3 border-b border-default-200">
+            <div className="h-16 shrink-0 px-4 md:px-6 flex items-center gap-3 border-b border-default-200">
+              {isMobile && (
+                <button type="button" onClick={() => setMobilePane('inbox')} aria-label="Назад" className="w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+              )}
               <Avatar name="Операторы" />
-              <span className="text-[18px] font-medium">Общий чат операторов</span>
+              <span className="text-[18px] font-medium truncate">Общий чат операторов</span>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3 bg-white">
               {groupMsgs.map(m => (
@@ -3724,9 +3813,19 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
           </>
         ) : selected ? (
           <>
-            <div className="h-16 shrink-0 px-6 flex items-center gap-3 border-b border-default-200">
+            <div className="h-16 shrink-0 px-4 md:px-6 flex items-center gap-3 border-b border-default-200">
+              {isMobile && (
+                <button type="button" onClick={() => setMobilePane('inbox')} aria-label="Назад" className="w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                </button>
+              )}
               <Avatar name={convName(selected)} />
-              <span className="text-[18px] font-medium">{convName(selected)}</span>
+              <span className="flex-1 min-w-0 text-[18px] font-medium truncate">{convName(selected)}</span>
+              {isMobile && (
+                <button type="button" onClick={() => setMobilePane('info')} aria-label="Информация о диалоге" className="w-9 h-9 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100">
+                  <IconInfo />
+                </button>
+              )}
             </div>
 
             <div ref={threadRef} className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3 bg-white">
@@ -3898,16 +3997,30 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       </div>
 
       {/* Информация */}
+      <div className={cn(isMobile ? (mobilePane === 'info' ? 'flex w-full min-w-0' : 'hidden') : 'contents')}>
       {groupOpen ? (
-      <GroupInfoPanel messages={groupMsgs} />
+      <GroupInfoPanel messages={groupMsgs} isMobile={isMobile} onBack={() => setMobilePane('thread')} />
       ) : (
       <aside
         className={cn(
-          'shrink-0 border-l border-default-200 overflow-y-auto flex flex-col',
-          infoOpen ? 'w-[340px] p-5 gap-5' : 'w-12 py-4 items-center gap-3',
+          'border-l border-default-200 overflow-y-auto flex flex-col',
+          isMobile
+            ? 'w-full p-5 gap-5'
+            : cn('shrink-0', infoOpen ? 'w-[340px] p-5 gap-5' : 'w-12 py-4 items-center gap-3'),
         )}
       >
-        {infoOpen ? (
+        {isMobile ? (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setMobilePane('thread')} aria-label="Назад" className="w-9 h-9 -ml-1 shrink-0 flex items-center justify-center rounded-[8px] text-[#3D3D3B] hover:bg-default-100">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+            <span className="flex items-center gap-2 text-[18px] font-medium">
+              <span className="text-default-400"><IconInfo /></span>
+              Информация:
+            </span>
+            <button type="button" onClick={handleRefresh} aria-label="Обновить" className="ml-auto text-default-400 hover:text-[#1A1A1A]"><IconDots /></button>
+          </div>
+        ) : infoOpen ? (
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-[18px] font-medium">
               <span className="text-default-400"><IconInfo /></span>
@@ -3938,7 +4051,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
           </button>
         )}
 
-        {infoOpen && (<>
+        {infoExpanded && (<>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -4080,15 +4193,18 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
         </div>
         </>)}
 
-        {infoOpen && (
+        {infoExpanded && !isMobile && (
           <button type="button" onClick={() => navigate('/')} className="mt-auto text-[13px] text-default-400 text-left">
             ← В кабинет
           </button>
         )}
       </aside>
       )}
+      </div>
       </>
       )}
+      </div>
+      </div>
     </div>
   )
 }
