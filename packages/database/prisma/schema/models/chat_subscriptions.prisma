@@ -1,0 +1,26 @@
+/// Аккаунтная подписка «Модуль Чат» (тарифная лестница free|start|pro|business|agency).
+/// Зеркало того, что прислал lmntai вебхуком `chat_subscription` (источник истины — lmntai:
+/// конструктор/цены/счёт Точка). Здесь только применяется к функциям и лимитам. Ключ — lemnityUserId
+/// (тот же userId, что в вебхуке и в SSO-тикете). См. plan/plan-app-chat.md, раздел «Монетизация».
+/// В отличие от Callback: `free` — настоящий тариф (энфорсмент всегда имеет лимиты, не «выключен»).
+model ChatSubscription {
+  id            String    @id @default(cuid())
+  lemnityUserId String    @unique @map("lemnity_user_id")
+
+  // Тариф: free|start|pro|business|agency. По умолчанию — free (бесплатный реальный тариф).
+  planTier      String    @default("free") @map("plan_tier")
+
+  // Лимиты, вычисленные lmntai и присланные в вебхуке.
+  siteLimit     Int       @map("site_limit")
+  managerLimit  Int       @default(1) @map("manager_limit")
+  aiDailyLimit  Int       @map("ai_daily_limit")
+  extraManager  Int       @default(0) @map("extra_manager")
+
+  paidUntil     DateTime? @map("paid_until")
+  lastPaymentId String?   @map("last_payment_id") // идемпотентность вебхука
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt      @map("updated_at")
+
+  @@map("chat_subscriptions")
+}
