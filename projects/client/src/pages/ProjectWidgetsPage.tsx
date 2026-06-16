@@ -25,8 +25,7 @@ import Modal from '@/components/Modal/Modal'
 // «Обратный звонок» (CALLBACK) пока в тесте — только админ; «Видео виджет» открыт всем.
 const ADMIN_ONLY_WIDGETS: ReadonlySet<string> = new Set([
   WidgetTypeEnum.CALLBACK,
-  // «Чат» — на тестировании, доступен в каталоге только администратору.
-  WidgetTypeEnum.CHAT,
+  // «Чат» — открыт всем пользователям в каталоге (тарифный гейт работает внутри редактора).
 ])
 
 // Allowlist админов по email (на время теста; синхронно с сервером).
