@@ -14,8 +14,12 @@ type MobileWidgetTriggerProps =
       triggerStyle: CSSProperties
       triggerText: string
       unreadCount: number
+      pulse?: boolean
       toggleOpen: () => void
     }
+
+const RIPPLE_CSS =
+  '@keyframes lemnity-ripple{0%{transform:scale(1);opacity:.5}55%{transform:scale(2.1);opacity:0}100%{transform:scale(2.1);opacity:0}}'
 
 const MobileWidgetTrigger = ({ ref, ...props }: MobileWidgetTriggerProps) => {
   const modalStyles: CSSProperties = {
@@ -48,17 +52,38 @@ const MobileWidgetTrigger = ({ ref, ...props }: MobileWidgetTriggerProps) => {
     props.toggleOpen()
   }
 
+  const doPulse = props.pulse && !props.open
+  const rippleColor = (props.triggerStyle?.backgroundColor as string | undefined) ?? '#5951E5'
+  const ripple = (delay: string): CSSProperties => ({
+    position: 'absolute',
+    inset: 0,
+    borderRadius: 9999,
+    background: rippleColor,
+    zIndex: 0,
+    pointerEvents: 'none',
+    animation: `lemnity-ripple 1.4s ease-out infinite ${delay}`,
+  })
+
   return (
     <>
-      <button
-        ref={ref}
-        className='rounded-full h-13.5 min-w-13.5 w-fit px-4 self-end relative'
-        style={props.triggerStyle}
-        onClick={handleButtonPress}
-      >
-        {triggerText}
-        {!props.open && <Badge badgeContent={props.unreadCount} />}
-      </button>
+      {doPulse && <style>{RIPPLE_CSS}</style>}
+      <div className='relative w-fit self-end'>
+        {doPulse && (
+          <>
+            <span aria-hidden style={ripple('0s')} />
+            <span aria-hidden style={ripple('0.18s')} />
+          </>
+        )}
+        <button
+          ref={ref}
+          className='rounded-full h-13.5 min-w-13.5 w-fit px-4 relative z-10'
+          style={props.triggerStyle}
+          onClick={handleButtonPress}
+        >
+          {triggerText}
+          {!props.open && <Badge badgeContent={props.unreadCount} />}
+        </button>
+      </div>
 
       {props.open && (
         <div

@@ -92,6 +92,9 @@ const ChatWidgetSchema = z.object({
     ),
   triggerPosition: PositionEnum,
 
+  // Анимация «биение сердца» у кнопки-лаунчера (опционально; старые конфиги валидны).
+  triggerPulse: z.boolean().optional(),
+
   // Окно чата.
   operatorName: z
     .string()
@@ -194,6 +197,29 @@ const ChatWidgetSchema = z.object({
     phone: z.string(),
     email: z.string(),
   }),
+
+  // Социальные сети компании — показываются в 3-й вкладке окна чата.
+  // icon — ключ иконки из библиотеки «Мультикнопки» (vk / telegram-message / instagram / …).
+  // Опционально (старые конфиги без поля валидны; новые получают [] из defaults).
+  companySocials: z
+    .array(
+      z.object({
+        id: z.string(),
+        icon: z.string(),
+        url: z.string(),
+      }),
+    )
+    .optional(),
+
+  // Заголовок вкладки «Соцсети» (как «Приветственный заголовок»). Все поля опциональны.
+  socialsTitle: z.string().optional(),
+  socialsTitleSize: z.number().min(8).max(64).optional(),
+  socialsTitleWeight: z.number().min(100).max(900).optional(),
+  socialsTitleColor: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i, 'Цвет должен быть в HEX формате')
+    .optional(),
+  socialsTitleAlign: z.enum(['left', 'center', 'right']).optional(),
 
   // Запрашивать контакт (имя/телефон) перед началом диалога.
   requireContact: z.boolean(),

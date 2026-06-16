@@ -62,6 +62,10 @@ export const chatWidgetMetadata: MetadataType = {
         Component: lazy(() => import('./ChatCompanyContactsSettings')),
       },
       {
+        id: 'chat.company-socials',
+        Component: lazy(() => import('./ChatSocialLinksSettings')),
+      },
+      {
         id: 'chat.ai-agent',
         Component: lazy(() => import('./ChatAiAgentSettings')),
       },

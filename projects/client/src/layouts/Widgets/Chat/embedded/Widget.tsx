@@ -5,6 +5,8 @@ import { cn } from '@heroui/theme'
 
 import EmojiPicker from '@/components/EmojiPicker'
 import { renderMarkdown } from '@/common/markdownLite'
+import { FAB_MENU_ICON_OPTIONS, FAB_MENU_BUTTON_PRESETS } from '@/layouts/Widgets/FABMenu/buttonLibrary'
+import type { FABMenuIconKey } from '@/layouts/Widgets/FABMenu/types'
 import type { ChatUiMessage } from './types'
 import type { OperatorInfo } from './useChatConnection'
 
@@ -59,9 +61,11 @@ type WidgetProps = {
   // Сторона, к которой докуется боковая панель (определяет, с какого края торчит кнопка закрытия).
   sidebarSide?: 'left' | 'right'
   brandingEnabled: boolean
-  view: 'home' | 'chat' | 'form' | 'contacts' | 'callback'
+  view: 'home' | 'chat' | 'form' | 'contacts' | 'callback' | 'socials'
   contacts: ContactsCfg
   contactsTab: ContactsTabData
+  companySocials: { id: string; icon: string; url: string }[]
+  socialsHeading: SocialsHeading
   formHeader: string
   disabled?: boolean
   preview?: boolean
@@ -88,6 +92,7 @@ type WidgetProps = {
   onDownloadDialog: () => void
   onTabChat: () => void
   onTabContacts: () => void
+  onTabSocials: () => void
   onTabAi: () => void
   onLeaveMessage: () => void
   onCall: () => void
@@ -432,19 +437,21 @@ const IconMail = ({ color }: { color: string }) => (
   </svg>
 )
 
-type TabKey = 'chat' | 'contacts'
+type TabKey = 'chat' | 'contacts' | 'socials'
 
 const TabBar = ({
   accent,
   active,
   onChat,
   onContacts,
+  onSocials,
   onAi,
 }: {
   accent: string
   active: TabKey
   onChat: () => void
   onContacts: () => void
+  onSocials: () => void
   onAi: () => void
 }) => (
   <div className="shrink-0 h-10 flex items-center justify-around px-6 border-b border-[#EFEFF2]">
@@ -454,7 +461,9 @@ const TabBar = ({
     <button type="button" className="p-1" aria-label="Контакты" onClick={onContacts}>
       <IconDoc color={active === 'contacts' ? accent : '#1A1A1A'} />
     </button>
-    <button type="button" className="p-1" aria-label="Карта"><IconShareNodes color="#1A1A1A" /></button>
+    <button type="button" className="p-1" aria-label="Соцсети" onClick={onSocials}>
+      <IconShareNodes color={active === 'socials' ? accent : '#1A1A1A'} />
+    </button>
     <button type="button" className="p-1" aria-label="ИИ-агент" onClick={onAi}>
       <IconSparkles color={accent} />
     </button>
@@ -700,6 +709,80 @@ const ContactForm = ({
 }
 
 export type ContactsTabData = { address: string; phone: string; email: string }
+
+export type SocialsHeading = {
+  title: string
+  size: number
+  weight: number
+  color: string
+  align: 'left' | 'center' | 'right'
+}
+
+// Вкладка «Соцсети компании» (3-я кнопка): заголовок + список соцсетей-ссылок (логотипы «Мультикнопки»).
+const SocialsTab = ({
+  data,
+  accent,
+  heading,
+}: {
+  data: { id: string; icon: string; url: string }[]
+  accent: string
+  heading: SocialsHeading
+}) => {
+  const items = data.filter(s => s.url.trim())
+  return (
+    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2.5">
+      {heading.title.trim() && (
+        <div
+          className="px-1 mb-1 whitespace-pre-wrap break-words"
+          style={{
+            fontSize: heading.size,
+            fontWeight: heading.weight,
+            color: heading.color,
+            textAlign: heading.align,
+          }}
+        >
+          {heading.title}
+        </div>
+      )}
+      {items.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center px-6 text-center text-[15px] text-[#9A9A9A]">
+          Социальные сети компании пока не указаны.
+        </div>
+      ) : (
+        items.map(s => {
+        const opt = FAB_MENU_ICON_OPTIONS[s.icon as FABMenuIconKey]
+        const preset = FAB_MENU_BUTTON_PRESETS.find(p => p.icon === s.icon)
+        const bg = preset?.gradientColors?.length
+          ? `linear-gradient(135deg, ${preset.gradientColors.join(', ')})`
+          : preset?.color ?? '#5951E5'
+        const href = /^https?:\/\//i.test(s.url) ? s.url : `https://${s.url}`
+        return (
+          <a
+            key={s.id}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-3 rounded-[12px] border border-[#E3E3E8] px-4 h-14 hover:bg-[#FAFAFB] transition-colors"
+          >
+            {opt?.icon && (
+              <span
+                className="w-9 h-9 shrink-0 rounded-[10px] flex items-center justify-center"
+                style={{ background: bg }}
+              >
+                <img src={opt.icon} alt="" className="w-5 h-5 object-contain" />
+              </span>
+            )}
+            <span className="flex-1 min-w-0 text-[15px] text-[#1A1A1A] truncate">
+              {opt?.label ?? s.url}
+            </span>
+            <span className="text-[18px]" style={{ color: accent }}>›</span>
+          </a>
+        )
+        })
+      )}
+    </div>
+  )
+}
 
 const ContactsTab = ({
   data,
@@ -1014,9 +1097,16 @@ const Widget = (props: WidgetProps) => {
             {/* Ряд иконок-вкладок */}
             <TabBar
               accent={accent}
-              active={props.view === 'contacts' || props.view === 'callback' ? 'contacts' : 'chat'}
+              active={
+                props.view === 'socials'
+                  ? 'socials'
+                  : props.view === 'contacts' || props.view === 'callback'
+                    ? 'contacts'
+                    : 'chat'
+              }
               onChat={props.onTabChat}
               onContacts={props.onTabContacts}
+              onSocials={props.onTabSocials}
               onAi={props.onTabAi}
             />
 
@@ -1047,6 +1137,10 @@ const Widget = (props: WidgetProps) => {
                 preview={props.preview}
                 onSubmit={props.onSubmitCallback}
               />
+            )}
+
+            {props.view === 'socials' && (
+              <SocialsTab data={props.companySocials} accent={accent} heading={props.socialsHeading} />
             )}
 
             {props.view === 'form' && (

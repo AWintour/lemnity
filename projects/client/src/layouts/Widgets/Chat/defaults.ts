@@ -31,6 +31,7 @@ export const chatWidgetDefaults: ChatWidgetType = {
   triggerFontColor: '#FFFFFF',
   triggerIcon: 'Send',
   triggerPosition: 'bottom-right',
+  triggerPulse: false,
 
   operatorName: 'Поддержка',
   operatorSubtitle: 'Супер гид города',
@@ -78,6 +79,14 @@ export const chatWidgetDefaults: ChatWidgetType = {
     phone: '+7 982 13 000 12',
     email: 'hello@lemnity.ru',
   },
+
+  // Социальные сети компании (3-я вкладка окна чата).
+  companySocials: [],
+  socialsTitle: 'Мы в социальных сетях',
+  socialsTitleSize: 20,
+  socialsTitleWeight: 600,
+  socialsTitleColor: '#1A1A1A',
+  socialsTitleAlign: 'left',
 
   requireContact: false,
 

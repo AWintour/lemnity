@@ -23,28 +23,58 @@ type DesktopWidgetTriggerProps =
       unreadCount: number
       // Боковая панель открыта — круглый баббл-триггер не показываем (закрытие — кнопкой на панели).
       hideTrigger?: boolean
+      // Анимация «биение сердца» у кнопки (когда чат закрыт).
+      pulse?: boolean
       onMouseEnter: () => void
       onMouseLeave: () => void
       toggleOpen: () => void
     }
 
+// Расходящиеся «волны» от кнопки в такт сердцебиения: волна уходит в первой части цикла,
+// затем пауза; два span'а со сдвигом дают «двойной удар» (туц-туц … пауза).
+const RIPPLE_CSS =
+  '@keyframes lemnity-ripple{0%{transform:scale(1);opacity:.5}55%{transform:scale(2.1);opacity:0}100%{transform:scale(2.1);opacity:0}}'
+const RIPPLE_DURATION = '1.4s'
+
+const rippleSpanStyle = (color: string, delay: string): CSSProperties => ({
+  position: 'absolute',
+  inset: 0,
+  borderRadius: 9999,
+  background: color,
+  zIndex: 0,
+  pointerEvents: 'none',
+  animation: `lemnity-ripple ${RIPPLE_DURATION} ease-out infinite ${delay}`,
+})
+
 const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
   const TriggerIcon = props.triggerIcon ? Icons[props.triggerIcon] : null
+
+  const doPulse = props.pulse && !props.open
+  const rippleColor = (props.triggerStyle?.backgroundColor as string | undefined) ?? '#5951E5'
 
   return (
     <>
       {props.children}
 
-      {props.hideTrigger ? null : <button
+      {doPulse && <style>{RIPPLE_CSS}</style>}
+
+      {props.hideTrigger ? null : (
+      <div className={cn('relative w-fit', props.triggerPosition === 'bottom-right' && 'self-end')}>
+        {doPulse && (
+          <>
+            <span aria-hidden style={rippleSpanStyle(rippleColor, '0s')} />
+            <span aria-hidden style={rippleSpanStyle(rippleColor, '0.18s')} />
+          </>
+        )}
+        <button
         ref={ref}
         type='button'
         onClick={props.toggleOpen}
         className={cn(
           'group flex items-center justify-center rounded-full',
-          'text-white ring-1 ring-white/20 relative',
+          'text-white ring-1 ring-white/20 relative z-10',
           'transition-transform motion-reduce:transition-none duration-250',
           'h-15.5 min-w-15.5 w-fit gap-2.5 px-4 hover:scale-105',
-          props.triggerPosition === 'bottom-right' && 'self-end',
         )}
         style={props.triggerStyle}
         aria-label={props.open ? 'Скрыть чат' : 'Открыть чат'}
@@ -76,7 +106,9 @@ const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
         )}
 
         {!props.open && <Badge badgeContent={props.unreadCount} />}
-      </button>}
+        </button>
+      </div>
+      )}
     </>
   )
 }

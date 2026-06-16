@@ -27,7 +27,7 @@ import type { ChatUiMessage } from './types'
 import type { QuickReply } from './Widget'
 import { exportChatToPdf } from './exportPdf'
 
-type ChatView = 'home' | 'chat' | 'form' | 'contacts' | 'callback'
+type ChatView = 'home' | 'chat' | 'form' | 'contacts' | 'callback' | 'socials'
 
 // Окно, скролл которого определяет авто-открытие по прокрутке. Виджет живёт в srcdoc-iframe
 // (тот же origin) → визитёр скроллит родительскую страницу. Если доступа нет — своё окно.
@@ -65,6 +65,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     triggerIcon,
     triggerBackgroundColor,
     triggerPosition,
+    triggerPulse,
     operatorName,
     operatorSubtitle,
     operatorAvatarUrl,
@@ -95,6 +96,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     scenario,
     contacts,
     contactsTab,
+    companySocials,
+    socialsTitle,
+    socialsTitleSize,
+    socialsTitleWeight,
+    socialsTitleColor,
+    socialsTitleAlign,
     aiAgentEnabled,
     aiAgentName,
   } = useWidgetSettingsStore(
@@ -105,6 +112,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         triggerText: settings.triggerText ?? defaults.triggerText,
         triggerFontColor: settings.triggerFontColor ?? defaults.triggerFontColor,
         triggerIcon: settings.triggerIcon ?? defaults.triggerIcon,
+        triggerPulse: settings.triggerPulse ?? defaults.triggerPulse ?? false,
         triggerBackgroundColor:
           settings.triggerBackgroundColor ?? defaults.triggerBackgroundColor,
         triggerPosition: settings.triggerPosition ?? defaults.triggerPosition,
@@ -142,6 +150,16 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         scenario: (settings.scenario ?? defaults.scenario) as Scenario,
         contacts: settings.contacts ?? defaults.contacts,
         contactsTab: settings.contactsTab ?? defaults.contactsTab,
+        companySocials: settings.companySocials ?? defaults.companySocials ?? [],
+        // Плоские поля (НЕ объект) — иначе useShallow видит новую ссылку каждый рендер → цикл.
+        socialsTitle: settings.socialsTitle ?? defaults.socialsTitle ?? '',
+        socialsTitleSize: settings.socialsTitleSize ?? defaults.socialsTitleSize ?? 20,
+        socialsTitleWeight: settings.socialsTitleWeight ?? defaults.socialsTitleWeight ?? 600,
+        socialsTitleColor: settings.socialsTitleColor ?? defaults.socialsTitleColor ?? '#1A1A1A',
+        socialsTitleAlign: (settings.socialsTitleAlign ?? defaults.socialsTitleAlign ?? 'left') as
+          | 'left'
+          | 'center'
+          | 'right',
         aiAgentEnabled: settings.aiAgentEnabled ?? defaults.aiAgentEnabled,
         aiAgentName: settings.aiAgentName ?? defaults.aiAgentName,
       }
@@ -585,6 +603,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   const handleTabContacts = useCallback(() => {
     if (contactsTab.enabled) navigate('contacts')
   }, [contactsTab.enabled, navigate])
+  const handleTabSocials = useCallback(() => navigate('socials'), [navigate])
   const handleTabAi = useCallback(() => {
     if (!aiAgentEnabled) return
     navigate('chat')
@@ -775,6 +794,14 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     view,
     contacts,
     contactsTab,
+    companySocials,
+    socialsHeading: {
+      title: socialsTitle,
+      size: socialsTitleSize,
+      weight: socialsTitleWeight,
+      color: socialsTitleColor,
+      align: socialsTitleAlign,
+    },
     formHeader,
     preview: props.preview,
     chatActive: mode === 'operator',
@@ -794,6 +821,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     onDownloadDialog: handleDownloadDialog,
     onTabChat: handleTabChat,
     onTabContacts: handleTabContacts,
+    onTabSocials: handleTabSocials,
     onTabAi: handleTabAi,
     onLeaveMessage: handleLeaveMessage,
     onCall: handleOpenCallback,
@@ -837,6 +865,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
             toggleOpen={toggleOpen}
             triggerStyle={triggerStyle}
             triggerText={triggerText}
+            pulse={triggerPulse}
           >
             <Widget open={open} mobile {...widgetProps} />
           </MobileWidgetTrigger>
@@ -853,6 +882,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
             triggerPosition={triggerPosition}
             triggerStyle={triggerStyle}
             triggerText={triggerText}
+            pulse={triggerPulse}
           >
             <Widget open={open} {...widgetProps} />
           </DesktopWidgetTrigger>
