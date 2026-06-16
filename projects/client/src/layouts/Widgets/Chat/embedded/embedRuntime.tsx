@@ -53,8 +53,6 @@ const scrollPercent = (w: Window): number => {
   return Math.min(100, (scrollTop / max) * 100)
 }
 
-// Пауза перед авто-переходом шага без кнопок (имитация набора оператором).
-const AUTO_ADVANCE_MS = 1500
 
 type ChatEmbedRuntimeProps = {
   preview?: boolean
@@ -492,7 +490,8 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         })
       }
       setCurrentStepId(nextId)
-    }, AUTO_ADVANCE_MS)
+      // Живее: задержка набора зависит от длины следующего сообщения (имитация печати).
+    }, Math.min(4500, 900 + (nextStep.message?.length ?? 0) * 35))
 
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps

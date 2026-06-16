@@ -1201,16 +1201,20 @@ const Widget = (props: WidgetProps) => {
                 </div>
               </>
             ) : props.operatorOnline ? (
-              <div className="shrink-0 px-4 pt-2 pb-3">
-                <button
-                  type="button"
-                  onClick={props.onEnterChat}
-                  className="w-full h-12 rounded-[12px] text-white text-[16px] font-medium"
-                  style={{ backgroundColor: accent }}
-                >
-                  Войти в чат
-                </button>
-              </div>
+              // «Войти в чат» — только если в текущем шаге сценария нет кнопки-перехода к оператору
+              // (если есть хэндоф-кнопка, посетитель идёт к оператору через неё — кнопку не дублируем).
+              props.quickReplies.some(q => q.isHandoff) ? null : (
+                <div className="shrink-0 px-4 pt-2 pb-3">
+                  <button
+                    type="button"
+                    onClick={props.onEnterChat}
+                    className="w-full h-12 rounded-[12px] text-white text-[16px] font-medium"
+                    style={{ backgroundColor: accent }}
+                  >
+                    Войти в чат
+                  </button>
+                </div>
+              )
             ) : props.offlineSent ? (
               <div className="shrink-0 px-4 pt-2 pb-3">
                 <div
