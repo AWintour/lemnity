@@ -15,6 +15,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 
 import { useChatSocket } from '@/hooks/useChatSocket'
+import { useChatSubscription } from '@/hooks/useChatSubscription'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
@@ -1332,6 +1333,21 @@ const OperatorsSection = ({
     [chatOptions]
   )
 
+  // widgetId чат-виджета активного проекта — для запроса тарифа/подписки.
+  // Лимит операторов account-wide, поэтому достаточно любого чат-виджета владельца.
+  const subWidgetId = useMemo(() => {
+    if (preview || !projectId) return undefined
+    const proj = allProjects.find(p => p.id === projectId)
+    const w = proj?.widgets.find(x => x.type === WidgetTypeEnum.CHAT)
+    return w?.id ?? chatOptions[0]?.widgetId
+  }, [preview, projectId, allProjects, chatOptions])
+  const { subscription } = useChatSubscription(subWidgetId)
+  // permissive: если тариф неизвестен (фетч упал / preview) — не блокируем UI.
+  // Сервер считает всех операторов проекта (включая строку владельца) против managerLimit.
+  const managerLimit = subscription?.managerLimit
+  const limitReached = real && typeof managerLimit === 'number' && operators.length >= managerLimit
+  const upgradeUrl = `${import.meta.env.VITE_LK_URL || 'https://lemnity.ru'}/pricing`
+
   useEffect(() => {
     if (!real || !projectId) return
     let alive = true
@@ -1469,9 +1485,14 @@ const OperatorsSection = ({
           setOperators(prev => [...prev, mapOp(created, deptNameById)])
           reset()
         } catch (e) {
-          const msg =
-            (e as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-            'Не удалось добавить оператора'
+          const data = (e as { response?: { data?: { message?: string; code?: string; limit?: number } } })?.response
+            ?.data
+          if (data?.code === 'manager_limit_reached') {
+            const lim = typeof data.limit === 'number' ? data.limit : managerLimit
+            setAddError(`Лимит операторов тарифа: ${lim ?? ''}. Улучшите тариф на ${upgradeUrl}`)
+            return
+          }
+          const msg = data?.message ?? 'Не удалось добавить оператора'
           setAddError(typeof msg === 'string' ? msg : 'Не удалось добавить оператора')
         }
       })()
@@ -1762,13 +1783,24 @@ const OperatorsSection = ({
           <h2 className="text-[20px] font-semibold text-[#1A1A1A]">Операторы</h2>
           <p className="text-[15px] text-default-400">{operators.length} в команде</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAdding(v => !v)}
-          className="h-10 px-5 rounded-[10px] bg-primary text-white text-[15px] flex items-center gap-2"
-        >
-          <IconUserPlus /> Добавить оператора
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={() => setAdding(v => !v)}
+            disabled={limitReached}
+            className="h-10 px-5 rounded-[10px] bg-primary text-white text-[15px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <IconUserPlus /> Добавить оператора
+          </button>
+          {limitReached && (
+            <span className="text-[13px] text-default-400">
+              Лимит операторов тарифа: {managerLimit}.{' '}
+              <a href={upgradeUrl} target="_top" className="text-primary hover:underline">
+                Улучшить тариф
+              </a>
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="p-6 flex flex-col gap-3 w-full">

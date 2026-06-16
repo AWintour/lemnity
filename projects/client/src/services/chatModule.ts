@@ -250,3 +250,28 @@ export async function getAiPages(widgetId: string) {
   const res = await http.get<{ pages: AiPage[] }>(API.CHAT.AI_PAGES(widgetId))
   return res.data.pages
 }
+
+/* ============ Тариф/подписка «Модуля Чат» по чат-виджету ============ */
+
+export type ChatPlanTier = 'free' | 'start' | 'pro' | 'business' | 'agency'
+
+export type ChatSubscription = {
+  planTier: ChatPlanTier
+  managerLimit: number
+  siteLimit: number
+  aiDailyLimit: number
+  paidUntil: string | null
+  features: {
+    allChannels: boolean
+    whiteLabel: boolean
+    advancedAnalytics: boolean
+    departments: boolean
+    apiAccess: boolean
+    prioritySupport: boolean
+  }
+}
+
+export async function getChatSubscription(widgetId: string): Promise<ChatSubscription> {
+  const res = await http.get<ChatSubscription>(API.CHAT.SUBSCRIPTION(widgetId))
+  return res.data
+}

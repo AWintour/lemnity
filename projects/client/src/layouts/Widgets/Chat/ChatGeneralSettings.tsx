@@ -8,6 +8,7 @@ import CustomSwitch from '@/components/CustomSwitch'
 import { Input } from '@/components'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
+import { useChatSubscription } from '@/hooks/useChatSubscription'
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 import { chatWidgetDefaults as defaults } from './defaults'
 
@@ -18,24 +19,41 @@ type FeatureRowProps = {
   description: ReactNode
   enabled: boolean
   onToggle: (next: boolean) => void
+  /** Заблокировать тумблер (недоступно на тарифе) и показать пилюлю. */
+  locked?: boolean
+  lockBadge?: ReactNode
 }
 
-const FeatureRow = ({ title, description, enabled, onToggle }: FeatureRowProps) => (
+const FeatureRow = ({ title, description, enabled, onToggle, locked, lockBadge }: FeatureRowProps) => (
   <div className="rounded-[12px] border border-[#ECECEC] p-4 flex flex-col gap-2.5">
     <div className="flex items-start justify-between gap-4">
       <span className="text-[18px] leading-5.5 font-medium text-[#1A1A1A]">{title}</span>
-      <CustomSwitch
-        size="sm"
-        isSelected={enabled}
-        onValueChange={onToggle}
-        selectedColor={ACCENT}
-      />
+      <div className="flex items-center gap-3">
+        {locked && lockBadge}
+        <CustomSwitch
+          size="sm"
+          isSelected={locked ? false : enabled}
+          isDisabled={locked}
+          onValueChange={onToggle}
+          selectedColor={ACCENT}
+        />
+      </div>
     </div>
     <p className="text-[16px] leading-5.5 text-[#9A9A9A]">{description}</p>
   </div>
 )
 
-const ChatGeneralSettings = () => {
+type ChatGeneralSettingsProps = {
+  /** Явный override доступности white-label (отключение «Сделано на Lemnity»).
+   *  Если не передан — резолвится из тарифа по widgetId из стора.
+   *  Неизвестный тариф трактуется как «разрешено», чтобы не блокировать платных. */
+  whiteLabelAllowed?: boolean
+}
+
+// Сентинел id из «Модуля Чат» (preview / нет реального виджета) — по нему тариф не запрашиваем.
+const SETTINGS_WIDGET_ID = 'chat-module-settings'
+
+const ChatGeneralSettings = ({ whiteLabelAllowed }: ChatGeneralSettingsProps) => {
   const {
     title,
     featuresEnabled,
@@ -62,6 +80,13 @@ const ChatGeneralSettings = () => {
   )
 
   const setChatPatch = useWidgetSettingsStore(s => s.setChatPatch)
+
+  // Если override не передан — тянем тариф по widgetId из стора (кроме сентинела).
+  const widgetId = useWidgetSettingsStore(s => s.settings?.id)
+  const subWidgetId = whiteLabelAllowed === undefined && widgetId && widgetId !== SETTINGS_WIDGET_ID ? widgetId : undefined
+  const { subscription } = useChatSubscription(subWidgetId)
+  // permissive: тариф неизвестен → разрешаем (true), чтобы не блокировать платных.
+  const resolvedWhiteLabelAllowed = whiteLabelAllowed ?? subscription?.features.whiteLabel ?? true
 
   // Контент «Функционала» можно свернуть при включённом режиме; при выключенном — свёрнут сразу.
   // По умолчанию блок свёрнут.
@@ -156,6 +181,12 @@ const ChatGeneralSettings = () => {
                     enabled={brandingEnabled}
                     onToggle={next => setChatPatch({ brandingEnabled: next })}
                     description="Вы можете отключить отображение логотипа «Сделано на Lemnity» для вашего чата."
+                    locked={!resolvedWhiteLabelAllowed}
+                    lockBadge={
+                      <span className="text-[14px] leading-4 text-white bg-[#9A96A2] rounded-full px-3 py-1.5 whitespace-nowrap">
+                        Доступно с тарифа Start
+                      </span>
+                    }
                   />
 
                   <FeatureRow
