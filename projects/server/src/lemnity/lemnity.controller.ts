@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger'
 import type { Request, Response } from 'express'
 import { LemnityService } from './lemnity.service'
 import { CallbackSubscriptionService, parseCallbackSubscriptionPayload } from './callback-subscription.service'
+import { ChatSubscriptionService, parseChatSubscriptionPayload } from './chat-subscription.service'
 import { AuthService } from '../auth/auth.service'
 
 type RawRequest = Request & { rawBody?: Buffer }
@@ -18,6 +19,7 @@ export class LemnityController {
   constructor(
     private readonly lemnity: LemnityService,
     private readonly callbackSub: CallbackSubscriptionService,
+    private readonly chatSub: ChatSubscriptionService,
     private readonly auth: AuthService
   ) {}
 
@@ -120,5 +122,35 @@ export class LemnityController {
       return { active: false }
     }
     return this.callbackSub.getByEmail(email)
+  }
+
+  /**
+   * Вебхук подписки «Модуля Чат» из lmntai. Аккаунтная подписка по userId.
+   * Всегда 200 (как callback-subscription): плохая подпись/тело → { skipped }.
+   */
+  @Post('chat-subscription')
+  async chatSubscription(@Req() req: RawRequest) {
+    const raw = req.rawBody ? req.rawBody.toString('utf8') : JSON.stringify(req.body ?? {})
+    if (!this.lemnity.verify(raw, sigHeader(req))) {
+      return { skipped: 'unverified' }
+    }
+    let payload: unknown
+    try {
+      payload = JSON.parse(raw)
+    } catch {
+      return { skipped: 'invalid_json' }
+    }
+    const input = parseChatSubscriptionPayload(payload)
+    if (!input) return { skipped: 'bad_payload' }
+    return this.chatSub.apply(input)
+  }
+
+  /** Текущая подписка «Модуля Чат» + usage по email (подпись = hmac(secret, email)). */
+  @Get('chat-subscription')
+  async chatSubscriptionByEmail(@Query('email') email: string, @Req() req: Request) {
+    if (!email || !this.lemnity.verify(email, sigHeader(req))) {
+      return { active: false }
+    }
+    return this.chatSub.getByEmail(email)
   }
 }
