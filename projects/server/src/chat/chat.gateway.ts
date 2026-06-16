@@ -54,6 +54,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(ChatGateway.name)
   // projectId -> множество socketId подключённых менеджеров (presence).
   private readonly onlineManagers = new Map<string, Set<string>>()
+  // conversationId -> когда последний раз показали «бот устал» (троттлинг от спама).
+  private readonly tiredAt = new Map<string, number>()
+
+  /** Не чаще раза в 60с на диалог показываем сообщение «бот устал». */
+  private allowTiredMessage(conversationId: string): boolean {
+    const now = Date.now()
+    const last = this.tiredAt.get(conversationId) ?? 0
+    if (now - last < 60_000) return false
+    this.tiredAt.set(conversationId, now)
+    return true
+  }
 
   constructor(
     private readonly chat: ChatService,
@@ -243,11 +254,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Fire-and-forget: не задерживает ack визитёру; ошибки гасятся внутри maybeReply.
       // onTyping → статус «печатает…» у посетителя на время генерации (имитация живого человека).
       const convId = data.conversationId
+      const projectId = data.projectId
       const emitTyping = (typing: boolean) =>
         this.server.to(convRoom(convId)).emit('operator:typing', { typing })
-      void this.ai.maybeReply(convId, emitTyping).then(aiMessage => {
-        if (aiMessage)
-          this.broadcastMessage({ id: convId, projectId: data.projectId }, aiMessage)
+      void this.ai.maybeReply(convId, emitTyping).then(async res => {
+        if (res.message) {
+          this.broadcastMessage({ id: convId, projectId }, res.message)
+          return
+        }
+        // Агент включён, но недоступен (квота/ошибка/нет ключа) И нет оператора онлайн →
+        // мягкое сообщение посетителю (с троттлингом, чтобы не спамить на каждое сообщение).
+        if (res.status !== 'unavailable') return
+        const operatorOnline = (this.onlineManagers.get(projectId)?.size ?? 0) > 0
+        if (operatorOnline || !this.allowTiredMessage(convId)) return
+        const sys = await this.chat.appendMessage({
+          conversationId: convId,
+          sender: 'system',
+          body: 'Наш бот устал ( Запросов очень много ) Подождите пожалуйста.'
+        })
+        this.broadcastMessage({ id: convId, projectId }, sys)
       })
       return message
     }

@@ -199,17 +199,13 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     setView(next)
   }, [pushHistory])
 
-  // «Назад»: восстанавливаем полный снимок предыдущего экрана (view + шаг + режим + лента).
+  // «Назад»: всегда возвращаемся на ГЛАВНЫЙ экран (а не на шаг назад). Переписку НЕ стираем —
+  // она остаётся доступной во вкладке «чат». Сбрасываем шаг сценария к началу и историю навигации.
   const goBack = useCallback(() => {
-    const snap = historyRef.current.pop()
-    if (!snap) {
-      setView('home')
-      return
-    }
-    setView(snap.view)
-    setCurrentStepId(snap.stepId)
-    setMode(snap.mode)
-    setMessages(prev => prev.slice(0, snap.messageCount))
+    historyRef.current = []
+    setCurrentStepId(null)
+    setMode('bot')
+    setView('home')
   }, [])
   const [unreadCount, setUnreadCount] = useState(0)
   const openRef = useRef(false)
@@ -785,7 +781,8 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     chatActive: mode === 'operator',
     offlineSent,
     ended,
-    canGoBack: historyRef.current.length > 0,
+    // «Назад» видна на любом экране, кроме главного, и всегда ведёт на главный.
+    canGoBack: view !== 'home',
     onSend: handleSend,
     onAttach: handleAttach,
     onRestart: handleRestart,

@@ -17,6 +17,13 @@ const LLM_TIMEOUT_MS = 20_000
 const HISTORY_LIMIT = 20
 const isRecord = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object'
 
+// Результат попытки ответа ИИ. status различает «незачем ждать» и «включён, но недоступен»
+// (последнее — повод показать посетителю «бот устал», если нет оператора онлайн).
+export type AiReplyResult = {
+  message: ChatMessageEntity | null
+  status: 'replied' | 'unavailable' | 'inactive'
+}
+
 export type AiUsage = {
   // Задан ли OPENROUTER_API_KEY на сервере (без него агент молчит, даже если включён в настройках).
   configured: boolean
@@ -85,16 +92,20 @@ export class AiAgentService {
 
   /**
    * Если у виджета включён ИИ-агент и не исчерпана квота — генерирует ответ на последнее сообщение
-   * посетителя и сохраняет его (sender='manager', aiGenerated=true). Возвращает сообщение или null.
+   * посетителя и сохраняет его (sender='manager', aiGenerated=true).
+   * Возвращает { message, status }:
+   *  - `inactive`    — агента ждать незачем (нет диалога / не web-канал / агент выключен / уже отвечает);
+   *  - `unavailable` — агент ВКЛЮЧЁН, но ответить не смог (нет ключа / исчерпана квота / ошибка LLM);
+   *  - `replied`     — есть `message`.
    * Best-effort: любые ошибки гасятся, на работу чата не влияют.
    */
   async maybeReply(
     conversationId: string,
     onTyping?: (typing: boolean) => void
-  ): Promise<ChatMessageEntity | null> {
-    const apiKey = this.config.get<string>('OPENROUTER_API_KEY')
-    if (!apiKey) return null
-    if (this.inFlight.has(conversationId)) return null
+  ): Promise<AiReplyResult> {
+    const inactive: AiReplyResult = { message: null, status: 'inactive' }
+    const unavailable: AiReplyResult = { message: null, status: 'unavailable' }
+    if (this.inFlight.has(conversationId)) return inactive
     this.inFlight.add(conversationId)
     try {
       const conv = await this.prisma.chatConversation.findUnique({
@@ -107,20 +118,24 @@ export class AiAgentService {
           project: { select: { websiteUrl: true } }
         }
       })
-      if (!conv) return null
+      if (!conv) return inactive
       // MVP: ИИ отвечает только в веб-виджете. На соц-каналах ответ ушёл бы обратно в мессенджер
       // (sendOutboundForConversation) и мог бы зациклиться — оставлено за рамками MVP.
-      if (conv.channel && conv.channel !== 'web') return null
+      if (conv.channel && conv.channel !== 'web') return inactive
 
       const cfg = this.readAgentConfig(conv.widget?.config, conv.widget?.configVersion)
-      if (!cfg?.enabled) return null
+      if (!cfg?.enabled) return inactive
+
+      // Агент ВКЛЮЧЁН — дальше любой сбой считаем «недоступен» (повод показать «бот устал»).
+      const apiKey = this.config.get<string>('OPENROUTER_API_KEY')
+      if (!apiKey) return unavailable
 
       const usage = await this.getUsage(conv.widgetId)
       if (usage.remaining <= 0 || usage.dailyRemaining <= 0) {
         this.logger.warn(
           `AI quota reached for widget ${conv.widgetId} (month ${usage.used}/${usage.limit}, day ${usage.dailyUsed}/${usage.dailyLimit})`
         )
-        return null
+        return unavailable
       }
 
       // «Разделы для изучения» — выбранные внутренние страницы сайта (URL). Пусто → только главная.
@@ -157,17 +172,18 @@ export class AiAgentService {
       } finally {
         onTyping?.(false)
       }
-      if (!answer) return null
+      if (!answer) return unavailable
 
-      return this.chat.appendMessage({
+      const message = await this.chat.appendMessage({
         conversationId,
         sender: 'manager',
         body: answer,
         aiGenerated: true
       })
+      return { message, status: 'replied' }
     } catch (err) {
       this.logger.warn(`AI maybeReply failed for ${conversationId}: ${(err as Error).message}`)
-      return null
+      return unavailable
     } finally {
       this.inFlight.delete(conversationId)
     }

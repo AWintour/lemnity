@@ -67,6 +67,9 @@ const IconSparkles = () => (
   </svg>
 )
 const IconDots = () => <Ic d="M12 6h.01M12 12h.01M12 18h.01" stroke={2.5} size={20} />
+const IconInfo = () => <Ic d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z|M12 11v5|M12 7.5h.01" size={18} stroke={1.8} />
+const IconArchive = () => <Ic d="M3 7h18v3H3z|M5 10v9h14v-9|M9.5 13.5h5" size={18} stroke={1.8} />
+const IconClose = () => <Ic d="M6 6l12 12M18 6 6 18" size={18} stroke={2} />
 const IconSelectAll = () => <Ic d="M4 4h16v16H4z|M8.5 12l2.5 2.5 5-5.5" size={22} stroke={1.8} />
 const IconMailUnread = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -2901,6 +2904,11 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
   }, [isOperator, urlSection, go])
   const [filter, setFilter] = useState<'all' | 'unread' | 'archived'>('all')
   const [filterOpen, setFilterOpen] = useState(false)
+  // Сворачивание блока «Информация» (правая панель диалога).
+  const [infoOpen, setInfoOpen] = useState(true)
+  // Выбор диалогов в списке инбокса для массового «Убрать в архив».
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [archiving, setArchiving] = useState(false)
   const [groupOpen, setGroupOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
   const [emojiOpen, setEmojiOpen] = useState(false)
@@ -3135,6 +3143,36 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
     await chatsService.updateConversationStatus(selectedId, 'closed')
     void loadConversations()
   }, [selectedId, loadConversations, preview])
+
+  // Выбор диалогов в инбоксе + массовое «Убрать в архив» (status='closed').
+  const toggleSel = useCallback((id: string) => {
+    setSel(prev => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  }, [])
+  const archiveSelected = useCallback(async () => {
+    const ids = [...sel]
+    if (ids.length === 0) return
+    if (preview) {
+      setConversations(prev => prev.map(c => (sel.has(c.id) ? { ...c, status: 'closed' } : c)))
+      setSel(new Set())
+      return
+    }
+    setArchiving(true)
+    try {
+      await Promise.all(ids.map(id => chatsService.updateConversationStatus(id, 'closed')))
+      setSel(new Set())
+      void loadConversations()
+    } catch (e) {
+      console.error('archive failed', e)
+      alert('Не удалось убрать в архив')
+    } finally {
+      setArchiving(false)
+    }
+  }, [sel, preview, loadConversations])
 
   const handleAttach = useCallback(() => {
     if (fileRef.current) {
@@ -3510,22 +3548,44 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
           </div>
         </div>
 
+        {sel.size > 0 && (
+          <div className="px-3 pb-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void archiveSelected()}
+              disabled={archiving}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-[8px] bg-[#5951E5] text-white text-[14px] disabled:opacity-60"
+            >
+              <IconArchive /> {archiving ? 'Архивирую…' : 'Убрать в архив'} <span className="opacity-80">{sel.size}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSel(new Set())}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-[8px] border border-default-200 text-[14px] text-default-500"
+            >
+              <IconClose /> Снять
+            </button>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto px-2">
           {filtered.length === 0 && (
             <div className="p-4 text-[14px] text-default-400">Диалогов нет</div>
           )}
           {filtered.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => void select(c.id)}
-              className={cn(
-                'w-full px-3 py-3 rounded-[12px] flex items-start gap-3 text-left transition-colors relative',
-                c.id === selectedId
-                  ? 'bg-white ring-2 ring-primary shadow-[0_4px_14px_rgba(26,82,219,0.18)] border-l-4 border-primary pl-2.5'
-                  : 'hover:bg-white/60',
-              )}
-            >
+            <div key={c.id} className="flex items-center gap-1.5 pl-1">
+              {/* Чекбокс сбоку — выбор для массового «Убрать в архив» (вне кнопки строки). */}
+              <CheckBox checked={sel.has(c.id)} onChange={() => toggleSel(c.id)} />
+              <button
+                type="button"
+                onClick={() => void select(c.id)}
+                className={cn(
+                  'flex-1 min-w-0 px-3 py-3 rounded-[12px] flex items-start gap-3 text-left transition-colors relative',
+                  c.id === selectedId
+                    ? 'bg-white ring-2 ring-primary shadow-[0_4px_14px_rgba(26,82,219,0.18)] border-l-4 border-primary pl-2.5'
+                    : 'hover:bg-white/60',
+                )}
+              >
               <Avatar name={convName(c)} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
@@ -3545,7 +3605,8 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                   </span>
                 </div>
               </div>
-            </button>
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -3766,10 +3827,20 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
       ) : (
       <aside className="w-[340px] shrink-0 border-l border-default-200 p-5 flex flex-col gap-5 overflow-y-auto">
         <div className="flex items-center justify-between">
-          <span className="text-[18px] font-medium">Информация:</span>
+          <button
+            type="button"
+            onClick={() => setInfoOpen(v => !v)}
+            aria-expanded={infoOpen}
+            className="flex items-center gap-2 text-[18px] font-medium hover:text-[#1A1A1A]"
+          >
+            <span className="text-default-400"><IconInfo /></span>
+            Информация:
+            <span className={cn('text-default-400 transition-transform', infoOpen && 'rotate-180')}><IconChevron /></span>
+          </button>
           <button type="button" onClick={handleRefresh} aria-label="Обновить" className="text-default-400 hover:text-[#1A1A1A]"><IconDots /></button>
         </div>
 
+        {infoOpen && (<>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -3909,6 +3980,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             </>
           )}
         </div>
+        </>)}
 
         <button type="button" onClick={() => navigate('/')} className="mt-auto text-[13px] text-default-400 text-left">
           ← В кабинет
