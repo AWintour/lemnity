@@ -208,8 +208,6 @@ services:
       - /etc/ssl/lemnity:/etc/nginx/ssl:ro
       # В эту директорию CD выкладывает собранный фронт из client-образа
       - ./dist:/usr/share/nginx/html:ro
-      # Статические лендинги из репозитория (партнёрка /partners и пр.), синхронизируются reset --hard
-      - ./landing:/usr/share/nginx/landing:ro
     depends_on:
       server:
         condition: service_healthy
