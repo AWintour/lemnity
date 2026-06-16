@@ -445,7 +445,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
       }
       navigate('chat')
       setMode('operator')
-      append({ id: uuidv4(), sender: 'visitor', body: `${button.emoji ? button.emoji + ' ' : ''}${button.label}`, createdAt: nowIso() })
+      // pending → серверное эхо (message:new) схлопнётся с этим оптимистичным сообщением,
+      // иначе надпись кнопки дублируется (см. реконсиляцию в onIncoming).
+      append({ id: uuidv4(), sender: 'visitor', body: `${button.emoji ? button.emoji + ' ' : ''}${button.label}`, createdAt: nowIso(), pending: !props.preview })
       append({ id: uuidv4(), sender: 'system', body: 'Передаю менеджеру…', createdAt: nowIso() })
       sendToOperator(`${button.emoji ? button.emoji + ' ' : ''}${button.label}`)
       return
@@ -459,7 +461,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     if (nextStep && (nextStep.message.trim() || nextStep.image)) {
       append({ id: `step-${nextStep.id}-${uuidv4().slice(0, 6)}`, sender: 'manager', body: nextStep.message, image: nextStep.image, createdAt: nowIso() })
     }
-  }, [currentStepId, stepById, append, sendToOperator, contacts])
+  }, [currentStepId, stepById, append, sendToOperator, contacts, props.preview])
 
   // Авто-переход: шаг БЕЗ кнопок с заданным next бот продолжает сам после паузы (с «печатает…»).
   // Перезапускается при смене шага → получается цепочка сообщений. Защита от циклов — autoChainRef.
