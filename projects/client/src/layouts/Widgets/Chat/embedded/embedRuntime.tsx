@@ -977,12 +977,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
                 'relative h-full justify-end',
                 triggerPosition === 'bottom-right' ? 'items-end' : 'items-start',
                 // Закрытый баббл-триггер не прижимаем к краям — отступ как у модального формата.
-                !open && (triggerPosition === 'bottom-right' ? 'pb-3 pr-3' : 'pb-3 pl-3'),
+                !open && (triggerPosition === 'bottom-right' ? 'pb-3 pr-6' : 'pb-3 pl-6'),
               )
             : 'relative'
           : sidebarDocked
             ? cn('fixed top-0 bottom-0', triggerPosition === 'bottom-right' ? 'right-0' : 'left-0')
-            : cn('fixed bottom-3', triggerPosition === 'bottom-right' ? 'right-3' : 'left-3'),
+            : cn('fixed bottom-3', triggerPosition === 'bottom-right' ? 'right-6' : 'left-6'),
       )}
     >
       {isMobileViewport
