@@ -17,14 +17,9 @@ export const chatWidgetMetadata: MetadataType = {
         id: 'chat.general',
         Component: lazy(() => import('./ChatGeneralSettings')),
       },
-      {
-        id: 'chat.schedule',
-        Component: lazy(() => import('./ChatScheduleSettings')),
-      },
-      {
-        id: 'chat.auto-open',
-        Component: lazy(() => import('./ChatAutoOpenSettings')),
-      },
+      // На вкладку «Отображение» перенесены: «Ограничения времени показа» (ChatScheduleSettings),
+      // «Автоматически открывать чат» (ChatAutoOpenSettings — заменён «Автоматически» + «Настройки показа»)
+      // и «Персонализированные приветствия» (ChatPersonalizationSettings).
       {
         id: 'chat.appearance',
         Component: lazy(() => import('./ChatAppearanceSettings')),
@@ -41,18 +36,12 @@ export const chatWidgetMetadata: MetadataType = {
         id: 'chat.contacts',
         Component: lazy(() => import('./ChatContactsSettings')),
       },
-      {
-        id: 'chat.personalization',
-        Component: lazy(() => import('./ChatPersonalizationSettings')),
-      },
+      // «Согласие и политика» (ChatAgreementSettings) перенесён на вкладку «Отображение».
       {
         id: 'chat.callback-soon',
         Component: lazy(() => import('./ChatCallbackSettings')),
       },
-      {
-        id: 'chat.widget-settings',
-        Component: lazy(() => import('./ChatWidgetSettings')),
-      },
+      // «Форма / Кнопка» (ChatWidgetSettings) перенесена в «Отображение» → «Вид иконки» → «Кнопка».
       {
         id: 'chat.scenario',
         Component: lazy(() => import('./ScenarioEditor')),

@@ -19,6 +19,8 @@ type TriggerSettingsProps = {
   onTriggerIconChange?: (icon: Icon) => void
   onTriggerBackgroundColorChange: (color: string) => void
   onTriggerPositionChange: (position: Position) => void
+  // Скрыть выбор положения (для Чата он перенесён на вкладку «Отображение»).
+  hidePosition?: boolean
 }
 
 const TriggerSettings = (props: TriggerSettingsProps) => {
@@ -40,15 +42,17 @@ const TriggerSettings = (props: TriggerSettingsProps) => {
             onTriggerTextChange={props.onTriggerTextChange}
             onTriggerIconChange={props.onTriggerIconChange}
           />
-          <ButtonPositionChooser
-            noBorder
-            noPadding
-            value={props.triggerPosition}
-            options={ALLOWED_POSITIONS}
-            // ButtonPosition is a superset of Position
-            // i do not want to create a wrapper just to handle this case
-            onChange={props.onTriggerPositionChange as (p: ButtonPosition) => void}
-          />
+          {!props.hidePosition && (
+            <ButtonPositionChooser
+              noBorder
+              noPadding
+              value={props.triggerPosition}
+              options={ALLOWED_POSITIONS}
+              // ButtonPosition is a superset of Position
+              // i do not want to create a wrapper just to handle this case
+              onChange={props.onTriggerPositionChange as (p: ButtonPosition) => void}
+            />
+          )}
         </div>
       </div>
     </BorderedContainer>

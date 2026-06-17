@@ -12,6 +12,23 @@ const PositionEnum = z.enum(['bottom-left', 'bottom-right'])
 
 export type Position = z.infer<typeof PositionEnum>
 
+// Тип мобильного лаунчера: «картинка» или «кнопка» с текстом.
+const MobileTriggerEnum = z.enum(['image', 'button'])
+
+export type MobileTrigger = z.infer<typeof MobileTriggerEnum>
+
+// Блок «Мобильная версия»: отдельный вид лаунчера на мобильных + выключатель показа на мобильных.
+const MobileSchema = z.object({
+  mobileEnabled: z.boolean(),
+  triggerType: MobileTriggerEnum,
+  imageUrl: z.string().optional(),
+  triggerText: z.string(),
+  triggerFontColor: z.string(),
+  triggerBackgroundColor: z.string(),
+})
+
+export type MobileSettings = z.infer<typeof MobileSchema>
+
 // Сценарий бота — дерево быстрых ответов. Шаг = узел canvas (сообщение бота + кнопки),
 // кнопка = ребро: ведёт к другому шагу (next = id) либо передаёт оператору (next = null).
 const ScenarioButtonSchema = z.object({
@@ -94,6 +111,19 @@ const ChatWidgetSchema = z.object({
 
   // Анимация «биение сердца» у кнопки-лаунчера (опционально; старые конфиги валидны).
   triggerPulse: z.boolean().optional(),
+
+  // Блок «Мобильная версия» (опционально; старые конфиги без блока валидны).
+  mobileSettings: MobileSchema.optional(),
+
+  // Блок «Согласие и политика» (опционально; старые конфиги без блока валидны).
+  agreement: z
+    .object({
+      enabled: z.boolean(),
+      color: z.string(),
+      agreementUrl: z.string(),
+      policyUrl: z.string(),
+    })
+    .optional(),
 
   // Окно чата.
   operatorName: z
@@ -242,7 +272,8 @@ export type ChatWidgetType = z.infer<typeof ChatWidgetSchema>
 
 const customSurfaces = {
   fields: LooseSurfaceSchema,
-  display: LooseSurfaceSchema,
+  // display — стандартная вкладка «Отображение» (как у «Колеса фортуны»): не loose,
+  // используется DisplaySchemaBase. Старые конфиги с пустым display бэкфилит canonicalizeChat.
   integration: LooseSurfaceSchema,
 } as const
 

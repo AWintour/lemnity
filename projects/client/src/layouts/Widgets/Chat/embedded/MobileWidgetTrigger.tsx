@@ -13,6 +13,9 @@ type MobileWidgetTriggerProps =
       open: boolean
       triggerStyle: CSSProperties
       triggerText: string
+      // Вид мобильного лаунчера: 'button' (текст) или 'image' (картинка). По умолчанию — кнопка.
+      triggerType?: 'image' | 'button'
+      imageUrl?: string
       unreadCount: number
       pulse?: boolean
       toggleOpen: () => void
@@ -52,6 +55,7 @@ const MobileWidgetTrigger = ({ ref, ...props }: MobileWidgetTriggerProps) => {
     props.toggleOpen()
   }
 
+  const asImage = props.triggerType === 'image' && !!props.imageUrl
   const doPulse = props.pulse && !props.open
   const rippleColor = (props.triggerStyle?.backgroundColor as string | undefined) ?? '#5951E5'
   const ripple = (delay: string): CSSProperties => ({
@@ -74,15 +78,26 @@ const MobileWidgetTrigger = ({ ref, ...props }: MobileWidgetTriggerProps) => {
             <span aria-hidden style={ripple('0.18s')} />
           </>
         )}
-        <button
-          ref={ref}
-          className='rounded-full h-13.5 min-w-13.5 w-fit px-4 relative z-10'
-          style={props.triggerStyle}
-          onClick={handleButtonPress}
-        >
-          {triggerText}
-          {!props.open && <Badge badgeContent={props.unreadCount} />}
-        </button>
+        {asImage ? (
+          <button
+            ref={ref}
+            className='rounded-full h-13.5 w-13.5 relative z-10 overflow-hidden p-0'
+            onClick={handleButtonPress}
+          >
+            <img src={props.imageUrl} alt='Чат' className='w-full h-full object-cover' />
+            {!props.open && <Badge badgeContent={props.unreadCount} />}
+          </button>
+        ) : (
+          <button
+            ref={ref}
+            className='rounded-full h-13.5 min-w-13.5 w-fit px-4 relative z-10'
+            style={props.triggerStyle}
+            onClick={handleButtonPress}
+          >
+            {triggerText}
+            {!props.open && <Badge badgeContent={props.unreadCount} />}
+          </button>
+        )}
       </div>
 
       {props.open && (

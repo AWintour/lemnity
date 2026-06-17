@@ -37,11 +37,12 @@ const ExternalLoginRedirect = () => {
   return null
 }
 
-// Гейт «Модуля Чат»: либо владелец-админ (owner ProtectedRoute), либо операторская сессия.
-const ChatModuleGate = ({ isAdmin }: { isAdmin: boolean }) => {
+// Гейт «Модуля Чат»: любой авторизованный владелец (ProtectedRoute) либо операторская сессия.
+// Модуль открыт всем пользователям — тарифные ограничения работают внутри (лимит операторов и т.п.).
+const ChatModuleGate = () => {
   const hasOperator = useOperatorAuthStore(s => !!s.operator)
   if (hasOperator) return <ChatModulePage />
-  return <ProtectedRoute>{isAdmin ? <ChatModulePage /> : <Navigate to="/" replace />}</ProtectedRoute>
+  return <ProtectedRoute><ChatModulePage /></ProtectedRoute>
 }
 
 function App() {
@@ -129,8 +130,8 @@ function App() {
       />
       {/* Вход оператора — публичный (своя сессия, не SSO владельца). */}
       <Route path="/operator" element={<OperatorLoginPage />} />
-      <Route path="/chat-module" element={<ChatModuleGate isAdmin={isAdmin} />} />
-      <Route path="/chat-module/:section" element={<ChatModuleGate isAdmin={isAdmin} />} />
+      <Route path="/chat-module" element={<ChatModuleGate />} />
+      <Route path="/chat-module/:section" element={<ChatModuleGate />} />
       <Route
         path="/projects"
         element={

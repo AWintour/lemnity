@@ -194,7 +194,7 @@ const implementedWidgetDefinitions: Partial<Record<WidgetTypeEnum, WidgetDefinit
     buildIntegrationSettings: buildChatIntegrationSettings,
     settingsSurfaces: {
       fields: 'custom',
-      display: 'custom',
+      // display — стандартная вкладка «Отображение» (см. Chat/schema.ts и canonicalizeChat).
     }
   },
 }

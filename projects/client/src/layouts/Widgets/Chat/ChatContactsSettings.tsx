@@ -10,12 +10,12 @@ import { chatWidgetDefaults as defaults } from './defaults'
 type Contacts = ChatWidgetType['contacts']
 type FieldKey = 'name' | 'phone' | 'email'
 
-const CheckBox = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
-  <button
-    type="button"
+// Визуальный чекбокс (span): клик обрабатывает внешняя кнопка-строка, поэтому без своей кнопки
+// (иначе была бы вложенность <button> в <button> и двойное переключение).
+const CheckBox = ({ checked }: { checked: boolean }) => (
+  <span
     role="checkbox"
     aria-checked={checked}
-    onClick={() => onChange(!checked)}
     className={cn(
       'w-7 h-7 shrink-0 rounded-[8px] flex items-center justify-center transition-colors',
       checked ? 'bg-[#3D3D3B]' : 'bg-white border border-[#D7D7DB]',
@@ -26,7 +26,7 @@ const CheckBox = ({ checked, onChange }: { checked: boolean; onChange: (v: boole
         <path d="M5 12.5l4.5 4.5L19 7" />
       </svg>
     )}
-  </button>
+  </span>
 )
 
 const Radio = ({ checked }: { checked: boolean }) => (
@@ -77,7 +77,7 @@ const ChatContactsSettings = () => {
               onClick={() => patchField(f.key, { enabled: !contacts[f.key].enabled })}
               className="flex items-center gap-3"
             >
-              <CheckBox checked={contacts[f.key].enabled} onChange={v => patchField(f.key, { enabled: v })} />
+              <CheckBox checked={contacts[f.key].enabled} />
               <span className="text-[18px] text-[#1A1A1A]">{f.label}</span>
             </button>
 
@@ -88,7 +88,7 @@ const ChatContactsSettings = () => {
                 onClick={() => patchField(f.key, { required: !contacts[f.key].required })}
                 className="flex items-center gap-3"
               >
-                <CheckBox checked={contacts[f.key].required} onChange={v => patchField(f.key, { required: v })} />
+                <CheckBox checked={contacts[f.key].required} />
                 <span className="text-[18px] text-[#9A9A9A]">Обязательно для заполнения</span>
               </button>
             </div>

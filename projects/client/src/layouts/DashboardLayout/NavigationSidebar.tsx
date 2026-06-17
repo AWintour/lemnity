@@ -20,7 +20,6 @@ import { cn } from '@heroui/theme'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
 import { useProjectsStore } from '@/stores/projectsStore'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
 
 // Общий личный кабинет lemnity.ru. «Оплата и тарифы» уводит в раздел «Тарифы» ЛК.
 // target=_top: app встроен в iframe кабинета — навигируем верхнее окно (весь ЛК);
@@ -55,13 +54,10 @@ const NavigationSidebar = () => {
     () => projects.some(p => p.widgets.some(w => w.type === WidgetTypeEnum.CALLBACK && w.enabled)),
     [projects]
   )
-  // «Модуль Чат» на тестировании — показываем только администратору.
-  const isAdmin = useIsAdmin()
+  // «Модуль Чат» доступен всем: пункт показываем, если есть хотя бы один включённый чат-виджет.
   const hasEnabledChat = useMemo(
-    () =>
-      isAdmin &&
-      projects.some(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled)),
-    [projects, isAdmin]
+    () => projects.some(p => p.widgets.some(w => w.type === WidgetTypeEnum.CHAT && w.enabled)),
+    [projects]
   )
 
   useEffect(() => {

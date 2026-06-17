@@ -48,11 +48,11 @@ const ChatFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
         Закрыть
       </button>
       <div className={cn(
-        // Боковая панель — на всю высоту у края; модальное окно — снизу с отступом.
+        // Боковая панель — на всю высоту у края; модальное окно — снизу с отступом от краёв (как в реале).
         isSidebar ? 'h-full' : 'mt-auto mb-6',
-        triggerPosition === 'bottom-right'
-          ? 'ml-auto mr-0'
-          : 'mr-auto ml-0',
+        isSidebar
+          ? (triggerPosition === 'bottom-right' ? 'ml-auto mr-0' : 'mr-auto ml-0')
+          : (triggerPosition === 'bottom-right' ? 'ml-auto mr-6' : 'mr-auto ml-6'),
       )}>
         <ChatEmbedRuntime preview />
       </div>

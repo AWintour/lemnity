@@ -16,6 +16,7 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { getWidgetDefinition } from '@/layouts/Widgets/registry'
 import { usesStandardSurface } from '@/stores/widgetSettings/widgetDefinitions'
 import FieldsSettingsTab from '@/layouts/WidgetSettings/FieldsSettingsTab/FieldsSettingsTab'
+import DisplaySettingsTab from '@/layouts/WidgetSettings/DisplaySettingsTab/DisplaySettingsTab'
 import IntegrationTab from '@/layouts/WidgetSettings/IntegrationTab/IntegrationTab'
 import WidgetPreview from '@/layouts/WidgetPreview/WidgetPreview'
 import SvgIcon from '@/components/SvgIcon'
@@ -50,14 +51,16 @@ useWidgetSettingsStore.getState().init(PREVIEW_ID, WTYPE, 'preview-project')
 const def = getWidgetDefinition(WTYPE)
 const InlinePreview = def.preview.inline
 
-type TabKey = 'fields' | 'integration'
+type TabKey = 'fields' | 'display' | 'integration'
 
 const Page = () => {
   const [tab, setTab] = useState<TabKey>('fields')
   const [inline, setInline] = useState(false)
+  const showDisplay = usesStandardSurface(WTYPE, 'display')
   const showIntegration = usesStandardSurface(WTYPE, 'integration')
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'fields', label: 'Настройка виджета' },
+    ...(showDisplay ? [{ key: 'display' as const, label: 'Отображение' }] : []),
     ...(showIntegration ? [{ key: 'integration' as const, label: 'Интеграция' }] : []),
   ]
 
@@ -100,6 +103,7 @@ const Page = () => {
           <div className="flex flex-col py-2.5 gap-2.5 flex-1 min-h-0 overflow-auto rounded-md">
             <Suspense fallback={<div className="p-4 text-sm text-[#9A968F]">Загрузка…</div>}>
               {tab === 'fields' && <FieldsSettingsTab />}
+              {tab === 'display' && showDisplay && <DisplaySettingsTab />}
               {tab === 'integration' && showIntegration && <IntegrationTab />}
             </Suspense>
           </div>

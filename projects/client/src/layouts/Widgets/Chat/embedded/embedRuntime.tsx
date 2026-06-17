@@ -12,6 +12,10 @@ import { cn } from '@heroui/theme'
 import Widget from './Widget'
 import DesktopWidgetTrigger from './DesktopWidgetTrigger'
 import MobileWidgetTrigger from './MobileWidgetTrigger'
+import AvatarWidgetTrigger from './AvatarWidgetTrigger'
+
+// Стабильная ссылка для фолбэка приветствий (свежий [] в селекторе useShallow → бесконечный цикл).
+const EMPTY_GREETINGS: string[] = []
 import { useChatConnection } from './useChatConnection'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
@@ -21,7 +25,7 @@ import { MAX_IMAGE_BYTES, IMAGE_TOO_LARGE_MESSAGE, classifyAttachment } from '@/
 import { uploadPublicChatFile } from '@/common/api/publicApi'
 import messageSoundUrl from '@/assets/zvuk-chat.mp3'
 
-import type { ChatWidgetType, Scenario } from '@lemnity/widget-config/widgets/chat'
+import type { ChatWidgetType, Position, Scenario } from '@lemnity/widget-config/widgets/chat'
 import { chatWidgetDefaults as defaults } from '../defaults'
 import type { ChatUiMessage } from './types'
 import type { QuickReply } from './Widget'
@@ -64,7 +68,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     triggerFontColor,
     triggerIcon,
     triggerBackgroundColor,
-    triggerPosition,
+    widgetTriggerPosition,
     triggerPulse,
     operatorName,
     operatorSubtitle,
@@ -86,11 +90,11 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     windowBackgroundColor,
     windowAccentColor,
     clientColor,
-    autoOpen,
-    delay,
-    afterOpenEnabled,
-    scrollOpenEnabled,
-    scrollOpenPercent,
+    displayScrollEnabled,
+    displayScrollPercent,
+    displayAfterEnabled,
+    displayAfterSeconds,
+    displayOnExit,
     brandingEnabled,
     soundEnabled,
     scenario,
@@ -104,9 +108,51 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     socialsTitleAlign,
     aiAgentEnabled,
     aiAgentName,
+    deferredCall,
+    agreementEnabled,
+    agreementColor,
+    agreementUrl,
+    agreementPolicyUrl,
+    mobileEnabled,
+    mobileTriggerType,
+    mobileImageUrl,
+    mobileTriggerText,
+    mobileTriggerFontColor,
+    mobileTriggerBackgroundColor,
+    // Вкладка «Отображение» (стандартный surface display) — управляет лаунчером и показом.
+    displayIconType,
+    displayImageUrl,
+    displayButtonText,
+    displayButtonColor,
+    displayButtonTextColor,
+    displayPosition,
+    displayStartShowing,
+    displayIconKind,
+    displayGreetings,
+    displayIconSize,
   } = useWidgetSettingsStore(
     useShallow(s => {
       const settings = (s.settings?.widget as ChatWidgetType)
+      const display = s.settings?.display as
+        | {
+            icon?: {
+              type?: 'image' | 'button'
+              image?: { url?: string }
+              button?: { text?: string; buttonColor?: string; textColor?: string }
+              position?: 'bottom-left' | 'top-right' | 'bottom-right'
+            }
+            startShowing?: 'onClick' | 'timer'
+            timer?: { delayMs?: number }
+            chatIconKind?: 'image' | 'button' | 'avatar'
+            greetings?: string[]
+            iconSize?: number
+            showRules?: {
+              onExit?: boolean
+              scrollBelow?: { enabled?: boolean; percent?: number | null }
+              afterOpen?: { enabled?: boolean; seconds?: number | null }
+            }
+          }
+        | undefined
 
       return {
         triggerText: settings.triggerText ?? defaults.triggerText,
@@ -115,7 +161,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         triggerPulse: settings.triggerPulse ?? defaults.triggerPulse ?? false,
         triggerBackgroundColor:
           settings.triggerBackgroundColor ?? defaults.triggerBackgroundColor,
-        triggerPosition: settings.triggerPosition ?? defaults.triggerPosition,
+        widgetTriggerPosition: settings.triggerPosition ?? defaults.triggerPosition,
 
         operatorName: settings.operatorName ?? defaults.operatorName,
         operatorSubtitle: settings.operatorSubtitle ?? defaults.operatorSubtitle,
@@ -139,11 +185,13 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
         windowAccentColor: settings.windowAccentColor ?? defaults.windowAccentColor,
         clientColor: settings.clientColor ?? defaults.clientColor,
 
-        autoOpen: settings.autoOpen ?? defaults.autoOpen,
-        delay: settings.delay ?? defaults.delay,
-        afterOpenEnabled: settings.afterOpenEnabled ?? defaults.afterOpenEnabled ?? true,
-        scrollOpenEnabled: (settings.scrollOpen ?? defaults.scrollOpen).enabled,
-        scrollOpenPercent: (settings.scrollOpen ?? defaults.scrollOpen).percent,
+        // Авто-открытие управляется вкладкой «Отображение»: мастер — «Автоматически»
+        // (startShowing==='timer'), а триггеры — из «Настройки показа» (display.showRules).
+        displayScrollEnabled: display?.showRules?.scrollBelow?.enabled ?? false,
+        displayScrollPercent: display?.showRules?.scrollBelow?.percent ?? null,
+        displayAfterEnabled: display?.showRules?.afterOpen?.enabled ?? false,
+        displayAfterSeconds: display?.showRules?.afterOpen?.seconds ?? null,
+        displayOnExit: display?.showRules?.onExit ?? false,
 
         brandingEnabled: settings.brandingEnabled ?? defaults.brandingEnabled,
         soundEnabled: settings.soundEnabled ?? defaults.soundEnabled,
@@ -162,9 +210,40 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
           | 'right',
         aiAgentEnabled: settings.aiAgentEnabled ?? defaults.aiAgentEnabled,
         aiAgentName: settings.aiAgentName ?? defaults.aiAgentName,
+        deferredCall: settings.deferredCall ?? defaults.deferredCall,
+        // «Согласие и политика» — плоские поля (стабильные примитивы для useShallow).
+        agreementEnabled: (settings.agreement ?? defaults.agreement!).enabled,
+        agreementColor: (settings.agreement ?? defaults.agreement!).color,
+        agreementUrl: (settings.agreement ?? defaults.agreement!).agreementUrl,
+        agreementPolicyUrl: (settings.agreement ?? defaults.agreement!).policyUrl,
+        // «Мобильная версия» — плоские поля (стабильные примитивы, без новой ссылки в useShallow).
+        mobileEnabled: (settings.mobileSettings ?? defaults.mobileSettings!).mobileEnabled,
+        mobileTriggerType: (settings.mobileSettings ?? defaults.mobileSettings!).triggerType,
+        mobileImageUrl: (settings.mobileSettings ?? defaults.mobileSettings!).imageUrl,
+        mobileTriggerText: (settings.mobileSettings ?? defaults.mobileSettings!).triggerText,
+        mobileTriggerFontColor: (settings.mobileSettings ?? defaults.mobileSettings!).triggerFontColor,
+        mobileTriggerBackgroundColor: (settings.mobileSettings ?? defaults.mobileSettings!).triggerBackgroundColor,
+        // Плоские поля вкладки «Отображение» (стабильные примитивы для useShallow).
+        displayIconType: display?.icon?.type ?? 'image',
+        displayImageUrl: display?.icon?.image?.url ?? '',
+        displayButtonText: display?.icon?.button?.text ?? '',
+        displayButtonColor: display?.icon?.button?.buttonColor ?? '',
+        displayButtonTextColor: display?.icon?.button?.textColor ?? '',
+        displayPosition: display?.icon?.position,
+        displayStartShowing: display?.startShowing ?? 'onClick',
+        displayIconKind: display?.chatIconKind ?? display?.icon?.type ?? 'image',
+        displayGreetings: display?.greetings ?? EMPTY_GREETINGS,
+        displayIconSize: display?.iconSize ?? 62,
       }
     })
   )
+
+  // Позиция лаунчера: вкладка «Отображение» (display.icon.position) перекрывает «Настройку виджета».
+  // Chat поддерживает только bottom-left/right; top-right сводим к bottom-right.
+  const triggerPosition: Position =
+    displayPosition === 'bottom-left' ? 'bottom-left'
+      : displayPosition === 'bottom-right' || displayPosition === 'top-right' ? 'bottom-right'
+      : widgetTriggerPosition
 
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatUiMessage[]>([])
@@ -219,10 +298,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   // она остаётся доступной во вкладке «чат». Сбрасываем шаг сценария к началу и историю навигации.
   const goBack = useCallback(() => {
     historyRef.current = []
-    setCurrentStepId(null)
+    // На главном экране кнопки берутся из стартового шага сценария: сбрасываем шаг
+    // к старту (а не в null), иначе главный экран остаётся без кнопок — пустым.
+    setCurrentStepId(scenario.enabled ? scenario.startStepId : null)
     setMode('bot')
     setView('home')
-  }, [])
+  }, [scenario.enabled, scenario.startStepId])
   const [unreadCount, setUnreadCount] = useState(0)
   const openRef = useRef(false)
   openRef.current = open
@@ -378,13 +459,16 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     resetConversation()
   }, [resetConversation, props.preview])
 
-  // Автооткрытие окна: два независимых триггера (оба под общим тумблером autoOpen):
-  //  • по времени — через delay секунд (если включён afterOpenEnabled);
-  //  • по скроллу — когда страница прокручена ниже scrollOpenPercent% (если включён scrollOpenEnabled).
-  // Виджет встроен в srcdoc-iframe (тот же origin), поэтому скролл считаем у родительской
+  // Авто-открытие окна управляется вкладкой «Отображение»:
+  //  • мастер-тумблер — «Автоматически» (display.startShowing==='timer');
+  //  • конкретные триггеры — из «Настройки показа» (display.showRules):
+  //    через N секунд после открытия страницы / при скролле ниже N% / когда покидает сайт.
+  // Виджет встроен в srcdoc-iframe (тот же origin), поэтому скролл/уход считаем у родительской
   // страницы (window.parent); при недоступности — фоллбэк на собственное окно.
+  const displayTimerOpen = displayStartShowing === 'timer'
   useEffect(() => {
-    if (props.preview || !autoOpen) return
+    if (props.preview) return
+    if (!displayTimerOpen) return
     if (openRef.current) return
 
     let done = false
@@ -396,28 +480,40 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     }
 
     let timer: ReturnType<typeof setTimeout> | undefined
-    if (afterOpenEnabled) {
-      timer = setTimeout(openOnce, Math.max(0, delay) * 1000)
+    if (displayAfterEnabled) {
+      timer = setTimeout(openOnce, Math.max(0, displayAfterSeconds ?? 0) * 1000)
     }
 
     let scrollHost: Window | null = null
     let onScroll: (() => void) | undefined
-    if (scrollOpenEnabled) {
+    if (displayScrollEnabled && displayScrollPercent != null) {
       scrollHost = getScrollHost()
       onScroll = () => {
-        if (scrollHost && scrollPercent(scrollHost) >= scrollOpenPercent) openOnce()
+        if (scrollHost && scrollPercent(scrollHost) >= displayScrollPercent) openOnce()
       }
       scrollHost.addEventListener('scroll', onScroll, { passive: true })
       onScroll() // вдруг страница уже прокручена ниже порога
     }
 
+    let exitDoc: Document | null = null
+    let onMouseOut: ((e: MouseEvent) => void) | undefined
+    if (displayOnExit) {
+      exitDoc = getScrollHost().document
+      onMouseOut = (e: MouseEvent) => {
+        // Уход курсора за верхнюю границу окна (намерение покинуть сайт).
+        if (e.clientY <= 0 && !e.relatedTarget) openOnce()
+      }
+      exitDoc?.addEventListener('mouseout', onMouseOut)
+    }
+
     function cleanup() {
       if (timer) clearTimeout(timer)
       if (scrollHost && onScroll) scrollHost.removeEventListener('scroll', onScroll)
+      if (exitDoc && onMouseOut) exitDoc.removeEventListener('mouseout', onMouseOut)
     }
 
     return cleanup
-  }, [props.preview, autoOpen, afterOpenEnabled, delay, scrollOpenEnabled, scrollOpenPercent])
+  }, [props.preview, displayTimerOpen, displayAfterEnabled, displayAfterSeconds, displayScrollEnabled, displayScrollPercent, displayOnExit])
 
   // Кнопки текущего шага показываем всегда (закреплены над текстом); в режиме оператора
   // Widget рендерит их неактивными (см. chatActive). Поэтому без гейта по mode.
@@ -751,12 +847,28 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     firstMountCrutchRef.current = true
   }, [])
 
+  // Привязка к вкладке «Отображение»: значения display.* перекрывают поля «Настройка виджета»,
+  // но только когда они реально заданы — пустые дефолты сохраняют текущий вид лаунчера.
+  // Лаунчер-«кнопка»: текст/цвета из display перекрывают; «картинка»: url из display.
+  const useDisplayButton = displayIconType === 'button'
+  const useDisplayImage = displayIconType === 'image' && !!displayImageUrl
+  const effectiveTriggerText = useDisplayButton && displayButtonText ? displayButtonText : triggerText
+  const effectiveTriggerFontColor = useDisplayButton && displayButtonTextColor ? displayButtonTextColor : triggerFontColor
+  const effectiveTriggerBackgroundColor = useDisplayButton && displayButtonColor ? displayButtonColor : triggerBackgroundColor
+  const desktopImageUrl = useDisplayImage ? displayImageUrl : undefined
+
   const triggerStyle: CSSProperties = {
-    color: triggerFontColor,
-    backgroundColor: triggerBackgroundColor,
+    color: effectiveTriggerFontColor,
+    backgroundColor: effectiveTriggerBackgroundColor,
     willChange: 'transform',
   }
-  const closeIconStyle: CSSProperties = { color: triggerFontColor }
+  // На мобильных лаунчер берёт собственные цвета из блока «Мобильная версия».
+  const mobileTriggerStyle: CSSProperties = {
+    color: mobileTriggerFontColor,
+    backgroundColor: mobileTriggerBackgroundColor,
+    willChange: 'transform',
+  }
+  const closeIconStyle: CSSProperties = { color: effectiveTriggerFontColor }
 
   // Когда ИИ-агент включён, посетитель видит имя агента из настроек как отвечающего
   // (без пометки «бот» — пометку «ИИ» видит только оператор в кабинете).
@@ -794,6 +906,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     view,
     contacts,
     contactsTab,
+    // «Позвонить» в контактах ведёт на форму отложенного звонка; без этой функции кнопку гасим.
+    callbackEnabled: deferredCall,
+    // «Согласие и политика» — чекбокс согласия над полем ввода.
+    agreement: agreementEnabled
+      ? { color: agreementColor, agreementUrl, policyUrl: agreementPolicyUrl }
+      : undefined,
     companySocials,
     socialsHeading: {
       title: socialsTitle,
@@ -836,6 +954,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   // В боковой панели закрытие — кнопкой НА панели (слева), поэтому круглый баббл-триггер прячем.
   const hideTrigger = isSidebarFmt && open
 
+  // «Мобильная версия» выключена → на мобильных виджет не показываем (в превью настроек показываем всегда).
+  if (isMobileViewport && !mobileEnabled && !props.preview) return null
+
   return (
     <div
       ref={containerRef}
@@ -863,12 +984,34 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
             open={open}
             unreadCount={unreadCount}
             toggleOpen={toggleOpen}
-            triggerStyle={triggerStyle}
-            triggerText={triggerText}
+            triggerStyle={mobileTriggerStyle}
+            triggerText={mobileTriggerText}
+            triggerType={mobileTriggerType}
+            imageUrl={mobileImageUrl}
             pulse={triggerPulse}
           >
             <Widget open={open} mobile {...widgetProps} />
           </MobileWidgetTrigger>
+        : displayIconKind === 'avatar'
+        ? <AvatarWidgetTrigger
+            ref={triggerRef}
+            open={open}
+            toggleOpen={toggleOpen}
+            greetings={displayGreetings}
+            operatorName={effectiveOperatorName}
+            operatorAvatarUrl={operatorAvatarUrl}
+            unreadCount={unreadCount}
+            accent={effectiveTriggerBackgroundColor}
+            size={displayIconSize}
+            pulse={triggerPulse}
+            preview={props.preview}
+            agreement={agreementEnabled
+              ? { color: agreementColor, agreementUrl, policyUrl: agreementPolicyUrl }
+              : undefined}
+          >
+            {/* В режиме «Аватарка» согласие гейтит ОТКРЫТИЕ (в тизере), поэтому в окне его не дублируем. */}
+            <Widget open={open} {...widgetProps} agreement={undefined} />
+          </AvatarWidgetTrigger>
         : <DesktopWidgetTrigger
             ref={triggerRef}
             hideTrigger={hideTrigger}
@@ -881,7 +1024,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
             triggerIcon={triggerIcon}
             triggerPosition={triggerPosition}
             triggerStyle={triggerStyle}
-            triggerText={triggerText}
+            triggerText={effectiveTriggerText}
+            imageUrl={desktopImageUrl}
+            size={displayIconSize}
             pulse={triggerPulse}
           >
             <Widget open={open} {...widgetProps} />

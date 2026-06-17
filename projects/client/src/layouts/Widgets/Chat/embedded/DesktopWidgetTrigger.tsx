@@ -19,6 +19,10 @@ type DesktopWidgetTriggerProps =
       closeIconStyle: CSSProperties
       triggerIcon: Icon
       triggerText: string
+      // Картинка-лаунчер из вкладки «Отображение»: если задана — показываем её вместо иконки.
+      imageUrl?: string
+      // Размер кнопки-лаунчера (px) из «Размер иконки». По умолчанию 62.
+      size?: number
       triggerPosition: Position
       unreadCount: number
       // Боковая панель открыта — круглый баббл-триггер не показываем (закрытие — кнопкой на панели).
@@ -51,6 +55,12 @@ const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
 
   const doPulse = props.pulse && !props.open
   const rippleColor = (props.triggerStyle?.backgroundColor as string | undefined) ?? '#5951E5'
+  // Размер кнопки/иконки из «Размер иконки» (внутренние элементы масштабируем пропорционально).
+  const size = props.size ?? 62
+  const iconInner = Math.round(size * 0.48)
+  const imageInner = Math.round(size * 0.58)
+  // Без текста лаунчер — ровный круг (width=height); с текстом — «таблетка» с отступами.
+  const hasText = !!props.triggerText
 
   return (
     <>
@@ -74,9 +84,14 @@ const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
           'group flex items-center justify-center rounded-full',
           'text-white ring-1 ring-white/20 relative z-10',
           'transition-transform motion-reduce:transition-none duration-250',
-          'h-15.5 min-w-15.5 w-fit gap-2.5 px-4 hover:scale-105',
+          'hover:scale-105',
+          hasText ? 'w-fit gap-2.5 px-4' : 'shrink-0',
         )}
-        style={props.triggerStyle}
+        style={
+          hasText
+            ? { ...props.triggerStyle, height: size, minWidth: size }
+            : { ...props.triggerStyle, width: size, height: size }
+        }
         aria-label={props.open ? 'Скрыть чат' : 'Открыть чат'}
         onMouseEnter={props.onMouseEnter}
         onMouseLeave={props.onMouseLeave}
@@ -88,17 +103,23 @@ const DesktopWidgetTrigger = ({ ref, ...props }: DesktopWidgetTriggerProps) => {
         {props.open
           ? (
             <div
-              className='w-7.5 h-7.5 rotate-45'
-              style={props.closeIconStyle}
+              className='rotate-45'
+              style={{ ...props.closeIconStyle, width: iconInner, height: iconInner }}
             >
               <SvgIcon src={iconAdd} />
             </div>
           )
-          : (props.triggerIcon !== 'HeartDislike' && TriggerIcon && (
-              <div className='w-7.5 h-7.5'>
-                <TriggerIcon />
+          : props.imageUrl
+            ? (
+              <div className='rounded-full overflow-hidden' style={{ width: imageInner, height: imageInner }}>
+                <img src={props.imageUrl} alt='' className='w-full h-full object-cover' />
               </div>
-            ))
+            )
+            : (props.triggerIcon !== 'HeartDislike' && TriggerIcon && (
+                <div style={{ width: iconInner, height: iconInner }}>
+                  <TriggerIcon />
+                </div>
+              ))
         }
 
         {props.triggerPosition === 'bottom-left' && props.triggerText && (

@@ -3,6 +3,7 @@ import type {
   FieldsSettings,
   IntegrationSettings,
 } from '@/stores/widgetSettings/types'
+import { buildStandardDisplaySettings } from '@/stores/widgetSettings/displayDefaults'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
 import type {
   ChatWidgetType,
@@ -32,6 +33,24 @@ export const chatWidgetDefaults: ChatWidgetType = {
   triggerIcon: 'Send',
   triggerPosition: 'bottom-right',
   triggerPulse: false,
+
+  // «Согласие и политика» — чекбокс согласия над полем ввода.
+  agreement: {
+    enabled: true,
+    color: '#9A9A9A',
+    agreementUrl: 'lemnity.ru/agreement',
+    policyUrl: 'lemnity.ru/political',
+  },
+
+  // «Мобильная версия» — включена по умолчанию; на мобильных лаунчер берётся отсюда.
+  mobileSettings: {
+    mobileEnabled: true,
+    triggerType: 'button',
+    imageUrl: undefined,
+    triggerText: 'Чат',
+    triggerFontColor: '#FFFFFF',
+    triggerBackgroundColor: '#5951E5',
+  },
 
   operatorName: 'Поддержка',
   operatorSubtitle: 'Супер гид города',
@@ -142,7 +161,16 @@ export const buildChatWidgetSettings = (): ChatWidgetType =>
 
 export const buildChatFieldsSettings = (): FieldsSettings =>
   ({}) as FieldsSettings
-export const buildChatDisplaySettings = (): DisplaySettings =>
-  ({}) as DisplaySettings
+// Чат использует стандартную вкладку «Отображение» → сидим стандартными дефолтами.
+// Положение по умолчанию — правый нижний угол; плюс два дефолтных приветствия для лаунчера
+// «Аватарка» (плейсхолдер имени подставляется в рантайме).
+export const buildChatDisplaySettings = (): DisplaySettings => {
+  const base = buildStandardDisplaySettings()
+  return {
+    ...base,
+    icon: { ...base.icon, position: 'bottom-right' },
+    greetings: ['Здравствуйте', 'Меня зовут (имя оператора)', 'Чем могу помочь?'],
+  } as DisplaySettings
+}
 export const buildChatIntegrationSettings = (): IntegrationSettings =>
   ({}) as IntegrationSettings

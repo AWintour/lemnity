@@ -64,6 +64,9 @@ type WidgetProps = {
   view: 'home' | 'chat' | 'form' | 'contacts' | 'callback' | 'socials'
   contacts: ContactsCfg
   contactsTab: ContactsTabData
+  callbackEnabled: boolean
+  // «Согласие и политика»: чекбокс согласия над полем ввода (undefined = выключено).
+  agreement?: { color: string; agreementUrl: string; policyUrl: string }
   companySocials: { id: string; icon: string; url: string }[]
   socialsHeading: SocialsHeading
   formHeader: string
@@ -160,13 +163,6 @@ const IconSend = ({ color }: { color: string }) => (
     <path d="M21 4 11 21l-2-7.5L21 4Z" />
   </svg>
 )
-
-const IconPlus = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 6v12M6 12h12" />
-  </svg>
-)
-
 
 const IconClip = ({ color }: { color: string }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
@@ -788,10 +784,12 @@ const ContactsTab = ({
   data,
   onLeaveMessage,
   onCall,
+  callbackEnabled,
 }: {
   data: ContactsTabData
   onLeaveMessage: () => void
   onCall: () => void
+  callbackEnabled: boolean
 }) => {
   const row = (icon: React.ReactNode, text: string) =>
     text ? (
@@ -801,11 +799,12 @@ const ContactsTab = ({
       </div>
     ) : null
 
-  const actionBtn = (label: string, onClick: () => void) => (
+  const actionBtn = (label: string, onClick: () => void, disabled = false) => (
     <button
       type="button"
       onClick={onClick}
-      className="w-full px-4 py-4 flex items-center justify-between gap-3 rounded-[14px] border border-[#E3E3E8] text-[16px] text-[#6E6E76] hover:bg-[#FAFAFB] transition-colors"
+      disabled={disabled}
+      className="w-full px-4 py-4 flex items-center justify-between gap-3 rounded-[14px] border border-[#E3E3E8] text-[16px] text-[#6E6E76] hover:bg-[#FAFAFB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
     >
       <span>{label}</span>
       <span className="shrink-0 text-[#1A1A1A]"><IconArrowCircle color="currentColor" /></span>
@@ -824,7 +823,7 @@ const ContactsTab = ({
       <hr className="border-[#EDEDF0]" />
       <div className="flex flex-col gap-3">
         {actionBtn('Отправить сообщение', onLeaveMessage)}
-        {actionBtn('Позвонить', onCall)}
+        {actionBtn('Позвонить', onCall, !callbackEnabled)}
       </div>
     </div>
   )
@@ -920,6 +919,41 @@ const CallbackView = ({
 
 /* ------------------------------- widget --------------------------------- */
 
+// Чекбокс согласия над полем ввода (блок «Согласие и политика»).
+const ConsentRow = ({
+  agreement,
+  agreed,
+  onToggle,
+}: {
+  agreement: { color: string; agreementUrl: string; policyUrl: string }
+  agreed: boolean
+  onToggle: () => void
+}) => {
+  const href = (u: string) => (/^https?:\/\//i.test(u) ? u : `https://${u}`)
+  return (
+    <div className="shrink-0 px-4 pt-2 flex items-start gap-2.5">
+      <button
+        type="button"
+        aria-label="Согласие на обработку данных"
+        aria-pressed={agreed}
+        onClick={onToggle}
+        style={{ background: agreed ? '#1A1A1A' : '#fff', borderColor: agreed ? '#1A1A1A' : '#C9C9CE' }}
+        className="mt-0.5 w-5 h-5 rounded-[5px] border flex items-center justify-center flex-none"
+      >
+        {agreed && (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+        )}
+      </button>
+      <span className="text-[13px] leading-[1.45]" style={{ color: agreement.color }}>
+        Я даю{' '}
+        <a href={href(agreement.agreementUrl)} target="_blank" rel="noreferrer" className="underline">согласие</a>
+        {' '}на{' '}
+        <a href={href(agreement.policyUrl)} target="_blank" rel="noreferrer" className="underline">обработку персональных данных</a>
+      </span>
+    </div>
+  )
+}
+
 // Лоадер при переключении разделов-вкладок.
 const Spinner = ({ color }: { color: string }) => (
   <span
@@ -930,8 +964,25 @@ const Spinner = ({ color }: { color: string }) => (
 
 const Widget = (props: WidgetProps) => {
   const [draft, setDraft] = useState('')
+  // Согласие на обработку данных: пока не отмечено — отправка заблокирована.
+  const [agreed, setAgreed] = useState(false)
+  const consentBlocked = !!props.agreement && !agreed
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  // Поле ввода сообщения — textarea: текст переносится вниз, растёт до 3 строк, дальше скролл.
+  const messageInputRef = useRef<HTMLTextAreaElement | null>(null)
+  // Максимум 3 строки: line-height 24px × 3 = 72px, дальше внутренний скролл.
+  const MESSAGE_INPUT_MAX_H = 72
+  const autoGrowMessageInput = () => {
+    const el = messageInputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, MESSAGE_INPUT_MAX_H)}px`
+  }
+  // Пересчитываем высоту при любой смене текста (ввод, вставка эмодзи, очистка после отправки).
+  useEffect(() => {
+    autoGrowMessageInput()
+  }, [draft])
 
   // Текущая вкладка-раздел (home/chat — одна группа). При смене показываем краткий
   // лоадер и плавно проявляем контент — иначе мгновенная подмена «мигает».
@@ -955,12 +1006,13 @@ const Widget = (props: WidgetProps) => {
 
   const submit = (body: string) => {
     const text = body.trim()
-    if (!text || props.disabled) return
+    if (!text || props.disabled || consentBlocked) return
     props.onSend(text)
   }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    if (consentBlocked) return
     submit(draft)
     setDraft('')
   }
@@ -1128,6 +1180,7 @@ const Widget = (props: WidgetProps) => {
                 data={props.contactsTab}
                 onLeaveMessage={props.onLeaveMessage}
                 onCall={props.onCall}
+                callbackEnabled={props.callbackEnabled}
               />
             )}
 
@@ -1237,19 +1290,33 @@ const Widget = (props: WidgetProps) => {
               </div>
             ) : props.chatActive ? (
               <>
+                {props.agreement && (
+                  <ConsentRow agreement={props.agreement} agreed={agreed} onToggle={() => setAgreed(a => !a)} />
+                )}
                 <form onSubmit={handleSubmit} className="shrink-0 px-4 pt-2">
-                  <div className="flex items-center gap-2 border-t border-[#EFEFF2] pt-3">
-                    <input
+                  <div className="flex items-end gap-2 border-t border-[#EFEFF2] pt-3">
+                    <textarea
+                      ref={messageInputRef}
                       value={draft}
                       onChange={e => setDraft(e.target.value)}
+                      onKeyDown={e => {
+                        // Enter — отправка; Shift+Enter — перенос строки.
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          if (consentBlocked) return
+                          submit(draft)
+                          setDraft('')
+                        }
+                      }}
                       disabled={props.disabled}
                       placeholder={props.placeholder}
-                      className="flex-1 text-[17px] leading-6 text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
+                      rows={1}
+                      className="flex-1 resize-none max-h-18 overflow-y-auto text-[17px] leading-6 text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
                     />
                     <button
                       type="submit"
-                      disabled={props.disabled || draft.trim().length === 0}
-                      className="shrink-0 p-1 disabled:opacity-40"
+                      disabled={props.disabled || draft.trim().length === 0 || consentBlocked}
+                      className="shrink-0 p-1 pb-0.5 disabled:opacity-40"
                       aria-label="Отправить"
                     >
                       <IconSend color="#8E8B97" />
@@ -1269,19 +1336,6 @@ const Widget = (props: WidgetProps) => {
                       e.target.value = ''
                     }}
                   />
-                  <button
-                    type="button"
-                    aria-label="Добавить вложение"
-                    className="shrink-0"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <span
-                      className="w-7 h-7 rounded-full flex items-center justify-center"
-                      style={{ border: `1.6px solid ${accent}` }}
-                    >
-                      <IconPlus color={accent} />
-                    </span>
-                  </button>
                   <button
                     type="button"
                     aria-label="Вложение"
@@ -1319,27 +1373,42 @@ const Widget = (props: WidgetProps) => {
                 </div>
               </div>
             ) : (
+              <>
+              {props.agreement && (
+                <ConsentRow agreement={props.agreement} agreed={agreed} onToggle={() => setAgreed(a => !a)} />
+              )}
               <form
                 onSubmit={e => {
                   e.preventDefault()
                   const text = draft.trim()
-                  if (!text || props.disabled) return
+                  if (!text || props.disabled || consentBlocked) return
                   props.onOfflineSend(text)
                   setDraft('')
                 }}
                 className="shrink-0 px-4 pt-2 pb-3"
               >
-                <div className="flex items-center gap-2 border border-[#E3E3E8] rounded-[12px] px-3 h-12">
-                  <input
+                <div className="flex items-end gap-2 border border-[#E3E3E8] rounded-[12px] px-3 py-2.5 min-h-12">
+                  <textarea
+                    ref={messageInputRef}
                     value={draft}
                     onChange={e => setDraft(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        const text = draft.trim()
+                        if (!text || props.disabled || consentBlocked) return
+                        props.onOfflineSend(text)
+                        setDraft('')
+                      }
+                    }}
                     disabled={props.disabled}
                     placeholder="Сообщение"
-                    className="flex-1 text-[16px] text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
+                    rows={1}
+                    className="flex-1 resize-none max-h-18 overflow-y-auto text-[16px] leading-6 text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
                   />
                   <button
                     type="submit"
-                    disabled={props.disabled || draft.trim().length === 0}
+                    disabled={props.disabled || draft.trim().length === 0 || consentBlocked}
                     className="shrink-0 p-1 disabled:opacity-40"
                     aria-label="Отправить"
                   >
@@ -1347,6 +1416,7 @@ const Widget = (props: WidgetProps) => {
                   </button>
                 </div>
               </form>
+              </>
             ))}
 
             {/* Футер брендинга */}

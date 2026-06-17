@@ -3,7 +3,6 @@ import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@heroui/theme'
 
 import BorderedContainer from '@/layouts/BorderedContainer/BorderedContainer'
-import ResizableTextarea from '@/components/ResizableTextarea'
 import CustomSwitch from '@/components/CustomSwitch'
 import ColorPicker from '@/components/ColorPicker'
 import NumberStepper from '@/components/NumberStepper'
@@ -19,8 +18,6 @@ const ACCENT = '!bg-[#5951E5]'
 
 const ChatHeaderSettings = () => {
   const {
-    operatorName,
-    operatorSubtitle,
     companyLogo,
     welcomeTitle,
     welcomeTitleSize,
@@ -31,8 +28,6 @@ const ChatHeaderSettings = () => {
       useShallow(s => {
         const w = s.settings?.widget as ChatWidgetType
         return {
-          operatorName: w.operatorName ?? defaults.operatorName,
-          operatorSubtitle: w.operatorSubtitle ?? defaults.operatorSubtitle ?? '',
           companyLogo: w.companyLogo ?? defaults.companyLogo,
           welcomeTitle: w.welcomeTitle ?? defaults.welcomeTitle,
           welcomeTitleSize: w.welcomeTitleSize ?? defaults.welcomeTitleSize,
@@ -67,33 +62,6 @@ const ChatHeaderSettings = () => {
 
   return (
     <div className="w-full min-w-122 flex flex-col gap-5">
-      {/* Оператор: имя и подзаголовок (компактная шапка экрана чата) */}
-      <BorderedContainer>
-        <div className="w-full flex flex-col gap-4">
-          <span className="text-[20px] leading-6 font-semibold text-[#1A1A1A]">Оператор</span>
-          <ResizableTextarea
-            value={operatorName}
-            onChange={e => setChatPatch({ operatorName: e.target.value })}
-            placeholder="Имя оператора"
-            maxLength={40}
-            className={cn(
-              'w-full rounded-[12px] border border-[#E4E4E7] px-4 py-3',
-              'text-[18px] leading-6 text-[#1A1A1A] outline-none focus:border-[#5951E5]',
-            )}
-          />
-          <ResizableTextarea
-            value={operatorSubtitle}
-            onChange={e => setChatPatch({ operatorSubtitle: e.target.value })}
-            placeholder="Подзаголовок (например: Супер гид города)"
-            maxLength={60}
-            className={cn(
-              'w-full rounded-[12px] border border-[#E4E4E7] px-4 py-3',
-              'text-[18px] leading-6 text-[#1A1A1A] outline-none focus:border-[#5951E5]',
-            )}
-          />
-        </div>
-      </BorderedContainer>
-
       {/* Логотип компании */}
       <BorderedContainer>
         <div className="w-full flex flex-col gap-4">
