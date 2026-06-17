@@ -5,7 +5,7 @@ import { cn } from '@heroui/theme'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import useUrlImage from '@/hooks/useUrlImage'
-import { useMobileContext } from '../../layouts/Widgets/EventTimer/embedded/MobileContext'
+import { useMobileContext } from './MobileContext'
 
 import type {
   EventTimertWidgetType,

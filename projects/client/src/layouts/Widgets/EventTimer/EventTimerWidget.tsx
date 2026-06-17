@@ -19,7 +19,7 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import useUrlImageOrDefault from '../../../hooks/useUrlImage'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
-import { useMobileContext } from './embedded/MobileContext'
+import { useMobileContext } from '@/components/announcement/MobileContext'
 
 import crossIcon from '@/assets/icons/cross.svg'
 import type {

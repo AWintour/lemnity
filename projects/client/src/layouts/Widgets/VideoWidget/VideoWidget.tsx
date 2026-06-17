@@ -16,7 +16,7 @@ import VideoLeadForm, { type VideoLeadFormValues } from './VideoLeadForm'
 
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { sendPublicRequest } from '@/common/api/publicApi'
-import { useMobileContext } from './embedded/MobileContext'
+import { useMobileContext } from '@/components/announcement/MobileContext'
 import { getFontWeightClass } from './utils/getFontWeightClass'
 
 import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widget'

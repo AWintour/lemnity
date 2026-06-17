@@ -10,7 +10,7 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import { sendEvent } from '@/common/api/publicApi'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 
-import { MobileProvider } from './MobileContext'
+import { MobileProvider } from '@/components/announcement/MobileContext'
 
 import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widget'
 

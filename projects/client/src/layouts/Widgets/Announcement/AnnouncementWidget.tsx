@@ -14,7 +14,7 @@ import * as Icons from '@/components/Icons'
 import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import useUrlImage from '@/hooks/useUrlImage'
 import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
-import { useMobileContext } from './embedded/MobileContext'
+import { useMobileContext } from '@/components/announcement/MobileContext'
 import { useViewportWidth } from '@/hooks/useViewportWidth'
 import { getFontWeightClass } from './utils/getFontWeightClass'
 

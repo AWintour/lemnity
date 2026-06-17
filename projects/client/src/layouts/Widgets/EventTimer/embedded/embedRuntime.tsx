@@ -19,7 +19,7 @@ import type {
 } from '@lemnity/widget-config/widgets/event-timer'
 import type { CountdownForm } from '../EventTimerFormScreen'
 import { type EventTimerWidgetVariant } from '../EventTimerWidget'
-import { MobileProvider } from './MobileContext'
+import { MobileProvider } from '@/components/announcement/MobileContext'
 
 export type Rect = {
   width: number

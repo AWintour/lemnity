@@ -15,7 +15,7 @@ import type {
   AnnouncementWidgetType,
 } from '@lemnity/widget-config/widgets/announcement'
 import { type AnnouncementWidgetVariant } from '../AnnouncementWidget'
-import { MobileProvider } from './MobileContext'
+import { MobileProvider } from '@/components/announcement/MobileContext'
 
 export type Rect = {
   width: number
