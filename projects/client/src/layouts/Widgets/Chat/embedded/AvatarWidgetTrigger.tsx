@@ -32,6 +32,8 @@ type AvatarWidgetTriggerProps =
       accent: string
       // Размер кружка-аватара (px) из «Размер иконки». По умолчанию 62.
       size?: number
+      // Есть онлайн-оператор → зелёная точка «онлайн» (иначе бот, без точки).
+      online?: boolean
       // Анимация «биение сердца» (как у обычной кнопки).
       pulse?: boolean
       // «Согласие и политика»: если задано — открытие чата требует отметить чекбокс согласия.
@@ -266,8 +268,8 @@ const AvatarWidgetTrigger = ({ ref, ...props }: AvatarWidgetTriggerProps) => {
               <Avatar size={size} />
             </div>
           )}
-          {/* Зелёная точка «онлайн» */}
-          {!props.open && (
+          {/* Зелёная точка «онлайн» — только если есть живой оператор онлайн */}
+          {!props.open && props.online && (
             <span
               className="absolute rounded-full bg-[#2DBE6A] border-2 border-white"
               style={{ width: Math.round(size * 0.26), height: Math.round(size * 0.26), right: 0, bottom: 0 }}

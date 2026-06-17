@@ -874,6 +874,12 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   // (без пометки «бот» — пометку «ИИ» видит только оператор в кабинете).
   const effectiveOperatorName = aiAgentEnabled && aiAgentName ? aiAgentName : operatorName
 
+  // Лаунчер «Аватарка»: если есть онлайн-оператор — показываем его (живой); иначе — бот
+  // (дефолтный аватар/имя из настроек, при включённом ИИ — имя агента).
+  const onlineOperator = operators.find(o => o.online)
+  const launcherAvatarUrl = onlineOperator ? (onlineOperator.avatarUrl ?? undefined) : operatorAvatarUrl
+  const launcherName = onlineOperator ? onlineOperator.name : effectiveOperatorName
+
   const widgetProps = {
     operatorName: effectiveOperatorName,
     operatorSubtitle,
@@ -998,8 +1004,9 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
             open={open}
             toggleOpen={toggleOpen}
             greetings={displayGreetings}
-            operatorName={effectiveOperatorName}
-            operatorAvatarUrl={operatorAvatarUrl}
+            operatorName={launcherName}
+            operatorAvatarUrl={launcherAvatarUrl}
+            online={!!onlineOperator}
             unreadCount={unreadCount}
             accent={effectiveTriggerBackgroundColor}
             size={displayIconSize}
