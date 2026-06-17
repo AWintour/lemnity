@@ -104,7 +104,8 @@ export const useWebPush = (projectId?: string | null) => {
         (await reg.pushManager.getSubscription()) ??
         (await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
+          // cast: под строгой TS-lib Uint8Array — generic (ArrayBufferLike), а DOM ждёт BufferSource.
+          applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
         }))
       await subscribePush({
         projectId,
