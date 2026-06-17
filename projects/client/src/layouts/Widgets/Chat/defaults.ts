@@ -39,7 +39,7 @@ export const chatWidgetDefaults: ChatWidgetType = {
     enabled: true,
     color: '#9A9A9A',
     agreementUrl: 'lemnity.ru/agreement',
-    policyUrl: 'lemnity.ru/political',
+    policyUrl: 'lemnity.ru/policy',
   },
 
   // «Мобильная версия» — включена по умолчанию; на мобильных лаунчер берётся отсюда.
@@ -65,7 +65,7 @@ export const chatWidgetDefaults: ChatWidgetType = {
   welcomeTitleAlign: 'left',
 
   greetingMessage: 'Здравствуйте! Чем можем помочь?',
-  onlineMessage: 'Операторы онлайн\nОтвечаем в течение 3 мин.',
+  onlineMessage: 'Менеджеры онлайн\nОтвечаем в течение 3 мин.',
   onlineMessageEnabled: true,
   offlineMessage: 'Увы, но сейчас нас здесь нет.\nМы вернемся в рабочее время пн-пт с 09:00 по 19:00 мск',
   offlineMessageEnabled: true,
@@ -169,7 +169,7 @@ export const buildChatDisplaySettings = (): DisplaySettings => {
   return {
     ...base,
     icon: { ...base.icon, position: 'bottom-right' },
-    greetings: ['Здравствуйте', 'Меня зовут (имя оператора)', 'Чем могу помочь?'],
+    greetings: ['Здравствуйте', 'Меня зовут (имя менеджера)', 'Чем могу помочь?'],
   } as DisplaySettings
 }
 export const buildChatIntegrationSettings = (): IntegrationSettings =>

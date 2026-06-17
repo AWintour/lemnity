@@ -1,0 +1,19 @@
+{
+  "name": "Lemnity — кабинет",
+  "short_name": "Lemnity",
+  "description": "Кабинет оператора Lemnity: чаты, заявки, уведомления.",
+  "start_url": "/chat",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5951E5",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

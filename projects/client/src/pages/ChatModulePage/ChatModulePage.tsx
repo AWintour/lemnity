@@ -37,6 +37,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover'
 import FeedbackPopover from '@/components/FeedbackPopover/FeedbackPopover'
 import CustomSwitch from '@/components/CustomSwitch'
 import ChatAiAgentSettings from '@/layouts/Widgets/Chat/ChatAiAgentSettings'
+import NotificationsToggle from './NotificationsToggle'
 import { renderMarkdown } from '@/common/markdownLite'
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 // .sidebar-bg задаёт фон сайдбара/инбокса. Импортируем явно, иначе на роуте /chat-module
@@ -3611,7 +3612,10 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
             )}
             <span className="text-[18px] font-medium truncate">Мои входящие</span>
           </span>
-          <div className="relative">
+          <div className="flex items-center gap-3 shrink-0">
+            {/* В превью (без сети) — визуальный тумблер; в кабинете — реальный web-push. */}
+            <NotificationsToggle projectId={activeProjectId} preview={preview} />
+            <div className="relative">
             <button
               type="button"
               onClick={() => setOpMenuOpen(v => !v)}
@@ -3653,6 +3657,7 @@ const ChatModulePage = ({ preview }: { preview?: boolean }): ReactElement => {
                 </div>
               </>
             )}
+            </div>
           </div>
         </div>
 

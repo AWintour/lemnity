@@ -13,6 +13,7 @@ import {
 import type { Server, Socket } from 'socket.io'
 import { ChatService } from './chat.service'
 import { AiAgentService } from './ai-agent.service'
+import { PushService, actorIdentityKey } from './push.service'
 import { ChatOperatorService } from '../chat-operator/chat-operator.service'
 import type { ChatActor } from './chat-actor.guard'
 import type { ChatMessageEntity } from './entities/chat-message.entity'
@@ -54,8 +55,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(ChatGateway.name)
   // projectId -> множество socketId подключённых менеджеров (presence).
   private readonly onlineManagers = new Map<string, Set<string>>()
+  // projectId -> (identityKey сотрудника -> число активных сокетов). Кто СЕЙЧАС смотрит кабинет —
+  // тому web-push не шлём (см. push при visitor-сообщении).
+  private readonly onlineStaff = new Map<string, Map<string, number>>()
   // conversationId -> когда последний раз показали «бот устал» (троттлинг от спама).
   private readonly tiredAt = new Map<string, number>()
+  // conversationId -> когда последний раз слали web-push (троттлинг от спама на серию сообщений).
+  private readonly pushAt = new Map<string, number>()
 
   /** Не чаще раза в 60с на диалог показываем сообщение «бот устал». */
   private allowTiredMessage(conversationId: string): boolean {
@@ -71,8 +77,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly operators: ChatOperatorService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
-    private readonly ai: AiAgentService
+    private readonly ai: AiAgentService,
+    private readonly push: PushService
   ) {}
+
+  /** Не чаще раза в 20с на диалог шлём web-push (серия сообщений визитёра → один пуш). */
+  private allowPush(conversationId: string): boolean {
+    const now = Date.now()
+    const last = this.pushAt.get(conversationId) ?? 0
+    if (now - last < 20_000) return false
+    this.pushAt.set(conversationId, now)
+    return true
+  }
+
+  /** identityKey'и сотрудников проекта, у кого сейчас открыт кабинет (исключаем из push). */
+  private onlineIdentityKeys(projectId: string): Set<string> {
+    return new Set(this.onlineStaff.get(projectId)?.keys() ?? [])
+  }
 
   async handleConnection(client: Socket) {
     const auth = (client.handshake.auth ?? {}) as Record<string, unknown>
@@ -166,6 +187,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Присоединяет персонал к комнатам менеджеров проектов + presence (виджет видит «оператор онлайн»).
   private joinStaffRooms(client: Socket, projectIds: string[]) {
+    const identityKey = actorIdentityKey((client.data as StaffData).actor)
     for (const projectId of projectIds) {
       void client.join(projManagersRoom(projectId))
       const set = this.onlineManagers.get(projectId) ?? new Set<string>()
@@ -175,6 +197,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!wasOnline) {
         this.server.to(projVisitorsRoom(projectId)).emit('operator:presence', { online: true })
       }
+      // Учёт присутствия по личности (а не по сокету): несколько вкладок одного сотрудника.
+      const staff = this.onlineStaff.get(projectId) ?? new Map<string, number>()
+      staff.set(identityKey, (staff.get(identityKey) ?? 0) + 1)
+      this.onlineStaff.set(projectId, staff)
     }
   }
 
@@ -182,13 +208,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const data = client.data as SocketData | undefined
     if (!data || data.role === 'visitor') return
 
+    const identityKey = actorIdentityKey(data.actor)
     for (const projectId of data.projectIds) {
       const set = this.onlineManagers.get(projectId)
-      if (!set) continue
-      set.delete(client.id)
-      if (set.size === 0) {
-        this.onlineManagers.delete(projectId)
-        this.server.to(projVisitorsRoom(projectId)).emit('operator:presence', { online: false })
+      if (set) {
+        set.delete(client.id)
+        if (set.size === 0) {
+          this.onlineManagers.delete(projectId)
+          this.server.to(projVisitorsRoom(projectId)).emit('operator:presence', { online: false })
+        }
+      }
+      const staff = this.onlineStaff.get(projectId)
+      if (staff) {
+        const next = (staff.get(identityKey) ?? 0) - 1
+        if (next <= 0) staff.delete(identityKey)
+        else staff.set(identityKey, next)
+        if (staff.size === 0) this.onlineStaff.delete(projectId)
       }
     }
   }
@@ -250,6 +285,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         { id: data.conversationId, projectId: data.projectId },
         message
       )
+      // Web-push сотрудникам, кто сейчас НЕ в кабинете (телефон/закрытая вкладка), с троттлингом.
+      // Fire-and-forget: не задерживает ack визитёру; ошибки гасятся внутри notifyProjectStaff.
+      if (this.allowPush(data.conversationId)) {
+        const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? ''
+        const preview = body.trim() || 'Вложение'
+        void this.push.notifyProjectStaff(
+          data.projectId,
+          {
+            title: 'Новое сообщение в чате',
+            body: preview.length > 120 ? `${preview.slice(0, 119)}…` : preview,
+            url: frontendUrl ? `${frontendUrl}/chat` : '/chat',
+            tag: `conv:${data.conversationId}`
+          },
+          this.onlineIdentityKeys(data.projectId)
+        )
+      }
       // ИИ-агент: если включён у виджета и не исчерпана квота — отвечает на сообщение посетителя.
       // Fire-and-forget: не задерживает ack визитёру; ошибки гасятся внутри maybeReply.
       // onTyping → статус «печатает…» у посетителя на время генерации (имитация живого человека).

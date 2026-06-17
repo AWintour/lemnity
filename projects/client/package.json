@@ -6,9 +6,10 @@
   "scripts": {
     "build:workspace-deps": "pnpm -C ../.. --filter @lemnity/api-sdk --filter @lemnity/nest-common --filter @lemnity/widget-config --filter @lemnity/embed-script --if-present run build",
     "sync:embed-script": "pnpm -C ../.. --filter @lemnity/embed-script --if-present run sync:public",
+    "sync:pwa": "mkdir -p public && cp -f pwa/sw.js pwa/manifest.webmanifest pwa/pwa-icon.svg public/",
     "postinstall": "pnpm run build:workspace-deps && pnpm run sync:embed-script",
-    "start:dev": "vite",
-    "build": "tsc -b && vite build",
+    "start:dev": "pnpm run sync:pwa && vite",
+    "build": "pnpm run sync:pwa && tsc -b && vite build",
     "preview": "vite preview",
     "format:fix": "prettier --write . --ignore-path .prettierignore",
     "format": "prettier --check . --ignore-path .prettierignore",

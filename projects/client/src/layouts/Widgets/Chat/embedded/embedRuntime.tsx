@@ -408,7 +408,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     append({
       id: `closed-${uuidv4().slice(0, 6)}`,
       sender: 'system',
-      body: 'Оператор завершил беседу',
+      body: 'Менеджер завершил беседу',
       createdAt: new Date().toISOString(),
     })
   }, [append])
@@ -885,6 +885,7 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
     operatorSubtitle,
     operatorAvatarUrl,
     operatorOnline,
+    aiAgentEnabled,
     operators,
     onlineMessage,
     onlineMessageEnabled,

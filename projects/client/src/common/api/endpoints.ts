@@ -47,7 +47,10 @@ export const API = {
     MESSAGES: (id: string) => `/chat/conversations/${id}/messages` as const,
     AI_USAGE: (widgetId: string) => `/chat/ai-usage?widgetId=${encodeURIComponent(widgetId)}` as const,
     AI_PAGES: (widgetId: string) => `/chat/ai-pages?widgetId=${encodeURIComponent(widgetId)}` as const,
-    SUBSCRIPTION: (widgetId: string) => `/chat/subscription?widgetId=${encodeURIComponent(widgetId)}` as const
+    SUBSCRIPTION: (widgetId: string) => `/chat/subscription?widgetId=${encodeURIComponent(widgetId)}` as const,
+    PUSH_PUBLIC_KEY: '/chat/push/public-key' as const,
+    PUSH_SUBSCRIBE: '/chat/push/subscribe' as const,
+    PUSH_UNSUBSCRIBE: '/chat/push/unsubscribe' as const
   },
   MANAGERS: {
     LIST: (projectId: string) => `/projects/${projectId}/managers` as const,

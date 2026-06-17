@@ -423,6 +423,65 @@ category/note/channel), `ChatConversationEntity` отдаёт visitorPhone/visit
   ВКЛЮЧЁН, но недоступен (квота/ошибка/нет ключа) И нет оператора онлайн — системное «Наш бот устал
   ( Запросов очень много ) Подождите пожалуйста.» (троттлинг 60с на диалог).
 
+## Push-уведомления операторам (Web Push + PWA) (2026-06-17)
+
+Оператор получает **нативный push на телефон/десктоп**, когда его НЕТ в кабинете (вкладка закрыта,
+телефон в кармане). Раньше уведомление было только real-time через socket, пока открыта вкладка.
+Без стороннего провайдера и без мобильного приложения; кабинет дополнительно устанавливается как PWA.
+
+**Prisma** (`models/chat_module.prisma` + back-relation в `projects.prisma`):
+- `OperatorPushSubscription` (projectId, `userId?`|`operatorId?` — личность владельца/оператора,
+  `endpoint @unique`, p256dh, auth, userAgent?). FK на `projects` (ON DELETE CASCADE — авто-очистка).
+- ⚠️ В отличие от прочих командных таблиц чат-модуля (идут через `db push`), эта добавлена
+  **миграцией** `prisma/schema/migrations/20260617000000_add_operator_push_subscriptions/`
+  (идемпотентный SQL, как `add_chat`/`add_ai_agent`) — применится `migrate deploy` на старте.
+  Остальные чат-таблицы (`chat_operators` и т.п.) по-прежнему создаются `db push` — применять схему
+  как обычно (migrate deploy + db push).
+
+**Бэкенд** (`projects/server/src/chat/`):
+- `PushService` (`push.service.ts`): `setVapidDetails` из env, `getPublicKey()`, `saveSubscription`
+  (upsert по endpoint, личность из `ChatActor`), `deleteSubscription`,
+  `notifyProjectStaff(projectId, payload, onlineIdentityKeys)` — резолвит владельца проекта +
+  активных операторов, шлёт `web-push` их подпискам, **исключает онлайн-сотрудников**
+  (`identityKey` = `owner:<userId>`/`op:<operatorId>`), **удаляет протухшие** (404/410). Если VAPID
+  не задан — no-op. Зарегистрирован в `ChatModule`.
+- Эндпоинты в `chat.controller.ts` (под `ChatActorGuard` — владелец ИЛИ оператор; DTO
+  `dto/push-subscribe.dto.ts`): `GET /chat/push/public-key`, `POST /chat/push/subscribe`,
+  `POST /chat/push/unsubscribe`.
+- Триггер в `chat.gateway.ts`: на visitor-`message:send` после `broadcastMessage` — fire-and-forget
+  `notifyProjectStaff` (троттлинг **20с/диалог**). Presence по личности: `onlineStaff`
+  `Map<projectId, Map<identityKey, refcount>>` ведётся в `joinStaffRooms`/`handleDisconnect`
+  (несколько вкладок одного сотрудника). Клик по пушу → `FRONTEND_URL + /chat`.
+- env: `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (`env.example`). Публичный ключ отдаётся
+  клиенту через GET (не зашит в билд). Прод-ключи — в секрет-стор. Зависимость `web-push`.
+
+**Клиент**:
+- Service worker `public/sw.js` (push → `showNotification`; `notificationclick` → фокус существующей
+  вкладки или `openWindow`; **без кэширования** — навигацию не трогает), `public/manifest.webmanifest`
+  + `public/pwa-icon.svg`, линки manifest/theme-color/apple-touch в `index.html`.
+- Хук `common/push/useWebPush.ts`: регистрация SW, `Notification.requestPermission`, `pushManager.subscribe`
+  (`applicationServerKey` из public-key), POST подписки; статусы `unsupported|denied|off|on|loading`;
+  диагностика в консоль `[web-push] …`. Сервис `services/push.ts` + блок `CHAT.PUSH_*` в `endpoints.ts`.
+- Тумблер-колокольчик `pages/ChatModulePage/NotificationsToggle.tsx` рядом со статусом оператора:
+  **выкл = серый зачёркнутый, вкл = синий**. В **превью** (без сети) — визуальный тумблер; в кабинете —
+  реальный web-push. На неподдерживаемых браузерах скрыт.
+
+**iOS**: web-push работает только в установленной на «Домой» PWA (в обычной вкладке Safari `PushManager`
+недоступен → тумблер скрывается).
+
+**Верификация (2026-06-17)** — на реальном поднятом стеке (одноразовый Postgres):
+- Миграция применяется и идемпотентна; таблица/индексы/`@unique`/FK-cascade корректны.
+- Прямой прогон реального `PushService`: доставка оператору ✅, исключение онлайн-сотрудника ✅,
+  удаление протухшей (410) подписки ✅ (реальная отправка `web-push` в локальный HTTPS-приёмник).
+- Реальный сервер (`node dist/main`) + HTTP-эндпоинты с JWT: 401 без токена ✅, public-key ✅,
+  subscribe → строка в БД ✅, unsubscribe → удаление ✅, плохое тело → 400 ✅.
+- `tsc -b`/`lint`/client+server build — зелёные.
+- ⚠️ Браузерный `pushManager.subscribe` против FCM в headless-Chromium не воспроизводится (нет
+  push-сервиса) — подтверждается только на живом браузере против запущенного сервера.
+
+**Включение**: VAPID-ключи в env сервера → перезапуск → реальный кабинет (не `/preview/`) → колокольчик
+→ разрешить уведомления в браузере.
+
 ## Деплой
 
 Прод-деплой — push в `main` → GitHub Actions (`.github/workflows/CI-CD.yml`): сборка образов →

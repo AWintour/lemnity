@@ -18,6 +18,8 @@ import { ChatSubscriptionService } from '../lemnity/chat-subscription.service'
 import { chatPlanFeatures } from '../lemnity/chat-entitlement'
 import { ChatSubscriptionEntity } from './entities/chat-subscription.entity'
 import { ChatGateway } from './chat.gateway'
+import { PushService } from './push.service'
+import { PushSubscribeDto, PushUnsubscribeDto } from './dto/push-subscribe.dto'
 import { ChatActorGuard, ChatActorParam, type ChatActor } from './chat-actor.guard'
 import { ListConversationsDto } from './dto/list-conversations.dto'
 import { SendMessageDto } from './dto/send-message.dto'
@@ -41,8 +43,37 @@ export class ChatController {
     private readonly chat: ChatService,
     private readonly ai: AiAgentService,
     private readonly chatSub: ChatSubscriptionService,
-    private readonly gateway: ChatGateway
+    private readonly gateway: ChatGateway,
+    private readonly push: PushService
   ) {}
+
+  // Публичный VAPID-ключ для подписки на web-push в кабинете (null — push не настроен на сервере).
+  @Get('push/public-key')
+  publicKey(): { publicKey: string | null } {
+    return { publicKey: this.push.getPublicKey() }
+  }
+
+  // Подписать текущего сотрудника (владелец/оператор) на push-уведомления о новых сообщениях.
+  @Post('push/subscribe')
+  async pushSubscribe(
+    @ChatActorParam() actor: ChatActor,
+    @Body() dto: PushSubscribeDto
+  ): Promise<{ ok: true }> {
+    await this.push.saveSubscription(actor, dto.projectId, {
+      endpoint: dto.endpoint,
+      p256dh: dto.p256dh,
+      auth: dto.auth,
+      userAgent: dto.userAgent
+    })
+    return { ok: true }
+  }
+
+  // Отписать устройство (выключили уведомления / разлогин).
+  @Post('push/unsubscribe')
+  async pushUnsubscribe(@Body() dto: PushUnsubscribeDto): Promise<{ ok: true }> {
+    await this.push.deleteSubscription(dto.endpoint)
+    return { ok: true }
+  }
 
   // Статистика месячной квоты ИИ-агента по чат-виджету (для раздела «Ассистент»).
   @Get('ai-usage')

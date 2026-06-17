@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma.service'
 import { ChatService } from './chat.service'
 import { AiAgentService } from './ai-agent.service'
 import { SiteKnowledgeService } from './site-knowledge.service'
+import { PushService } from './push.service'
 import { ChatGateway } from './chat.gateway'
 import { ChatController } from './chat.controller'
 import { PublicChatController } from './public-chat.controller'
@@ -20,6 +21,7 @@ import { S3Service } from '../storage/s3.service'
     ChatService,
     AiAgentService,
     SiteKnowledgeService,
+    PushService,
     ChatGateway,
     ChatActorGuard,
     PrismaService,

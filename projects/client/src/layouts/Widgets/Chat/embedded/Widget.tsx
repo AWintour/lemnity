@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, type Transition } from 'framer-motion'
 import { PatternFormat } from 'react-number-format'
 import { cn } from '@heroui/theme'
 
 import EmojiPicker from '@/components/EmojiPicker'
 import { renderMarkdown } from '@/common/markdownLite'
+import { CONSENT_PREFIX, CONSENT_AGREEMENT_LABEL, CONSENT_MIDDLE, CONSENT_POLICY_LABEL } from '@/common/consentText'
 import { FAB_MENU_ICON_OPTIONS, FAB_MENU_BUTTON_PRESETS } from '@/layouts/Widgets/FABMenu/buttonLibrary'
 import type { FABMenuIconKey } from '@/layouts/Widgets/FABMenu/types'
 import type { ChatUiMessage } from './types'
@@ -34,6 +35,9 @@ type WidgetProps = {
   operatorSubtitle?: string
   operatorAvatarUrl?: string
   operatorOnline: boolean
+  // ИИ-агент включён у виджета: при отсутствии онлайн-оператора диалог ведёт ассистент (живой),
+  // а не «оставьте сообщение». Влияет на личность в шапке и тип поля ввода.
+  aiAgentEnabled: boolean
   // Реальные операторы проекта (из чат-модуля) — подтягиваются в шапку.
   operators: OperatorInfo[]
   onlineMessage: string
@@ -112,6 +116,35 @@ const formatTime = (iso: string) => {
     return ''
   }
 }
+
+// Календарный день сообщения (локальный) — для разделителя-даты в ленте. Пусто для seed/epoch.
+const dayKey = (iso: string) => {
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime()) || d.getTime() === 0) return ''
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+  } catch {
+    return ''
+  }
+}
+
+// Подпись разделителя: «Сегодня» / «Вчера» / «17 июня». Чтобы «11:48» из прошлой сессии
+// не читалось как «ответили только что» рядом с живыми сообщениями.
+const formatDayLabel = (iso: string) => {
+  const d = new Date(iso)
+  const now = new Date()
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const days = Math.round((startOf(now) - startOf(d)) / 86_400_000)
+  if (days === 0) return 'Сегодня'
+  if (days === 1) return 'Вчера'
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+}
+
+const DayDivider = ({ label }: { label: string }) => (
+  <div className="flex justify-center py-1">
+    <span className="px-3 py-0.5 rounded-full bg-[#EFEFF2] text-[12px] leading-4 text-[#8E8B97]">{label}</span>
+  </div>
+)
 
 /* ----------------------------- inline icons ----------------------------- */
 
@@ -593,7 +626,7 @@ const TypingBubble = () => (
 const OperatorTypingBubble = () => (
   <div className="w-full flex items-start">
     <div className="bg-[#F4F2FC] rounded-[16px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2">
-      <span className="text-[13px] text-[#7A7785]">Оператор набирает текст</span>
+      <span className="text-[13px] text-[#7A7785]">Менеджер набирает текст</span>
       <span className="flex items-center gap-1">
         {[0, 1, 2].map(i => (
           <span
@@ -945,10 +978,10 @@ const ConsentRow = ({
         )}
       </button>
       <span className="text-[13px] leading-[1.45]" style={{ color: agreement.color }}>
-        Я даю{' '}
-        <a href={href(agreement.agreementUrl)} target="_blank" rel="noreferrer" className="underline">согласие</a>
-        {' '}на{' '}
-        <a href={href(agreement.policyUrl)} target="_blank" rel="noreferrer" className="underline">обработку персональных данных</a>
+        {CONSENT_PREFIX}
+        <a href={href(agreement.agreementUrl)} target="_blank" rel="noreferrer" className="underline">{CONSENT_AGREEMENT_LABEL}</a>
+        {CONSENT_MIDDLE}
+        <a href={href(agreement.policyUrl)} target="_blank" rel="noreferrer" className="underline">{CONSENT_POLICY_LABEL}</a>
       </span>
     </div>
   )
@@ -1024,10 +1057,11 @@ const Widget = (props: WidgetProps) => {
 
   const accent = props.windowAccentColor
 
-  // Шапка: подтягиваем реальных операторов проекта. Главный = первый онлайн (иначе первый);
-  // имя/роль/аватар берём у него, иначе — значения из конфига.
+  // Шапка показывает РЕАЛЬНОГО отвечающего: главный = первый ОНЛАЙН-оператор; если онлайн-операторов
+  // нет — личность ассистента/бота (имя/аватар из конфига, при включённом ИИ — имя агента), а не
+  // оффлайн-человек с красной точкой (иначе имя «застывает», а индикатор мигает зелёный→красный).
   const onlineOperators = props.operators.filter(o => o.online)
-  const primaryOperator = onlineOperators[0] ?? props.operators[0]
+  const primaryOperator = onlineOperators[0]
   const headerName = primaryOperator?.name ?? props.operatorName
   const headerSubtitle = primaryOperator?.role ?? props.operatorSubtitle
   // Аватар: фото оператора → его инициал (единый фолбэк, в т.ч. если фото не загрузилось) → конфиг → бот.
@@ -1035,6 +1069,9 @@ const Widget = (props: WidgetProps) => {
   const headerAvatarInitial = primaryOperator
     ? (primaryOperator.name || '?').charAt(0).toUpperCase()
     : undefined
+  // Индикатор: зелёный, когда отвечает живой оператор ИЛИ активен ИИ-ассистент (он всегда «онлайн»);
+  // красный только в честном офлайне (нет ни оператора, ни ИИ — режим «оставьте сообщение»).
+  const headerOnline = !!primaryOperator || props.aiAgentEnabled
   const showQuickReplies = props.quickReplies.length > 0
 
   const isSidebar = props.windowFormat === 'sidebar' && !props.mobile
@@ -1044,6 +1081,70 @@ const Widget = (props: WidgetProps) => {
     : undefined
 
   const sidebarSide = props.sidebarSide ?? 'right'
+
+  // Единое поле свободного ввода (живой оператор ИЛИ ИИ-ассистент): одинаковый плейсхолдер,
+  // рамка и панель вложение/эмодзи — чтобы поле не выглядело по-разному в разных состояниях.
+  const activeInput = (
+    <>
+      {props.agreement && (
+        <ConsentRow agreement={props.agreement} agreed={agreed} onToggle={() => setAgreed(a => !a)} />
+      )}
+      <form onSubmit={handleSubmit} className="shrink-0 px-4 pt-2">
+        <div className="flex items-end gap-2 border-t border-[#EFEFF2] pt-3">
+          <textarea
+            ref={messageInputRef}
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => {
+              // Enter — отправка; Shift+Enter — перенос строки.
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                if (consentBlocked) return
+                submit(draft)
+                setDraft('')
+              }
+            }}
+            disabled={props.disabled}
+            placeholder={props.placeholder}
+            rows={1}
+            className="flex-1 resize-none max-h-18 overflow-y-auto text-[17px] leading-6 text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
+          />
+          <button
+            type="submit"
+            disabled={props.disabled || draft.trim().length === 0 || consentBlocked}
+            className="shrink-0 p-1 pb-0.5 disabled:opacity-40"
+            aria-label="Отправить"
+          >
+            <IconSend color="#8E8B97" />
+          </button>
+        </div>
+      </form>
+
+      <div className="shrink-0 px-4 py-3 flex items-center gap-6">
+        {/* Скрытый input — открывается кнопками «+» и «скрепка». */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={e => {
+            const file = e.target.files?.[0]
+            if (file) props.onAttach?.(file)
+            e.target.value = ''
+          }}
+        />
+        <button
+          type="button"
+          aria-label="Вложение"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <IconClip color="#8E8B97" />
+        </button>
+        <EmojiPicker onPick={em => setDraft(d => d + em)}>
+          <IconEmoji color="#8E8B97" />
+        </EmojiPicker>
+      </div>
+    </>
+  )
 
   return (
     <AnimatePresence>
@@ -1135,7 +1236,7 @@ const Widget = (props: WidgetProps) => {
                   operatorSubtitle={headerSubtitle}
                   operatorAvatarUrl={headerAvatarUrl ?? undefined}
                   avatarInitial={headerAvatarInitial}
-                  operatorOnline={props.operatorOnline}
+                  operatorOnline={headerOnline}
                   canGoBack={props.canGoBack}
                   showClose={false}
                   onBack={props.onBack}
@@ -1213,9 +1314,17 @@ const Widget = (props: WidgetProps) => {
               className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3"
             >
               {/* Лента сообщений — только на экране чата (первый экран показывает только кнопки) */}
-              {props.view === 'chat' && props.messages.map(message => (
-                <MessageBubble key={message.id} message={message} clientColor={props.clientColor} />
-              ))}
+              {props.view === 'chat' && props.messages.map((message, i) => {
+                const dk = dayKey(message.createdAt)
+                const prevDk = i > 0 ? dayKey(props.messages[i - 1].createdAt) : ''
+                const showDivider = !!dk && dk !== prevDk && prevDk !== ''
+                return (
+                  <Fragment key={message.id}>
+                    {showDivider && <DayDivider label={formatDayLabel(message.createdAt)} />}
+                    <MessageBubble message={message} clientColor={props.clientColor} />
+                  </Fragment>
+                )
+              })}
 
               {/* Бот «печатает…» перед авто-переходом к следующему шагу. */}
               {props.view === 'chat' && props.typing && <TypingBubble />}
@@ -1289,65 +1398,7 @@ const Widget = (props: WidgetProps) => {
                 </button>
               </div>
             ) : props.chatActive ? (
-              <>
-                {props.agreement && (
-                  <ConsentRow agreement={props.agreement} agreed={agreed} onToggle={() => setAgreed(a => !a)} />
-                )}
-                <form onSubmit={handleSubmit} className="shrink-0 px-4 pt-2">
-                  <div className="flex items-end gap-2 border-t border-[#EFEFF2] pt-3">
-                    <textarea
-                      ref={messageInputRef}
-                      value={draft}
-                      onChange={e => setDraft(e.target.value)}
-                      onKeyDown={e => {
-                        // Enter — отправка; Shift+Enter — перенос строки.
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault()
-                          if (consentBlocked) return
-                          submit(draft)
-                          setDraft('')
-                        }
-                      }}
-                      disabled={props.disabled}
-                      placeholder={props.placeholder}
-                      rows={1}
-                      className="flex-1 resize-none max-h-18 overflow-y-auto text-[17px] leading-6 text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
-                    />
-                    <button
-                      type="submit"
-                      disabled={props.disabled || draft.trim().length === 0 || consentBlocked}
-                      className="shrink-0 p-1 pb-0.5 disabled:opacity-40"
-                      aria-label="Отправить"
-                    >
-                      <IconSend color="#8E8B97" />
-                    </button>
-                  </div>
-                </form>
-
-                <div className="shrink-0 px-4 py-3 flex items-center gap-6">
-                  {/* Скрытый input — открывается кнопками «+» и «скрепка». */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) props.onAttach?.(file)
-                      e.target.value = ''
-                    }}
-                  />
-                  <button
-                    type="button"
-                    aria-label="Вложение"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <IconClip color="#8E8B97" />
-                  </button>
-                  <EmojiPicker onPick={em => setDraft(d => d + em)}>
-                    <IconEmoji color="#8E8B97" />
-                  </EmojiPicker>
-                </div>
-              </>
+              activeInput
             ) : props.operatorOnline ? (
               // «Войти в чат» — только если в текущем шаге сценария нет кнопки-перехода к оператору
               // (если есть хэндоф-кнопка, посетитель идёт к оператору через неё — кнопку не дублируем).
@@ -1359,10 +1410,14 @@ const Widget = (props: WidgetProps) => {
                     className="w-full h-12 rounded-[12px] text-white text-[16px] font-medium"
                     style={{ backgroundColor: accent }}
                   >
-                    Войти в чат
+                    Написать менеджеру
                   </button>
                 </div>
               )
+            ) : props.aiAgentEnabled ? (
+              // Оператора онлайн нет, но включён ИИ-ассистент — он ведёт живой диалог.
+              // Показываем то же поле ввода, а не терминальное «оставьте сообщение».
+              activeInput
             ) : props.offlineSent ? (
               <div className="shrink-0 px-4 pt-2 pb-3">
                 <div
@@ -1402,7 +1457,7 @@ const Widget = (props: WidgetProps) => {
                       }
                     }}
                     disabled={props.disabled}
-                    placeholder="Сообщение"
+                    placeholder={props.placeholder}
                     rows={1}
                     className="flex-1 resize-none max-h-18 overflow-y-auto text-[16px] leading-6 text-[#1A1A1A] placeholder:text-[#B6B3BE] outline-none bg-transparent"
                   />

@@ -19,8 +19,6 @@ const inputStyles = {
 const agreementTitle = 'Согласие и политика'
 const advertisementTitle = 'Рекламная информация'
 
-const agreementDisclaimer = 'Я даю Согласие на обработку персональных данных \
-в соотвествии с Политикой конфиденциальности'
 const advertisementDisclaimer = 'Нажимая на кнопку, вы даёте своё согласие \
 на получение рекламно-информационной рассылки.'
 
@@ -63,32 +61,35 @@ const AgreementAndPolicy = (props: AgreementAndPolicyProps) => {
         ref={containerDivRef}
         className="flex flex-col gap-2.5 @container"
       >
-        <div
-          className="flex flex-row gap-2.5 flex-wrap @min-[467px]:flex-nowrap"
-        >
-          <span
-            className={cn(
-              'w-full min-h-12.75 px-2.5 flex items-center',
-              'border bg-white border-[#E8E8E8] rounded-[5px]',
-              'text-[13px] text-[#AFAFAF]',
-            )}
+        {/* Подсказка-превью текста + выбор цвета — только для «Рекламной информации».
+            В «Согласие и политика» этот ряд убран по требованию: текст фиксирован,
+            цвет берётся из дефолта. */}
+        {props.variant === 'advertisement' && (
+          <div
+            className="flex flex-row gap-2.5 flex-wrap @min-[467px]:flex-nowrap"
           >
-            {props.variant === 'agreement'
-              ? agreementDisclaimer
-              : advertisementDisclaimer}
-          </span>
+            <span
+              className={cn(
+                'w-full min-h-12.75 px-2.5 flex items-center',
+                'border bg-white border-[#E8E8E8] rounded-[5px]',
+                'text-[13px] text-[#AFAFAF]',
+              )}
+            >
+              {advertisementDisclaimer}
+            </span>
 
-          <ColorPicker
-            popoverPlacement='bottom-end'
-            triggerText={
-              containerWidth < 467
-                ? 'Цвет текста'
-                : undefined
-            }
-            initialColor={props.agreement.color}
-            onColorChange={props.onFontColorChange}
-          />
-        </div>
+            <ColorPicker
+              popoverPlacement='bottom-end'
+              triggerText={
+                containerWidth < 467
+                  ? 'Цвет текста'
+                  : undefined
+              }
+              initialColor={props.agreement.color}
+              onColorChange={props.onFontColorChange}
+            />
+          </div>
+        )}
 
         {props.variant === 'agreement' && <>
           <span className="text-lg font-normal">URL согласие</span>
