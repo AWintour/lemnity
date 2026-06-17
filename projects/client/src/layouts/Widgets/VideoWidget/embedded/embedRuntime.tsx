@@ -12,6 +12,8 @@ import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 
 import { MobileProvider } from './MobileContext'
 
+import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widget'
+
 export type Rect = {
   width: number
   height: number
@@ -24,6 +26,9 @@ type EmbedRuntimeProps = {
 export const VideoWidgetEmbedRuntime = (props: EmbedRuntimeProps) => {
   const widgetId = useWidgetSettingsStore(s => s.settings?.id)
   const projectId = useWidgetSettingsStore(s => s.projectId)
+  const mobileEnabled = useWidgetSettingsStore(
+    s => (s.settings?.widget as VideoWidgetType | undefined)?.mobileSettings.mobileEnabled ?? true
+  )
 
   const [focused, setFocused] = useState(false)
   const isMobile = useIsMobileViewport()
@@ -72,6 +77,12 @@ export const VideoWidgetEmbedRuntime = (props: EmbedRuntimeProps) => {
   }
 
   const widgetRef = useRef<HTMLDivElement | null>(null)
+
+  // Виджет показывается на мобильных устройствах только если включена
+  // настройка «Мобильная версия». В превью настроек показываем всегда.
+  if (isMobile && !mobileEnabled && !props.isPreview) {
+    return null
+  }
 
   return (
     <>
