@@ -1,67 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
 import { WidgetTypeEnum } from '@lemnity/api-sdk'
-import styles from './embed.css?inline'
-import { getWidgetDefinition } from '@/layouts/Widgets/registry'
-import { FABMenuEmbedRuntime } from '@/layouts/Widgets/FABMenu/embedRuntime'
-import { WheelEmbedRuntime } from '@/layouts/Widgets/WheelOfFortune/embedRuntime'
-import { ConveyorEmbedRuntime } from '@/layouts/Widgets/ConveyorOfLuck/embedRuntime'
-import { ActionTimerEmbedRuntime } from '@/layouts/Widgets/CountDown/embedRuntime'
-import { CountdownAnnouncementEmbedRuntime } from '@/layouts/Widgets/Announcement/embedded'
-import EventTimerEmbedRuntime from '@/layouts/Widgets/EventTimer/embedded/embedRuntime'
-import NotificationEmbedRuntime from '@/layouts/Widgets/Notification/embedded/embedRuntime'
-import { VideoWidgetEmbedRuntime } from '@/layouts/Widgets/VideoWidget/embedded'
-import { CallbackEmbedRuntime } from '@/layouts/Widgets/Callback/embedded'
-import ChatEmbedRuntime from '@/layouts/Widgets/Chat/embedded/embedRuntime'
-import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 import type { InitOptions } from './types'
-import { ensureContainer, ensureElement, fetchPublicWidget } from './utils'
-import { HeroUIProvider } from '@heroui/system'
-import { ModalPortalProvider } from '@/components/Modal/Modal'
-import { UNSAFE_PortalProvider } from '@react-aria/overlays'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { LemnityInnerPayload } from './mountInline'
+import { ensureContainer, fetchPublicWidget, getEmbedBundleUrl } from './utils'
 
-const EmbedRuntime = ({ widgetType }: { widgetType: WidgetTypeEnum }) => {
-  switch (widgetType) {
-    case WidgetTypeEnum.FAB_MENU:
-      return <FABMenuEmbedRuntime />
-    case WidgetTypeEnum.WHEEL_OF_FORTUNE:
-      return <WheelEmbedRuntime />
-    // «Конвейер Удачи» — клон колеса с барабаном вместо круга, свой embed-раннер.
-    case WidgetTypeEnum.CONVEYOR_OF_LUCK:
-      return <ConveyorEmbedRuntime />
-    case WidgetTypeEnum.ACTION_TIMER:
-      return <ActionTimerEmbedRuntime />
-    case WidgetTypeEnum.ANNOUNCEMENT:
-      return <CountdownAnnouncementEmbedRuntime />
-    case WidgetTypeEnum.EVENT_TIMER:
-      return <EventTimerEmbedRuntime />
-    case WidgetTypeEnum.NOTIFICATION:
-      return <NotificationEmbedRuntime />
-    case WidgetTypeEnum.VIDEO_WIDGET:
-      return <VideoWidgetEmbedRuntime />
-    case WidgetTypeEnum.CALLBACK:
-      return <CallbackEmbedRuntime />
-    case WidgetTypeEnum.CHAT:
-      return <ChatEmbedRuntime />
-    default:
-      return <EmbeddedWidget widgetType={widgetType} />
-  }
-}
-
-export const EmbeddedWidget = ({
-  widgetType
-}: {
-  widgetType: WidgetTypeEnum
-}) => {
-  const definition = getWidgetDefinition(widgetType)
-  const PanelComponent = definition?.preview?.panel
-  if (!PanelComponent) return null
-  return <PanelComponent mode="desktop"/>
-}
+// Конфиг виджета сериализуется в srcdoc как `window.__lemnityInner`. Экранируем `<`,
+// чтобы значения конфига не могли закрыть тег <script> внутри srcdoc.
+const serializeInner = (payload: LemnityInnerPayload): string =>
+  JSON.stringify(payload).replace(/</g, '\\u003c')
 
 class EmbedManager {
-  private root: Root | null = null
   private container: HTMLElement | null = null
   private widgetId: string | null = null
   private iframe: HTMLIFrameElement | null = null
@@ -70,8 +17,7 @@ class EmbedManager {
   private lastClipPath: string | null = null
   private hasVisualViewportListeners = false
   private resizeRaf = 0
-  private queryClient = new QueryClient()
-  
+
   private getViewportMetrics() {
     const vv = window.visualViewport
     const scale = vv?.scale ?? 1
@@ -111,12 +57,6 @@ class EmbedManager {
   }
 
   private handleMessage = (event: MessageEvent) => {
-    // if (event.data?.scope?.startsWith('lemnity')) {
-    //   console.table('[EmbedManager]', event.data?.rect)
-    //   console.trace()
-    //   console.log('///////////////////////////////////////////')
-    // }
-
     const scopeOk =
       event.data
       && typeof event.data === 'object'
@@ -232,8 +172,6 @@ class EmbedManager {
       const widgetType = (payload.config.widgetType as WidgetTypeEnum | undefined) ?? payload.type
       if (!widgetType) throw new Error('Widget type is missing')
 
-      useWidgetSettingsStore.getState().init(widgetId, widgetType, payload.projectId, payload.config)
-
       const container = ensureContainer(widgetId)
       const iframe = document.createElement('iframe')
       iframe.setAttribute('data-lemnity-embed-frame', 'true')
@@ -249,7 +187,18 @@ class EmbedManager {
         zIndex: '2147483001',
         pointerEvents: 'auto'
       })
-      
+
+      // Каждый виджет грузит бандл ВНУТРИ своего iframe (свой JS-реалм → свои синглтон-сторы),
+      // поэтому конфиги виджетов одного проекта больше не затирают друг друга в общем сторе и
+      // несколько виджетов отображаются одновременно. Конфиг прокидываем как window.__lemnityInner.
+      const inner: LemnityInnerPayload = {
+        widgetId,
+        widgetType,
+        projectId: payload.projectId,
+        config: payload.config
+      }
+      const bundleUrl = getEmbedBundleUrl()
+
       iframe.srcdoc = `<!DOCTYPE html>
         <html>
         <head>
@@ -426,7 +375,7 @@ class EmbedManager {
 
                 const announcement = document.querySelector('[data-lemnity-announcement]')
                 const isAnnouncement = !!announcement
-              
+
                 if (!isNotification && !isAnnouncement) {
                   schedule()
                   return
@@ -492,6 +441,8 @@ class EmbedManager {
               schedule()
             })();
           </script>
+          <script>window.__lemnityInner = ${serializeInner(inner)};</script>
+          <script type="module" src="${bundleUrl}"></script>
         </body>
         </html>`
 
@@ -501,9 +452,6 @@ class EmbedManager {
       await new Promise<void>(resolve => {
         iframe.onload = () => resolve()
       })
-
-      const iframeDoc = iframe.contentDocument
-      if (!iframeDoc) throw new Error('Iframe document is not accessible')
 
       window.addEventListener('message', this.handleMessage)
       window.addEventListener('resize', this.handleResize, { passive: true })
@@ -521,51 +469,6 @@ class EmbedManager {
         window.visualViewport.addEventListener('scroll', this.handleResize, { passive: true })
       }
 
-
-      const target = iframeDoc.body
-
-      const styleTag = ensureElement(iframeDoc.head, 'style[data-lemnity-embed]', (doc: Document) => {
-        const el = doc.createElement('style')
-        el.setAttribute('data-lemnity-embed', 'true')
-        el.textContent = styles
-        return el
-      })
-      void styleTag
-
-      const themeRoot = ensureElement(target, '#lemnity-theme-root', (doc: Document) => {
-        const div = doc.createElement('div')
-        div.id = 'lemnity-theme-root'
-        return div
-      })
-
-      const mountNode = ensureElement(themeRoot, '.lemnity-embed-root', (doc: Document) => {
-        const div = doc.createElement('div')
-        div.className = 'lemnity-embed-root'
-        return div
-      })
-
-      const modalPortalRoot = ensureElement(themeRoot, '#lemnity-modal-root', (doc: Document) => {
-        const div = doc.createElement('div')
-        div.id = 'lemnity-modal-root'
-        return div
-      })
-
-      const root = createRoot(mountNode)
-      root.render(
-        <StrictMode>
-          <UNSAFE_PortalProvider getContainer={() => modalPortalRoot}>
-            <ModalPortalProvider value={modalPortalRoot}>
-              <HeroUIProvider>
-                <QueryClientProvider client={this.queryClient}>
-                  <EmbedRuntime widgetType={widgetType} />
-                </QueryClientProvider>
-              </HeroUIProvider>
-            </ModalPortalProvider>
-          </UNSAFE_PortalProvider>
-        </StrictMode>
-      )
-
-      this.root = root
       this.widgetId = widgetId
       reg.__lemnityMounted[widgetId] = this
     } catch (error) {
@@ -582,9 +485,7 @@ class EmbedManager {
       }
     }
     cancelAnimationFrame(this.resizeRaf)
-    if (this.root) {
-      this.root.unmount()
-    }
+    // Виджет живёт ВНУТРИ iframe — снос iframe уничтожает его React-дерево и стор вместе с реалмом.
     if (this.container) {
       if (this.container.parentElement) {
         this.container.parentElement.removeChild(this.container)
@@ -596,8 +497,6 @@ class EmbedManager {
       window.visualViewport.removeEventListener('resize', this.handleResize)
       window.visualViewport.removeEventListener('scroll', this.handleResize)
     }
-    useWidgetSettingsStore.getState().reset()
-    this.root = null
     this.container = null
     this.widgetId = null
     this.iframe = null

@@ -1,5 +1,6 @@
 import type { InitOptions } from './types'
 import EmbedManager from './embedManager'
+import { mountInline, type LemnityInnerPayload } from './mountInline'
 import { collectEmbedProjectIds, collectEmbedWidgetIds, fetchPublicProjectWidgets } from './utils'
 
 // По одному менеджеру на widgetId: один EmbedManager хостит ровно один виджет
@@ -58,6 +59,15 @@ const autoInitFromQuery = () => {
 }
 
 const bootstrap = () => {
+  // «Внутренний» реалм: бандл загружен ВНУТРИ srcdoc-iframe конкретного виджета
+  // (EmbedManager положил конфиг в window.__lemnityInner). Монтируем ровно один виджет
+  // в это окно и выходим — никакого autoInit/проектного скана здесь быть не должно.
+  const inner = (window as unknown as { __lemnityInner?: LemnityInnerPayload }).__lemnityInner
+  if (inner) {
+    mountInline(inner)
+    return
+  }
+
   const w = window as unknown as typeof window & {
     LemnityWidgets?: {
       init?: (options: InitOptions) => Promise<void>

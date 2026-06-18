@@ -31,6 +31,26 @@ export const getApiBase = () => {
   return 'https://app.lemnity.ru/api'
 }
 
+/**
+ * Абсолютный URL бандла embed.js (без query). Нужен, чтобы загрузить бандл ВНУТРЬ
+ * srcdoc-iframe каждого виджета — так каждый виджет исполняется в собственном JS-реалме
+ * со своими синглтон-сторами (см. mountInline). Берём из тега на странице партнёра,
+ * с фолбэком на прод/локальный origin.
+ */
+export const getEmbedBundleUrl = (): string => {
+  const script = findEmbedScript()
+  if (script?.src) {
+    try {
+      const u = new URL(script.src)
+      u.search = ''
+      return u.toString()
+    } catch {
+      // ignore parse errors
+    }
+  }
+  return isLocalEnv() ? `${getWindowOrigin()}/embed.js` : 'https://app.lemnity.ru/embed.js'
+}
+
 export const findEmbedScript = () => {
   if (typeof document === 'undefined') return null
   const scripts = [
