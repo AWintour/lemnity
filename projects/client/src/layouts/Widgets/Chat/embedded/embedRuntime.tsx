@@ -27,6 +27,7 @@ import messageSoundUrl from '@/assets/zvuk-chat.mp3'
 
 import type { ChatWidgetType, Position, Scenario } from '@lemnity/widget-config/widgets/chat'
 import { chatWidgetDefaults as defaults } from '../defaults'
+import { resolveChatTriggerPosition } from '../resolveTriggerPosition'
 import type { ChatUiMessage } from './types'
 import type { QuickReply } from './Widget'
 import { exportChatToPdf } from './exportPdf'
@@ -239,11 +240,10 @@ const ChatEmbedRuntime = (props: ChatEmbedRuntimeProps) => {
   )
 
   // Позиция лаунчера: вкладка «Отображение» (display.icon.position) перекрывает «Настройку виджета».
-  // Chat поддерживает только bottom-left/right; top-right сводим к bottom-right.
-  const triggerPosition: Position =
-    displayPosition === 'bottom-left' ? 'bottom-left'
-      : displayPosition === 'bottom-right' || displayPosition === 'top-right' ? 'bottom-right'
-      : widgetTriggerPosition
+  const triggerPosition: Position = resolveChatTriggerPosition(
+    displayPosition,
+    widgetTriggerPosition,
+  )
 
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatUiMessage[]>([])

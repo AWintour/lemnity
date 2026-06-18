@@ -8,6 +8,7 @@ import useWidgetSettingsStore from '@/stores/widgetSettingsStore'
 
 import type { ChatWidgetType } from '@lemnity/widget-config/widgets/chat'
 import { chatWidgetDefaults as defaults } from './defaults'
+import { resolveChatTriggerPosition } from './resolveTriggerPosition'
 
 type FloatingPreviewProps = {
   onClose: () => void
@@ -19,8 +20,13 @@ const ChatFloatingPreview = ({ onClose }: FloatingPreviewProps) => {
   const { triggerPosition, windowFormat } = useWidgetSettingsStore(
     useShallow(s => {
       const settings = (s.settings?.widget as ChatWidgetType)
+      const displayPosition = (s.settings?.display as { icon?: { position?: 'bottom-left' | 'top-right' | 'bottom-right' } } | undefined)?.icon?.position
       return {
-        triggerPosition: settings.triggerPosition ?? defaults.triggerPosition,
+        // «Отображение» (display.icon.position) перекрывает «Настройку виджета» — как в embedRuntime.
+        triggerPosition: resolveChatTriggerPosition(
+          displayPosition,
+          settings.triggerPosition ?? defaults.triggerPosition,
+        ),
         windowFormat: settings.windowFormat ?? defaults.windowFormat,
       }
     })

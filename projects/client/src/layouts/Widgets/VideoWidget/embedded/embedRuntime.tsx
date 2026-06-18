@@ -13,6 +13,7 @@ import { useIsMobileViewport } from '@/hooks/useIsMobileViewport'
 import { MobileProvider } from '@/components/announcement/MobileContext'
 
 import type { VideoWidgetType } from '@lemnity/widget-config/widgets/video-widget'
+import { videoWidgetDefaults } from '../defaults'
 
 export type Rect = {
   width: number
@@ -28,6 +29,11 @@ export const VideoWidgetEmbedRuntime = (props: EmbedRuntimeProps) => {
   const projectId = useWidgetSettingsStore(s => s.projectId)
   const mobileEnabled = useWidgetSettingsStore(
     s => (s.settings?.widget as VideoWidgetType | undefined)?.mobileSettings.mobileEnabled ?? true
+  )
+  // Расположение виджета на странице («Положение виджета» в настройках).
+  const position = useWidgetSettingsStore(
+    s => (s.settings?.widget as VideoWidgetType | undefined)?.appearence.position
+      ?? videoWidgetDefaults.appearence.position
   )
 
   const [focused, setFocused] = useState(false)
@@ -68,7 +74,9 @@ export const VideoWidgetEmbedRuntime = (props: EmbedRuntimeProps) => {
       type: 'interactive-region',
       lock: false,
       rect: {
-        left: window.innerWidth - rect.width - offset,
+        left: position === 'bottom-left'
+          ? offset
+          : window.innerWidth - rect.width - offset,
         top: window.innerHeight - rect.height - offset,
         width: rect.width,
         height: rect.height,
@@ -101,6 +109,7 @@ export const VideoWidgetEmbedRuntime = (props: EmbedRuntimeProps) => {
         <DesktopWidgetTrigger
           widgetRef={widgetRef}
           focused={focused}
+          position={position}
           onClickOutside={handleClickOutside}
           onFocusClick={handleFocusClick}
           sendBoundingRectToIframe={sendBoundingRectToIframe}

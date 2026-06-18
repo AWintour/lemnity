@@ -10,14 +10,18 @@ type DesktopWidgetTriggerProps = Pick<HTMLProps<HTMLElement>, 'children'> & {
   sendBoundingRectToIframe: (rect: Rect, offset: number) => void
   onFocusClick: () => void
   onClickOutside: () => void
+  // Расположение виджета на странице. По умолчанию — снизу справа (прежнее поведение).
+  position?: 'bottom-left' | 'bottom-right'
 }
 
 const DesktopWidgetTrigger = ({
   focused,
   widgetRef,
   sendBoundingRectToIframe,
+  position = 'bottom-right',
   ...props
 }: DesktopWidgetTriggerProps) => {
+  const isLeft = position === 'bottom-left'
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   useClickOutside(containerRef, props.onClickOutside)
@@ -82,7 +86,10 @@ const DesktopWidgetTrigger = ({
       // 
       // a marker to apply custom logic to in embedManager.tsx
       data-lemnity-announcement
-      className='fixed bottom-6 right-6 pointer-events-none'
+      className={cn(
+        'fixed bottom-6 pointer-events-none',
+        isLeft ? 'left-6' : 'right-6',
+      )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -91,7 +98,7 @@ const DesktopWidgetTrigger = ({
         ref={containerRef}
         className={cn(
           'w-fit h-fit group',
-          'origin-bottom-right',
+          isLeft ? 'origin-bottom-left' : 'origin-bottom-right',
 
           !focused && 'scale-40',
           // !focused && 'translate-x-[30%] translate-y-[30%]',
