@@ -71,11 +71,14 @@ class EmbedManager {
       return
     }
 
-    if (event.data.type === 'interactive-region') {
-      this.handleChildMessage(event.data)
-    }
+    // interactive-region всегда исходит из дочернего iframe конкретного виджета. Если оно
+    // пришло НЕ из нашего iframe — это сообщение другого виджета того же проекта (на странице
+    // по одному менеджеру на виджет, и каждый слушает window). Применять чужой rect нельзя:
+    // он затрёт наш clip-path и обрежет наш виджет → виден будет только один виджет.
+    // Игнорируем и не пересылаем такое сообщение в свой iframe.
+    if (event.data.type === 'interactive-region') return
 
-    // Forward external messages with our scope into the iframe
+    // Forward external host messages with our scope into the iframe
     if (this.iframe?.contentWindow) {
       this.iframe.contentWindow.postMessage(event.data, '*')
     }
