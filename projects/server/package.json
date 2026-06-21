@@ -106,12 +106,6 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "transformIgnorePatterns": [
-      "node_modules/(?!(@lemnity|@prisma)/)"
-    ],
-    "moduleNameMapper": {
-      "^@lemnity/database$": "<rootDir>/../../../packages/database"
-    }
+    "testEnvironment": "node"
   }
 }

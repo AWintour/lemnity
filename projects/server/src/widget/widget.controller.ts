@@ -24,13 +24,11 @@ export class WidgetController {
     @CurrentUser('email') email: string,
     @CurrentUser('role') role: string
   ): Promise<Widget> {
-    if (
-      ADMIN_ONLY_WIDGET_TYPES.has(createWidgetDto.type) &&
-      !isAdminUser(email, role)
-    ) {
+    const admin = isAdminUser(email, role)
+    if (ADMIN_ONLY_WIDGET_TYPES.has(createWidgetDto.type) && !admin) {
       throw new ForbiddenException('Этот тип виджета доступен только администратору')
     }
-    return this.widgetService.create(createWidgetDto, userId, isAdminUser(email, role))
+    return this.widgetService.create(createWidgetDto, userId, admin)
   }
 
   @Get()
