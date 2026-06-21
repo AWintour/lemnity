@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Виджет «Чат» — простая презентация для клиентов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF6EC;
+    --cream-2:#F3EBDA;
+    --ink:#241E17;
+    --ink-soft:#5A5044;
+    --coral:#FF6A45;
+    --coral-deep:#E8431C;
+    --teal:#0F9B7A;
+    --teal-deep:#0A6E57;
+    --sun:#FFC24B;
+    --line:#E3D8C2;
+    --shadow:18px 18px 0 rgba(36,30,23,.10);
+    --radius:30px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:"Golos Text",sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* subtle paper grain + warm glow */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(60% 50% at 15% 10%, rgba(255,194,75,.20), transparent 60%),
+      radial-gradient(55% 55% at 90% 90%, rgba(15,155,122,.14), transparent 60%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.04;
+    background-image:radial-gradient(var(--ink) 1px, transparent 1px);
+    background-size:6px 6px;
+  }
+
+  /* ---------- progress + nav ---------- */
+  .progress{
+    position:fixed;top:0;left:0;height:7px;width:0%;z-index:50;
+    background:linear-gradient(90deg,var(--coral),var(--sun));
+    transition:width .5s cubic-bezier(.16,1,.3,1);
+  }
+
+  .brand{
+    position:fixed;top:22px;left:30px;z-index:40;
+    display:flex;align-items:center;gap:12px;
+    font-family:"Unbounded",sans-serif;font-weight:800;font-size:18px;letter-spacing:-.5px;
+  }
+  .brand .dot{
+    width:30px;height:30px;border-radius:11px 11px 11px 4px;
+    background:var(--coral);box-shadow:3px 3px 0 var(--ink);
+    display:grid;place-items:center;
+  }
+  .brand .dot::after{content:"";width:11px;height:6px;border-radius:6px;background:var(--cream);}
+
+  /* ---------- deck ---------- */
+  .deck{position:relative;z-index:10;height:100vh;width:100vw;}
+  .slide{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:90px 6vw 130px;
+    opacity:0;visibility:hidden;
+    transform:translateX(60px) scale(.98);
+    transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1),visibility .55s;
+  }
+  .slide.active{opacity:1;visibility:visible;transform:translateX(0) scale(1);}
+  .slide.prev{transform:translateX(-60px) scale(.98);}
+
+  .wrap{width:100%;max-width:1180px;}
+
+  /* reveal animation for inner items */
+  .slide.active .r{animation:rise .65s both cubic-bezier(.16,1,.3,1);}
+  .slide.active .r:nth-child(1){animation-delay:.05s}
+  .slide.active .r:nth-child(2){animation-delay:.15s}
+  .slide.active .r:nth-child(3){animation-delay:.25s}
+  .slide.active .r:nth-child(4){animation-delay:.35s}
+  .slide.active .r:nth-child(5){animation-delay:.45s}
+  @keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+  /* chat bubbles pop in one-by-one (driven by JS via the .in class) */
+  .slide .bub{opacity:0;transform-origin:bottom left;}
+  .slide .bub.me{transform-origin:bottom right;}
+  .slide .bub.in{animation:bubInLeft .5s both cubic-bezier(.34,1.56,.64,1);}
+  .slide .bub.me.in{animation-name:bubInRight;}
+  @keyframes bubInLeft{
+    from{opacity:0;transform:translateY(16px) translateX(-14px) scale(.8)}
+    to{opacity:1;transform:none}
+  }
+  @keyframes bubInRight{
+    from{opacity:0;transform:translateY(16px) translateX(14px) scale(.8)}
+    to{opacity:1;transform:none}
+  }
+
+  /* «печатает…» — three bouncing dots before an operator reply */
+  .bub.typing{display:flex;gap:7px;align-items:center;padding:16px 18px;}
+  .bub.typing i{
+    width:9px;height:9px;border-radius:50%;background:var(--ink-soft);
+    display:block;animation:typedot 1.2s infinite ease-in-out;
+  }
+  .bub.typing i:nth-child(2){animation-delay:.18s;}
+  .bub.typing i:nth-child(3){animation-delay:.36s;}
+  @keyframes typedot{
+    0%,60%,100%{transform:translateY(0);opacity:.4}
+    30%{transform:translateY(-6px);opacity:1}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    .slide .bub{opacity:1;}
+    .slide .bub.in{animation:none;}
+  }
+
+  .kicker{
+    display:inline-flex;align-items:center;gap:10px;
+    font-weight:600;font-size:16px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--teal-deep);background:rgba(15,155,122,.12);
+    padding:9px 18px;border-radius:100px;margin-bottom:26px;
+  }
+  .kicker::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--teal);}
+
+  h1{
+    font-family:"Unbounded",sans-serif;font-weight:800;
+    font-size:clamp(40px,7vw,86px);line-height:1.02;letter-spacing:-.02em;
+    margin-bottom:26px;
+  }
+  h2{
+    font-family:"Unbounded",sans-serif;font-weight:800;
+    font-size:clamp(32px,5vw,60px);line-height:1.05;letter-spacing:-.02em;
+    margin-bottom:30px;
+  }
+  .lead{font-size:clamp(20px,2.5vw,28px);line-height:1.5;color:var(--ink-soft);max-width:780px;}
+  .hl{color:var(--coral-deep);font-weight:600;background:linear-gradient(transparent 60%,rgba(255,194,75,.55) 60%);}
+
+  /* grid of cards */
+  .grid{display:grid;gap:24px;margin-top:14px;}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g4{grid-template-columns:repeat(2,1fr);}
+
+  .card{
+    background:#fff;border:2.5px solid var(--ink);border-radius:var(--radius);
+    padding:30px 30px 32px;box-shadow:var(--shadow);
+  }
+  .card .ic{
+    width:62px;height:62px;border-radius:18px;display:grid;place-items:center;
+    font-size:30px;margin-bottom:18px;border:2.5px solid var(--ink);
+  }
+  .card h3{font-family:"Unbounded",sans-serif;font-weight:600;font-size:23px;margin-bottom:10px;line-height:1.15;}
+  .card p{font-size:18px;line-height:1.5;color:var(--ink-soft);}
+
+  .bg-coral{background:#FFE3DA}.bg-teal{background:#D6F0E8}.bg-sun{background:#FFEFC8}.bg-ink{background:#E7DFCF}
+
+  /* two-column hero */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center;}
+
+  /* ---- phone / chat mockup ---- */
+  .mock{
+    position:relative;width:100%;max-width:420px;margin:0 auto;
+    background:#fff;border:3px solid var(--ink);border-radius:34px;
+    box-shadow:22px 22px 0 rgba(36,30,23,.12);overflow:hidden;
+  }
+  .mock-head{
+    background:var(--coral);color:#fff;padding:22px 24px;display:flex;align-items:center;gap:14px;
+  }
+  .mock-head .ava{
+    width:50px;height:50px;border-radius:50%;background:var(--sun);border:3px solid #fff;
+    display:grid;place-items:center;font-size:24px;flex:none;
+  }
+  .mock-head .nm{font-family:"Unbounded",sans-serif;font-weight:600;font-size:19px;line-height:1.1;}
+  .mock-head .st{font-size:14px;opacity:.92;display:flex;align-items:center;gap:7px;margin-top:3px;}
+  .mock-head .st::before{content:"";width:9px;height:9px;border-radius:50%;background:#9DFFB0;box-shadow:0 0 0 3px rgba(255,255,255,.3);}
+  .mock-body{padding:24px 22px;display:flex;flex-direction:column;gap:14px;background:var(--cream-2);min-height:230px;}
+  .bub{max-width:80%;padding:14px 18px;font-size:17px;line-height:1.4;border-radius:20px;}
+  .bub.them{background:#fff;border:2px solid var(--ink);border-bottom-left-radius:6px;align-self:flex-start;}
+  .bub.me{background:var(--teal);color:#fff;border-bottom-right-radius:6px;align-self:flex-end;font-weight:500;}
+  .bub.photo{padding:8px;}
+  .bub.photo .ph{width:150px;height:96px;border-radius:13px;background:linear-gradient(135deg,var(--sun),var(--coral));display:grid;place-items:center;font-size:30px;}
+  .mock-foot{display:flex;align-items:center;gap:12px;padding:16px 20px;background:#fff;border-top:2px solid var(--line);}
+  .mock-foot .inp{flex:1;height:42px;border-radius:100px;background:var(--cream);border:2px solid var(--line);display:flex;align-items:center;padding:0 18px;color:var(--ink-soft);font-size:15px;}
+  .mock-foot .snd{width:44px;height:44px;border-radius:50%;background:var(--coral);display:grid;place-items:center;color:#fff;font-size:18px;flex:none;}
+
+  /* floating launcher bubble */
+  .launcher{
+    position:absolute;right:-14px;bottom:-18px;width:78px;height:78px;border-radius:26px 26px 8px 26px;
+    background:var(--coral);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--ink);
+    display:grid;place-items:center;font-size:34px;
+    animation:bob 2.6s ease-in-out infinite;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  /* numbered steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:18px;}
+  .step{background:#fff;border:2.5px solid var(--ink);border-radius:var(--radius);padding:30px;box-shadow:var(--shadow);position:relative;}
+  .step .num{
+    position:absolute;top:-26px;left:24px;width:54px;height:54px;border-radius:16px;
+    background:var(--ink);color:var(--cream);display:grid;place-items:center;
+    font-family:"Unbounded",sans-serif;font-weight:800;font-size:26px;
+  }
+  .step h3{font-family:"Unbounded",sans-serif;font-weight:600;font-size:22px;margin:18px 0 10px;}
+  .step p{font-size:18px;line-height:1.5;color:var(--ink-soft);}
+
+  .codebox{
+    margin-top:30px;background:var(--ink);color:#FFE9C9;border-radius:20px;
+    padding:22px 26px;font-family:ui-monospace,Menlo,monospace;font-size:16px;line-height:1.6;
+    box-shadow:var(--shadow);overflow:auto;
+  }
+  .codebox .tag{color:#7FE3C4;}
+  .codebox .at{color:var(--sun);}
+
+  .reassure{margin-top:24px;display:inline-flex;align-items:center;gap:14px;
+    background:#D6F0E8;border:2.5px solid var(--ink);border-radius:100px;padding:14px 26px;
+    font-size:19px;font-weight:600;}
+  .reassure span{font-size:26px;}
+
+  /* bullet list big */
+  .blist{list-style:none;margin-top:10px;display:grid;gap:18px;}
+  .blist li{display:flex;gap:18px;align-items:flex-start;font-size:clamp(19px,2.1vw,23px);line-height:1.45;}
+  .blist .chk{flex:none;width:40px;height:40px;border-radius:13px;background:var(--teal);color:#fff;
+    display:grid;place-items:center;font-size:20px;border:2.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink);}
+  .blist b{font-weight:700;}
+
+  /* cover decorative bubbles */
+  .float{position:absolute;border:2.5px solid var(--ink);background:#fff;border-radius:22px 22px 22px 6px;
+    padding:14px 20px;font-size:18px;font-weight:600;box-shadow:8px 8px 0 rgba(36,30,23,.12);}
+
+  /* ---------- footer nav ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:45;
+    display:flex;align-items:center;justify-content:center;gap:18px;
+    padding:18px 24px;
+    background:linear-gradient(transparent,var(--cream) 38%);
+  }
+  .btn{
+    font-family:"Golos Text",sans-serif;font-weight:700;font-size:20px;cursor:pointer;
+    border:3px solid var(--ink);border-radius:100px;padding:15px 34px;background:#fff;color:var(--ink);
+    box-shadow:5px 5px 0 var(--ink);transition:transform .12s,box-shadow .12s,background .2s;
+    display:inline-flex;align-items:center;gap:10px;user-select:none;
+  }
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink);}
+  .btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink);}
+  .btn.primary{background:var(--coral);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:5px 5px 0 var(--ink);}
+  .counter{font-family:"Unbounded",sans-serif;font-weight:600;font-size:18px;min-width:74px;text-align:center;
+    background:#fff;border:3px solid var(--ink);border-radius:100px;padding:13px 8px;}
+
+  .dots{position:fixed;right:28px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:13px;}
+  .dots button{width:14px;height:14px;border-radius:50%;border:2.5px solid var(--ink);background:transparent;cursor:pointer;padding:0;transition:all .25s;}
+  .dots button.on{background:var(--coral);transform:scale(1.35);}
+
+  .hint{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:40;
+    font-size:15px;color:var(--ink-soft);background:rgba(255,255,255,.7);padding:6px 16px;border-radius:100px;
+    border:1.5px solid var(--line);}
+
+  @media(max-width:880px){
+    .split{grid-template-columns:1fr;gap:36px;}
+    .g3,.steps{grid-template-columns:1fr;}
+    .g2,.g4{grid-template-columns:1fr;}
+    .slide{padding:84px 22px 130px;}
+    .dots{display:none;}
+    .brand{font-size:15px;}
+    .btn{font-size:17px;padding:13px 22px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="brand"><span class="dot"></span> Lemnity · Чат</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1. COVER -->
+  <section class="slide">
+    <div class="wrap split">
+      <div>
+        <span class="kicker r">Виджет «Чат»</span>
+        <h1 class="r">Помощник, который <br>всегда на связи</h1>
+        <p class="lead r">Маленькое окошко в углу вашего сайта. Посетитель пишет вам, <span class="hl">как другу в мессенджере</span> — а вы отвечаете. Просто и понятно.</p>
+      </div>
+      <div class="r" style="position:relative;">
+        <div class="mock">
+          <div class="mock-head">
+            <div class="ava">🙂</div>
+            <div><div class="nm">Анна, поддержка</div><div class="st">на связи сейчас</div></div>
+          </div>
+          <div class="mock-body">
+            <div class="bub them">Здравствуйте! Чем можем помочь? 🌿</div>
+            <div class="bub me">Подскажите, есть ли доставка?</div>
+            <div class="bub them">Да, привезём завтра до обеда 🚚</div>
+          </div>
+          <div class="mock-foot">
+            <div class="inp">Напишите сообщение…</div>
+            <div class="snd">➤</div>
+          </div>
+        </div>
+        <div class="launcher">💬</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. WHAT IS IT -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="kicker r">Что это такое</span>
+      <h2 class="r">Это как живой продавец —<br>только прямо на сайте</h2>
+      <p class="lead r" style="margin-bottom:40px;">Представьте: клиент зашёл на ваш сайт. У него есть вопрос. Вместо того чтобы уйти, он нажимает на кнопку 💬 и сразу пишет вам.</p>
+      <div class="grid g3">
+        <div class="card r"><div class="ic bg-coral">👀</div><h3>Клиент видит кнопку</h3><p>Аккуратный значок в углу страницы. Заметный, но не мешает.</p></div>
+        <div class="card r"><div class="ic bg-teal">✍️</div><h3>Пишет вопрос</h3><p>Как в WhatsApp или Telegram. Никаких сложностей.</p></div>
+        <div class="card r"><div class="ic bg-sun">⚡</div><h3>Вы отвечаете</h3><p>Сразу, в реальном времени. Клиент остаётся доволен.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. WHY -->
+  <section class="slide">
+    <div class="wrap split">
+      <div>
+        <span class="kicker r">Зачем это нужно</span>
+        <h2 class="r">Больше клиентов.<br>Больше продаж.</h2>
+        <p class="lead r">Люди не любят звонить и писать письма. А чат — это легко. Поэтому вопросов задают больше, а значит — и покупок больше.</p>
+      </div>
+      <div class="r">
+        <ul class="blist">
+          <li><span class="chk">✓</span><div><b>Клиент не уходит с вопросом.</b> Получил ответ — остался у вас.</div></li>
+          <li><span class="chk">✓</span><div><b>Удобно, как мессенджер.</b> Знакомо каждому, учиться не нужно.</div></li>
+          <li><span class="chk">✓</span><div><b>Вы собираете контакты.</b> Имя, телефон, почту — для будущих продаж.</div></li>
+          <li><span class="chk">✓</span><div><b>Работает и ночью.</b> Если вас нет — чат примет сообщение и вы перезвоните.</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. WHAT VISITOR SEES -->
+  <section class="slide">
+    <div class="wrap split">
+      <div class="r" style="order:2;position:relative;">
+        <div class="mock">
+          <div class="mock-head">
+            <div class="ava">🙂</div>
+            <div><div class="nm">Магазин «Уют»</div><div class="st">отвечаем за минуту</div></div>
+          </div>
+          <div class="mock-body">
+            <div class="bub them">Добрый день! 👋</div>
+            <div class="bub me">Хочу такой же диван, как на фото</div>
+            <div class="bub me photo"><div class="ph">🛋️</div></div>
+            <div class="bub them">Отличный выбор! Есть в наличии 😊</div>
+          </div>
+          <div class="mock-foot">
+            <div class="inp">📎 Прикрепить фото…</div>
+            <div class="snd">➤</div>
+          </div>
+        </div>
+      </div>
+      <div style="order:1;">
+        <span class="kicker r">Что видит ваш клиент</span>
+        <h2 class="r">Просто и приятно</h2>
+        <ul class="blist r">
+          <li><span class="chk">💬</span><div>Пишет сообщение и <b>сразу видит ответ</b></div></li>
+          <li><span class="chk">📷</span><div>Может <b>прикрепить фото или файл</b></div></li>
+          <li><span class="chk">🟢</span><div>Видит, что вы <b>сейчас на связи</b></div></li>
+          <li><span class="chk">😊</span><div>Ставит смайлики — общение как с человеком</div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. WHAT OPERATOR CAN DO -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="kicker r">Что можете вы</span>
+      <h2 class="r">Отвечайте откуда удобно</h2>
+      <div class="grid g4" style="margin-top:24px;">
+        <div class="card r"><div class="ic bg-teal">💻</div><h3>С компьютера или телефона</h3><p>Отвечайте из офиса или прямо с прогулки — как вам удобно.</p></div>
+        <div class="card r"><div class="ic bg-coral">🖼️</div><h3>Шлите фото, видео и файлы</h3><p>До 10 вложений в одном сообщении. Покажите товар «вживую».</p></div>
+        <div class="card r"><div class="ic bg-sun">📍</div><h3>Видите, кто к вам пришёл</h3><p>Откуда клиент, с какого устройства и какая страница его заинтересовала.</p></div>
+        <div class="card r"><div class="ic bg-ink">✅</div><h3>Завершайте диалог одной кнопкой</h3><p>Помогли — закрыли беседу. Всё аккуратно и под контролем.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. MAKE IT YOURS -->
+  <section class="slide">
+    <div class="wrap split">
+      <div>
+        <span class="kicker r">Сделайте его своим</span>
+        <h2 class="r">Под цвета вашего бренда</h2>
+        <p class="lead r">Чат подстроится под ваш сайт. Выберите цвет, добавьте логотип и имя — клиенты сразу поймут, что общаются именно с вами.</p>
+        <ul class="blist r" style="margin-top:30px;">
+          <li><span class="chk">🎨</span><div>Любой <b>цвет</b> окна и кнопки</div></li>
+          <li><span class="chk">🏷️</span><div>Ваш <b>логотип и название</b></div></li>
+          <li><span class="chk">👤</span><div><b>Имя и фото</b> сотрудника, который отвечает</div></li>
+        </ul>
+      </div>
+      <div class="r" style="display:flex;flex-direction:column;gap:20px;align-items:center;">
+        <div class="mock" style="max-width:340px;">
+          <div class="mock-head" style="background:var(--teal);">
+            <div class="ava" style="background:#fff;">🏪</div>
+            <div><div class="nm">Кофейня «Зерно»</div><div class="st">Мария, бариста</div></div>
+          </div>
+          <div class="mock-body" style="min-height:140px;">
+            <div class="bub them">Доброе утро! Уже варим ваш латте ☕</div>
+            <div class="bub me" style="background:var(--coral);">Спасибо, бегу!</div>
+          </div>
+        </div>
+        <p style="font-size:16px;color:var(--ink-soft);text-align:center;">↑ Тот же чат — в зелёном стиле кофейни</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. SMART -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="kicker r">Умные функции</span>
+      <h2 class="r">Чат работает за вас</h2>
+      <div class="grid g4" style="margin-top:24px;">
+        <div class="card r"><div class="ic bg-sun">⏱️</div><h3>Открывается сам</h3><p>Через несколько секунд или когда клиент листает страницу — чат вежливо предложит помощь.</p></div>
+        <div class="card r"><div class="ic bg-teal">📝</div><h3>Собирает контакты</h3><p>Спросит имя, телефон и почту — чтобы вы могли перезвонить.</p></div>
+        <div class="card r"><div class="ic bg-coral">🌙</div><h3>Не пропустит ночные сообщения</h3><p>Вас нет на месте? Клиент оставит сообщение, а вы ответите утром.</p></div>
+        <div class="card r"><div class="ic bg-ink">🤖</div><h3>ИИ-помощник <span style="font-size:13px;color:var(--coral-deep);">(скоро)</span></h3><p>Умный помощник ответит на простые вопросы сам, пока вы заняты.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. INSTALL -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="kicker r">Установка за 1 минуту</span>
+      <h2 class="r">Не нужно быть программистом</h2>
+      <p class="lead r">Всё делается в три простых шага. А если что — мы поможем и установим за вас.</p>
+      <div class="steps">
+        <div class="step r"><div class="num">1</div><h3>Копируете строчку</h3><p>Мы даём вам готовый «код для вставки» — это одна короткая строчка. Нажимаете «Копировать».</p></div>
+        <div class="step r"><div class="num">2</div><h3>Вставляете на сайт</h3><p>Вставляете её на свой сайт (или передаёте тому, кто им занимается).</p></div>
+        <div class="step r"><div class="num">3</div><h3>Готово!</h3><p>Чат сразу появляется на сайте и начинает работать. Больше ничего делать не нужно.</p></div>
+      </div>
+      <div class="codebox r">&lt;<span class="tag">script</span> <span class="at">src</span>=<span style="color:#fff;">"https://lemnity.com/embed.js?widgetId=ВАШ-ЧАТ"</span>&gt;&lt;/<span class="tag">script</span>&gt;</div>
+      <div class="reassure r"><span>🤝</span> Не уверены? Мы установим чат за вас — бесплатно.</div>
+    </div>
+  </section>
+
+  <!-- 9. CLOSE -->
+  <section class="slide">
+    <div class="wrap" style="text-align:center;">
+      <span class="kicker r" style="margin-left:auto;margin-right:auto;">Готовы начать?</span>
+      <h1 class="r" style="max-width:960px;margin:0 auto 26px;">Клиенты ближе —<br>продажи выше</h1>
+      <p class="lead r" style="margin:0 auto 40px;">Подключите чат «Lemnity» и отвечайте посетителям так же легко, как пишете близким. Просто, по-человечески, без сложностей.</p>
+      <div class="r" style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;">
+        <a class="btn primary" href="#" onclick="return false">Подключить чат →</a>
+        <a class="btn" href="#" onclick="return false">Задать вопрос</a>
+      </div>
+      <p class="r" style="margin-top:46px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:20px;">💬 Lemnity · Чат для вашего сайта</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="hint" id="hint">Листайте стрелками ← → или кнопками внизу</div>
+
+<div class="nav">
+  <button class="btn" id="prev">← Назад</button>
+  <div class="counter"><span id="cur">1</span> / <span id="total">9</span></div>
+  <button class="btn primary" id="next">Далее →</button>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const total=slides.length;
+  let i=0;
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  const cur=document.getElementById('cur');
+  const progress=document.getElementById('progress');
+  const dotsWrap=document.getElementById('dots');
+  const hint=document.getElementById('hint');
+  document.getElementById('total').textContent=total;
+
+  // build dots
+  slides.forEach((_,n)=>{
+    const b=document.createElement('button');
+    b.setAttribute('aria-label','Слайд '+(n+1));
+    b.addEventListener('click',()=>go(n));
+    dotsWrap.appendChild(b);
+  });
+  const dots=[...dotsWrap.children];
+
+  // ---- live-chat sequencer: reveal bubbles one-by-one, with a «печатает…» pause before operator replies ----
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let chatTimers=[];
+  function clearChat(){
+    chatTimers.forEach(t=>clearTimeout(t));
+    chatTimers=[];
+    document.querySelectorAll('.bub.typing').forEach(n=>n.remove());
+  }
+  function playChat(slide){
+    slide.querySelectorAll('.mock-body').forEach(body=>{
+      const bubs=[...body.querySelectorAll('.bub')];
+      if(reduceMotion){bubs.forEach(b=>b.classList.add('in'));return;}
+      bubs.forEach(b=>b.classList.remove('in'));
+      let t=450; // wait until the phone has slid into view
+      bubs.forEach((b,k)=>{
+        const isReply=b.classList.contains('them')&&k>0&&bubs[k-1].classList.contains('me');
+        if(isReply){
+          const start=t, typeDur=950;
+          chatTimers.push(setTimeout(()=>{
+            const ind=document.createElement('div');
+            ind.className='bub them typing';
+            ind.innerHTML='<i></i><i></i><i></i>';
+            body.insertBefore(ind,b);
+            requestAnimationFrame(()=>ind.classList.add('in'));
+          },start));
+          chatTimers.push(setTimeout(()=>{
+            const ind=body.querySelector('.bub.typing');
+            if(ind)ind.remove();
+            b.classList.add('in');
+          },start+typeDur));
+          t=start+typeDur+300;
+        }else{
+          chatTimers.push(setTimeout(()=>b.classList.add('in'),t));
+          t+=300;
+        }
+      });
+    });
+  }
+
+  function go(n){
+    n=Math.max(0,Math.min(total-1,n));
+    slides.forEach((s,k)=>{
+      s.classList.remove('active','prev');
+      if(k===n)s.classList.add('active');
+      else if(k<n)s.classList.add('prev');
+    });
+    dots.forEach((d,k)=>d.classList.toggle('on',k===n));
+    i=n;
+    cur.textContent=n+1;
+    progress.style.width=((n)/(total-1)*100)+'%';
+    prevBtn.disabled=(n===0);
+    nextBtn.disabled=(n===total-1);
+    if(n>0)hint.style.opacity='0';
+    clearChat();
+    playChat(slides[n]);
+  }
+
+  prevBtn.addEventListener('click',()=>go(i-1));
+  nextBtn.addEventListener('click',()=>go(i+1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')go(i+1);
+    if(e.key==='ArrowLeft'||e.key==='PageUp')go(i-1);
+    if(e.key==='Home')go(0);
+    if(e.key==='End')go(total-1);
+  });
+
+  // touch swipe
+  let x0=null;
+  document.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(x0===null)return;
+    const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>55){dx<0?go(i+1):go(i-1);}
+    x0=null;
+  },{passive:true});
+
+  go(0);
+</script>
+</body>
+</html>

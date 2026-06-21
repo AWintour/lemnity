@@ -1,6 +1,8 @@
 // PrismaService imports the ESM-only @lemnity/database client, which jest can't transform.
 // We inject a fake prisma anyway, so stub the module boundary to avoid loading the real client.
 jest.mock('../prisma.service', () => ({ PrismaService: class PrismaService {} }))
+// admin.ts (imported transitively via ChatSubscriptionService) pulls WidgetType from the
+// ESM-only @lemnity/database, which jest can't transform — stub the enum so the suite loads.
 jest.mock('@lemnity/database', () => ({ WidgetType: {} }))
 
 // Stub the adapter registry: the tier gate runs BEFORE any adapter call, so a paid plan reaching

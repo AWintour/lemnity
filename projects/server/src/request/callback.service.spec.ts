@@ -1,4 +1,6 @@
 jest.mock('../prisma.service', () => ({ PrismaService: class PrismaService {} }))
+// admin.ts (imported transitively) pulls WidgetType from the ESM-only @lemnity/database,
+// which jest can't transform — stub the enum so the suite loads.
 jest.mock('@lemnity/database', () => ({ WidgetType: {} }))
 
 import { BadRequestException } from '@nestjs/common'
