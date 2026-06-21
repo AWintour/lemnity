@@ -30,7 +30,7 @@ export class WidgetController {
     ) {
       throw new ForbiddenException('Этот тип виджета доступен только администратору')
     }
-    return this.widgetService.create(createWidgetDto, userId)
+    return this.widgetService.create(createWidgetDto, userId, isAdminUser(email, role))
   }
 
   @Get()

@@ -254,7 +254,7 @@ export class WidgetService {
     }
   }
 
-  async create(createWidgetDto: CreateWidgetDto, userId: string) {
+  async create(createWidgetDto: CreateWidgetDto, userId: string, isAdmin = false) {
     // Verify that the project belongs to the user
     const project = await this.prisma.project.findFirst({
       where: { id: createWidgetDto.projectId, userId }
@@ -272,9 +272,10 @@ export class WidgetService {
       name: createWidgetDto.name,
       type: createWidgetDto.type,
       enabled: createWidgetDto.enabled ?? false,
-      // Бесплатный период 5 дней с момента создания — виджет активен (paidUntil > now)
-      // без оплаты. Дальше продлевается подпиской из ЛК. См. plans/plan-wid.md.
-      paidUntil: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      // Бесплатный период 5 дней с момента создания (paidUntil > now). Для админа —
+      // null (бессрочно/grandfather), виджет не истекает и не требует оплаты.
+      // Дальше продлевается подпиской из ЛК. См. plans/plan-wid.md.
+      paidUntil: isAdmin ? null : new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       project: { connect: { id: createWidgetDto.projectId } }
     }
 
