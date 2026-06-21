@@ -1,12 +1,13 @@
 // PrismaService imports the ESM-only @lemnity/database client, which jest can't transform.
 // We inject a fake prisma anyway, so stub the module boundary to avoid loading the real client.
 jest.mock('../prisma.service', () => ({ PrismaService: class PrismaService {} }))
+jest.mock('@lemnity/database', () => ({ WidgetType: {} }))
 
 import {
   ChatSubscriptionService,
   parseChatSubscriptionPayload
 } from './chat-subscription.service'
-import { FREE_CHAT_ENTITLEMENT } from './chat-entitlement'
+import { FREE_CHAT_ENTITLEMENT, ADMIN_CHAT_ENTITLEMENT } from './chat-entitlement'
 import type { PrismaService } from '../prisma.service'
 
 type MockPrisma = {
@@ -277,5 +278,44 @@ describe('ChatSubscriptionService.getByEmail (subscription + usage)', () => {
     expect(prisma.chatOperator.count).toHaveBeenCalledTimes(1)
     const countArg = prisma.chatOperator.count.mock.calls[0][0]
     expect(countArg.where.project.userId).toBe('u1')
+  })
+})
+
+describe('ChatSubscriptionService.getActiveEntitlementByUserId — admin', () => {
+  it('returns ADMIN_CHAT_ENTITLEMENT when user email is in the admin allowlist', async () => {
+    const prisma = makePrisma()
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      lemnityUserId: null,
+      email: 'lemnitycom@gmail.com',
+      role: 'USER'
+    })
+    const svc = new ChatSubscriptionService(prisma as unknown as PrismaService)
+    expect(await svc.getActiveEntitlementByUserId('u1', NOW)).toEqual(ADMIN_CHAT_ENTITLEMENT)
+    expect(prisma.chatSubscription.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('returns ADMIN_CHAT_ENTITLEMENT when user role is ADMIN', async () => {
+    const prisma = makePrisma()
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      lemnityUserId: 'lm_1',
+      email: 'someone@example.com',
+      role: 'ADMIN'
+    })
+    const svc = new ChatSubscriptionService(prisma as unknown as PrismaService)
+    expect(await svc.getActiveEntitlementByUserId('u1', NOW)).toEqual(ADMIN_CHAT_ENTITLEMENT)
+  })
+
+  it('returns FREE for a normal user (no admin email/role, no subscription)', async () => {
+    const prisma = makePrisma()
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      lemnityUserId: null,
+      email: 'someone@example.com',
+      role: 'USER'
+    })
+    const svc = new ChatSubscriptionService(prisma as unknown as PrismaService)
+    expect(await svc.getActiveEntitlementByUserId('u1', NOW)).toEqual(FREE_CHAT_ENTITLEMENT)
   })
 })

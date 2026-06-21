@@ -38,6 +38,18 @@ export const FREE_CHAT_ENTITLEMENT: ChatEntitlement = {
   paidUntil: null
 }
 
+/**
+ * Entitlement администратора: полный доступ как agency, без лимитов, бессрочно.
+ * Применяется в getActiveEntitlementByUserId, когда isAdminUser(email, role) === true.
+ */
+export const ADMIN_CHAT_ENTITLEMENT: ChatEntitlement = {
+  planTier: 'agency',
+  siteLimit: 999999,
+  managerLimit: 999999,
+  aiDailyLimit: 999999,
+  paidUntil: null
+}
+
 /** Ранг тарифа: free=0, start=1, pro=2, business=3, agency=4. */
 const PLAN_RANK: Record<ChatPlanTier, number> = {
   free: 0,

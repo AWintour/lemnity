@@ -4,9 +4,11 @@ import {
   extendPaidUntil,
   isSubscriptionActive,
   FREE_CHAT_ENTITLEMENT,
+  ADMIN_CHAT_ENTITLEMENT,
   type ChatEntitlement,
   type ChatPlanTier
 } from './chat-entitlement'
+import { isAdminUser } from '../common/admin'
 
 const CHAT_PLAN_TIERS: readonly ChatPlanTier[] = ['free', 'start', 'pro', 'business', 'agency']
 
@@ -137,8 +139,10 @@ export class ChatSubscriptionService {
   ): Promise<ChatEntitlement> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { lemnityUserId: true }
+      select: { lemnityUserId: true, email: true, role: true }
     })
+    // Админ — полный доступ как agency, бессрочно; подписку не читаем.
+    if (isAdminUser(user?.email, user?.role)) return ADMIN_CHAT_ENTITLEMENT
     if (!user?.lemnityUserId) return FREE_CHAT_ENTITLEMENT
 
     const sub = await this.prisma.chatSubscription.findUnique({
