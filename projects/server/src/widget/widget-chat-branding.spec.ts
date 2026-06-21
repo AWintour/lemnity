@@ -7,6 +7,9 @@ jest.mock('@lemnity/widget-config', () => ({
   canonicalizeWidgetConfig: (raw: unknown) => raw,
   validate: () => ({ ok: true, issues: [] })
 }))
+jest.mock('@lemnity/database', () => ({
+  WidgetType: { CALLBACK: 'CALLBACK', CHAT: 'CHAT', NOTIFICATION: 'NOTIFICATION' }
+}))
 
 import { WidgetService } from './widget.service'
 import type { PrismaService } from '../prisma.service'
