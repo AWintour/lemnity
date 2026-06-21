@@ -1,4 +1,5 @@
 jest.mock('../prisma.service', () => ({ PrismaService: class PrismaService {} }))
+jest.mock('@lemnity/database', () => ({ WidgetType: {} }))
 
 import { BadRequestException } from '@nestjs/common'
 import { CallbackService } from './callback.service'

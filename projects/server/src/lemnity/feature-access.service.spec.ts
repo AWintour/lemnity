@@ -1,4 +1,5 @@
 jest.mock('../prisma.service', () => ({ PrismaService: class PrismaService {} }))
+jest.mock('@lemnity/database', () => ({ WidgetType: {} }))
 
 import { ForbiddenException } from '@nestjs/common'
 import { FeatureAccessService } from './feature-access.service'
