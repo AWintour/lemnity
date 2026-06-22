@@ -276,6 +276,10 @@ export const paymentSlice = createSlice({
       (state, action: PayloadAction<PromoDto>) => {
         state.dbPromo = action.payload
       },
+    dbPromoCleared:
+      (state) => {
+        state.dbPromo = undefined
+      },
     paymentIdChanged:
       (state, action: PayloadAction<string | undefined>) => {
         state.paymentId = action.payload
@@ -414,6 +418,7 @@ export const {
   paymentPlanAdded,
   promoChanged,
   dbPromoChanged,
+  dbPromoCleared,
   paymentIdChanged,
 } = paymentSlice.actions
 

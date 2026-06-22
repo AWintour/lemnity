@@ -9,6 +9,7 @@ import {
   type RadioProps,
 } from '@heroui/radio'
 import { cn } from '@heroui/theme'
+import { addToast } from '@heroui/toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import Decimal from 'decimal.js'
 
@@ -23,12 +24,14 @@ import {
   currentBillingPeriodIdChanged,
   currentPaymentPlanIdChanged,
   dbPromoChanged,
+  dbPromoCleared,
   promoChanged,
   selectAllPaymentPlans,
   selectBillingPeiodById,
   selectBillingPeriodIds,
   selectCurrentBillingPeriodId,
   selectCurrentPaymentPlanId,
+  selectDbPromo,
   selectPaymentPlanById,
   selectPromo,
   type TBillingPeriodKey,
@@ -158,29 +161,59 @@ const PaymentPeriodRadioGroup = () => {
 
 const Promo = () => {
   const [open, setOpen] = useState(false)
+  const [applying, setApplying] = useState(false)
 
   const dispatch = useAppDispatch()
   const promo = useAppSelector(selectPromo)
+  const dbPromo = useAppSelector(selectDbPromo)
+
+  // промокод считается применённым, только когда введённый код совпадает
+  // с тем, что вернул сервер; правка инпута сбрасывает применённый промокод
+  const isApplied =
+    !!dbPromo && dbPromo.promo.toUpperCase() === promo.trim().toUpperCase()
 
   const handlePromoChange = (value: string) => {
     dispatch(promoChanged(value.toUpperCase()))
+    if (dbPromo) {
+      dispatch(dbPromoCleared())
+    }
   }
 
   const handleApplyPromo = async () => {
+    if (!promo.trim() || applying) {
+      return
+    }
+
+    setApplying(true)
     try {
-      const { data } = await getPromo(promo)
-      console.log('[Promo]', data)
+      const { data } = await getPromo(promo.trim())
 
       if (!data) {
-        // toast
-        console.log('[Promo] not found')
+        dispatch(dbPromoCleared())
+        addToast({
+          title: 'Промокод не найден',
+          description: 'Проверьте правильность кода',
+          color: 'warning',
+        })
         return
       }
 
       dispatch(dbPromoChanged(data))
+      addToast({
+        title: 'Промокод применён',
+        description: `Скидка ${Number(data.discount)}%`,
+        color: 'success',
+      })
     }
     catch {
-      console.log('[Promo] network error')
+      addToast({
+        title: 'Не удалось проверить промокод',
+        description: 'Попробуйте ещё раз позже',
+        color: 'danger',
+      })
+    }
+    finally {
+      setApplying(false)
     }
   }
 
@@ -223,24 +256,51 @@ const Promo = () => {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className={`overflow-hidden`}
           >
-            <Input
-              value={promo}
-              classNames={{
-                inputWrapper:
-                  'min-h-8.75 h-8.75 px-4 rounded-[5px] border border-[#5951E5]',
-                input: 'text-base',
-              }}
-              placeholder='Введите промокод'
-              endContent={
-                <button
-                  className='text-base text-[#5951E5] cursor-pointer'
-                  onClick={handleApplyPromo}
+            <div className='flex flex-row items-center gap-2.5'>
+              <Input
+                value={promo}
+                classNames={{
+                  inputWrapper:
+                    'min-h-8.75 h-8.75 px-4 rounded-[5px] border border-[#5951E5]',
+                  input: 'text-base',
+                }}
+                placeholder='Введите промокод'
+                endContent={
+                  <button
+                    className={cn(
+                      'text-base text-[#5951E5]',
+                      applying
+                        ? 'opacity-50 cursor-default'
+                        : 'cursor-pointer',
+                    )}
+                    disabled={applying}
+                    onClick={handleApplyPromo}
+                  >
+                    Применить
+                  </button>
+                }
+                onValueChange={handlePromoChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleApplyPromo()
+                  }
+                }}
+              />
+
+              {promo.trim() && (
+                <span
+                  className={cn(
+                    'whitespace-nowrap rounded-full px-2.5 py-1',
+                    'text-[12px] leading-none',
+                    isApplied
+                      ? 'bg-[#E8F6E9] text-[#3BB240]'
+                      : 'bg-[#FDEAEA] text-[#E5514E]',
+                  )}
                 >
-                  Применить
-                </button>
-              }
-              onValueChange={handlePromoChange}
-            />
+                  {isApplied ? 'применён' : 'не применён'}
+                </span>
+              )}
+            </div>
           </motion.div>
       )}
       </AnimatePresence>

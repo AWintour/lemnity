@@ -94,9 +94,14 @@ export class PaymentService {
   }
 
   getPromo(promo: string) {
-    return this.prisma.promo.findUnique({
+    // ввод может прийти с пробелами или в другом регистре —
+    // нормализуем, чтобы «lemnity20» и «LEMNITY20 » находили одну запись
+    return this.prisma.promo.findFirst({
       where: {
-        promo: promo,
+        promo: {
+          equals: promo.trim(),
+          mode: 'insensitive',
+        },
       },
     })
   }
