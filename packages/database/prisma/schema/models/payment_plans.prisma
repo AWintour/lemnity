@@ -1,0 +1,27 @@
+model PaymentPlan {
+  id String @id @default(cuid())
+
+  name             String
+  enabled          Boolean
+  numberOfProjects Int     @map("number_of_projects")
+  numberOfWidgets  Int     @map("number_of_widgets")
+
+  // i decided to use separate fields for each billing period's price
+  // to avoid doing calculations + rounding in the UI
+  // 6 470,00 per year looks prettier than whatever is the result of
+  // Numbeer(539,166667).toFixed(2) * 12
+  // + we are dealing with money here
+  // rounding errors are actually illegal
+  monthlyPrice     Decimal @default(0) @map("monthly_price") @db.Decimal(10, 2)
+  quarterlyPrice   Decimal @default(0) @map("quarterly_price") @db.Decimal(10, 2)
+  yearlyPrice      Decimal @default(0) @map("yearly_price") @db.Decimal(10, 2)
+  
+  paymentPlanOptions  PaymentPlanOptions[] @relation(name: "planToPaymentOptions")
+  includedPlanOptions PaymentPlanOptions[] @relation(name: "planToIncludedOptions")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("payment_plans")
+}

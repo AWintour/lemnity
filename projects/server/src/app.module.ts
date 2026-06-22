@@ -10,6 +10,7 @@ import { FilesModule } from './files/files.module'
 import { CollectorModule } from './collector/collector.module'
 import { StatsModule } from './stats/stats.module'
 import { RequestModule } from './request/request.module'
+import { PaymentModule } from './payment/payment.module'
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { RequestModule } from './request/request.module'
     FilesModule,
     CollectorModule,
     StatsModule,
-    RequestModule
+    RequestModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService]

@@ -1,0 +1,16 @@
+enum PaymentType {
+  CARD
+  INVOICE
+}
+
+model Payment {
+  id String @id
+  data Json
+
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+
+  @@map("payments")
+}

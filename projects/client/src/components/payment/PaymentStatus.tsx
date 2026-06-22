@@ -1,6 +1,7 @@
 import { cn } from '@heroui/theme'
 import { getDaysWord } from './utils'
-import { usePaymentContext } from './usePaymentContext'
+import { useAppSelector } from '@/stores/redux/hooks'
+import { selectIsTrialPeriod } from '@/stores/redux/paymentSlice'
 
 type PaymentStatusProps = {
   balance: number
@@ -9,8 +10,8 @@ type PaymentStatusProps = {
 
 const PaymentStatus = (props: PaymentStatusProps) => {
   const { balance, daysLeft } = props
-  const { state } = usePaymentContext()
-  const { isTrialPeriod } = state
+
+  const isTrialPeriod = useAppSelector(selectIsTrialPeriod)
 
   const balanceSubtitle = isTrialPeriod
     ? 'У вас тестовый период'

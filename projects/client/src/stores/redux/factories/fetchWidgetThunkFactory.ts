@@ -26,7 +26,7 @@ type ThunkParams = {
  * @returns an `AsyncThunk`. durrr.
  * 
  * @example
- *   // this action will should be dispatched when the store is aleady mounted
+ *   // this action should be dispatched when the store is aleady mounted
  *   // if it's not then we are having a bigger problem
  *   export const fetchAnnouncementWidget = fetchWidgetThunkFactory(
  *     'announcement/fetchWidget',

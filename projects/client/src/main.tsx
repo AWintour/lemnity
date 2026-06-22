@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HeroUIProvider } from '@heroui/system'
+import { ToastProvider } from '@heroui/toast'
 
 import useAuthStore, { type AuthState } from '@stores/authStore.ts'
 import YandexMetrika from './common/utils/yandexMetrika.ts'
@@ -35,6 +36,7 @@ export const Root = () => {
     <StrictMode>
       <Provider store={store}>
         <HeroUIProvider>
+          <ToastProvider />
           <BrowserRouter
             // done to silence the warning about the opt-in features
             // might need to remove once v7 releases

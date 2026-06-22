@@ -5,12 +5,11 @@ import HomePageBanner from '@/layouts/HomePageBanner/HomePageBanner'
 import AddProjectsBlock from '@/layouts/AddProjectsBlock/AddProjectsBlock'
 import ProjectList from '@/layouts/ProjectList/ProjectList'
 import AddProjectModal from '@/layouts/AddProjectsBlock/AddProjectModal'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useProjectsStore } from '@/stores/projectsStore'
 import useUserStore from '@/stores/userStore'
 import { Button } from '@heroui/button'
 import chatboxIcon from '@/assets/icons/chatbox.svg'
-
 // import MaintenancePage from './MaintenancePage'
 // import CenteredLayout from '@/layouts/CenteredLayout'
 

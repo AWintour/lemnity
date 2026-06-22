@@ -1,47 +1,44 @@
 import { cn } from '@heroui/theme'
 
 import CustomSwitch from '../CustomSwitch'
-import { usePaymentContext } from './usePaymentContext'
-import type { ModificationKey } from './PaymentContext'
-import { AVAILABLE_WIDGETS, type WidgetType } from '@/layouts/Widgets/constants'
-
-type WidgetItem = {title: string, type: WidgetType}
-
-// filter widgets by their availability and return the titles
-const widgets = AVAILABLE_WIDGETS.reduce<Array<WidgetItem>>(
-  (acc, { isAvailable, title, type }) => {
-    if (isAvailable) {
-      acc.push({ title, type })
-    }
-    return acc
-  },
-  [],
-)
+import { useAppDispatch, useAppSelector } from '@/stores/redux/hooks'
+import {
+  planOptionCartStateChanged,
+  selectIncludedPlanOptions,
+  selectIsPlanOptionAddedToCart,
+  selectPaymentPlanOptions,
+  type TIncludedPlanOption,
+  type TPaymentPlanOption,
+} from '@/stores/redux/paymentSlice'
 
 type ModificationItemProps = {
-  title: string
-  type: ModificationKey
-  enabled: boolean
+  value: TPaymentPlanOption | TIncludedPlanOption
+  isDisabled?: boolean
+  isSelected: boolean
 }
 
 const ModificationItem = (props: ModificationItemProps) => {
-  const { dispatch } = usePaymentContext()
+  const dispatch = useAppDispatch()
 
-  const handleToggle = () => {
-    dispatch({ type: 'toggleModification', modification: props.type })
+  const handleToggle = (value: boolean) => {
+    dispatch(planOptionCartStateChanged({
+      type: props.value.type,
+      value: value,
+    }))
   }
 
   return (
     <div className='w-full flex flex-row items-center justify-between'>
       <span className='text-base leading-4.75'>
-        {props.title}
+        {props.value.name}
       </span>
 
       {/* i do not wish to knnw what is happening inside the CustomSwitch */}
       {/* it isn't mine and this is done for consistency */}
       <CustomSwitch
-        isSelected={props.enabled}  // selected? fr bruh? not that i'm better
+        isSelected={props.isSelected}
         onValueChange={handleToggle}
+        isDisabled={props.isDisabled}
         // ths was also pulled out of some random pre-existing code
         selectedColor='group-data-[selected=true]:!bg-[#5951E5]'
         size='sm'
@@ -51,8 +48,12 @@ const ModificationItem = (props: ModificationItemProps) => {
 }
 
 const Modifications = () => {
-  const { state } = usePaymentContext()
-  const { modifications } = state
+  const includedPlanOptions =
+    useAppSelector(selectIncludedPlanOptions)
+  const paymentPlanOptions =
+    useAppSelector(selectPaymentPlanOptions)
+  const isPlanOptionAddedToCart =
+    useAppSelector(selectIsPlanOptionAddedToCart)
 
   return (
     <div
@@ -67,20 +68,22 @@ const Modifications = () => {
 
       <hr className='w-full border-[#C0C0C0]' />
 
-      {widgets.map(widget => (
+      {includedPlanOptions.map(option => (
         <ModificationItem
-          key={widget.type}
-          title={widget.title}
-          type={widget.type}
-          enabled={modifications[widget.type]}
+          key={option.type}
+          value={option}
+          isDisabled={true}
+          isSelected={true}
         />
       ))}
-
-      <ModificationItem
-        title='Лейбл “Сделано на Lemnity”'
-        type='BRANDING'
-        enabled={modifications['BRANDING']}
-      />
+      
+      {paymentPlanOptions.map(option => (
+        <ModificationItem
+          key={option.type}
+          value={option}
+          isSelected={isPlanOptionAddedToCart[option.type] ?? false}
+        />
+      ))}
 
       <hr className='w-full border-[#C0C0C0] mt-auto mb-0' />
     </div>
